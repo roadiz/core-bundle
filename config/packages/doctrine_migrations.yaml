@@ -1,0 +1,4 @@
+doctrine_migrations:
+    migrations_paths:
+        'RZ\Roadiz\Migrations': '@RoadizCoreBundle/migrations'
+    enable_profiler: '%kernel.debug%'
