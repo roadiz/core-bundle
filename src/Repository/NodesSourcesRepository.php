@@ -31,13 +31,24 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  */
 final class NodesSourcesRepository extends StatusAwareRepository
 {
+    private ?NodeSourceSearchHandlerInterface $nodeSourceSearchHandler;
+
+    /**
+     * @param ManagerRegistry $registry
+     * @param PreviewResolverInterface $previewResolver
+     * @param EventDispatcherInterface $dispatcher
+     * @param Security $security
+     * @param NodeSourceSearchHandlerInterface|null $nodeSourceSearchHandler
+     */
     public function __construct(
         ManagerRegistry $registry,
         PreviewResolverInterface $previewResolver,
         EventDispatcherInterface $dispatcher,
-        Security $security
+        Security $security,
+        ?NodeSourceSearchHandlerInterface $nodeSourceSearchHandler
     ) {
         parent::__construct($registry, NodesSources::class, $previewResolver, $dispatcher, $security);
+        $this->nodeSourceSearchHandler = $nodeSourceSearchHandler;
     }
 
     /**
@@ -428,10 +439,8 @@ final class NodesSourcesRepository extends StatusAwareRepository
      */
     public function findBySearchQuery($query, $limit = 25)
     {
-        /** @var NodeSourceSearchHandlerInterface|null $service */
-        $service = $this->get(NodeSourceSearchHandlerInterface::class);
-        if (null !== $service) {
-            $service->boostByUpdateDate();
+        if (null !== $this->nodeSourceSearchHandler) {
+            $this->nodeSourceSearchHandler->boostByUpdateDate();
             $arguments = [];
             if ($this->isDisplayingNotPublishedNodes()) {
                 $arguments['status'] = ['<=', Node::PUBLISHED];
@@ -441,9 +450,9 @@ final class NodesSourcesRepository extends StatusAwareRepository
             }
 
             if ($limit > 0) {
-                return $service->search($query, $arguments, $limit)->getResultItems();
+                return $this->nodeSourceSearchHandler->search($query, $arguments, $limit)->getResultItems();
             }
-            return $service->search($query, $arguments, 999999)->getResultItems();
+            return $this->nodeSourceSearchHandler->search($query, $arguments, 999999)->getResultItems();
         }
         return [];
     }
@@ -459,17 +468,15 @@ final class NodesSourcesRepository extends StatusAwareRepository
      */
     public function findBySearchQueryAndTranslation($query, TranslationInterface $translation, $limit = 25)
     {
-        /** @var SearchHandlerInterface|null $service */
-        $service = $this->get(NodeSourceSearchHandlerInterface::class);
-        if (null !== $service) {
+        if (null !== $this->nodeSourceSearchHandler) {
             $params = [
                 'translation' => $translation,
             ];
 
             if ($limit > 0) {
-                return $service->search($query, $params, $limit);
+                return $this->nodeSourceSearchHandler->search($query, $params, $limit);
             } else {
-                return $service->search($query, $params, 999999);
+                return $this->nodeSourceSearchHandler->search($query, $params, 999999);
             }
         }
         return new SolrSearchResults([], $this->_em);
