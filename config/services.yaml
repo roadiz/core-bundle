@@ -80,7 +80,7 @@ services:
         arguments: ['%kernel.project_dir%/var/secret', true]
 
     JMS\Serializer\Construction\ObjectConstructorInterface:
-        alias: jms_serializer.unserialize_object_constructor
+        alias: RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\ObjectConstructor
 
     RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\ChainDoctrineObjectConstructor:
         decorates: jms_serializer.doctrine_object_constructor
@@ -96,3 +96,6 @@ services:
                 '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\GroupObjectConstructor',
                 '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\SettingObjectConstructor',
                 '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\SettingGroupObjectConstructor']
+
+    Solarium\Core\Client\Client:
+        factory: ['RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry', 'getClient']

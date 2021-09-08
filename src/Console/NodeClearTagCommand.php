@@ -4,9 +4,11 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
+use RZ\Roadiz\CoreBundle\Node\UniversalDataDuplicator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,8 +18,17 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class NodeClearTagCommand extends Command
 {
-    /** @var SymfonyStyle */
-    protected $io;
+    protected SymfonyStyle $io;
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+    }
 
     protected function configure()
     {
@@ -27,9 +38,9 @@ class NodeClearTagCommand extends Command
         ;
     }
 
-    protected function getNodeQueryBuilder(ObjectManager $entityManager, Tag $tag): QueryBuilder
+    protected function getNodeQueryBuilder(Tag $tag): QueryBuilder
     {
-        $qb = $entityManager->getRepository(Node::class)->createQueryBuilder('n');
+        $qb = $this->managerRegistry->getRepository(Node::class)->createQueryBuilder('n');
         return $qb->innerJoin('n.tags', 't')
             ->andWhere($qb->expr()->eq('t.id', ':tagId'))
             ->setParameter(':tagId', $tag);
@@ -37,8 +48,7 @@ class NodeClearTagCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var ObjectManager $em */
-        $em = $this->getHelper('doctrine')->getEntityManager();
+        $em = $this->managerRegistry->getManagerForClass(Node::class);
         $this->io = new SymfonyStyle($input, $output);
 
         $tagId = (int) $input->getArgument('tagId');
@@ -54,7 +64,7 @@ class NodeClearTagCommand extends Command
         $batchSize = 20;
         $i = 0;
 
-        $count = $this->getNodeQueryBuilder($em, $tag)
+        $count = $this->getNodeQueryBuilder($tag)
             ->select('count(n)')
             ->getQuery()
             ->getSingleScalarResult();
@@ -68,7 +78,7 @@ class NodeClearTagCommand extends Command
             sprintf('Are you sure to delete permanently %d nodes?', $count),
             false
         ))) {
-            $results = $this->getNodeQueryBuilder($em, $tag)
+            $results = $this->getNodeQueryBuilder($tag)
                 ->select('n')
                 ->getQuery()
                 ->getResult();

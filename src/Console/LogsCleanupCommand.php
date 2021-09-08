@@ -6,7 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Console;
 use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Log;
-use RZ\Roadiz\Core\Repositories\LogRepository;
+use RZ\Roadiz\CoreBundle\Repository\LogRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -15,6 +15,17 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class LogsCleanupCommand extends Command
 {
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+    }
+
     protected function configure()
     {
         $this
@@ -33,11 +44,8 @@ class LogsCleanupCommand extends Command
         $now->add(\DateInterval::createFromDateString('-6 months'));
         $io = new SymfonyStyle($input, $output);
 
-        /** @var ManagerRegistry $managerRegistry */
-        $managerRegistry = $this->getHelper('doctrine')->getManagerRegistry();
-
         /** @var LogRepository $logRepository */
-        $logRepository = $managerRegistry->getRepository(Log::class);
+        $logRepository = $this->managerRegistry->getRepository(Log::class);
         $qb = $logRepository->createQueryBuilder('l');
         $qb->select($qb->expr()->count('l'))
             ->andWhere($qb->expr()->lte('l.datetime', ':date'))

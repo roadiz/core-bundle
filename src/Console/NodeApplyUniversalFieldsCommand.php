@@ -7,7 +7,7 @@ use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
-use RZ\Roadiz\Utils\Node\UniversalDataDuplicator;
+use RZ\Roadiz\CoreBundle\Node\UniversalDataDuplicator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -16,6 +16,20 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class NodeApplyUniversalFieldsCommand extends Command
 {
+    protected ManagerRegistry $managerRegistry;
+    protected UniversalDataDuplicator $universalDataDuplicator;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param UniversalDataDuplicator $universalDataDuplicator
+     */
+    public function __construct(ManagerRegistry $managerRegistry, UniversalDataDuplicator $universalDataDuplicator)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+        $this->universalDataDuplicator = $universalDataDuplicator;
+    }
+
     protected function configure()
     {
         $this->setName('nodes:force-universal')
@@ -25,12 +39,10 @@ class NodeApplyUniversalFieldsCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var ManagerRegistry $managerRegistry */
-        $managerRegistry = $this->getHelper('doctrine')->getManagerRegistry();
-        $translation = $managerRegistry->getRepository(Translation::class)->findDefault();
+        $translation = $this->managerRegistry->getRepository(Translation::class)->findDefault();
         $io = new SymfonyStyle($input, $output);
 
-        $manager = $managerRegistry->getManagerForClass(NodesSources::class);
+        $manager = $this->managerRegistry->getManagerForClass(NodesSources::class);
         if (null === $manager) {
             throw new \RuntimeException('No manager found for ' . NodesSources::class);
         }
@@ -56,12 +68,11 @@ class NodeApplyUniversalFieldsCommand extends Command
             if ($io->askQuestion(
                 $question
             )) {
-                $duplicator = new UniversalDataDuplicator($managerRegistry);
                 $io->progressStart(count($sources));
 
                 /** @var NodesSources $source */
                 foreach ($sources as $source) {
-                    $duplicator->duplicateUniversalContents($source);
+                    $this->universalDataDuplicator->duplicateUniversalContents($source);
                     $io->progressAdvance();
                 }
                 $manager->flush();

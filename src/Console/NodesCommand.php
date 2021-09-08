@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use Symfony\Component\Console\Command\Command;
@@ -16,7 +17,16 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class NodesCommand extends Command
 {
-    private $entityManager;
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+    }
 
     protected function configure()
     {
@@ -32,23 +42,22 @@ class NodesCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $io = new SymfonyStyle($input, $output);
         $nodes = [];
         $tableContent = [];
 
         if ($input->getOption('type')) {
-            $nodeType = $this->entityManager
+            $nodeType = $this->managerRegistry
                 ->getRepository(NodeType::class)
                 ->findByName($input->getOption('type'));
             if (null !== $nodeType) {
-                $nodes = $this->entityManager
+                $nodes = $this->managerRegistry
                     ->getRepository(Node::class)
                     ->setDisplayingNotPublishedNodes(true)
                     ->findBy(['nodeType' => $nodeType], ['nodeName' => 'ASC']);
             }
         } else {
-            $nodes = $this->entityManager
+            $nodes = $this->managerRegistry
                 ->getRepository(Node::class)
                 ->setDisplayingNotPublishedNodes(true)
                 ->findBy([], ['nodeName' => 'ASC']);

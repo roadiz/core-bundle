@@ -4,10 +4,11 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
-use RZ\Roadiz\Utils\Node\NodeFactory;
+use RZ\Roadiz\CoreBundle\Node\NodeFactory;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -21,8 +22,19 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class NodesCreationCommand extends Command
 {
     protected SymfonyStyle $io;
-    private EntityManagerInterface $entityManager;
-    private NodeFactory $nodeFactory;
+    protected NodeFactory $nodeFactory;
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param NodeFactory $nodeFactory
+     */
+    public function __construct(ManagerRegistry $managerRegistry, NodeFactory $nodeFactory)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+        $this->nodeFactory = $nodeFactory;
+    }
 
     protected function configure()
     {
@@ -47,20 +59,18 @@ class NodesCreationCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
-        $this->nodeFactory = $this->getHelper('kernel')->getKernel()->get(NodeFactory::class);
         $nodeName = $input->getArgument('node-name');
         $typeName = $input->getArgument('node-type');
         $locale = $input->getArgument('locale');
         $this->io = new SymfonyStyle($input, $output);
 
-        $existingNode = $this->entityManager
+        $existingNode = $this->managerRegistry
             ->getRepository(Node::class)
             ->setDisplayingNotPublishedNodes(true)
             ->findOneByNodeName($nodeName);
 
         if (null === $existingNode) {
-            $type = $this->entityManager
+            $type = $this->managerRegistry
                 ->getRepository(NodeType::class)
                 ->findOneByName($typeName);
 
@@ -68,13 +78,13 @@ class NodesCreationCommand extends Command
                 $translation = null;
 
                 if ($locale) {
-                    $translation = $this->entityManager
+                    $translation = $this->managerRegistry
                         ->getRepository(Translation::class)
                         ->findOneBy(['locale' => $locale]);
                 }
 
                 if ($translation === null) {
-                    $translation = $this->entityManager
+                    $translation = $this->managerRegistry
                         ->getRepository(Translation::class)
                         ->findDefault();
                 }
@@ -116,7 +126,7 @@ class NodesCreationCommand extends Command
             }
         }
 
-        $this->entityManager->flush();
+        $this->managerRegistry->getManagerForClass(Node::class)->flush();
         $this->io->success('Node “' . $nodeName . '” created at root level.');
     }
 }

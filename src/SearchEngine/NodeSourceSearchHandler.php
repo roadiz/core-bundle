@@ -23,9 +23,9 @@ class NodeSourceSearchHandler extends AbstractSearchHandler implements NodeSourc
      * @param string  $q
      * @param array   $args
      * @param integer $rows
-     * @param boolean $searchTags
-     * @param integer $proximity Proximity matching: Lucene supports finding words are a within a specific distance away.
-     * @param integer $page
+     * @param bool $searchTags
+     * @param int $proximity Proximity matching: Lucene supports finding words are a within a specific distance away.
+     * @param int $page
      *
      * @return array|null
      */

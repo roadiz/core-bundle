@@ -14,9 +14,9 @@ class ChainDoctrineObjectConstructor implements ObjectConstructorInterface
 {
     protected ?ObjectManager $entityManager;
     /**
-     * @var ArrayCollection<TypedObjectConstructorInterface>
+     * @var array<TypedObjectConstructorInterface>
      */
-    protected ArrayCollection $typedObjectConstructors;
+    protected array $typedObjectConstructors;
     protected ObjectConstructorInterface $fallbackConstructor;
 
     /**
@@ -30,21 +30,8 @@ class ChainDoctrineObjectConstructor implements ObjectConstructorInterface
         array $typedObjectConstructors
     ) {
         $this->entityManager = $entityManager;
-        $this->typedObjectConstructors = new ArrayCollection($typedObjectConstructors);
+        $this->typedObjectConstructors = $typedObjectConstructors;
         $this->fallbackConstructor = $fallbackConstructor;
-    }
-
-    /**
-     * @param TypedObjectConstructorInterface $typedObjectConstructor
-     *
-     * @return ChainDoctrineObjectConstructor
-     */
-    public function add(TypedObjectConstructorInterface $typedObjectConstructor): self
-    {
-        if (!$this->typedObjectConstructors->contains($typedObjectConstructor)) {
-            $this->typedObjectConstructors->add($typedObjectConstructor);
-        }
-        return $this;
     }
 
     /**
