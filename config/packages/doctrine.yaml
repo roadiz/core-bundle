@@ -16,6 +16,18 @@ doctrine:
                 dir: 'Entity'
                 prefix: 'RZ\Roadiz\CoreBundle\Entity'
                 alias: RoadizCoreBundle
+            RZ\Roadiz\Core:
+                is_bundle: true
+                type: annotation
+                dir: 'AbstractEntities'
+                prefix: 'RZ\Roadiz\Core\AbstractEntities'
+                alias: AbstractEntities
+            GeneratedNodeSources:
+                is_bundle: true
+                type: annotation
+                dir: 'GeneratedNodeSources'
+                prefix: 'GeneratedNodeSources'
+                alias: GeneratedNodeSources
         resolve_target_entities:
             RZ\Roadiz\Contracts\NodeType\NodeTypeInterface: RZ\Roadiz\CoreBundle\Entity\NodeType
             RZ\Roadiz\CoreBundle\Model\AttributeInterface: RZ\Roadiz\CoreBundle\Entity\Attribute

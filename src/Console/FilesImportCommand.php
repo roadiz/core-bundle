@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use RZ\Roadiz\Core\Kernel;
+use RZ\Roadiz\Core\Models\FileAwareInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -11,11 +11,29 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 use ZipArchive;
 
 class FilesImportCommand extends Command
 {
     use FilesCommandTrait;
+
+    protected FileAwareInterface $fileAware;
+    protected string $exportDir;
+    protected string $appNamespace;
+
+    /**
+     * @param FileAwareInterface $fileAware
+     * @param string $exportDir
+     * @param string $appNamespace
+     */
+    public function __construct(FileAwareInterface $fileAware, string $exportDir, string $appNamespace)
+    {
+        parent::__construct();
+        $this->fileAware = $fileAware;
+        $this->exportDir = $exportDir;
+        $this->appNamespace = $appNamespace;
+    }
 
     protected function configure()
     {
@@ -34,9 +52,6 @@ class FilesImportCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var Kernel $kernel */
-        $kernel = $this->getHelper('kernel')->getKernel();
-        $configuration = $this->getHelper('configuration')->getConfiguration();
         $io = new SymfonyStyle($input, $output);
 
         $confirmation = new ConfirmationQuestion(
@@ -44,7 +59,8 @@ class FilesImportCommand extends Command
             false
         );
 
-        $tempDir = tempnam(sys_get_temp_dir(), $configuration['appNamespace'] . '_files');
+        $appNamespace = (new AsciiSlugger())->slug($this->appNamespace, '_');
+        $tempDir = tempnam(sys_get_temp_dir(), $appNamespace . '_files');
         if (file_exists($tempDir)) {
             unlink($tempDir);
         }
@@ -60,15 +76,15 @@ class FilesImportCommand extends Command
 
                 $fs = new Filesystem();
                 if ($fs->exists($tempDir . $this->getPublicFolderName())) {
-                    $fs->mirror($tempDir . $this->getPublicFolderName(), $kernel->getPublicFilesPath());
+                    $fs->mirror($tempDir . $this->getPublicFolderName(), $this->fileAware->getPublicFilesPath());
                     $io->success('Public files have been imported.');
                 }
                 if ($fs->exists($tempDir . $this->getPrivateFolderName())) {
-                    $fs->mirror($tempDir . $this->getPrivateFolderName(), $kernel->getPrivateFilesPath());
+                    $fs->mirror($tempDir . $this->getPrivateFolderName(), $this->fileAware->getPrivateFilesPath());
                     $io->success('Private files have been imported.');
                 }
                 if ($fs->exists($tempDir . $this->getFontsFolderName())) {
-                    $fs->mirror($tempDir . $this->getFontsFolderName(), $kernel->getFontsFilesPath());
+                    $fs->mirror($tempDir . $this->getFontsFolderName(), $this->fileAware->getFontsFilesPath());
                     $io->success('Font files have been imported.');
                 }
 

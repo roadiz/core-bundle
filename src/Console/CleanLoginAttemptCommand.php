@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\LoginAttempt;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -17,6 +17,14 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class CleanLoginAttemptCommand extends Command
 {
+    protected ManagerRegistry $managerRegistry;
+
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+    }
+
     protected function configure()
     {
         $this->setName('login-attempts:clean')
@@ -26,11 +34,8 @@ class CleanLoginAttemptCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        /** @var EntityManagerInterface $entityManager */
-        $entityManager = $this->getHelper('doctrine')->getEntityManager();
 
-        $entityManager->getRepository(LoginAttempt::class)
-            ->cleanLoginAttempts();
+        $this->managerRegistry->getRepository(LoginAttempt::class)->cleanLoginAttempts();
 
         $io->success('All login attempts older than 1 day were deleted.');
 

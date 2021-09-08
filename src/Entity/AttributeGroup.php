@@ -12,7 +12,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Entity
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\EntityRepository")
+ * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\AttributeGroupRepository")
  * @ORM\Table(name="attribute_groups", indexes={
  *     @ORM\Index(columns={"canonical_name"})
  * })

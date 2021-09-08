@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Repository;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderNodesSourcesApplyEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderNodesSourcesBuildEvent;
@@ -15,18 +16,30 @@ use RZ\Roadiz\CoreBundle\Entity\Log;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
+use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\NodeSourceSearchHandlerInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\SearchHandlerInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\SearchResultsInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\SolrSearchResults;
+use Symfony\Component\Security\Core\Security;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * EntityRepository that implements search engine query with Solr.
  *
  * @extends StatusAwareRepository<\RZ\Roadiz\CoreBundle\Entity\NodesSources>
  */
-class NodesSourcesRepository extends StatusAwareRepository
+final class NodesSourcesRepository extends StatusAwareRepository
 {
+    public function __construct(
+        ManagerRegistry $registry,
+        PreviewResolverInterface $previewResolver,
+        EventDispatcherInterface $dispatcher,
+        Security $security
+    ) {
+        parent::__construct($registry, NodesSources::class, $previewResolver, $dispatcher, $security);
+    }
+
     /**
      * @param QueryBuilder $qb
      * @param string $property
@@ -170,7 +183,7 @@ class NodesSourcesRepository extends StatusAwareRepository
      */
     protected function alterQueryBuilderWithAuthorizationChecker(
         QueryBuilder $qb,
-        $prefix = EntityRepository::NODESSOURCES_ALIAS
+        string $prefix = EntityRepository::NODESSOURCES_ALIAS
     ) {
         if (true === $this->isDisplayingAllNodesStatuses()) {
             if (!$this->hasJoinedNode($qb, $prefix)) {

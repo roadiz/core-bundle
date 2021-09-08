@@ -7,20 +7,28 @@ use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\CoreBundle\Entity\FolderTranslation;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\Utils\StringHandler;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Repository
  * @extends EntityRepository<Folder>
  */
-class FolderRepository extends EntityRepository
+final class FolderRepository extends EntityRepository
 {
-    /**
+    public function __construct(
+        ManagerRegistry $registry,
+        EventDispatcherInterface $dispatcher
+    ) {
+        parent::__construct($registry, Folder::class, $dispatcher);
+    }
+        /**
      * Find a folder according to the given path or create it.
      *
      * @param string           $folderPath

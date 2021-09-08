@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\Persistence\ObjectManager;
+use Doctrine\Persistence\ManagerRegistry;
 use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManager;
 use RZ\Roadiz\CoreBundle\Entity\Document;
@@ -16,16 +16,22 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class DocumentAverageColorCommand extends Command
 {
-    /** @var SymfonyStyle */
-    protected $io;
+    protected SymfonyStyle $io;
+    private ImageManager $manager;
+    private AverageColorResolver $colorResolver;
+    private ManagerRegistry $managerRegistry;
+    private Packages $packages;
+
     /**
-     * @var ImageManager
+     * @param ManagerRegistry $managerRegistry
+     * @param Packages $packages
      */
-    private $manager;
-    /**
-     * @var AverageColorResolver
-     */
-    private $colorResolver;
+    public function __construct(ManagerRegistry $managerRegistry, Packages $packages)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+        $this->packages = $packages;
+    }
 
     protected function configure()
     {
@@ -36,22 +42,25 @@ class DocumentAverageColorCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var ObjectManager $em */
-        $em = $this->getHelper('doctrine')->getEntityManager();
-        /** @var Packages $packages */
-        $packages = $this->getHelper('assetPackages')->getPackages();
         $this->io = new SymfonyStyle($input, $output);
         $this->manager = new ImageManager();
         $this->colorResolver = new AverageColorResolver();
 
         $batchSize = 20;
         $i = 0;
-        $count = $em->getRepository(Document::class)
+        $manager = $this->managerRegistry->getManagerForClass(Document::class);
+        $count = (int) $manager->getRepository(Document::class)
             ->createQueryBuilder('d')
             ->select('count(d)')
             ->getQuery()
             ->getSingleScalarResult();
-        $q = $em->getRepository(Document::class)
+
+        if ($count < 1) {
+            $this->io->success('No document found');
+            return 0;
+        }
+
+        $q = $manager->getRepository(Document::class)
             ->createQueryBuilder('d')
             ->getQuery();
         $iterableResult = $q->iterate();
@@ -60,23 +69,23 @@ class DocumentAverageColorCommand extends Command
         foreach ($iterableResult as $row) {
             /** @var Document $document */
             $document = $row[0];
-            $this->updateDocumentColor($document, $packages);
+            $this->updateDocumentColor($document);
             if (($i % $batchSize) === 0) {
-                $em->flush(); // Executes all updates.
-                $em->clear(); // Detaches all objects from Doctrine!
+                $manager->flush(); // Executes all updates.
+                $manager->clear(); // Detaches all objects from Doctrine!
             }
             ++$i;
             $this->io->progressAdvance();
         }
-        $em->flush();
+        $manager->flush();
         $this->io->progressFinish();
         return 0;
     }
 
-    private function updateDocumentColor(Document $document, Packages $packages)
+    private function updateDocumentColor(Document $document)
     {
         if ($document->isImage()) {
-            $documentPath = $packages->getDocumentFilePath($document);
+            $documentPath = $this->packages->getDocumentFilePath($document);
             try {
                 $mediumColor = $this->colorResolver->getAverageColor($this->manager->make($documentPath));
                 $document->setImageAverageColor($mediumColor);

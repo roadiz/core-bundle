@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
@@ -16,8 +17,17 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class DocumentClearFolderCommand extends Command
 {
-    /** @var SymfonyStyle */
-    protected $io;
+    protected SymfonyStyle $io;
+    private ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+    }
 
     protected function configure()
     {
@@ -37,14 +47,13 @@ class DocumentClearFolderCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var ObjectManager $em */
-        $em = $this->getHelper('doctrine')->getEntityManager();
         $this->io = new SymfonyStyle($input, $output);
 
         $folderId = (int) $input->getArgument('folderId');
         if ($folderId <= 0) {
             throw new \InvalidArgumentException('Folder ID must be a valid ID');
         }
+        $em = $this->managerRegistry->getManagerForClass(Folder::class);
         /** @var Folder|null $folder */
         $folder = $em->find(Folder::class, $folderId);
         if ($folder === null) {

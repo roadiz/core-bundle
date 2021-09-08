@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 
 /**
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\EntityRepository")
+ * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\CustomFormAnswerRepository")
  * @ORM\Table(name="custom_form_answers",  indexes={
  *     @ORM\Index(columns={"ip"}),
  *     @ORM\Index(columns={"submitted_at"}),
@@ -22,12 +22,12 @@ class CustomFormAnswer extends AbstractEntity
      * @ORM\Column(type="string", name="ip")
      * @var string
      */
-    private $ip = '';
+    private string $ip = '';
     /**
      * @ORM\Column(type="datetime", name="submitted_at")
      * @var \DateTime
      */
-    private $submittedAt;
+    private ?\DateTime $submittedAt;
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomFormFieldAttribute",
      *            mappedBy="customFormAnswer",
@@ -41,7 +41,7 @@ class CustomFormAnswer extends AbstractEntity
      * @ORM\JoinColumn(name="custom_form_id", referencedColumnName="id", onDelete="CASCADE")
      * @var CustomForm|null
      **/
-    private $customForm = null;
+    private ?CustomForm $customForm = null;
 
     /**
      * Create a new empty CustomFormAnswer according to given node-type.

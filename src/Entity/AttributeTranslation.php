@@ -10,7 +10,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Entity
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\EntityRepository")
+ * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\AttributeTranslationRepository")
  * @ORM\Table(name="attribute_translations", indexes={
  *     @ORM\Index(columns={"label"})
  * }, uniqueConstraints={

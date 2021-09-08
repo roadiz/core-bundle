@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Repository;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
@@ -15,13 +16,21 @@ use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Entity\Setting;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Repository
  * @extends EntityRepository<Document>
  */
-class DocumentRepository extends EntityRepository
+final class DocumentRepository extends EntityRepository
 {
+    public function __construct(
+        ManagerRegistry $registry,
+        EventDispatcherInterface $dispatcher
+    ) {
+        parent::__construct($registry, Document::class, $dispatcher);
+    }
+
     /**
      * Get a document with its translation id.
      *
@@ -481,39 +490,6 @@ class DocumentRepository extends EntityRepository
             ->andWhere($qb->expr()->eq('d.raw', ':raw'))
             ->addOrderBy('nsf.position', 'ASC')
             ->setParameter('field', $field)
-            ->setParameter('nodeSource', $nodeSource)
-            ->setParameter('translation', $nodeSource->getTranslation())
-            ->setParameter('raw', false)
-            ->setCacheable(true);
-
-        return $qb->getQuery()->getResult();
-    }
-
-    /**
-     * @deprecated Use findByNodeSourceAndField because relying on field name **is not safe**.
-     * @param NodesSources $nodeSource
-     * @param string $fieldName
-     *
-     * @return array
-     */
-    public function findByNodeSourceAndFieldName(
-        NodesSources $nodeSource,
-        string $fieldName
-    ) {
-        trigger_error(
-            'Method ' . __METHOD__ . ' is deprecated. Use findByNodeSourceAndField because relying on field name **is not safe**.',
-            E_USER_DEPRECATED
-        );
-        $qb = $this->createQueryBuilder('d');
-        $qb->addSelect('dt')
-            ->addSelect('dd')
-            ->leftJoin('d.documentTranslations', 'dt', 'WITH', 'dt.translation = :translation')
-            ->leftJoin('d.downscaledDocument', 'dd')
-            ->innerJoin('d.nodesSourcesByFields', 'nsf', 'WITH', 'nsf.nodeSource = :nodeSource')
-            ->innerJoin('nsf.field', 'f', 'WITH', 'f.name = :name')
-            ->andWhere($qb->expr()->eq('d.raw', ':raw'))
-            ->addOrderBy('nsf.position', 'ASC')
-            ->setParameter('name', (string) $fieldName)
             ->setParameter('nodeSource', $nodeSource)
             ->setParameter('translation', $nodeSource->getTranslation())
             ->setParameter('raw', false)

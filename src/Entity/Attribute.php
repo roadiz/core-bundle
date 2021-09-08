@@ -13,7 +13,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Entity
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\EntityRepository")
+ * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\AttributeRepository")
  * @ORM\Table(name="attributes", indexes={
  *     @ORM\Index(columns={"code"}),
  *     @ORM\Index(columns={"type"}),

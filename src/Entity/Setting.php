@@ -307,7 +307,7 @@ class Setting extends AbstractEntity
      * Available values for ENUM and MULTIPLE setting types.
      *
      * @var string|null
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(name="defaultValues", type="text", nullable=true)
      * @Serializer\Groups({"setting"})
      * @Serializer\Type("string")
      */

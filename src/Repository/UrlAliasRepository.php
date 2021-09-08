@@ -3,11 +3,22 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+
 /**
- * @extends EntityRepository<\RZ\Roadiz\CoreBundle\Entity\UrlAlias>
+ * @extends EntityRepository<UrlAlias>
  */
-class UrlAliasRepository extends EntityRepository
+final class UrlAliasRepository extends EntityRepository
 {
+    public function __construct(
+        ManagerRegistry $registry,
+        EventDispatcherInterface $dispatcher
+    ) {
+        parent::__construct($registry, UrlAlias::class, $dispatcher);
+    }
+
     /**
      * Get all url aliases linked to given node.
      *

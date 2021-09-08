@@ -3,14 +3,24 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
+use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Repository
  * @extends EntityRepository<\RZ\Roadiz\CoreBundle\Entity\NodeTypeField>
  */
-class NodeTypeFieldRepository extends EntityRepository
+final class NodeTypeFieldRepository extends EntityRepository
 {
+    public function __construct(
+        ManagerRegistry $registry,
+        EventDispatcherInterface $dispatcher
+    ) {
+        parent::__construct($registry, NodeTypeField::class, $dispatcher);
+    }
+
     /**
      * @param NodeType|null $nodeType
      * @return array

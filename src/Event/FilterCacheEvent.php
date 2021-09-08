@@ -5,7 +5,6 @@ namespace RZ\Roadiz\CoreBundle\Event;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use RZ\Roadiz\Core\Kernel;
 use Symfony\Contracts\EventDispatcher\Event;
 
 /**
@@ -13,37 +12,13 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 abstract class FilterCacheEvent extends Event
 {
-    /**
-     * @var Kernel
-     */
-    private $kernel;
+    private Collection $messageCollection;
+    private Collection $errorCollection;
 
-    /**
-     * @var Collection
-     */
-    private $messageCollection;
-
-    /**
-     * @var Collection
-     */
-    private $errorCollection;
-
-    /**
-     * @param Kernel $kernel
-     */
-    public function __construct(Kernel $kernel)
+    public function __construct()
     {
-        $this->kernel = $kernel;
         $this->messageCollection = new ArrayCollection();
         $this->errorCollection = new ArrayCollection();
-    }
-
-    /**
-     * @return Kernel
-     */
-    public function getKernel(): Kernel
-    {
-        return $this->kernel;
     }
 
     /**
@@ -51,7 +26,7 @@ abstract class FilterCacheEvent extends Event
      * @param string|null $classname
      * @param string|null $description
      */
-    public function addMessage($message, $classname = null, $description = null)
+    public function addMessage(string $message, ?string $classname = null, ?string $description = null)
     {
         $this->messageCollection->add([
             "clearer" => $classname,
@@ -65,7 +40,7 @@ abstract class FilterCacheEvent extends Event
      * @param string|null $classname
      * @param string|null $description
      */
-    public function addError($message, $classname = null, $description = null)
+    public function addError(string $message, ?string $classname = null, ?string $description = null)
     {
         $this->errorCollection->add([
             "clearer" => $classname,
@@ -77,7 +52,7 @@ abstract class FilterCacheEvent extends Event
     /**
      * @return array
      */
-    public function getErrors()
+    public function getErrors(): array
     {
         return $this->errorCollection->toArray();
     }
@@ -85,7 +60,7 @@ abstract class FilterCacheEvent extends Event
     /**
      * @return array
      */
-    public function getMessages()
+    public function getMessages(): array
     {
         return $this->messageCollection->toArray();
     }

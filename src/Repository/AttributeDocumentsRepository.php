@@ -3,13 +3,23 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CoreBundle\Entity\AttributeDocuments;
 use RZ\Roadiz\CoreBundle\Model\AttributeInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Repository
  */
 final class AttributeDocumentsRepository extends EntityRepository
 {
+    public function __construct(
+        ManagerRegistry $registry,
+        EventDispatcherInterface $dispatcher
+    ) {
+        parent::__construct($registry, AttributeDocuments::class, $dispatcher);
+    }
+
     /**
      * @param AttributeInterface $attribute
      *

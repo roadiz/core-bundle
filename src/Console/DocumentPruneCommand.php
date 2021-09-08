@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\Persistence\ObjectManager;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -13,8 +13,17 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class DocumentPruneCommand extends Command
 {
-    /** @var SymfonyStyle */
-    protected $io;
+    protected ManagerRegistry $managerRegistry;
+    protected SymfonyStyle $io;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+    }
 
     protected function configure()
     {
@@ -23,26 +32,15 @@ class DocumentPruneCommand extends Command
         ;
     }
 
-    /**
-     * @param ObjectManager $entityManager
-     *
-     * @return Document[]
-     */
-    protected function getDocuments(ObjectManager $entityManager): array
-    {
-        return $entityManager->getRepository(Document::class)->findAllUnused();
-    }
-
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var ObjectManager $em */
-        $em = $this->getHelper('doctrine')->getEntityManager();
         $this->io = new SymfonyStyle($input, $output);
 
         $batchSize = 20;
         $i = 0;
 
-        $documents = $this->getDocuments($em);
+        $em = $this->managerRegistry->getManagerForClass(Document::class);
+        $documents = $em->getRepository(Document::class)->findAllUnused();
         $count = count($documents);
 
         if ($count <= 0) {

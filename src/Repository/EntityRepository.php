@@ -3,15 +3,15 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Mapping;
 use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderApplyEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderBuildEvent;
@@ -19,64 +19,59 @@ use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderSelectEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
-use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @template TEntityClass of object
- * @extends \Doctrine\ORM\EntityRepository<TEntityClass>
+ * @extends ServiceEntityRepository<TEntityClass>
  */
-class EntityRepository extends \Doctrine\ORM\EntityRepository
+abstract class EntityRepository extends ServiceEntityRepository
 {
-    protected PreviewResolverInterface $previewResolver;
     protected EventDispatcherInterface $dispatcher;
 
     /**
-     * @param EntityManagerInterface $em
-     * @param Mapping\ClassMetadata $class
-     * @param PreviewResolverInterface $previewResolver
+     * @param ManagerRegistry $registry
+     * @param string $entityClass
      * @param EventDispatcherInterface $dispatcher
      */
     public function __construct(
-        EntityManagerInterface $em,
-        Mapping\ClassMetadata $class,
-        PreviewResolverInterface $previewResolver,
+        ManagerRegistry $registry,
+        string $entityClass,
         EventDispatcherInterface $dispatcher
     ) {
-        parent::__construct($em, $class);
-        $this->previewResolver = $previewResolver;
+        parent::__construct($registry, $entityClass);
         $this->dispatcher = $dispatcher;
     }
 
     /**
      * Alias for DQL and Query builder representing Node relation.
      */
-    const DEFAULT_ALIAS = 'obj';
+    public const DEFAULT_ALIAS = 'obj';
 
     /**
      * Alias for DQL and Query builder representing Node relation.
      */
-    const NODE_ALIAS = 'n';
+    public const NODE_ALIAS = 'n';
 
     /**
      * Alias for DQL and Query builder representing NodesSources relation.
      */
-    const NODESSOURCES_ALIAS = 'ns';
+    public const NODESSOURCES_ALIAS = 'ns';
 
     /**
      * Alias for DQL and Query builder representing Translation relation.
      */
-    const TRANSLATION_ALIAS = 't';
+    public const TRANSLATION_ALIAS = 't';
 
     /**
      * Alias for DQL and Query builder representing Tag relation.
      */
-    const TAG_ALIAS = 'tg';
+    public const TAG_ALIAS = 'tg';
 
     /**
      * Alias for DQL and Query builder representing NodeType relation.
      */
-    const NODETYPE_ALIAS = 'nt';
+    public const NODETYPE_ALIAS = 'nt';
 
     /**
      * Doctrine column types that can be search
@@ -84,7 +79,7 @@ class EntityRepository extends \Doctrine\ORM\EntityRepository
      *
      * @var array
      */
-    protected $searchableTypes = ['string', 'text'];
+    protected array $searchableTypes = ['string', 'text'];
 
     /**
      * @param QueryBuilder $qb

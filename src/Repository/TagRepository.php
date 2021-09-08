@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Repository;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
 use RZ\Roadiz\CoreBundle\Entity\Node;
@@ -13,13 +14,21 @@ use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Entity\TagTranslation;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\Utils\StringHandler;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Repository
- * @extends EntityRepository<\RZ\Roadiz\CoreBundle\Entity\Tag>
+ * @extends EntityRepository<Tag>
  */
-class TagRepository extends EntityRepository
+final class TagRepository extends EntityRepository
 {
+    public function __construct(
+        ManagerRegistry $registry,
+        EventDispatcherInterface $dispatcher
+    ) {
+        parent::__construct($registry, Tag::class, $dispatcher);
+    }
+
     /**
      * Add a node filtering to queryBuilder.
      *

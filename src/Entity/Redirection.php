@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Http redirection which are editable by BO users.
  *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\EntityRepository")
+ * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\RedirectionRepository")
  * @ORM\Table(name="redirections")
  * @ORM\HasLifecycleCallbacks
  */
@@ -23,7 +23,7 @@ class Redirection extends AbstractDateTimed
     private $query = "";
 
     /**
-     * @ORM\Column(type="text", nullable=true, length=2048)
+     * @ORM\Column(name="redirectUri", type="text", nullable=true, length=2048)
      * @var string|null
      */
     private $redirectUri = null;

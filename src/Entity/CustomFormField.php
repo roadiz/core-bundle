@@ -12,7 +12,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractField;
  * CustomFormField entities are used to create CustomForms with
  * custom data structure.
  *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\EntityRepository")
+ * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\CustomFormFieldRepository")
  * @ORM\Table(name="custom_form_fields", uniqueConstraints={
  *      @ORM\UniqueConstraint(columns={"name", "custom_form_id"})
  * }, indexes={

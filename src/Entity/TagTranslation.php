@@ -15,7 +15,7 @@ use Gedmo\Mapping\Annotation as Gedmo;
  *
  * It stores their name and description.
  *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\EntityRepository")
+ * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\TagTranslationRepository")
  * @ORM\Table(name="tags_translations", uniqueConstraints={
  *      @ORM\UniqueConstraint(columns={"tag_id", "translation_id"})
  * })

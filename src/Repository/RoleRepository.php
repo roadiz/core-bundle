@@ -6,10 +6,12 @@ namespace RZ\Roadiz\CoreBundle\Repository;
 use RZ\Roadiz\CoreBundle\Entity\Role;
 
 /**
+ * Do not extend Roadiz or Service repository to prevent cyclic dependencies.
+ *
  * @package RZ\Roadiz\CoreBundle\Repository
- * @extends EntityRepository<\RZ\Roadiz\CoreBundle\Entity\Role>
+ * @extends \Doctrine\ORM\EntityRepository<Role>
  */
-class RoleRepository extends EntityRepository
+final class RoleRepository extends \Doctrine\ORM\EntityRepository
 {
     /**
      * @param string $roleName

@@ -518,11 +518,11 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
 
     /**
      * @ORM\ManyToOne(targetEntity="NodeType")
-     * @ORM\JoinColumn(onDelete="CASCADE")
+     * @ORM\JoinColumn(name="nodeType_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"node"})
      * @var NodeType|null
      */
-    private $nodeType = null;
+    private ?NodeType $nodeType = null;
 
     /**
      * @return NodeType|null
@@ -550,7 +550,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @var Node|null
      * @Serializer\Exclude
      */
-    protected $parent = null;
+    protected ?LeafInterface $parent = null;
 
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Node", mappedBy="parent", orphanRemoval=true)
@@ -558,7 +558,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @var ArrayCollection<Node>
      * @Serializer\Groups({"node_children"})
      */
-    protected $children;
+    protected Collection $children;
 
     /**
      * @ORM\ManyToMany(targetEntity="Tag", inversedBy="nodes")
@@ -656,7 +656,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
 
     /**
      * @ORM\ManyToMany(targetEntity="NodeType")
-     * @ORM\JoinTable(name="stack_types")
+     * @ORM\JoinTable(name="stack_types", inverseJoinColumns={
+     *     @ORM\JoinColumn(name="nodetype_id", onDelete="CASCADE")
+     * })
      * @var Collection<NodeType>
      * @Serializer\Groups({"node"})
      */

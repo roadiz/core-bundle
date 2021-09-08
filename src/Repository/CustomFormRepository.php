@@ -3,15 +3,25 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Repository
- * @extends EntityRepository<\RZ\Roadiz\CoreBundle\Entity\CustomForm>
+ * @extends EntityRepository<CustomForm>
  */
-class CustomFormRepository extends EntityRepository
+final class CustomFormRepository extends EntityRepository
 {
+    public function __construct(
+        ManagerRegistry $registry,
+        EventDispatcherInterface $dispatcher
+    ) {
+        parent::__construct($registry, CustomForm::class, $dispatcher);
+    }
+
     /**
      * @param Node          $node
      * @param NodeTypeField $field
@@ -28,30 +38,6 @@ class CustomFormRepository extends EntityRepository
                         ->setParameter('field', $field)
                         ->setParameter('node', $node);
 
-        return $query->getResult();
-    }
-
-    /**
-     * @deprecated Use findByNodeAndField instead because **filtering on field name is not safe**.
-     * @param Node $node
-     * @param string $fieldName
-     *
-     * @return array
-     */
-    public function findByNodeAndFieldName($node, $fieldName)
-    {
-        trigger_error(
-            'Method ' . __METHOD__ . ' is deprecated. Use findByNodeAndField instead because **filtering on field name is not safe**.',
-            E_USER_DEPRECATED
-        );
-        $query = $this->_em->createQuery('
-            SELECT cf FROM RZ\Roadiz\CoreBundle\Entity\CustomForm cf
-            INNER JOIN cf.nodes ncf
-            INNER JOIN ncf.field f
-            WHERE f.name = :name AND ncf.node = :node
-            ORDER BY ncf.position ASC')
-                        ->setParameter('name', (string) $fieldName)
-                        ->setParameter('node', $node);
         return $query->getResult();
     }
 }

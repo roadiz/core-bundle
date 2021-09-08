@@ -8,6 +8,7 @@ use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -34,14 +35,14 @@ class EmailManager
     protected ?string $emailTemplate = null;
     protected ?string $emailPlainTextTemplate = null;
     protected string $emailStylesheet;
-    protected Request $request;
+    protected RequestStack $requestStack;
     protected array $assignation;
     protected ?Email $message;
     protected ?Settings $settingsBag;
     protected ?DocumentUrlGeneratorInterface $documentUrlGenerator;
 
     /**
-     * @param Request                            $request
+     * @param RequestStack $requestStack
      * @param TranslatorInterface                $translator
      * @param Environment                        $templating
      * @param MailerInterface                    $mailer
@@ -49,14 +50,14 @@ class EmailManager
      * @param DocumentUrlGeneratorInterface|null $documentUrlGenerator
      */
     public function __construct(
-        Request $request,
+        RequestStack $requestStack,
         TranslatorInterface $translator,
         Environment $templating,
         MailerInterface $mailer,
         ?Settings $settingsBag = null,
         ?DocumentUrlGeneratorInterface $documentUrlGenerator = null
     ) {
-        $this->request = $request;
+        $this->requestStack = $requestStack;
         $this->translator = $translator;
         $this->mailer = $mailer;
         $this->templating = $templating;
@@ -482,17 +483,7 @@ class EmailManager
      */
     public function getRequest(): Request
     {
-        return $this->request;
-    }
-
-    /**
-     * @param Request $request
-     * @return EmailManager
-     */
-    public function setRequest(Request $request)
-    {
-        $this->request = $request;
-        return $this;
+        return $this->requestStack->getMainRequest();
     }
 
     /**

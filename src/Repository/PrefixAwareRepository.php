@@ -14,7 +14,7 @@ use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
  * @template TEntityClass of object
  * @extends \RZ\Roadiz\CoreBundle\Repository\EntityRepository<TEntityClass>
  */
-class PrefixAwareRepository extends EntityRepository
+abstract class PrefixAwareRepository extends EntityRepository
 {
     /**
      * @var array

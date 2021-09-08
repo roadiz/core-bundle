@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Utils\Asset\Packages;
@@ -16,7 +17,20 @@ use Symfony\Component\Filesystem\Filesystem;
 
 final class DocumentPruneOrphansCommand extends Command
 {
+    protected ManagerRegistry $managerRegistry;
+    private Packages $packages;
     protected SymfonyStyle $io;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param Packages $packages
+     */
+    public function __construct(ManagerRegistry $managerRegistry, Packages $packages)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+        $this->packages = $packages;
+    }
 
     protected function configure()
     {
@@ -31,17 +45,12 @@ final class DocumentPruneOrphansCommand extends Command
      */
     protected function getDocumentQueryBuilder(): QueryBuilder
     {
-        /** @var ObjectManager $em */
-        $em = $this->getHelper('doctrine')->getEntityManager();
-        return $em->getRepository(Document::class)->createQueryBuilder('d');
+        return $this->managerRegistry->getRepository(Document::class)->createQueryBuilder('d');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var ObjectManager $em */
-        $em = $this->getHelper('doctrine')->getEntityManager();
-        /** @var Packages $packages */
-        $packages = $this->getHelper('assetPackages')->getPackages();
+        $em = $this->managerRegistry->getManagerForClass(Document::class);
         $filesystem = new Filesystem();
         $this->io = new SymfonyStyle($input, $output);
         $dryRun = $input->getOption('dry-run');
@@ -51,10 +60,16 @@ final class DocumentPruneOrphansCommand extends Command
         $deleteCount = 0;
         $batchSize = 20;
         $i = 0;
-        $count = $this->getDocumentQueryBuilder()
+        $count = (int) $this->getDocumentQueryBuilder()
             ->select('count(d)')
             ->getQuery()
             ->getSingleScalarResult();
+
+        if ($count <= 0) {
+            $this->io->warning('No document found');
+            return 0;
+        }
+
         $q = $this->getDocumentQueryBuilder()->getQuery();
         $iterableResult = $q->iterate();
 
@@ -62,7 +77,7 @@ final class DocumentPruneOrphansCommand extends Command
         foreach ($iterableResult as $row) {
             /** @var Document $document */
             $document = $row[0];
-            $this->checkDocumentFilesystem($document, $packages, $filesystem, $em, $deleteCount, $dryRun);
+            $this->checkDocumentFilesystem($document, $filesystem, $em, $deleteCount, $dryRun);
             if (($i % $batchSize) === 0 && !$dryRun) {
                 $em->flush(); // Executes all updates.
                 $em->clear(); // Detaches all objects from Doctrine!
@@ -80,7 +95,6 @@ final class DocumentPruneOrphansCommand extends Command
 
     /**
      * @param Document $document
-     * @param Packages $packages
      * @param Filesystem $filesystem
      * @param ObjectManager $entityManager
      * @param int $deleteCount
@@ -88,7 +102,6 @@ final class DocumentPruneOrphansCommand extends Command
      */
     private function checkDocumentFilesystem(
         Document $document,
-        Packages $packages,
         Filesystem $filesystem,
         ObjectManager $entityManager,
         int &$deleteCount,
@@ -98,7 +111,7 @@ final class DocumentPruneOrphansCommand extends Command
          * Do not prune embed documents which may not have any file
          */
         if (!$document->isEmbed()) {
-            $documentPath = $packages->getDocumentFilePath($document);
+            $documentPath = $this->packages->getDocumentFilePath($document);
             if (!$filesystem->exists($documentPath)) {
                 if ($this->io->isDebug() && !$this->io->isQuiet()) {
                     $this->io->writeln(sprintf('%s file does not exist, pruning document %s', $document->getRelativePath(), $document->getId()));

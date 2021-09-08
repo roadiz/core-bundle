@@ -6,27 +6,45 @@ namespace RZ\Roadiz\CoreBundle\Console;
 use Doctrine\Common\Cache\CacheProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
-use Doctrine\Persistence\ObjectManager;
-use RZ\Roadiz\CMS\Importers\GroupsImporter;
-use RZ\Roadiz\CMS\Importers\RolesImporter;
-use RZ\Roadiz\CMS\Importers\SettingsImporter;
-use RZ\Roadiz\Core\ContainerAwareInterface;
-use RZ\Roadiz\Core\ContainerAwareTrait;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
+use RZ\Roadiz\CoreBundle\Importer\GroupsImporter;
+use RZ\Roadiz\CoreBundle\Importer\RolesImporter;
+use RZ\Roadiz\CoreBundle\Importer\SettingsImporter;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Yaml\Yaml;
-use Themes\Install\InstallApp;
 
 /**
  * Command line utils for installing RZ-CMS v3 from terminal.
  */
-class InstallCommand extends Command implements ContainerAwareInterface
+class InstallCommand extends Command
 {
-    use ContainerAwareTrait;
+    protected ManagerRegistry $managerRegistry;
+    protected RolesImporter $rolesImporter;
+    protected GroupsImporter $groupsImporter;
+    protected SettingsImporter $settingsImporter;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param RolesImporter $rolesImporter
+     * @param GroupsImporter $groupsImporter
+     * @param SettingsImporter $settingsImporter
+     */
+    public function __construct(
+        ManagerRegistry $managerRegistry,
+        RolesImporter $rolesImporter,
+        GroupsImporter $groupsImporter,
+        SettingsImporter $settingsImporter
+    ) {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+        $this->rolesImporter = $rolesImporter;
+        $this->groupsImporter = $groupsImporter;
+        $this->settingsImporter = $settingsImporter;
+    }
 
     protected function configure()
     {
@@ -38,11 +56,9 @@ class InstallCommand extends Command implements ContainerAwareInterface
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        /** @var ManagerRegistry $managerRegistry */
-        $managerRegistry = $this->getHelper('doctrine')->getManagerRegistry();
 
         $io->note('Before installing Roadiz, did you create database schema? ' . PHP_EOL .
-            'If not execute: bin/roadiz orm:schema-tool:create');
+            'If not execute: bin/console doctrine:migrations:migrate');
         $question = new ConfirmationQuestion(
             '<question>Are you sure to perform installation?</question>',
             false
@@ -51,32 +67,32 @@ class InstallCommand extends Command implements ContainerAwareInterface
         if ($input->getOption('no-interaction') ||
             $io->askQuestion($question)
         ) {
-            /**
-             * Import default data
-             */
-            $installRoot = InstallApp::getThemeFolder();
-            $data = Yaml::parse(file_get_contents($installRoot . "/config.yml"));
+
+            $fixturesRoot = dirname(__DIR__) . '/../config';
+            $data = Yaml::parse(file_get_contents($fixturesRoot . "/fixtures.yaml"));
 
             if (isset($data["importFiles"]['roles'])) {
                 foreach ($data["importFiles"]['roles'] as $filename) {
-                    $this->get(RolesImporter::class)->import(file_get_contents($installRoot . "/" . $filename));
-                    $io->success('Theme file “' . $installRoot . "/" . $filename . '” has been imported.');
+                    $filePath = $fixturesRoot . "/" . $filename;
+                    $this->rolesImporter->import(file_get_contents($filePath));
+                    $io->success('Theme file “' . $filePath . '” has been imported.');
                 }
             }
             if (isset($data["importFiles"]['groups'])) {
                 foreach ($data["importFiles"]['groups'] as $filename) {
-                    $this->get(GroupsImporter::class)->import(file_get_contents($installRoot . "/" . $filename));
-                    $io->success('Theme file “' . $installRoot . "/" . $filename . '” has been imported.');
+                    $filePath = $fixturesRoot . "/" . $filename;
+                    $this->groupsImporter->import(file_get_contents($filePath));
+                    $io->success('Theme file “' . $filePath . '” has been imported.');
                 }
             }
             if (isset($data["importFiles"]['settings'])) {
                 foreach ($data["importFiles"]['settings'] as $filename) {
-                    $this->get(SettingsImporter::class)->import(file_get_contents($installRoot . "/" . $filename));
-                    $io->success('Theme files “' . $installRoot . "/" . $filename . '” has been imported.');
+                    $filePath = $fixturesRoot . "/" . $filename;
+                    $this->settingsImporter->import(file_get_contents($filePath));
+                    $io->success('Theme files “' . $filePath . '” has been imported.');
                 }
             }
-            /** @var ObjectManager $manager */
-            $manager = $managerRegistry->getManagerForClass(Translation::class);
+            $manager = $this->managerRegistry->getManagerForClass(Translation::class);
             /*
              * Create default translation
              */
@@ -112,12 +128,9 @@ class InstallCommand extends Command implements ContainerAwareInterface
      *
      * @return boolean
      */
-    public function hasDefaultTranslation()
+    public function hasDefaultTranslation(): bool
     {
-        /** @var ManagerRegistry $managerRegistry */
-        $managerRegistry = $this->getHelper('doctrine')->getManagerRegistry();
-        $default = $managerRegistry->getRepository(Translation::class)->findOneBy([]);
-
+        $default = $this->managerRegistry->getRepository(Translation::class)->findOneBy([]);
         return $default !== null;
     }
 }

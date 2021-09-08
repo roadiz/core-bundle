@@ -3,10 +3,11 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
-use Doctrine\Common\Cache\CacheProvider;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\Core\Handlers\AbstractHandler;
+use Symfony\Component\Cache\ResettableInterface;
 
 /**
  * Handle operations with translations entities.
@@ -14,6 +15,14 @@ use RZ\Roadiz\Core\Handlers\AbstractHandler;
 class TranslationHandler extends AbstractHandler
 {
     private ?Translation $translation = null;
+    private ResettableInterface $resultCache;
+
+    public function __construct(ObjectManager $objectManager, ResettableInterface $resultCache)
+    {
+        parent::__construct($objectManager);
+        $this->resultCache = $resultCache;
+    }
+
 
     /**
      * @return Translation
@@ -57,10 +66,7 @@ class TranslationHandler extends AbstractHandler
         $this->objectManager->flush();
 
         if ($this->objectManager instanceof EntityManagerInterface) {
-            $cacheDriver = $this->objectManager->getConfiguration()->getResultCacheImpl();
-            if ($cacheDriver !== null && $cacheDriver instanceof CacheProvider) {
-                $cacheDriver->deleteAll();
-            }
+            $this->resultCache->reset();
         }
 
         return $this;

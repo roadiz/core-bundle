@@ -12,7 +12,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
  * CustomFormField entities are used to create CustomForms with
  * custom data structure.
  *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\EntityRepository")
+ * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\CustomFormFieldAttributeRepository")
  * @ORM\Table(name="custom_form_field_attributes", indexes={
  *     @ORM\Index(columns={"custom_form_answer_id", "custom_form_field_id"}, name="cffattribute_answer_field")
  * })
@@ -37,7 +37,9 @@ class CustomFormFieldAttribute extends AbstractEntity
     /**
      * @var Collection<Document>
      * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Document", inversedBy="customFormFieldAttributes")
-     * @ORM\JoinTable(name="custom_form_answers_documents")
+     * @ORM\JoinTable(name="custom_form_answers_documents", joinColumns={
+     *     @ORM\JoinColumn(name="customformfieldattribute_id", onDelete="CASCADE")
+     * })
      */
     protected $documents;
 

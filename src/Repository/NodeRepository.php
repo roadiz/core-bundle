@@ -8,6 +8,7 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderApplyEvent;
@@ -17,13 +18,24 @@ use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
-use Symfony\Component\EventDispatcher\EventDispatcher;
+use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
+use Symfony\Component\Security\Core\Security;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @extends StatusAwareRepository<\RZ\Roadiz\CoreBundle\Entity\Node>
+ * @extends StatusAwareRepository<Node>
  */
-class NodeRepository extends StatusAwareRepository
+final class NodeRepository extends StatusAwareRepository
 {
+    public function __construct(
+        ManagerRegistry $registry,
+        PreviewResolverInterface $previewResolver,
+        EventDispatcherInterface $dispatcher,
+        Security $security
+    ) {
+        parent::__construct($registry, Node::class, $previewResolver, $dispatcher, $security);
+    }
+
     /**
      * @param QueryBuilder $qb
      * @param string $property
@@ -33,9 +45,7 @@ class NodeRepository extends StatusAwareRepository
      */
     protected function dispatchQueryBuilderBuildEvent(QueryBuilder $qb, $property, $value)
     {
-        /** @var EventDispatcher $eventDispatcher */
-        $eventDispatcher = $this->container['dispatcher'];
-        return $eventDispatcher->dispatch(
+        return $this->dispatcher->dispatch(
             new QueryBuilderBuildEvent($qb, Node::class, $property, $value, $this->getEntityName())
         );
     }
@@ -49,9 +59,7 @@ class NodeRepository extends StatusAwareRepository
      */
     protected function dispatchQueryBuilderApplyEvent(QueryBuilder $qb, $property, $value)
     {
-        /** @var EventDispatcher $eventDispatcher */
-        $eventDispatcher = $this->container['dispatcher'];
-        return $eventDispatcher->dispatch(
+        return $this->dispatcher->dispatch(
             new QueryBuilderApplyEvent($qb, Node::class, $property, $value, $this->getEntityName())
         );
     }

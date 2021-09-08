@@ -3,14 +3,23 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\TagTranslation;
+use RZ\Roadiz\CoreBundle\Entity\TagTranslationDocuments;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Repository
- * @extends EntityRepository<\RZ\Roadiz\CoreBundle\Entity\TagTranslationDocuments>
+ * @extends EntityRepository<TagTranslationDocuments>
  */
-class TagTranslationDocumentsRepository extends EntityRepository
+final class TagTranslationDocumentsRepository extends EntityRepository
 {
+    public function __construct(
+        ManagerRegistry $registry,
+        EventDispatcherInterface $dispatcher
+    ) {
+        parent::__construct($registry, TagTranslationDocuments::class, $dispatcher);
+    }
     /**
      * @param TagTranslation $tagTranslation
      *

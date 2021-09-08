@@ -12,7 +12,7 @@ use JMS\Serializer\Annotation as Serializer;
 /**
  * A group gather User and Roles.
  *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\EntityRepository")
+ * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\GroupRepository")
  * @ORM\Table(name="usergroups")
  */
 class Group extends AbstractEntity
@@ -23,14 +23,14 @@ class Group extends AbstractEntity
      * @Serializer\Type("string")
      * @var string
      */
-    private $name = '';
+    private string $name = '';
     /**
      * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\User", mappedBy="groups")
      * @Serializer\Groups({"group_user"})
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\User>")
      * @var Collection<User>
      */
-    private $users;
+    private Collection $users;
     /**
      * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Role", inversedBy="groups", cascade={"persist", "merge"})
      * @ORM\JoinTable(name="groups_roles",
@@ -42,13 +42,13 @@ class Group extends AbstractEntity
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Role>")
      * @Serializer\Accessor(getter="getRolesEntities", setter="setRolesEntities")
      */
-    private $roles;
+    private Collection $roles;
     /**
      * @var array|null
      * @Serializer\Groups({"group", "user"})
      * @Serializer\Type("array<string>")
      */
-    private $rolesNames = null;
+    private ?array $rolesNames = null;
 
     /**
      * Create a new Group.

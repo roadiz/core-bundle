@@ -3,26 +3,46 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
+use Doctrine\Persistence\ManagerRegistry;
 use Intervention\Image\Exception\NotReadableException;
 use RZ\Roadiz\CoreBundle\Entity\Document;
-use RZ\Roadiz\Core\Kernel;
-use RZ\Roadiz\Utils\Asset\Packages;
-use RZ\Roadiz\Utils\Clearer\AssetsClearer;
+use RZ\Roadiz\CoreBundle\Event\Cache\CachePurgeAssetsRequestEvent;
 use RZ\Roadiz\Utils\Document\DownscaleImageManager;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Command line utils for process document downscale.
  */
 class DocumentDownscaleCommand extends Command
 {
-    private $configuration;
-    private $entityManager;
-    private $downscaler;
+    private ?int $maxPixelSize;
+    private DownscaleImageManager $downscaler;
+    private ManagerRegistry $managerRegistry;
+    private EventDispatcherInterface $dispatcher;
+
+    /**
+     * @param int|null $maxPixelSize
+     * @param DownscaleImageManager $downscaler
+     * @param ManagerRegistry $managerRegistry
+     * @param EventDispatcherInterface $dispatcher
+     */
+    public function __construct(
+        ?int $maxPixelSize,
+        DownscaleImageManager $downscaler,
+        ManagerRegistry $managerRegistry,
+        EventDispatcherInterface $dispatcher
+    ) {
+        parent::__construct();
+        $this->maxPixelSize = $maxPixelSize;
+        $this->downscaler = $downscaler;
+        $this->managerRegistry = $managerRegistry;
+        $this->dispatcher = $dispatcher;
+    }
 
     protected function configure()
     {
@@ -32,33 +52,19 @@ class DocumentDownscaleCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var Kernel $kernel */
-        $kernel = $this->getHelper('kernel')->getKernel();
-        /** @var Packages $packages */
-        $packages = $this->getHelper('assetPackages')->getPackages();
-        $this->configuration = $this->getHelper('configuration')->getConfiguration();
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $io = new SymfonyStyle($input, $output);
+        $entityManager = $this->managerRegistry->getManagerForClass(Document::class);
 
-        if (!empty($this->configuration['assetsProcessing']['maxPixelSize']) &&
-            $this->configuration['assetsProcessing']['maxPixelSize'] > 0) {
-            $this->downscaler = new DownscaleImageManager(
-                $this->entityManager,
-                $packages,
-                null,
-                $this->configuration['assetsProcessing']['driver'],
-                $this->configuration['assetsProcessing']['maxPixelSize']
-            );
-
+        if (null !== $this->maxPixelSize && $this->maxPixelSize > 0) {
             $confirmation = new ConfirmationQuestion(
-                '<question>Are you sure to downscale all your image documents to ' . $this->configuration['assetsProcessing']['maxPixelSize'] . 'px?</question>',
+                '<question>Are you sure to downscale all your image documents to ' . $this->maxPixelSize . 'px?</question>',
                 false
             );
             if ($io->askQuestion(
                 $confirmation
             )) {
                 /** @var Document[] $documents */
-                $documents = $this->entityManager
+                $documents = $entityManager
                     ->getRepository(Document::class)
                     ->findBy([
                         'mimeType' => [
@@ -83,12 +89,8 @@ class DocumentDownscaleCommand extends Command
                 $io->progressFinish();
                 $io->success('Every documents have been downscaled, a raw version has been kept.');
 
-                /*
-                 * Clear cache documents
-                 */
-                $assetsClearer = new AssetsClearer($kernel->getPublicCachePath());
-                $assetsClearer->clear();
-                $io->writeln($assetsClearer->getOutput());
+                $event = new CachePurgeAssetsRequestEvent();
+                $this->dispatcher->dispatch($event);
             }
             return 0;
         } else {

@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Node;
 
-use Doctrine\Common\Cache\CacheProvider;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 use Psr\Log\LoggerInterface;
@@ -17,6 +16,7 @@ use RZ\Roadiz\CoreBundle\Repository\EntityRepository;
 use RZ\Roadiz\CoreBundle\Routing\NodeRouter;
 use RZ\Roadiz\CoreBundle\Node\Exception\SameNodeUrlException;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -28,7 +28,7 @@ class NodeMover
     protected UrlGeneratorInterface $urlGenerator;
     protected HandlerFactoryInterface $handlerFactory;
     protected EventDispatcherInterface $dispatcher;
-    protected CacheProvider $cacheProvider;
+    protected AdapterInterface $cacheAdapter;
     protected LoggerInterface $logger;
 
     /**
@@ -36,7 +36,7 @@ class NodeMover
      * @param UrlGeneratorInterface $urlGenerator
      * @param HandlerFactoryInterface $handlerFactory
      * @param EventDispatcherInterface $dispatcher
-     * @param CacheProvider $cacheProvider
+     * @param AdapterInterface $cacheAdapter
      * @param LoggerInterface|null $logger
      */
     public function __construct(
@@ -44,15 +44,15 @@ class NodeMover
         UrlGeneratorInterface $urlGenerator,
         HandlerFactoryInterface $handlerFactory,
         EventDispatcherInterface $dispatcher,
-        CacheProvider $cacheProvider,
+        AdapterInterface $cacheAdapter,
         ?LoggerInterface $logger = null
     ) {
         $this->urlGenerator = $urlGenerator;
         $this->logger = $logger ?? new NullLogger();
         $this->dispatcher = $dispatcher;
-        $this->cacheProvider = $cacheProvider;
         $this->handlerFactory = $handlerFactory;
         $this->managerRegistry = $managerRegistry;
+        $this->cacheAdapter = $cacheAdapter;
     }
 
     private function getManager(): ObjectManager
@@ -100,7 +100,7 @@ class NodeMover
             $nodeHandler->cleanPositions();
         }
 
-        $this->cacheProvider->flushAll();
+        $this->cacheAdapter->reset();
 
         return $node;
     }

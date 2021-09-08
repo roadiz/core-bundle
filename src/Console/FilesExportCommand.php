@@ -3,18 +3,36 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use RZ\Roadiz\Core\Kernel;
+use RZ\Roadiz\Core\Models\FileAwareInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 use ZipArchive;
 
 class FilesExportCommand extends Command
 {
     use FilesCommandTrait;
+
+    protected FileAwareInterface $fileAware;
+    protected string $exportDir;
+    protected string $appNamespace;
+
+    /**
+     * @param FileAwareInterface $fileAware
+     * @param string $exportDir
+     * @param string $appNamespace
+     */
+    public function __construct(FileAwareInterface $fileAware, string $exportDir, string $appNamespace)
+    {
+        parent::__construct();
+        $this->fileAware = $fileAware;
+        $this->exportDir = $exportDir;
+        $this->appNamespace = $appNamespace;
+    }
 
     protected function configure()
     {
@@ -27,7 +45,7 @@ class FilesExportCommand extends Command
      * @param string $appName
      * @return string
      */
-    protected function getArchiveFileName($appName = "files_export")
+    protected function getArchiveFileName(string $appName = "files_export")
     {
         return $appName . '_' . date('Y-m-d') . '.zip';
     }
@@ -39,20 +57,21 @@ class FilesExportCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var Kernel $kernel */
-        $kernel = $this->getHelper('kernel')->getKernel();
-        $configuration = $this->getHelper('configuration')->getConfiguration();
-
         $fs = new Filesystem();
 
-        $publicFileFolder = $kernel->getPublicFilesPath();
-        $privateFileFolder = $kernel->getPrivateFilesPath();
-        $fontFileFolder = $kernel->getFontsFilesPath();
+        $publicFileFolder = $this->fileAware->getPublicFilesPath();
+        $privateFileFolder = $this->fileAware->getPrivateFilesPath();
+        $fontFileFolder = $this->fileAware->getFontsFilesPath();
 
-        $archiveName = $this->getArchiveFileName($configuration['appNamespace']);
+        $archiveName = $this->getArchiveFileName((new AsciiSlugger())->slug($this->appNamespace, '_'));
+        $archivePath = $this->exportDir . DIRECTORY_SEPARATOR . $archiveName;
+
+        if (!$fs->exists($this->exportDir)) {
+            throw new \RuntimeException($archivePath . ': directory does not exist or is not writable');
+        }
 
         $zip = new ZipArchive();
-        $zip->open($kernel->getRootDir() . '/' . $archiveName, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        $zip->open($archivePath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
 
         if ($fs->exists($publicFileFolder)) {
             $this->zipFolder($zip, $publicFileFolder, $this->getPublicFolderName());
@@ -75,7 +94,7 @@ class FilesExportCommand extends Command
      * @param string $folder
      * @param string $prefix
      */
-    protected function zipFolder(ZipArchive $zip, $folder, $prefix = "/public")
+    protected function zipFolder(ZipArchive $zip, string $folder, string $prefix = "/public")
     {
         $finder = new Finder();
         $files = $finder->files()

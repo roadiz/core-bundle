@@ -10,7 +10,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Entity
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\EntityRepository")
+ * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\AttributeValueTranslationRepository")
  * @ORM\Table(name="attribute_value_translations", indexes={
  *     @ORM\Index(columns={"value"}),
  *     @ORM\Index(columns={"translation_id", "attribute_value"})

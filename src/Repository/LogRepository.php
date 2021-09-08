@@ -5,13 +5,23 @@ namespace RZ\Roadiz\CoreBundle\Repository;
 
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CoreBundle\Entity\Log;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Repository
  * @extends EntityRepository<\RZ\Roadiz\CoreBundle\Entity\Log>
  */
-class LogRepository extends EntityRepository
+final class LogRepository extends EntityRepository
 {
+    public function __construct(
+        ManagerRegistry $registry,
+        EventDispatcherInterface $dispatcher
+    ) {
+        parent::__construct($registry, Log::class, $dispatcher);
+    }
+
     /**
      * Find latest Log with NodesSources.
      *

@@ -8,6 +8,12 @@ services:
             $cmsVersion: '2.0.0-alpha'
             $staticDomain: '%roadiz_core.static_domain_name%'
             $themes: '%roadiz_core.themes%'
+            $inheritanceType: '%roadiz_core.inheritance_type%'
+            $maxPixelSize: '%roadiz_core.assets_processing.max_pixel_size%'
+            $imageDriver: '%roadiz_core.assets_processing.driver%'
+            $appNamespace: '%roadiz_core.app_namespace%'
+            $exportDir: '%kernel.project_dir%/var/export'
+            $privateKeyName: '%roadiz_core.private_key_name%'
 
     RZ\Roadiz\CoreBundle\:
         resource: '../src/'
@@ -16,20 +22,29 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
             - '../src/Tests/'
+            - '../src/Event/'
 
     RZ\Roadiz\CoreBundle\EntityHandler\:
         resource: '../src/EntityHandler'
-        # Recreate handlers for each call
+        # Recreate handlers for each usage
         shared: false
+
+    RZ\Roadiz\CoreBundle\Mailer\EmailManager:
+        # Recreate manager for each usage
+        shared: false
+
+    RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber\:
+        resource: '../src/Doctrine/EventSubscriber'
+        tags: ['doctrine.event_subscriber']
 
     RZ\Roadiz\CoreBundle\Preview\RequestPreviewRevolver:
         arguments:
             - Symfony\Component\HttpFoundation\RequestStack
             - 'ROLE_BACKEND_USER'
 
-    RZ\Roadiz\Core\Models\FileAwareInterface:
-
     RZ\Roadiz\Utils\Asset\Packages:
+
+    RZ\Roadiz\Utils\Document\DownscaleImageManager:
 
     RZ\Roadiz\Core\Handlers\HandlerFactoryInterface:
         alias: RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory
@@ -45,3 +60,39 @@ services:
 
     RZ\Roadiz\CoreBundle\Cache\ReverseProxyCacheLocator:
         arguments: ['%roadiz_core.reverse_proxy_cache.frontends%']
+
+    Symfony\Component\Asset\VersionStrategy\VersionStrategyInterface:
+        alias: 'assets.empty_version_strategy'
+
+    Doctrine\Persistence\ObjectManager:
+        alias: 'doctrine.orm.default_entity_manager'
+
+    RZ\Roadiz\Core\Models\FileAwareInterface:
+        alias: RZ\Roadiz\CoreBundle\Filesystem\RoadizFileDirectories
+
+    RZ\Roadiz\CoreBundle\Filesystem\RoadizFileDirectories:
+        arguments: ['%kernel.project_dir%']
+
+    RZ\Crypto\KeyChain\KeyChainInterface:
+        alias: RZ\Crypto\KeyChain\AsymmetricFilesystemKeyChain
+
+    RZ\Crypto\KeyChain\AsymmetricFilesystemKeyChain:
+        arguments: ['%kernel.project_dir%/var/secret', true]
+
+    JMS\Serializer\Construction\ObjectConstructorInterface:
+        alias: jms_serializer.unserialize_object_constructor
+
+    RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\ChainDoctrineObjectConstructor:
+        decorates: jms_serializer.doctrine_object_constructor
+        arguments:
+            - '@doctrine.orm.default_entity_manager'
+            - '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\ObjectConstructor'
+            - ['@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TranslationObjectConstructor',
+                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TagObjectConstructor',
+                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\NodeObjectConstructor',
+                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\NodeTypeObjectConstructor',
+                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\NodeTypeFieldObjectConstructor',
+                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\RoleObjectConstructor',
+                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\GroupObjectConstructor',
+                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\SettingObjectConstructor',
+                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\SettingGroupObjectConstructor']

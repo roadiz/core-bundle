@@ -3,12 +3,23 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CoreBundle\Entity\Setting;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+
 /**
  * @package RZ\Roadiz\CoreBundle\Repository
- * @extends EntityRepository<\RZ\Roadiz\CoreBundle\Entity\Setting>
+ * @extends EntityRepository<Setting>
  */
-class SettingRepository extends EntityRepository
+final class SettingRepository extends EntityRepository
 {
+    public function __construct(
+        ManagerRegistry $registry,
+        EventDispatcherInterface $dispatcher
+    ) {
+        parent::__construct($registry, Setting::class, $dispatcher);
+    }
+
     /**
      * @param string $name
      *

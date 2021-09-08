@@ -3,11 +3,21 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Entity\AttributeValue;
 use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class AttributeValueRepository extends EntityRepository
 {
+    public function __construct(
+        ManagerRegistry $registry,
+        EventDispatcherInterface $dispatcher
+    ) {
+        parent::__construct($registry, AttributeValue::class, $dispatcher);
+    }
+
     /**
      * @param AttributableInterface $attributable
      *

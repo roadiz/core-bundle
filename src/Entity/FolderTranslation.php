@@ -12,7 +12,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
  *
  * It stores their name.
  *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\EntityRepository")
+ * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\FolderTranslationRepository")
  * @ORM\Table(name="folders_translations", uniqueConstraints={
  *      @ORM\UniqueConstraint(columns={"folder_id", "translation_id"})
  * })

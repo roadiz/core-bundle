@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\Persistence\ObjectManager;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Utils\Asset\Packages;
 use Symfony\Component\Console\Command\Command;
@@ -15,7 +15,20 @@ use Symfony\Component\HttpFoundation\File\File;
 
 class DocumentFilesizeCommand extends Command
 {
+    protected Packages $packages;
+    protected ManagerRegistry $managerRegistry;
     protected SymfonyStyle $io;
+
+    /**
+     * @param Packages $packages
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(Packages $packages, ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->packages = $packages;
+        $this->managerRegistry = $managerRegistry;
+    }
 
     protected function configure()
     {
@@ -26,19 +39,20 @@ class DocumentFilesizeCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var ObjectManager $em */
-        $em = $this->getHelper('doctrine')->getEntityManager();
-        /** @var Packages $packages */
-        $packages = $this->getHelper('assetPackages')->getPackages();
+        $em = $this->managerRegistry->getManagerForClass(Document::class);
         $this->io = new SymfonyStyle($input, $output);
 
         $batchSize = 20;
         $i = 0;
-        $count = $em->getRepository(Document::class)
+        $count = (int) $em->getRepository(Document::class)
             ->createQueryBuilder('d')
             ->select('count(d)')
             ->getQuery()
             ->getSingleScalarResult();
+        if ($count < 1) {
+            $this->io->success('No document found');
+            return 0;
+        }
         $q = $em->getRepository(Document::class)
             ->createQueryBuilder('d')
             ->getQuery();
@@ -48,7 +62,7 @@ class DocumentFilesizeCommand extends Command
         foreach ($iterableResult as $row) {
             /** @var Document $document */
             $document = $row[0];
-            $this->updateDocumentFilesize($document, $packages);
+            $this->updateDocumentFilesize($document);
             if (($i % $batchSize) === 0) {
                 $em->flush(); // Executes all updates.
                 $em->clear(); // Detaches all objects from Doctrine!
@@ -61,10 +75,10 @@ class DocumentFilesizeCommand extends Command
         return 0;
     }
 
-    private function updateDocumentFilesize(Document $document, Packages $packages)
+    private function updateDocumentFilesize(Document $document)
     {
         if (null !== $document->getRelativePath()) {
-            $documentPath = $packages->getDocumentFilePath($document);
+            $documentPath = $this->packages->getDocumentFilePath($document);
             try {
                 $file = new File($documentPath);
                 $document->setFilesize($file->getSize());

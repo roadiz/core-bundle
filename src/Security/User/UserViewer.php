@@ -8,7 +8,7 @@ use Psr\Log\NullLogger;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\User;
-use RZ\Roadiz\Utils\EmailManager;
+use RZ\Roadiz\CoreBundle\Mailer\EmailManager;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\Mailer\Exception\TransportException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;

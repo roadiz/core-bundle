@@ -136,14 +136,14 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     private $private = false;
     /**
      * @var integer
-     * @ORM\Column(type="integer", nullable=false, options={"default" = 0})
+     * @ORM\Column(name="imageWidth", type="integer", nullable=false, options={"default" = 0})
      * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("int")
      */
     private $imageWidth = 0;
     /**
      * @var integer
-     * @ORM\Column(type="integer", nullable=false, options={"default" = 0})
+     * @ORM\Column(name="imageHeight", type="integer", nullable=false, options={"default" = 0})
      * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("int")
      */

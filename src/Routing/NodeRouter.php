@@ -3,13 +3,13 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Routing;
 
-use Doctrine\Common\Cache\CacheProvider;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Event\NodesSources\NodesSourcesPathGeneratingEvent;
 use RZ\Roadiz\CoreBundle\Theme\ThemeResolverInterface;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Cmf\Component\Routing\VersatileGeneratorInterface;
+use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\Routing\Exception\InvalidParameterException;
@@ -26,7 +26,7 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
      */
     public const NO_CACHE_PARAMETER = '_no_cache';
     private ThemeResolverInterface $themeResolver;
-    private ?CacheProvider $nodeSourceUrlCacheProvider = null;
+    private AdapterInterface $nodeSourceUrlCacheAdapter;
     private ParameterBag $settingsBag;
     private EventDispatcherInterface $eventDispatcher;
 
@@ -35,6 +35,7 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
      * @param ThemeResolverInterface $themeResolver
      * @param ParameterBag $settingsBag
      * @param EventDispatcherInterface $eventDispatcher
+     * @param AdapterInterface $nodeSourceUrlCacheAdapter
      * @param array $options
      * @param RequestContext|null $context
      * @param LoggerInterface|null $logger
@@ -44,6 +45,7 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
         ThemeResolverInterface $themeResolver,
         ParameterBag $settingsBag,
         EventDispatcherInterface $eventDispatcher,
+        AdapterInterface $nodeSourceUrlCacheAdapter,
         array $options = [],
         RequestContext $context = null,
         LoggerInterface $logger = null
@@ -59,6 +61,7 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
         $this->settingsBag = $settingsBag;
         $this->eventDispatcher = $eventDispatcher;
         $this->matcher = $matcher;
+        $this->nodeSourceUrlCacheAdapter = $nodeSourceUrlCacheAdapter;
     }
 
     /**
@@ -67,22 +70,6 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
     public function getRouteCollection(): RouteCollection
     {
         return new RouteCollection();
-    }
-
-    /**
-     * @return CacheProvider|null
-     */
-    public function getNodeSourceUrlCacheProvider(): ?CacheProvider
-    {
-        return $this->nodeSourceUrlCacheProvider;
-    }
-
-    /**
-     * @param CacheProvider $nodeSourceUrlCacheProvider
-     */
-    public function setNodeSourceUrlCacheProvider(CacheProvider $nodeSourceUrlCacheProvider): void
-    {
-        $this->nodeSourceUrlCacheProvider = $nodeSourceUrlCacheProvider;
     }
 
     /**
@@ -226,15 +213,12 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
     {
         if ($noCache) {
             $cacheKey = $source->getId() . '_' .  $this->getContext()->getHost() . '_' . serialize($parameters);
-            if (null !== $this->nodeSourceUrlCacheProvider) {
-                if (!$this->nodeSourceUrlCacheProvider->contains($cacheKey)) {
-                    $this->nodeSourceUrlCacheProvider->save(
-                        $cacheKey,
-                        $this->getNodesSourcesPath($source, $parameters)
-                    );
-                }
-                return $this->nodeSourceUrlCacheProvider->fetch($cacheKey);
+            $cacheItem = $this->nodeSourceUrlCacheAdapter->getItem($cacheKey);
+            if (!$cacheItem->isHit()) {
+                $cacheItem->set($this->getNodesSourcesPath($source, $parameters));
+                $this->nodeSourceUrlCacheAdapter->save($cacheItem);
             }
+            return $cacheItem->get();
         }
 
         return $this->getNodesSourcesPath($source, $parameters);
@@ -246,7 +230,7 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
      *
      * @return NodePathInfo
      */
-    protected function getNodesSourcesPath(NodesSources $source, $parameters = []): NodePathInfo
+    protected function getNodesSourcesPath(NodesSources $source, array $parameters = []): NodePathInfo
     {
         $theme = $this->themeResolver->findTheme($this->getContext()->getHost());
         $event = new NodesSourcesPathGeneratingEvent(

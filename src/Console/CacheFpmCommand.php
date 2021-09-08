@@ -6,19 +6,33 @@ namespace RZ\Roadiz\CoreBundle\Console;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
-use RZ\Roadiz\Core\Kernel;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\HttpKernel\KernelInterface;
 
 /**
  * Command line utils for managing PHP-FPM Cache from terminal.
  */
 class CacheFpmCommand extends Command
 {
+    protected string $cmsVersion;
+    protected KernelInterface $kernel;
+
+    /**
+     * @param string $cmsVersion
+     * @param KernelInterface $kernel
+     */
+    public function __construct(string $cmsVersion, KernelInterface $kernel)
+    {
+        parent::__construct();
+        $this->cmsVersion = $cmsVersion;
+        $this->kernel = $kernel;
+    }
+
     protected function configure()
     {
         $this->setName('cache:clear-fpm')
@@ -34,8 +48,6 @@ class CacheFpmCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var Kernel $kernel */
-        $kernel = $this->getHelper('kernel')->getKernel();
         $io = new SymfonyStyle($input, $output);
         $url = 'http://localhost/clear_cache.php';
         $scriptName = 'clear_cache.php';
@@ -53,10 +65,10 @@ class CacheFpmCommand extends Command
             $client->get($url, [
                 'headers' => [
                     'Accept' => 'application/json',
-                    'User-Agent' => 'Roadiz_CLI/'.Kernel::$cmsVersion,
+                    'User-Agent' => 'Roadiz_CLI/'.$this->cmsVersion,
                 ],
                 'query' => [
-                    'env' => ($kernel->isPreview() ? 'preview' : $kernel->getEnvironment()),
+                    'env' => $this->kernel->getEnvironment(),
                 ],
                 'allow_redirects' => true,
                 'timeout' => 2
@@ -64,7 +76,7 @@ class CacheFpmCommand extends Command
             if ($io->getVerbosity() >= OutputInterface::VERBOSITY_VERY_VERBOSE) {
                 $io->note('Call web entry-point: ' . $url);
             }
-            $io->success('PHP-FPM caches were cleared for '.$kernel->getEnvironment().' environement.');
+            $io->success('PHP-FPM caches were cleared for '.$this->kernel->getEnvironment().' environement.');
         } catch (ConnectException $exception) {
             $io->warning('Cannot reach ' . $url . ' [' . $exception->getCode() . ']');
         } catch (ClientException $exception) {
