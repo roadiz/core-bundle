@@ -6,7 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Doctrine;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use RZ\Roadiz\Console\RoadizApplication;
+use RZ\Roadiz\CoreBundle\Console\RoadizApplication;
 use RZ\Roadiz\Core\Kernel;
 use RZ\Roadiz\Utils\Clearer\ClearerInterface;
 use RZ\Roadiz\Utils\Clearer\DoctrineCacheClearer;

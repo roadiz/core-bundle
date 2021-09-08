@@ -3,16 +3,16 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Exception;
 
-use RZ\Roadiz\CMS\Controllers\AppController;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class MaintenanceModeException extends \Exception
 {
-    protected $controller;
+    protected AbstractController $controller;
 
     /**
-     * @return AppController
+     * @return AbstractController
      */
-    public function getController()
+    public function getController(): AbstractController
     {
         return $this->controller;
     }
@@ -20,11 +20,11 @@ class MaintenanceModeException extends \Exception
     protected $message = 'Website is currently under maintenance. We will be back shortly.';
 
     /**
-     * @param AppController $controller
+     * @param AbstractController|null $controller
      * @param string $message
      * @param int $code
      */
-    public function __construct(AppController $controller = null, $message = null, $code = 0)
+    public function __construct(AbstractController $controller = null, $message = null, $code = 0)
     {
         if (null !== $message) {
             parent::__construct($message, $code);

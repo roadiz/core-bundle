@@ -5,7 +5,7 @@ namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
 use RZ\Roadiz\CoreBundle\Entity\Group;
 use RZ\Roadiz\CoreBundle\Entity\Role;
-use RZ\Roadiz\CoreBundle\EntityHandler\AbstractHandler;
+use RZ\Roadiz\Core\Handlers\AbstractHandler;
 
 /**
  * Handle operations with Group entities.

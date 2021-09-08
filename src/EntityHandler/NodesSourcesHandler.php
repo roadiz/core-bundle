@@ -12,7 +12,7 @@ use RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
-use RZ\Roadiz\CoreBundle\EntityHandler\AbstractHandler;
+use RZ\Roadiz\Core\Handlers\AbstractHandler;
 
 /**
  * Handle operations with node-sources entities.

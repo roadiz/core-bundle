@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
 use RZ\Roadiz\CoreBundle\Entity\Font;
-use RZ\Roadiz\CoreBundle\EntityHandler\AbstractHandler;
+use RZ\Roadiz\Core\Handlers\AbstractHandler;
 
 /**
  * Handle operations with fonts entities.

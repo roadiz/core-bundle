@@ -9,7 +9,7 @@ use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Exception\SolrServerNotConfiguredException;
-use RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactoryInterface;
+use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
 use RZ\Roadiz\Markdown\MarkdownInterface;
 use Solarium\Client;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;

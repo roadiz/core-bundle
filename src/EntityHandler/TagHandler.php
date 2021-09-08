@@ -7,7 +7,7 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\Query;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
-use RZ\Roadiz\CoreBundle\EntityHandler\AbstractHandler;
+use RZ\Roadiz\Core\Handlers\AbstractHandler;
 
 /**
  * Handle operations with tags entities.

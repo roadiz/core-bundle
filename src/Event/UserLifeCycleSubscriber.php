@@ -7,7 +7,7 @@ use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Events;
-use Pimple\Container;
+use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Entity\User;
 use RZ\Roadiz\CoreBundle\Event\User\UserCreatedEvent;
 use RZ\Roadiz\CoreBundle\Event\User\UserDeletedEvent;
@@ -18,22 +18,17 @@ use RZ\Roadiz\CoreBundle\Event\User\UserUpdatedEvent;
 use RZ\Roadiz\Core\Viewers\UserViewer;
 use RZ\Roadiz\Utils\MediaFinders\FacebookPictureFinder;
 use RZ\Roadiz\Random\TokenGenerator;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class UserLifeCycleSubscriber implements EventSubscriber
 {
-    /**
-     * @var Container
-     */
-    private $container;
-
-    /**
-     * @param Container $container
-     */
-    public function __construct(Container $container)
-    {
-        $this->container = $container;
-    }
+    private UserViewer $userViewer;
+    private EventDispatcherInterface $dispatcher;
+    private EncoderFactoryInterface $encoderFactory;
+    private UrlGeneratorInterface $urlGenerator;
+    private LoggerInterface $logger;
 
     /**
      * {@inheritdoc}
@@ -59,13 +54,13 @@ class UserLifeCycleSubscriber implements EventSubscriber
             if ($event->hasChangedField('enabled') &&
                 true === $event->getNewValue('enabled')) {
                 $userEvent = new UserEnabledEvent($user);
-                $this->container->offsetGet('dispatcher')->dispatch($userEvent);
+                $this->dispatcher->dispatch($userEvent);
             }
 
             if ($event->hasChangedField('enabled') &&
                 false === $event->getNewValue('enabled')) {
                 $userEvent = new UserDisabledEvent($user);
-                $this->container->offsetGet('dispatcher')->dispatch($userEvent);
+                $this->dispatcher->dispatch($userEvent);
             }
 
             if ($event->hasChangedField('facebookName')) {
@@ -90,7 +85,7 @@ class UserLifeCycleSubscriber implements EventSubscriber
                 '' !== $user->getPlainPassword()) {
                 $this->setPassword($user, $user->getPlainPassword());
                 $userEvent = new UserPasswordChangedEvent($user);
-                $this->container->offsetGet('dispatcher')->dispatch($userEvent);
+                $this->dispatcher->dispatch($userEvent);
             }
         }
     }
@@ -99,11 +94,9 @@ class UserLifeCycleSubscriber implements EventSubscriber
      * @param User $user
      * @param string $plainPassword
      */
-    protected function setPassword(User $user, $plainPassword)
+    protected function setPassword(User $user, string $plainPassword)
     {
-        /** @var EncoderFactoryInterface $encoderFactory */
-        $encoderFactory = $this->container->offsetGet('userEncoderFactory');
-        $encoder = $encoderFactory->getEncoder($user);
+        $encoder = $this->encoderFactory->getEncoder($user);
         $encodedPassword = $encoder->encodePassword(
             $plainPassword,
             $user->getSalt()
@@ -119,7 +112,7 @@ class UserLifeCycleSubscriber implements EventSubscriber
         $user = $event->getEntity();
         if ($user instanceof User) {
             $userEvent = new UserUpdatedEvent($user);
-            $this->container->offsetGet('dispatcher')->dispatch($userEvent);
+            $this->dispatcher->dispatch($userEvent);
         }
     }
 
@@ -131,7 +124,7 @@ class UserLifeCycleSubscriber implements EventSubscriber
         $user = $event->getEntity();
         if ($user instanceof User) {
             $userEvent = new UserDeletedEvent($user);
-            $this->container->offsetGet('dispatcher')->dispatch($userEvent);
+            $this->dispatcher->dispatch($userEvent);
         }
     }
 
@@ -145,7 +138,7 @@ class UserLifeCycleSubscriber implements EventSubscriber
         $user = $event->getEntity();
         if ($user instanceof User) {
             $userEvent = new UserCreatedEvent($user);
-            $this->container->offsetGet('dispatcher')->dispatch($userEvent);
+            $this->dispatcher->dispatch($userEvent);
         }
     }
 
@@ -165,15 +158,14 @@ class UserLifeCycleSubscriber implements EventSubscriber
                  * Do not generate password for new users
                  * just send them a password reset link.
                  */
-                $tokenGenerator = new TokenGenerator($this->container['logger']);
+                $tokenGenerator = new TokenGenerator($this->logger);
                 $user->setCredentialsExpired(true);
                 $user->setPasswordRequestedAt(new \DateTime());
                 $user->setConfirmationToken($tokenGenerator->generateToken());
-                /** @var UserViewer $userViewer */
-                $userViewer = $this->container['user.viewer'];
-                $userViewer->setUser($user);
-                $userViewer->sendPasswordResetLink(
-                    $this->container['urlGenerator'],
+
+                $this->userViewer->setUser($user);
+                $this->userViewer->sendPasswordResetLink(
+                    $this->urlGenerator,
                     'loginResetPage',
                     'users/welcome_user_email.html.twig',
                     'users/welcome_user_email.txt.twig'

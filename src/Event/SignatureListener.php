@@ -9,8 +9,6 @@ use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
- * Class SignatureListener.
- *
  * @package RZ\Roadiz\CoreBundle\Event
  */
 final class SignatureListener implements EventSubscriberInterface
@@ -18,18 +16,18 @@ final class SignatureListener implements EventSubscriberInterface
     /**
      * @var Settings
      */
-    protected $settingsBag;
-    private $version;
-    private $debug;
+    protected Settings $settingsBag;
+    private string $version;
+    private bool $debug;
 
     /**
      * @param Settings $settingsBag
-     * @param string   $version
+     * @param string   $cmsVersion
      * @param bool     $debug
      */
-    public function __construct(Settings $settingsBag, $version, $debug = false)
+    public function __construct(Settings $settingsBag, string $cmsVersion, bool $debug = false)
     {
-        $this->version = $version;
+        $this->version = $cmsVersion;
         $this->debug = $debug;
         $this->settingsBag = $settingsBag;
     }

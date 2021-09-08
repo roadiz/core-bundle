@@ -8,7 +8,7 @@ use Doctrine\ORM\Repository\RepositoryFactory;
 use Doctrine\Persistence\ObjectRepository;
 use Pimple\Container;
 use RZ\Roadiz\CoreBundle\Repository\EntityRepository;
-use RZ\Roadiz\Preview\PreviewResolverInterface;
+use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 
 final class RoadizRepositoryFactory implements RepositoryFactory
 {

@@ -6,14 +6,13 @@ namespace RZ\Roadiz\CoreBundle\Event;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 use Doctrine\ORM\Events;
-use Doctrine\ORM\Mapping\ClassMetadataInfo;
 
 class TablePrefixSubscriber implements EventSubscriber
 {
     /**
      * @var string
      */
-    protected $tablesPrefix;
+    protected string $tablesPrefix;
 
     /**
      * @param string $tablesPrefix
@@ -44,7 +43,6 @@ class TablePrefixSubscriber implements EventSubscriber
          */
         if (!empty($this->tablesPrefix) && $this->tablesPrefix !== '') {
             // the $metadata is all the mapping info for this class
-            /** @var ClassMetadataInfo $metadata */
             $metadata = $eventArgs->getClassMetadata();
             $metadata->table['name'] = $this->tablesPrefix.'_'.$metadata->table['name'];
 

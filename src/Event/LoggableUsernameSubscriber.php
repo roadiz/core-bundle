@@ -4,28 +4,27 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Event;
 
 use Gedmo\Loggable\LoggableListener;
-use Pimple\Container;
-use RZ\Roadiz\Core\ContainerAwareInterface;
-use RZ\Roadiz\Core\ContainerAwareTrait;
+use RZ\Roadiz\CoreBundle\Doctrine\Loggable\UserLoggableListener;
 use RZ\Roadiz\CoreBundle\Entity\User;
-use RZ\Roadiz\Utils\Doctrine\Loggable\UserLoggableListener;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorage;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
-class LoggableUsernameSubscriber implements EventSubscriberInterface, ContainerAwareInterface
+final class LoggableUsernameSubscriber implements EventSubscriberInterface
 {
-    use ContainerAwareTrait;
+    private TokenStorageInterface $tokenStorage;
+    private LoggableListener $loggableListener;
 
     /**
-     * @param Container $container
+     * @param TokenStorageInterface $tokenStorage
+     * @param LoggableListener $loggableListener
      */
-    public function __construct(Container $container)
+    public function __construct(TokenStorageInterface $tokenStorage, LoggableListener $loggableListener)
     {
-        $this->container = $container;
+        $this->tokenStorage = $tokenStorage;
+        $this->loggableListener = $loggableListener;
     }
-
 
     /**
      * @return array
@@ -43,16 +42,13 @@ class LoggableUsernameSubscriber implements EventSubscriberInterface, ContainerA
     public function onRequest(RequestEvent $event)
     {
         if ($event->isMasterRequest()) {
-            /** @var TokenStorage $tokenStorage */
-            $tokenStorage = $this->get('securityTokenStorage');
-
-            if ($tokenStorage->getToken() && $tokenStorage->getToken()->getUsername() !== '') {
-                $loggableListener = $this->get(LoggableListener::class);
-                if ($loggableListener instanceof UserLoggableListener &&
-                    $tokenStorage->getToken()->getUser() instanceof User) {
-                    $loggableListener->setUser($tokenStorage->getToken()->getUser());
+            $token = $this->tokenStorage->getToken();
+            if ($token && $token->getUsername() !== '') {
+                if ($this->loggableListener instanceof UserLoggableListener &&
+                    $token->getUser() instanceof User) {
+                    $this->loggableListener->setUser($token->getUser());
                 } else {
-                    $loggableListener->setUsername($tokenStorage->getToken()->getUsername());
+                    $this->loggableListener->setUsername($token->getUsername());
                 }
             }
         }

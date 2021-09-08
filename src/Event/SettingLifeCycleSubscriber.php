@@ -10,23 +10,23 @@ use Doctrine\ORM\Events;
 use ParagonIE\Halite\Alerts\InvalidKey;
 use ParagonIE\Halite\Alerts\InvalidMessage;
 use ParagonIE\HiddenString\HiddenString;
-use Pimple\Container;
+use Psr\Log\LoggerInterface;
 use RZ\Crypto\Encoder\UniqueKeyEncoderInterface;
 use RZ\Roadiz\CoreBundle\Entity\Setting;
 
-class SettingLifeCycleSubscriber implements EventSubscriber
+final class SettingLifeCycleSubscriber implements EventSubscriber
 {
-    /**
-     * @var Container
-     */
-    private $container;
+    private LoggerInterface $logger;
+    private ?UniqueKeyEncoderInterface $uniqueKeyEncoder;
 
     /**
-     * @param Container $container
+     * @param LoggerInterface $logger
+     * @param UniqueKeyEncoderInterface|null $uniqueKeyEncoder
      */
-    public function __construct(Container $container)
+    public function __construct(LoggerInterface $logger, ?UniqueKeyEncoderInterface $uniqueKeyEncoder)
     {
-        $this->container = $container;
+        $this->logger = $logger;
+        $this->uniqueKeyEncoder = $uniqueKeyEncoder;
     }
 
     /**
@@ -53,7 +53,7 @@ class SettingLifeCycleSubscriber implements EventSubscriber
                 /*
                  * Set raw value and do not encode it if setting is not encrypted no more.
                  */
-                $this->container['logger.doctrine']->info(sprintf('Disabled encryption for %s setting.', $setting->getName()));
+                $this->logger->info(sprintf('Disabled encryption for %s setting.', $setting->getName()));
                 $setting->setValue($setting->getRawValue());
             } elseif ($event->hasChangedField('encrypted') &&
                 $event->getNewValue('encrypted') === true &&
@@ -62,7 +62,7 @@ class SettingLifeCycleSubscriber implements EventSubscriber
                 /*
                  * Encode value for the first time.
                  */
-                $this->container['logger.doctrine']->info(sprintf('Encode %s value for the first time.', $setting->getName()));
+                $this->logger->info(sprintf('Encode %s value for the first time.', $setting->getName()));
                 $setting->setValue($this->getEncoder()->encode(new HiddenString($setting->getRawValue())));
             } elseif ($setting->isEncrypted() &&
                 $event->hasChangedField('value') &&
@@ -72,7 +72,7 @@ class SettingLifeCycleSubscriber implements EventSubscriber
                 /*
                  * Encode setting if value has changed
                  */
-                $this->container['logger.doctrine']->info(sprintf('Encode %s value.', $setting->getName()));
+                $this->logger->info(sprintf('Encode %s value.', $setting->getName()));
                 $event->setNewValue('value', $this->getEncoder()->encode(new HiddenString($event->getNewValue('value'))));
                 $setting->setClearValue($event->getNewValue('value'));
             }
@@ -91,18 +91,18 @@ class SettingLifeCycleSubscriber implements EventSubscriber
             null !== $this->getEncoder()
         ) {
             try {
-                $this->container['logger.doctrine']->debug(sprintf('Decode %s value', $setting->getName()));
+                $this->logger->debug(sprintf('Decode %s value', $setting->getName()));
                 $setting->setClearValue($this->getEncoder()->decode($setting->getRawValue())->getString());
             } catch (InvalidKey $exception) {
-                $this->container['logger.doctrine']->debug(sprintf('Failed to decode %s value', $setting->getName()));
+                $this->logger->debug(sprintf('Failed to decode %s value', $setting->getName()));
             } catch (InvalidMessage $exception) {
-                $this->container['logger.doctrine']->debug(sprintf('Failed to decode %s value', $setting->getName()));
+                $this->logger->debug(sprintf('Failed to decode %s value', $setting->getName()));
             }
         }
     }
 
     protected function getEncoder(): ?UniqueKeyEncoderInterface
     {
-        return $this->container[UniqueKeyEncoderInterface::class];
+        return $this->uniqueKeyEncoder;
     }
 }

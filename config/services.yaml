@@ -1,0 +1,47 @@
+---
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        bind:
+            $cmsVersion: '2.0.0-alpha'
+            $staticDomain: '%roadiz_core.static_domain_name%'
+            $themes: '%roadiz_core.themes%'
+
+    RZ\Roadiz\CoreBundle\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+            - '../src/Tests/'
+
+    RZ\Roadiz\CoreBundle\EntityHandler\:
+        resource: '../src/EntityHandler'
+        # Recreate handlers for each call
+        shared: false
+
+    RZ\Roadiz\CoreBundle\Preview\RequestPreviewRevolver:
+        arguments:
+            - Symfony\Component\HttpFoundation\RequestStack
+            - 'ROLE_BACKEND_USER'
+
+    RZ\Roadiz\Core\Models\FileAwareInterface:
+
+    RZ\Roadiz\Utils\Asset\Packages:
+
+    RZ\Roadiz\Core\Handlers\HandlerFactoryInterface:
+        alias: RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory
+
+    Gedmo\Loggable\LoggableListener:
+        alias: RZ\Roadiz\CoreBundle\Doctrine\Loggable\UserLoggableListener
+
+    RZ\Roadiz\CoreBundle\Doctrine\Loggable\UserLoggableListener:
+        tags:
+            - { name: doctrine.event_subscriber, connection: default }
+        calls:
+            - [ setAnnotationReader, [ "@annotation_reader" ] ]
+
+    RZ\Roadiz\CoreBundle\Cache\ReverseProxyCacheLocator:
+        arguments: ['%roadiz_core.reverse_proxy_cache.frontends%']

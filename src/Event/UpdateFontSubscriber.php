@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Event;
 
-use Pimple\Container;
 use RZ\Roadiz\CoreBundle\Event\Font\PreUpdatedFontEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 

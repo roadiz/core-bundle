@@ -3,25 +3,37 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Event;
 
-use Pimple\Container;
-use RZ\Roadiz\CMS\Controllers\AppController;
-use RZ\Roadiz\Core\ContainerAwareInterface;
+use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\Theme;
-use RZ\Roadiz\Core\Exceptions\MaintenanceModeException;
-use RZ\Roadiz\Core\HttpFoundation\Request as RoadizRequest;
-use RZ\Roadiz\Core\Kernel;
-use RZ\Roadiz\Utils\Theme\ThemeResolverInterface;
+use RZ\Roadiz\CoreBundle\Exception\MaintenanceModeException;
+use RZ\Roadiz\CoreBundle\Theme\ThemeResolverInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\Security\Core\Security;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Event
  */
 final class MaintenanceModeSubscriber implements EventSubscriberInterface
 {
-    private $container;
+    private Settings $settings;
+    private Security $security;
+    private ThemeResolverInterface $themeResolver;
+    private KernelInterface $kernel;
+
+    public function __construct(Settings $settings, Security $security, ThemeResolverInterface $themeResolver, KernelInterface $kernel)
+    {
+        $this->settings = $settings;
+        $this->security = $security;
+        $this->themeResolver = $themeResolver;
+        $this->kernel = $kernel;
+    }
+
     /**
      * @return array
      */
@@ -44,19 +56,13 @@ final class MaintenanceModeSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @param Container $container
-     */
-    public function __construct(Container $container)
-    {
-        $this->container = $container;
-    }
-    /**
      * @return array
      */
     public static function getSubscribedEvents()
     {
         return [
-            KernelEvents::REQUEST => ['onRequest', 31], // Should be lower than RouterListener (32) to be executed after!
+            KernelEvents::REQUEST => ['onRequest', 31],
+            // Should be lower than RouterListener (32) to be executed after!
         ];
     }
 
@@ -67,13 +73,13 @@ final class MaintenanceModeSubscriber implements EventSubscriberInterface
     public function onRequest(RequestEvent $event)
     {
         if ($event->isMasterRequest()) {
-            $maintenanceMode = (bool) $this->container['settingsBag']->get('maintenance_mode', false);
-            if ($maintenanceMode === true &&
-                !$this->container['securityAuthorizationChecker']->isGranted('ROLE_BACKEND_USER') &&
-                !in_array($event->getRequest()->get('_route'), $this->getAuthorizedRoutes())) {
-                /** @var ThemeResolverInterface $themeResolver */
-                $themeResolver = $this->container['themeResolver'];
-                $theme = $themeResolver->findTheme(null);
+            $maintenanceMode = (bool) $this->settings->get('maintenance_mode', false);
+            if (
+                $maintenanceMode === true &&
+                !$this->security->isGranted('ROLE_BACKEND_USER') &&
+                !in_array($event->getRequest()->get('_route'), $this->getAuthorizedRoutes())
+            ) {
+                $theme = $this->themeResolver->findTheme(null);
                 if (null !== $theme) {
                     throw new MaintenanceModeException($this->getControllerForTheme($theme, $event->getRequest()));
                 }
@@ -86,12 +92,10 @@ final class MaintenanceModeSubscriber implements EventSubscriberInterface
      * @param Theme   $theme
      * @param Request $request
      *
-     * @return AppController
+     * @return AbstractController
      */
     private function getControllerForTheme(Theme $theme, Request $request)
     {
-        /** @var Kernel $kernel */
-        $kernel = $this->container['kernel'];
         $ctrlClass = $theme->getClassName();
         $controller = new $ctrlClass();
 
@@ -99,18 +103,11 @@ final class MaintenanceModeSubscriber implements EventSubscriberInterface
          * Inject current Kernel to the matched Controller
          */
         if ($controller instanceof ContainerAwareInterface) {
-            $controller->setContainer($kernel->getContainer());
+            $controller->setContainer($this->kernel->getContainer());
         }
-        /*
-         * Do not inject current theme when
-         * Install mode is active.
-         */
-        if (true !== $kernel->isInstallMode() &&
-            $request instanceof RoadizRequest &&
-            $controller instanceof AppController) {
-            // No node controller matching in install mode
-            $request->setTheme($controller->getTheme());
-        }
+
+        // No node controller matching in install mode
+        $request->attributes->set('theme', $controller->getTheme());
 
         /*
          * Set request locale if _locale param
@@ -124,9 +121,9 @@ final class MaintenanceModeSubscriber implements EventSubscriberInterface
         /*
          * Prepare base assignation
          */
-        if ($controller instanceof AppController) {
-            $controller->__init();
-        }
+//        if ($controller instanceof AppController) {
+//            $controller->__init();
+//        }
         return $controller;
     }
 }

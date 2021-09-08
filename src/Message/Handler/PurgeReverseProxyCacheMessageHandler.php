@@ -4,9 +4,9 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Message\Handler;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Pimple\Psr11\Container;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use RZ\Roadiz\CoreBundle\Cache\ReverseProxyCacheLocator;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Message\GuzzleRequestMessage;
 use RZ\Roadiz\CoreBundle\Message\PurgeReverseProxyCacheMessage;
@@ -21,30 +21,30 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 final class PurgeReverseProxyCacheMessageHandler implements MessageHandlerInterface
 {
     private UrlGeneratorInterface $urlGenerator;
-    private array $configuration;
+    private ReverseProxyCacheLocator $reverseProxyCacheLocator;
     private LoggerInterface $logger;
-    private Container $busLocator;
+    private MessageBusInterface $bus;
     private ManagerRegistry $managerRegistry;
 
     /**
-     * @param Container $busLocator
+     * @param MessageBusInterface $bus
      * @param UrlGeneratorInterface $urlGenerator
-     * @param array $configuration
+     * @param ReverseProxyCacheLocator $reverseProxyCacheLocator
      * @param ManagerRegistry $managerRegistry
      * @param LoggerInterface|null $logger
      */
     public function __construct(
-        Container $busLocator,
+        MessageBusInterface $bus,
         UrlGeneratorInterface $urlGenerator,
-        array $configuration,
+        ReverseProxyCacheLocator $reverseProxyCacheLocator,
         ManagerRegistry $managerRegistry,
         LoggerInterface $logger = null
     ) {
         $this->urlGenerator = $urlGenerator;
-        $this->configuration = $configuration;
+        $this->reverseProxyCacheLocator = $reverseProxyCacheLocator;
         $this->logger = $logger ?? new NullLogger();
-        $this->busLocator = $busLocator;
         $this->managerRegistry = $managerRegistry;
+        $this->bus = $bus;
     }
 
     public function __invoke(PurgeReverseProxyCacheMessage $message)
@@ -83,12 +83,12 @@ final class PurgeReverseProxyCacheMessageHandler implements MessageHandlerInterf
     protected function createPurgeRequests(string $path = "/"): array
     {
         $requests = [];
-        foreach ($this->configuration['reverseProxyCache']['frontend'] as $name => $frontend) {
-            $requests[$name] = new \GuzzleHttp\Psr7\Request(
+        foreach ($this->reverseProxyCacheLocator->getFrontends() as $frontend) {
+            $requests[$frontend->getName()] = new \GuzzleHttp\Psr7\Request(
                 Request::METHOD_PURGE,
-                'http://' . $frontend['host'] . $path,
+                'http://' . $frontend->getHost() . $path,
                 [
-                    'Host' => $frontend['domainName']
+                    'Host' => $frontend->getDomainName()
                 ]
             );
         }
@@ -102,8 +102,7 @@ final class PurgeReverseProxyCacheMessageHandler implements MessageHandlerInterf
     protected function sendRequest(\GuzzleHttp\Psr7\Request $request): void
     {
         try {
-            $this->busLocator->get(MessageBusInterface::class)
-                ->dispatch(new Envelope(new GuzzleRequestMessage($request, [
+            $this->bus->dispatch(new Envelope(new GuzzleRequestMessage($request, [
                 'debug' => false,
                 'timeout' => 3
             ])));

@@ -6,7 +6,7 @@ namespace RZ\Roadiz\CoreBundle\EntityHandler;
 use Doctrine\Persistence\ObjectManager;
 use Pimple\Container;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
-use RZ\Roadiz\CoreBundle\EntityHandler\AbstractHandler;
+use RZ\Roadiz\Core\Handlers\AbstractHandler;
 
 /**
  * Handle operations with node-type fields entities.

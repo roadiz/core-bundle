@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Event;
 
-use RZ\Roadiz\Core\Kernel;
+use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Entity\Translation;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -13,14 +15,14 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 class LocaleSubscriber implements EventSubscriberInterface
 {
-    private $kernel;
+    private ManagerRegistry $managerRegistry;
 
     /**
-     * @param Kernel $kernel
+     * @param ManagerRegistry $managerRegistry
      */
-    public function __construct(Kernel $kernel)
+    public function __construct(ManagerRegistry $managerRegistry)
     {
-        $this->kernel = $kernel;
+        $this->managerRegistry = $managerRegistry;
     }
 
     /**
@@ -34,6 +36,11 @@ class LocaleSubscriber implements EventSubscriberInterface
         return [
             KernelEvents::REQUEST => ['onKernelRequest', 70],
         ];
+    }
+
+    private function getDefaultTranslation(): ?TranslationInterface
+    {
+        return $this->managerRegistry->getRepository(Translation::class)->findDefault();
     }
 
     /**
@@ -54,7 +61,7 @@ class LocaleSubscriber implements EventSubscriberInterface
                 $locale = $request->attributes->get('_locale');
                 $event->getRequest()->setLocale($locale);
                 \Locale::setDefault($locale);
-            } elseif (null !== $translation = $this->kernel->get('defaultTranslation')) {
+            } elseif (null !== $translation = $this->getDefaultTranslation()) {
                 $shortLocale = $translation->getLocale();
                 $event->getRequest()->setLocale($shortLocale);
                 \Locale::setDefault($shortLocale);

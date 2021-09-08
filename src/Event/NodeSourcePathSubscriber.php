@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Event;
 
 use RZ\Roadiz\CoreBundle\Event\NodesSources\NodesSourcesPathGeneratingEvent;
-use RZ\Roadiz\Core\Routing\NodesSourcesPathAggregator;
+use RZ\Roadiz\CoreBundle\Routing\NodesSourcesPathAggregator;
 use RZ\Roadiz\Utils\UrlGenerators\NodesSourcesUrlGenerator;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 

@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Contracts\NodeType\SerializableInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 
@@ -38,7 +39,7 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
      * @Serializer\Groups({"node_type"})
      * @Serializer\Type("bool")
      */
-    private $universal = false;
+    private bool $universal = false;
 
     /**
      * Exclude current field from full-text search engines.
@@ -48,7 +49,7 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
      * @Serializer\Groups({"node_type"})
      * @Serializer\Type("bool")
      */
-    private $excludeFromSearch = false;
+    private bool $excludeFromSearch = false;
 
     /**
      * @var NodeType|null
@@ -56,7 +57,7 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
      * @ORM\JoinColumn(name="node_type_id", onDelete="CASCADE")
      * @Serializer\Exclude()
      */
-    private $nodeType = null;
+    private ?NodeTypeInterface $nodeType = null;
 
     /**
      * @var string|null

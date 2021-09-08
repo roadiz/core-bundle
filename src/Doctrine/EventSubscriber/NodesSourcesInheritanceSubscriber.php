@@ -1,26 +1,35 @@
 <?php
 declare(strict_types=1);
 
-namespace RZ\Roadiz\CoreBundle\Event;
+namespace RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber;
 
 use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
-use Pimple\Container;
+use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Configuration;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 
 /**
- * @package RZ\Roadiz\CoreBundle\Event
+ * @package RZ\Roadiz\Core\Events
  */
 class NodesSourcesInheritanceSubscriber implements EventSubscriber
 {
+    private NodeTypes $nodeTypes;
+    private string $inheritanceType;
+
     /**
-     * @var Container
+     * @param NodeTypes $nodeTypes
+     * @param string $inheritanceType
      */
-    private $container;
+    public function __construct(NodeTypes $nodeTypes, string $inheritanceType)
+    {
+        $this->nodeTypes = $nodeTypes;
+        $this->inheritanceType = $inheritanceType;
+    }
+
 
     /**
      * @inheritDoc
@@ -30,14 +39,6 @@ class NodesSourcesInheritanceSubscriber implements EventSubscriber
         return [
             Events::loadClassMetadata,
         ];
-    }
-
-    /**
-     * @param Container $container
-     */
-    public function __construct(Container $container)
-    {
-        $this->container = $container;
     }
 
     /**
@@ -53,24 +54,20 @@ class NodesSourcesInheritanceSubscriber implements EventSubscriber
 
         if ($class->getName() === NodesSources::class) {
             try {
-                // List node types
                 /** @var NodeType[] $nodeTypes */
-                $nodeTypes = $this->container->offsetGet('nodeTypesBag')->all();
+                $nodeTypes = $this->nodeTypes->all();
                 $map = [];
                 foreach ($nodeTypes as $type) {
                     $map[strtolower($type->getName())] = $type->getSourceEntityFullQualifiedClassName();
                 }
-
                 $metadata->setDiscriminatorMap($map);
 
-                /*
-                 * change here your inheritance type according to configuration
-                 */
-                $inheritanceType = $this->container['config']['inheritance']['type'];
-                if ($inheritanceType === Configuration::INHERITANCE_TYPE_JOINED) {
+                if ($this->inheritanceType === Configuration::INHERITANCE_TYPE_JOINED) {
                     $metadata->setInheritanceType(ClassMetadataInfo::INHERITANCE_TYPE_JOINED);
-                } elseif ($inheritanceType === Configuration::INHERITANCE_TYPE_SINGLE_TABLE) {
+                } elseif ($this->inheritanceType === Configuration::INHERITANCE_TYPE_SINGLE_TABLE) {
                     $metadata->setInheritanceType(ClassMetadataInfo::INHERITANCE_TYPE_SINGLE_TABLE);
+                } else {
+                    throw new \RuntimeException('Inheritance type not supported: ' . $this->inheritanceType);
                 }
             } catch (\Exception $e) {
                 /*

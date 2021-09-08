@@ -6,7 +6,7 @@ namespace RZ\Roadiz\CoreBundle\EntityHandler;
 use Doctrine\Common\Cache\CacheProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
-use RZ\Roadiz\CoreBundle\EntityHandler\AbstractHandler;
+use RZ\Roadiz\Core\Handlers\AbstractHandler;
 
 /**
  * Handle operations with translations entities.

@@ -16,7 +16,7 @@ use RZ\Roadiz\Utils\Clearer\DoctrineCacheClearer;
 use RZ\Roadiz\Utils\Clearer\OPCacheClearer;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
-use RZ\Roadiz\CoreBundle\EntityHandler\AbstractHandler;
+use RZ\Roadiz\Core\Handlers\AbstractHandler;
 
 /**
  * Handle operations with node-type entities.

@@ -10,12 +10,12 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class Configuration implements ConfigurationInterface
 {
-    const INHERITANCE_TYPE_JOINED = 'joined';
-    const INHERITANCE_TYPE_SINGLE_TABLE = 'single_table';
+    public const INHERITANCE_TYPE_JOINED = 'joined';
+    public const INHERITANCE_TYPE_SINGLE_TABLE = 'single_table';
 
     public function getConfigTreeBuilder()
     {
-        $builder = new TreeBuilder('roadiz');
+        $builder = new TreeBuilder('roadiz_core');
         $root = $builder->getRootNode();
 
         $root->addDefaultsIfNotSet()
@@ -56,6 +56,7 @@ class Configuration implements ConfigurationInterface
             ->append($this->addSolrNode())
             ->append($this->addThemesNode())
             ->append($this->addInheritanceNode())
+            ->append($this->addReverseProxyCacheNode())
         ;
         return $builder;
     }
@@ -154,6 +155,54 @@ EOD
                             ->scalarNode('timeout')->defaultValue(3)->end()
                             ->scalarNode('port')->defaultValue(8983)->end()
                             ->scalarNode('path')->defaultValue('/')->end()
+                        ->end()
+                    ->end()
+                ->end()
+            ->end();
+
+        return $node;
+    }
+
+    /**
+     * @return ArrayNodeDefinition|NodeDefinition
+     */
+    protected function addReverseProxyCacheNode()
+    {
+        $builder = new TreeBuilder('reverseProxyCache');
+        $node = $builder->getRootNode();
+        $node->addDefaultsIfNotSet();
+        $node->children()
+                ->arrayNode('frontend')
+                    ->isRequired()
+                    ->useAttributeAsKey('name')
+                    ->prototype('array')
+                    ->children()
+                        ->scalarNode('host')
+                            ->isRequired()
+                            ->defaultValue('localhost')
+                        ->end()
+                        ->scalarNode('domainName')
+                            ->isRequired()
+                            ->defaultValue('localhost')
+                        ->end()
+                        ->scalarNode('timeout')->defaultValue(3)->end()
+                        ->end()
+                    ->end()
+                ->end()
+                ->arrayNode('cloudflare')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->scalarNode('version')
+                            ->defaultValue('v4')
+                        ->end()
+                        ->scalarNode('zone')
+                            ->isRequired()
+                        ->end()
+                        ->scalarNode('bearer')->end()
+                        ->scalarNode('email')->end()
+                        ->scalarNode('key')->end()
+                        ->scalarNode('timeout')
+                            ->defaultValue(3)
                         ->end()
                     ->end()
                 ->end()

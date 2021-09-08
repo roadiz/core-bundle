@@ -17,8 +17,8 @@ use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
-use RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactoryInterface;
-use RZ\Roadiz\CoreBundle\EntityHandler\AbstractHandler;
+use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
+use RZ\Roadiz\Core\Handlers\AbstractHandler;
 
 class HandlerFactory implements HandlerFactoryInterface
 {

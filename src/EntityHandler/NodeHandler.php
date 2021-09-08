@@ -20,7 +20,7 @@ use RZ\Roadiz\CoreBundle\Node\NodeNamePolicyInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Workflow\Registry;
 use Symfony\Component\Workflow\Workflow;
-use RZ\Roadiz\CoreBundle\EntityHandler\AbstractHandler;
+use RZ\Roadiz\Core\Handlers\AbstractHandler;
 
 /**
  * Handle operations with nodes entities.
