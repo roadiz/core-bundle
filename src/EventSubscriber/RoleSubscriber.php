@@ -45,8 +45,7 @@ class RoleSubscriber implements EventSubscriberInterface
     {
         $manager = $this->managerRegistry->getManagerForClass(Role::class);
         // Clear result cache
-        if (null !== $manager &&
-            $manager instanceof EntityManagerInterface &&
+        if ($manager instanceof EntityManagerInterface &&
             $manager->getConfiguration()->getResultCacheImpl() instanceof CacheProvider) {
             $manager->getConfiguration()->getResultCacheImpl()->deleteAll();
         }

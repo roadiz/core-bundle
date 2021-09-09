@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Role;
 use RZ\Roadiz\CoreBundle\Entity\User;
 use Symfony\Component\Console\Command\Command;
@@ -16,7 +17,16 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class UsersCommand extends Command
 {
-    protected $entityManager;
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+    }
 
     protected function configure()
     {
@@ -32,12 +42,11 @@ class UsersCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $name = $input->getArgument('username');
 
         if ($name) {
             /** @var User|null $user */
-            $user = $this->entityManager
+            $user = $this->managerRegistry
                 ->getRepository(User::class)
                 ->findOneBy(['username' => $name]);
 
@@ -60,7 +69,7 @@ class UsersCommand extends Command
                 );
             }
         } else {
-            $users = $this->entityManager
+            $users = $this->managerRegistry
                 ->getRepository(User::class)
                 ->findAll();
 
@@ -91,22 +100,22 @@ class UsersCommand extends Command
     }
 
     /**
-     * Get role by name, and create it if does not exist.
+     * Get role by name, and create it if it does not exist.
      *
      * @param string $roleName
      *
      * @return Role
      */
-    public function getRole($roleName = Role::ROLE_SUPERADMIN)
+    public function getRole(string $roleName = Role::ROLE_SUPERADMIN)
     {
-        $role = $this->entityManager
+        $role = $this->managerRegistry
             ->getRepository(Role::class)
             ->findOneBy(['name' => $roleName]);
 
         if ($role === null) {
             $role = new Role($roleName);
-            $this->entityManager->persist($role);
-            $this->entityManager->flush();
+            $this->managerRegistry->getManagerForClass(Role::class)->persist($role);
+            $this->managerRegistry->getManagerForClass(Role::class)->flush();
         }
 
         return $role;

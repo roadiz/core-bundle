@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\ORM\EntityManager;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -17,10 +17,16 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class TranslationsCreationCommand extends Command
 {
+    protected ManagerRegistry $managerRegistry;
+
     /**
-     * @var EntityManager
+     * @param ManagerRegistry $managerRegistry
      */
-    private $entityManager;
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+    }
 
     protected function configure()
     {
@@ -41,15 +47,14 @@ class TranslationsCreationCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $name = $input->getArgument('name');
         $locale = $input->getArgument('locale');
 
         if ($name) {
-            $translationByName = $this->entityManager
+            $translationByName = $this->managerRegistry
                 ->getRepository(Translation::class)
                 ->findOneByName($name);
-            $translationByLocale = $this->entityManager
+            $translationByLocale = $this->managerRegistry
                 ->getRepository(Translation::class)
                 ->findOneByLocale($locale);
 
@@ -72,8 +77,8 @@ class TranslationsCreationCommand extends Command
                     $newTrans->setName($name)
                         ->setLocale($locale);
 
-                    $this->entityManager->persist($newTrans);
-                    $this->entityManager->flush();
+                    $this->managerRegistry->getManagerForClass(Translation::class)->persist($newTrans);
+                    $this->managerRegistry->getManagerForClass(Translation::class)->flush();
 
                     $io->success('New ' . $newTrans->getName() . ' translation for ' . $newTrans->getLocale() . ' locale.');
                 }

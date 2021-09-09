@@ -5,7 +5,7 @@ namespace RZ\Roadiz\CoreBundle\Theme;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+use RZ\Roadiz\CoreBundle\Cache\Clearer\OPCacheClearer;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
@@ -29,19 +29,19 @@ class ThemeGenerator
      * @param string $projectDir
      * @param string $publicDir
      * @param string $cacheDir
-     * @param LoggerInterface|null $logger
+     * @param LoggerInterface $logger
      */
     public function __construct(
         string $projectDir,
         string $publicDir,
         string $cacheDir,
-        ?LoggerInterface $logger = null
+        LoggerInterface $logger
     ) {
         $this->filesystem = new Filesystem();
         $this->projectDir = $projectDir;
         $this->publicDir = $publicDir;
         $this->cacheDir = $cacheDir;
-        $this->logger = $logger ?? new NullLogger();
+        $this->logger = $logger;
     }
 
     /**

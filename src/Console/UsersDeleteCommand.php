@@ -13,7 +13,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Command line utils for managing users from terminal.
  */
-class UsersDeleteCommand extends UsersCommand
+final class UsersDeleteCommand extends UsersCommand
 {
     protected function configure()
     {
@@ -29,12 +29,11 @@ class UsersDeleteCommand extends UsersCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $name = $input->getArgument('username');
 
         if ($name) {
             /** @var User|null $user */
-            $user = $this->entityManager
+            $user = $this->managerRegistry
                 ->getRepository(User::class)
                 ->findOneBy(['username' => $name]);
 
@@ -46,8 +45,8 @@ class UsersDeleteCommand extends UsersCommand
                 if (!$input->isInteractive() || $io->askQuestion(
                     $confirmation
                 )) {
-                    $this->entityManager->remove($user);
-                    $this->entityManager->flush();
+                    $this->managerRegistry->getManagerForClass(User::class)->remove($user);
+                    $this->managerRegistry->getManagerForClass(User::class)->flush();
                     $io->success('User “' . $name . '” deleted.');
                 } else {
                     $io->warning('User “' . $name . '” was not deleted.');

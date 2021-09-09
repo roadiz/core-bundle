@@ -11,6 +11,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractHuman;
 use RZ\Roadiz\CoreBundle\Security\User\AdvancedUserInterface;
 use RZ\Roadiz\Random\SaltGenerator;
 use Symfony\Component\Security\Core\User\EquatableInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
@@ -25,7 +26,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * })
  * @ORM\HasLifecycleCallbacks
  */
-class User extends AbstractHuman implements AdvancedUserInterface, \Serializable, EquatableInterface
+class User extends AbstractHuman implements AdvancedUserInterface, \Serializable, EquatableInterface, PasswordAuthenticatedUserInterface
 {
     /**
      * Email confirmation link TTL (in seconds) to change
@@ -33,21 +34,19 @@ class User extends AbstractHuman implements AdvancedUserInterface, \Serializable
      *
      * @var int
      */
-    const CONFIRMATION_TTL = 900;
+    public const CONFIRMATION_TTL = 900;
 
     /**
      * @var bool
      * @Serializer\Groups({"user"})
      */
     protected $sendCreationConfirmationEmail;
-
     /**
      * @var string|null
      * @ORM\Column(type="string", name="facebook_name", unique=false, nullable=true)
      * @Serializer\Groups({"user"})
      */
     protected $facebookName = null;
-
     /**
      * @var string|null
      * @ORM\Column(type="text", name="picture_url", nullable=true)

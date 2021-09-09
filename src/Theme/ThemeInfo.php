@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Theme;
 use ReflectionClass;
 use ReflectionException;
 use RuntimeException;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Filesystem\Filesystem;
 
@@ -175,7 +176,7 @@ final class ThemeInfo
                 $className = $this->getClassname();
             }
             $reflection = new ReflectionClass($className);
-            if ($reflection->isSubclassOf(AppController::class)) {
+            if ($reflection->isSubclassOf(AbstractController::class)) {
                 return $reflection;
             }
         } catch (ReflectionException $Exception) {
@@ -237,7 +238,7 @@ final class ThemeInfo
 
         try {
             $reflection = new ReflectionClass($className);
-            if ($reflection->isSubclassOf(AppController::class)) {
+            if ($reflection->isSubclassOf(AbstractController::class)) {
                 return true;
             }
         } catch (ReflectionException $Exception) {

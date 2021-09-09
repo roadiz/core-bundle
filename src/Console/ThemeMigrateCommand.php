@@ -3,9 +3,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use RZ\Roadiz\Core\ContainerAwareInterface;
-use RZ\Roadiz\Core\ContainerAwareTrait;
-use RZ\Roadiz\Core\Kernel;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -15,9 +12,18 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Process\Process;
 
-class ThemeMigrateCommand extends Command implements ContainerAwareInterface
+class ThemeMigrateCommand extends Command
 {
-    use ContainerAwareTrait;
+    protected string $projectDir;
+
+    /**
+     * @param string $projectDir
+     */
+    public function __construct(string $projectDir)
+    {
+        parent::__construct();
+        $this->projectDir = $projectDir;
+    }
 
     protected function configure()
     {
@@ -77,11 +83,8 @@ class ThemeMigrateCommand extends Command implements ContainerAwareInterface
                 $input->isInteractive()
             );
             $this->runCommand(sprintf('cache:clear'), 'dev', false, $input->isInteractive());
-            $this->runCommand(sprintf('cache:clear'), 'dev', true, $input->isInteractive());
             $this->runCommand(sprintf('cache:clear'), 'prod', false, $input->isInteractive());
-            $this->runCommand(sprintf('cache:clear'), 'prod', true, $input->isInteractive());
             $this->runCommand(sprintf('cache:clear-fpm'), 'prod', false, $input->isInteractive());
-            $this->runCommand(sprintf('cache:clear-fpm'), 'prod', true, $input->isInteractive());
         }
         return 0;
     }
@@ -95,13 +98,11 @@ class ThemeMigrateCommand extends Command implements ContainerAwareInterface
      */
     protected function runCommand(string $command, string $environment = 'dev', bool $preview = false, bool $interactive = true)
     {
-        /** @var Kernel $existingKernel */
-        $existingKernel = $this->getHelper('kernel')->getKernel();
         $args = $interactive ? ' -v ' : ' -nq ';
         $process = Process::fromShellCommandline(
-            'php bin/roadiz ' . $args . $command . ' --env ' . $environment . ($preview ? ' --preview' : '')
+            'php bin/console ' . $args . $command . ' --env ' . $environment . ($preview ? ' --preview' : '')
         );
-        $process->setWorkingDirectory($existingKernel->getProjectDir());
+        $process->setWorkingDirectory($this->projectDir);
         $process->setTty($interactive);
         $process->run();
         return $process->wait();

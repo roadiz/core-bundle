@@ -3,8 +3,10 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Role;
 use RZ\Roadiz\CoreBundle\Entity\User;
+use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -16,7 +18,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Command line utils for managing users from terminal.
  */
-class UsersCreationCommand extends UsersCommand
+final class UsersCreationCommand extends UsersCommand
 {
     protected function configure()
     {
@@ -36,17 +38,24 @@ class UsersCreationCommand extends UsersCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $name = $input->getArgument('username');
 
         if ($name) {
             /** @var User|null $user */
-            $user = $this->entityManager
+            $user = $this->managerRegistry
                 ->getRepository(User::class)
                 ->findOneBy(['username' => $name]);
 
             if (null === $user) {
-                $this->executeUserCreation($name, $input, $output);
+                $user = $this->executeUserCreation($name, $input, $output);
+
+                // Change password right away
+                $command = $this->getApplication()->find('users:password');
+                $arguments = [
+                    'username' => $user->getUsername(),
+                ];
+                $passwordInput = new ArrayInput($arguments);
+                return $command->run($passwordInput, $output);
             } else {
                 throw new \InvalidArgumentException('User “' . $name . '” already exists.');
             }
@@ -62,7 +71,7 @@ class UsersCreationCommand extends UsersCommand
      * @return \RZ\Roadiz\CoreBundle\Entity\User
      */
     private function executeUserCreation(
-        $username,
+        string $username,
         InputInterface $input,
         OutputInterface $output
     ): User {
@@ -85,14 +94,14 @@ class UsersCreationCommand extends UsersCommand
                     $questionEmail
                 );
             } while (!filter_var($email, FILTER_VALIDATE_EMAIL) ||
-                $this->entityManager->getRepository(User::class)->emailExists($email)
+                $this->managerRegistry->getRepository(User::class)->emailExists($email)
             );
         } else {
             /*
              * From CLI
              */
             $email = $input->getOption('email');
-            if ($this->entityManager->getRepository(User::class)->emailExists($email)) {
+            if ($this->managerRegistry->getRepository(User::class)->emailExists($email)) {
                 throw new \InvalidArgumentException('Email already exists.');
             }
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -138,11 +147,10 @@ class UsersCreationCommand extends UsersCommand
             $user->setPlainPassword($input->getOption('password'));
         }
 
-        $this->entityManager->persist($user);
-        $this->entityManager->flush();
+        $this->managerRegistry->getManagerForClass(User::class)->persist($user);
+        $this->managerRegistry->getManagerForClass(User::class)->flush();
 
-        $io->success('User “' . $username . '”<' . $email . '> created with password: ' . $user->getPlainPassword());
-
+        $io->success('User “' . $username . '”<' . $email . '> created no password.');
         return $user;
     }
 }

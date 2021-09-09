@@ -5,6 +5,7 @@ namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\UserLogEntry;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -13,8 +14,19 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class VersionsPurgeCommand extends Command
+final class VersionsPurgeCommand extends Command
 {
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+    }
+
     protected function configure()
     {
         $this->setName('versions:purge')
@@ -60,14 +72,12 @@ EOT
     private function purgeByDate(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        /** @var EntityManagerInterface $em */
-        $em = $this->getHelper('doctrine')->getEntityManager();
+        $em = $this->managerRegistry->getManagerForClass(UserLogEntry::class);
         $dateTime = new \DateTime($input->getOption('before'));
 
         if ($dateTime >= new \DateTime()) {
             throw new \InvalidArgumentException('Before date must be in the past.');
         }
-        /** @var QueryBuilder $qb */
         $qb = $em->getRepository(UserLogEntry::class)->createQueryBuilder('l');
         $count = $qb->select($qb->expr()->countDistinct('l'))
             ->where($qb->expr()->lt('l.loggedAt', ':loggedAt'))
@@ -83,7 +93,6 @@ EOT
         if (!$input->isInteractive() || $io->askQuestion(
             $question
         )) {
-            /** @var QueryBuilder $qb */
             $qb = $em->getRepository(UserLogEntry::class)->createQueryBuilder('l');
             $result = $qb->delete(UserLogEntry::class, 'l')
                 ->where($qb->expr()->lt('l.loggedAt', ':loggedAt'))
@@ -100,8 +109,7 @@ EOT
         $deleteCount = 0;
         $io = new SymfonyStyle($input, $output);
         $count = (int) $input->getOption('count');
-        /** @var EntityManagerInterface $em */
-        $em = $this->getHelper('doctrine')->getEntityManager();
+        $em = $this->managerRegistry->getManagerForClass(UserLogEntry::class);
 
         $question = new ConfirmationQuestion(sprintf(
             'Do you want to purge all entities versions and to keep only the <info>latest %s</info>?',
@@ -110,7 +118,6 @@ EOT
         if (!$input->isInteractive() || $io->askQuestion(
             $question
         )) {
-            /** @var QueryBuilder $qb */
             $qb = $em->getRepository(UserLogEntry::class)->createQueryBuilder('l');
             $objects = $qb->select('MAX(l.version) as maxVersion', 'l.objectId', 'l.objectClass')
                 ->groupBy('l.objectId', 'l.objectClass')

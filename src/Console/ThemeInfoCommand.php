@@ -3,7 +3,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use RZ\Roadiz\Utils\Theme\ThemeInfo;
+use RZ\Roadiz\CoreBundle\Theme\ThemeGenerator;
+use RZ\Roadiz\CoreBundle\Theme\ThemeInfo;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputArgument;
@@ -13,6 +14,20 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class ThemeInfoCommand extends Command
 {
+    protected string $projectDir;
+    protected ThemeGenerator $themeGenerator;
+
+    /**
+     * @param string $projectDir
+     * @param ThemeGenerator $themeGenerator
+     */
+    public function __construct(string $projectDir, ThemeGenerator $themeGenerator)
+    {
+        parent::__construct();
+        $this->projectDir = $projectDir;
+        $this->themeGenerator = $themeGenerator;
+    }
+
     protected function configure()
     {
         $this->setName('themes:info')
@@ -34,7 +49,7 @@ class ThemeInfoCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $name = str_replace('/', '\\', $input->getArgument('name'));
-        $themeInfo = new ThemeInfo($name, $this->getHelper('kernel')->getKernel()->getProjectDir());
+        $themeInfo = new ThemeInfo($name, $this->projectDir);
 
         if ($themeInfo->exists()) {
             if (!$themeInfo->isValid()) {

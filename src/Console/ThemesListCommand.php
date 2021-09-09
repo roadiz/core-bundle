@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use RZ\Roadiz\Utils\Theme\ThemeResolverInterface;
+use RZ\Roadiz\CoreBundle\Theme\ThemeResolverInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,10 +16,19 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class ThemesListCommand extends Command
 {
+    protected Filesystem $filesystem;
+    protected ThemeResolverInterface $themeResolver;
+
     /**
-     * @var Filesystem
+     * @param ThemeResolverInterface $themeResolver
      */
-    protected $filesystem;
+    public function __construct(ThemeResolverInterface $themeResolver)
+    {
+        parent::__construct();
+        $this->themeResolver = $themeResolver;
+        $this->filesystem = new Filesystem();
+    }
+
 
     protected function configure()
     {
@@ -32,13 +41,6 @@ class ThemesListCommand extends Command
             );
     }
 
-    public function __construct()
-    {
-        parent::__construct();
-
-        $this->filesystem = new Filesystem();
-    }
-
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
@@ -48,8 +50,6 @@ class ThemesListCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        /** @var ThemeResolverInterface $themeResolver */
-        $themeResolver = $this->getHelper('themeResolver')->getThemeResolver();
         $name = $input->getArgument('classname');
 
         $tableContent = [];
@@ -59,14 +59,14 @@ class ThemesListCommand extends Command
              * Replace slash by anti-slashes
              */
             $name = str_replace('/', '\\', $name);
-            $theme = $themeResolver->findThemeByClass($name);
+            $theme = $this->themeResolver->findThemeByClass($name);
             $tableContent[] = [
                 str_replace('\\', '/', $theme->getClassName()),
                 ($theme->isAvailable() ? 'X' : ''),
                 ($theme->isBackendTheme() ? 'Backend' : 'Frontend'),
             ];
         } else {
-            $themes = $themeResolver->findAll();
+            $themes = $this->themeResolver->findAll();
             if (count($themes) > 0) {
                 foreach ($themes as $theme) {
                     $tableContent[] = [

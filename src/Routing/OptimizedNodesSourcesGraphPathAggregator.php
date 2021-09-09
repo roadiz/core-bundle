@@ -3,24 +3,30 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Routing;
 
-use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
+use Symfony\Component\Cache\Adapter\AdapterInterface;
 
 final class OptimizedNodesSourcesGraphPathAggregator implements NodesSourcesPathAggregator
 {
     private ManagerRegistry $managerRegistry;
-    private ArrayCache $cache;
+    private AdapterInterface $cacheAdapter;
 
     /**
      * @param ManagerRegistry $managerRegistry
+     * @param AdapterInterface $cacheAdapter
      */
-    public function __construct(ManagerRegistry $managerRegistry)
+    public function __construct(ManagerRegistry $managerRegistry, AdapterInterface $cacheAdapter)
     {
-        $this->cache = new ArrayCache();
         $this->managerRegistry = $managerRegistry;
+        $this->cacheAdapter = $cacheAdapter;
+    }
+
+    private function getCacheKey(NodesSources $nodesSources): string
+    {
+        return 'ns_url_' . $nodesSources->getId();
     }
 
     /**
@@ -37,11 +43,13 @@ final class OptimizedNodesSourcesGraphPathAggregator implements NodesSourcesPath
             return implode('/', $urlTokens);
         }
 
-        if (!$this->cache->contains($nodesSources->getId())) {
+        $cacheItem = $this->cacheAdapter->getItem($this->getCacheKey($nodesSources));
+        if (!$cacheItem->isHit()) {
             $urlTokens = array_reverse($this->getIdentifiers($nodesSources));
-            $this->cache->save($nodesSources->getId(), implode('/', $urlTokens));
+            $cacheItem->set(implode('/', $urlTokens));
+            $this->cacheAdapter->save($cacheItem);
         }
-        return $this->cache->fetch($nodesSources->getId());
+        return $cacheItem->get();
     }
 
     /**

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\ORM\EntityManager;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -17,10 +17,16 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class TranslationsDeleteCommand extends Command
 {
+    protected ManagerRegistry $managerRegistry;
+
     /**
-     * @var EntityManager
+     * @param ManagerRegistry $managerRegistry
      */
-    private $entityManager;
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+    }
 
     protected function configure()
     {
@@ -36,13 +42,12 @@ class TranslationsDeleteCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $locale = $input->getArgument('locale');
 
-        $translation = $this->entityManager
+        $translation = $this->managerRegistry
             ->getRepository(Translation::class)
             ->findOneByLocale($locale);
-        $translationCount = $this->entityManager
+        $translationCount = $this->managerRegistry
             ->getRepository(Translation::class)
             ->countBy([]);
 
@@ -62,8 +67,8 @@ class TranslationsDeleteCommand extends Command
             if ($io->askQuestion(
                 $confirmation
             )) {
-                $this->entityManager->remove($translation);
-                $this->entityManager->flush();
+                $this->managerRegistry->getManagerForClass(Translation::class)->remove($translation);
+                $this->managerRegistry->getManagerForClass(Translation::class)->flush();
                 $io->success('Translation deleted.');
             }
         } else {

@@ -90,9 +90,13 @@ class StaticThemeResolver implements ThemeResolverInterface
      */
     public function findAll(): array
     {
-        return array_merge([
-            $this->getBackendTheme(),
-        ], $this->getFrontendThemes());
+        $backendThemes = [];
+        if (class_exists($this->getBackendClassName())) {
+            $backendThemes = [
+                $this->getBackendTheme(),
+            ];
+        }
+        return array_merge($backendThemes, $this->getFrontendThemes());
     }
 
     /**

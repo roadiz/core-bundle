@@ -93,15 +93,12 @@ class NodeUrlMatcher extends DynamicUrlMatcher
      * @return array
      * @throws \ReflectionException
      */
-    protected function matchNode($decodedUrl): array
+    protected function matchNode(string $decodedUrl): array
     {
         $resourceInfo = $this->pathResolver->resolvePath($decodedUrl, $this->getSupportedFormatExtensions());
         $nodeSource = $resourceInfo->getResource();
 
-        if ($nodeSource !== null &&
-            $nodeSource instanceof NodesSources &&
-            !$nodeSource->getNode()->isHome()
-        ) {
+        if ($nodeSource instanceof NodesSources && !$nodeSource->getNode()->isHome()) {
             $translation = $nodeSource->getTranslation();
             $nodeRouteHelper = new NodeRouteHelper(
                 $nodeSource->getNode(),

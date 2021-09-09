@@ -3,9 +3,10 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
+use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CoreBundle\Bag\Roles;
 use RZ\Roadiz\CoreBundle\Entity\Role;
 use RZ\Roadiz\CoreBundle\Entity\User;
-use RZ\Roadiz\Utils\Console\Helper\RolesBagHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -16,8 +17,20 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Command line utils for managing users from terminal.
  */
-class UsersRolesCommand extends UsersCommand
+final class UsersRolesCommand extends UsersCommand
 {
+    private Roles $rolesBag;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param Roles $rolesBag
+     */
+    public function __construct(ManagerRegistry $managerRegistry, Roles $rolesBag)
+    {
+        parent::__construct($managerRegistry);
+        $this->rolesBag = $rolesBag;
+    }
+
     protected function configure()
     {
         $this->setName('users:roles')
@@ -44,20 +57,17 @@ class UsersRolesCommand extends UsersCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        /** @var RolesBagHelper $rolesBag */
-        $rolesBag = $this->getHelper('rolesBag');
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $name = $input->getArgument('username');
 
         if ($name) {
             /** @var User|null $user */
-            $user = $this->entityManager
+            $user = $this->managerRegistry
                 ->getRepository(User::class)
                 ->findOneBy(['username' => $name]);
 
             if (null !== $user) {
                 if ($input->getOption('add')) {
-                    $roles = $this->entityManager
+                    $roles = $this->managerRegistry
                         ->getRepository(Role::class)
                         ->getAllRoleName();
 
@@ -69,8 +79,8 @@ class UsersRolesCommand extends UsersCommand
                     do {
                         $role = $io->askQuestion($question);
                         if ($role != "") {
-                            $user->addRole($rolesBag->get($role));
-                            $this->entityManager->flush();
+                            $user->addRole($this->rolesBag->get($role));
+                            $this->managerRegistry->getManagerForClass(User::class)->flush();
                             $io->success('Role: ' . $role . ' added.');
                         }
                     } while ($role != "");
@@ -84,8 +94,8 @@ class UsersRolesCommand extends UsersCommand
 
                         $role = $io->askQuestion($question);
                         if (in_array($role, $roles)) {
-                            $user->removeRole($rolesBag->get($role));
-                            $this->entityManager->flush();
+                            $user->removeRole($this->rolesBag->get($role));
+                            $this->managerRegistry->getManagerForClass(User::class)->flush();
                             $io->success('Role: ' . $role . ' removed.');
                         }
                     } while ($role != "");

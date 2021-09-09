@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Cache;
 
-class ReverseProxyCache
+final class ReverseProxyCache
 {
     protected string $name;
     protected string $host;

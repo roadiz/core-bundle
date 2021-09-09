@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\User;
 use RZ\Roadiz\Random\PasswordGenerator;
 use Symfony\Component\Console\Input\InputArgument;
@@ -14,8 +15,20 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Command line utils for managing users from terminal.
  */
-class UsersPasswordCommand extends UsersCommand
+final class UsersPasswordCommand extends UsersCommand
 {
+    private PasswordGenerator $passwordGenerator;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param PasswordGenerator $passwordGenerator
+     */
+    public function __construct(ManagerRegistry $managerRegistry, PasswordGenerator $passwordGenerator)
+    {
+        parent::__construct($managerRegistry);
+        $this->passwordGenerator = $passwordGenerator;
+    }
+
     protected function configure()
     {
         $this->setName('users:password')
@@ -30,12 +43,11 @@ class UsersPasswordCommand extends UsersCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $name = $input->getArgument('username');
 
         if ($name) {
             /** @var User|null $user */
-            $user = $this->entityManager
+            $user = $this->managerRegistry
                 ->getRepository(User::class)
                 ->findOneBy(['username' => $name]);
 
@@ -47,9 +59,8 @@ class UsersPasswordCommand extends UsersCommand
                 if (!$input->isInteractive() || $io->askQuestion(
                     $confirmation
                 )) {
-                    $passwordGenerator = new PasswordGenerator();
-                    $user->setPlainPassword($passwordGenerator->generatePassword(12));
-                    $this->entityManager->flush();
+                    $user->setPlainPassword($this->passwordGenerator->generatePassword(12));
+                    $this->managerRegistry->getManagerForClass(User::class)->flush();
                     $io->success('A new password was regenerated for '.$name.': '. $user->getPlainPassword());
                 } else {
                     $io->warning('User password was not changed.');

@@ -5,7 +5,9 @@ namespace RZ\Roadiz\CoreBundle\DependencyInjection;
 
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\MarkdownConverter;
+use RZ\Roadiz\CoreBundle\Cache\CloudflareProxyCache;
 use RZ\Roadiz\CoreBundle\Cache\ReverseProxyCache;
+use RZ\Roadiz\CoreBundle\Cache\ReverseProxyCacheLocator;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\Node;
@@ -23,6 +25,7 @@ use Solarium\Core\Client\Adapter\Curl;
 use Solarium\Core\Client\Endpoint;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
@@ -91,16 +94,57 @@ class RoadizCoreExtension extends Extension
         /*
          * Reverse Proxy cache config
          */
-        $reverseProxyCacheFrontends = [];
+        $reverseProxyCacheFrontendsReferences = [];
         foreach ($config['reverseProxyCache']['frontend'] as $name => $frontend) {
-            $reverseProxyCacheFrontends[] = new ReverseProxyCache(
-                $name,
-                $frontend['host'],
-                $frontend['domainName'],
-                $frontend['timeout'],
+            $definitionName = 'roadiz_core.reverse_proxy_cache.frontends.' . $name;
+            $container->setDefinition(
+                $definitionName,
+                (new Definition())
+                    ->setClass(ReverseProxyCache::class)
+                    ->setPublic(true)
+                    ->setArguments([
+                        $name,
+                        $frontend['host'],
+                        $frontend['domainName'],
+                        $frontend['timeout'],
+                    ])
+            );
+            $reverseProxyCacheFrontendsReferences[] = new Reference($definitionName);
+        }
+
+        if (isset($config['reverseProxyCache']['cloudflare']) &&
+            isset($config['reverseProxyCache']['cloudflare']['bearer'])) {
+            $container->setDefinition(
+                'roadiz_core.reverse_proxy_cache.cloudflare',
+                (new Definition())
+                    ->setClass(CloudflareProxyCache::class)
+                    ->setPublic(true)
+                    ->setArguments([
+                        'cloudflare',
+                        $config['reverseProxyCache']['cloudflare']['zone'],
+                        $config['reverseProxyCache']['cloudflare']['version'],
+                        $config['reverseProxyCache']['cloudflare']['bearer'],
+                        $config['reverseProxyCache']['cloudflare']['email'],
+                        $config['reverseProxyCache']['cloudflare']['key'],
+                        $config['reverseProxyCache']['cloudflare']['timeout'],
+                    ])
             );
         }
-        $container->setParameter('roadiz_core.reverse_proxy_cache.frontends', $reverseProxyCacheFrontends);
+
+        $container->setDefinition(
+            ReverseProxyCacheLocator::class,
+            (new Definition())
+                ->setClass(ReverseProxyCacheLocator::class)
+                ->setPublic(true)
+                ->setArguments([
+                    $reverseProxyCacheFrontendsReferences,
+                    new Reference(
+                        'roadiz_core.reverse_proxy_cache.cloudflare',
+                        ContainerInterface::NULL_ON_INVALID_REFERENCE
+                    )
+                ])
+        );
+
         $container->setParameter('roadiz_core.use_native_json_column_type', $config['useNativeJsonColumnType']);
 
         /*

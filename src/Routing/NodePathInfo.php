@@ -95,7 +95,7 @@ class NodePathInfo implements \Serializable
      */
     public function serialize()
     {
-        return json_encode([
+        return \json_encode([
             'path' => $this->getPath(),
             'parameters' => $this->getParameters(),
             'is_complete' => $this->isComplete(),
@@ -108,7 +108,7 @@ class NodePathInfo implements \Serializable
      */
     public function unserialize($serialized)
     {
-        $data = json_decode($serialized, true);
+        $data = \json_decode($serialized, true);
         $this->setComplete($data['is_complete']);
         $this->setParameters($data['parameters']);
         $this->setPath($data['path']);

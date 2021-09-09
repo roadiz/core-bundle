@@ -7,7 +7,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use RZ\Roadiz\CoreBundle\Entity\Theme;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
-use RZ\Roadiz\Utils\Theme\ThemeResolverInterface;
+use RZ\Roadiz\CoreBundle\Theme\ThemeResolverInterface;
 use Symfony\Component\Routing\Matcher\UrlMatcher;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouteCollection;

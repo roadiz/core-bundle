@@ -13,7 +13,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Command line utils for managing users from terminal.
  */
-class UsersEnableCommand extends UsersCommand
+final class UsersEnableCommand extends UsersCommand
 {
     protected function configure()
     {
@@ -29,11 +29,10 @@ class UsersEnableCommand extends UsersCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $name = $input->getArgument('username');
 
         if ($name) {
-            $user = $this->entityManager
+            $user = $this->managerRegistry
                 ->getRepository(User::class)
                 ->findOneBy(['username' => $name]);
 
@@ -46,7 +45,7 @@ class UsersEnableCommand extends UsersCommand
                     $confirmation
                 )) {
                     $user->setEnabled(true);
-                    $this->entityManager->flush();
+                    $this->managerRegistry->getManagerForClass(User::class)->flush();
                     $io->success('User “' . $name . '” was enabled.');
                 } else {
                     $io->warning('User “' . $name . '” was not enabled');

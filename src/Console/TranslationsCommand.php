@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -14,7 +15,16 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class TranslationsCommand extends Command
 {
-    private $entityManager;
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+    }
 
     protected function configure()
     {
@@ -24,9 +34,8 @@ class TranslationsCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $io = new SymfonyStyle($input, $output);
-        $translations = $this->entityManager
+        $translations = $this->managerRegistry
             ->getRepository(Translation::class)
             ->findAll();
 

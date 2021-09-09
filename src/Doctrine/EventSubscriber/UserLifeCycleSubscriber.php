@@ -114,16 +114,18 @@ class UserLifeCycleSubscriber implements EventSubscriber
 
     /**
      * @param User $user
-     * @param string $plainPassword
+     * @param string|null $plainPassword
      */
-    protected function setPassword(User $user, string $plainPassword)
+    protected function setPassword(User $user, ?string $plainPassword)
     {
-        $encoder = $this->encoderFactory->getEncoder($user);
-        $encodedPassword = $encoder->encodePassword(
-            $plainPassword,
-            $user->getSalt()
-        );
-        $user->setPassword($encodedPassword);
+        if (null !== $plainPassword) {
+            $encoder = $this->encoderFactory->getEncoder($user);
+            $encodedPassword = $encoder->encodePassword(
+                $plainPassword,
+                $user->getSalt()
+            );
+            $user->setPassword($encodedPassword);
+        }
     }
 
     /**

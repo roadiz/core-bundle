@@ -3,11 +3,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use RZ\Roadiz\Core\ContainerAwareInterface;
-use RZ\Roadiz\Core\ContainerAwareTrait;
-use RZ\Roadiz\Core\Kernel;
-use RZ\Roadiz\Utils\Theme\ThemeGenerator;
-use RZ\Roadiz\Utils\Theme\ThemeInfo;
+use RZ\Roadiz\CoreBundle\Theme\ThemeGenerator;
+use RZ\Roadiz\CoreBundle\Theme\ThemeInfo;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,9 +13,21 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Process\Process;
 
-class ThemeGenerateCommand extends Command implements ContainerAwareInterface
+class ThemeGenerateCommand extends Command
 {
-    use ContainerAwareTrait;
+    protected string $projectDir;
+    protected ThemeGenerator $themeGenerator;
+
+    /**
+     * @param string $projectDir
+     * @param ThemeGenerator $themeGenerator
+     */
+    public function __construct(string $projectDir, ThemeGenerator $themeGenerator)
+    {
+        parent::__construct();
+        $this->projectDir = $projectDir;
+        $this->themeGenerator = $themeGenerator;
+    }
 
     protected function configure()
     {
@@ -70,9 +79,7 @@ class ThemeGenerateCommand extends Command implements ContainerAwareInterface
         }
 
         $name = str_replace('/', '\\', $input->getArgument('name'));
-        $themeInfo = new ThemeInfo($name, $this->getHelper('kernel')->getKernel()->getProjectDir());
-        /** @var ThemeGenerator $themeGenerator */
-        $themeGenerator = $this->get(ThemeGenerator::class);
+        $themeInfo = new ThemeInfo($name, $this->projectDir);
 
         if ($io->confirm(
             'Are you sure you want to generate a new theme called: "' . $themeInfo->getThemeName() . '"' .
@@ -80,39 +87,22 @@ class ThemeGenerateCommand extends Command implements ContainerAwareInterface
             false
         )) {
             if (!$themeInfo->exists()) {
-                $themeGenerator->downloadTheme($themeInfo, $branch);
+                $this->themeGenerator->downloadTheme($themeInfo, $branch);
                 $io->success('BaseTheme cloned into ' . $themeInfo->getThemePath());
             }
 
-            $themeGenerator->renameTheme($themeInfo);
+            $this->themeGenerator->renameTheme($themeInfo);
+            $this->themeGenerator->installThemeAssets($themeInfo, $expectedMethod);
 
-            $themeGenerator->installThemeAssets($themeInfo, $expectedMethod);
-
-            $this->runCommand(sprintf('themes:register "%s" -v', $themeInfo->getClassname()));
-
+            $io->note([
+                'Register your theme into your config/packages/roadiz_core.yaml configuration file',
+                '---',
+                'themes:',
+                '    - classname: ' . $themeInfo->getClassname(),
+            ]);
             $io->success($themeInfo->getThemeName() . ' has been regenerated and is ready to be installed, have fun!');
         }
 
         return 0;
-    }
-
-    /**
-     * @param string $command
-     * @param string $environment
-     * @param bool   $preview
-     *
-     * @return int
-     */
-    protected function runCommand(string $command, $environment = 'dev', $preview = false)
-    {
-        /** @var Kernel $existingKernel */
-        $existingKernel = $this->getHelper('kernel')->getKernel();
-        $process = Process::fromShellCommandline(
-            'php bin/roadiz ' . $command . ' -e ' . $environment . ($preview ? ' --preview' : '')
-        );
-        $process->setWorkingDirectory($existingKernel->getProjectDir());
-        $process->setTty(true);
-        $process->run();
-        return $process->wait();
     }
 }

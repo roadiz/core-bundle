@@ -3,20 +3,17 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\ORM\EntityNotFoundException;
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\Attribute\Importer\AttributeImporter;
-use RZ\Roadiz\CMS\Importers\EntityImporterInterface;
-use RZ\Roadiz\CMS\Importers\GroupsImporter;
-use RZ\Roadiz\CMS\Importers\NodesImporter;
-use RZ\Roadiz\CMS\Importers\NodeTypesImporter;
-use RZ\Roadiz\CMS\Importers\RolesImporter;
-use RZ\Roadiz\CMS\Importers\SettingsImporter;
-use RZ\Roadiz\CMS\Importers\TagsImporter;
-use RZ\Roadiz\Core\ContainerAwareInterface;
-use RZ\Roadiz\Core\ContainerAwareTrait;
-use RZ\Roadiz\Core\Exceptions\EntityAlreadyExistsException;
-use RZ\Roadiz\Utils\Theme\ThemeInfo;
+use RZ\Roadiz\CoreBundle\Exception\EntityAlreadyExistsException;
+use RZ\Roadiz\CoreBundle\Importer\AttributeImporter;
+use RZ\Roadiz\CoreBundle\Importer\EntityImporterInterface;
+use RZ\Roadiz\CoreBundle\Importer\GroupsImporter;
+use RZ\Roadiz\CoreBundle\Importer\NodeTypesImporter;
+use RZ\Roadiz\CoreBundle\Importer\RolesImporter;
+use RZ\Roadiz\CoreBundle\Importer\SettingsImporter;
+use RZ\Roadiz\CoreBundle\Importer\TagsImporter;
+use RZ\Roadiz\CoreBundle\Theme\ThemeGenerator;
+use RZ\Roadiz\CoreBundle\Theme\ThemeInfo;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\RuntimeException;
 use Symfony\Component\Console\Input\InputArgument;
@@ -31,29 +28,49 @@ use Symfony\Component\Yaml\Yaml;
 /**
  * Command line utils for managing themes from terminal.
  */
-class ThemeInstallCommand extends Command implements ContainerAwareInterface
+class ThemeInstallCommand extends Command
 {
-    use ContainerAwareTrait;
+    protected SymfonyStyle $io;
+    private bool $dryRun = false;
+    protected string $projectDir;
+    protected ThemeGenerator $themeGenerator;
+    protected NodeTypesImporter $nodeTypesImporter;
+    protected TagsImporter $tagsImporter;
+    protected SettingsImporter $settingsImporter;
+    protected RolesImporter $rolesImporter;
+    protected GroupsImporter $groupsImporter;
+    protected AttributeImporter $attributeImporter;
 
     /**
-     * @var SymfonyStyle
+     * @param string $projectDir
+     * @param ThemeGenerator $themeGenerator
+     * @param NodeTypesImporter $nodeTypesImporter
+     * @param TagsImporter $tagsImporter
+     * @param SettingsImporter $settingsImporter
+     * @param RolesImporter $rolesImporter
+     * @param GroupsImporter $groupsImporter
+     * @param AttributeImporter $attributeImporter
      */
-    protected $io;
-
-    /**
-     * @var bool
-     */
-    private $dryRun = false;
-
-    /**
-     * @var ThemeInfo
-     */
-    private $themeInfo;
-
-    /**
-     * @var string
-     */
-    private $themeConfigPath;
+    public function __construct(
+        string $projectDir,
+        ThemeGenerator $themeGenerator,
+        NodeTypesImporter $nodeTypesImporter,
+        TagsImporter $tagsImporter,
+        SettingsImporter $settingsImporter,
+        RolesImporter $rolesImporter,
+        GroupsImporter $groupsImporter,
+        AttributeImporter $attributeImporter
+    ) {
+        parent::__construct();
+        $this->projectDir = $projectDir;
+        $this->themeGenerator = $themeGenerator;
+        $this->nodeTypesImporter = $nodeTypesImporter;
+        $this->tagsImporter = $tagsImporter;
+        $this->settingsImporter = $settingsImporter;
+        $this->rolesImporter = $rolesImporter;
+        $this->groupsImporter = $groupsImporter;
+        $this->attributeImporter = $attributeImporter;
+    }
 
     protected function configure()
     {
@@ -71,12 +88,6 @@ class ThemeInstallCommand extends Command implements ContainerAwareInterface
                 'Import default data (node-types, roles, settings and tags)'
             )
             ->addOption(
-                'nodes',
-                null,
-                InputOption::VALUE_NONE,
-                'Import nodes data. This cannot be done at the same time with --data option.'
-            )
-            ->addOption(
                 'dry-run',
                 'd',
                 InputOption::VALUE_NONE,
@@ -90,6 +101,7 @@ class ThemeInstallCommand extends Command implements ContainerAwareInterface
             $this->dryRun = true;
         }
         $this->io = new SymfonyStyle($input, $output);
+        $themeInfo = null;
 
         /*
          * Test if Classname is not a valid yaml file before using Theme
@@ -98,7 +110,7 @@ class ThemeInstallCommand extends Command implements ContainerAwareInterface
             $classname = realpath($input->getArgument('classname'));
             if (file_exists($classname)) {
                 $this->io->note('Install assets directly from file: '. $classname);
-                $this->themeConfigPath = $classname;
+                $themeConfigPath = $classname;
             } else {
                 $this->io->error($classname .' configuration file is not readable.');
                 return 1;
@@ -108,26 +120,24 @@ class ThemeInstallCommand extends Command implements ContainerAwareInterface
              * Replace slash by anti-slashes
              */
             $classname = str_replace('/', '\\', $input->getArgument('classname'));
-            $this->themeInfo = new ThemeInfo($classname, $this->get('kernel')->getProjectDir());
-            $this->themeConfigPath = $this->themeInfo->getThemePath() . '/config.yml';
-            if (!$this->themeInfo->isValid()) {
-                throw new RuntimeException($this->themeInfo->getClassname() . ' is not a valid Roadiz theme.');
+            $themeInfo = new ThemeInfo($classname, $this->projectDir);
+            $themeConfigPath = $themeInfo->getThemePath() . '/config.yml';
+            if (!$themeInfo->isValid()) {
+                throw new RuntimeException($themeInfo->getClassname() . ' is not a valid Roadiz theme.');
             }
-            if (!file_exists($this->themeConfigPath)) {
-                $this->io->warning($this->themeInfo->getName() .' theme does not have any configuration.');
+            if (!file_exists($themeConfigPath)) {
+                $this->io->warning($themeInfo->getName() .' theme does not have any configuration.');
                 return 1;
             }
         }
 
-        if ($output->isVeryVerbose() && null !== $this->themeInfo) {
-            $this->io->writeln('Theme name is: <info>'. $this->themeInfo->getName() .'</info>.');
-            $this->io->writeln('Theme assets are located in <info>'. $this->themeInfo->getThemePath() .'/static</info>.');
+        if ($output->isVeryVerbose() && null !== $themeInfo) {
+            $this->io->writeln('Theme name is: <info>'. $themeInfo->getName() .'</info>.');
+            $this->io->writeln('Theme assets are located in <info>'. $themeInfo->getThemePath() .'/static</info>.');
         }
 
         if ($input->getOption('data')) {
-            $this->importThemeData();
-        } elseif ($input->getOption('nodes')) {
-            $this->importThemeNodes();
+            $this->importThemeData($themeInfo, $themeConfigPath);
         } else {
             $this->io->note(
                 'Roadiz themes are no more registered into database. ' .
@@ -137,39 +147,39 @@ class ThemeInstallCommand extends Command implements ContainerAwareInterface
         return 0;
     }
 
-    protected function importThemeData()
+    protected function importThemeData(ThemeInfo $themeInfo, string $themeConfigPath)
     {
-        $data = $this->getThemeConfig();
+        $data = $this->getThemeConfig($themeConfigPath);
 
         if (false !== $data && isset($data["importFiles"])) {
             if (isset($data["importFiles"]['groups'])) {
                 foreach ($data["importFiles"]['groups'] as $filename) {
-                    $this->importFile($filename, $this->get(GroupsImporter::class));
+                    $this->importFile($themeInfo, $filename, $this->groupsImporter);
                 }
             }
             if (isset($data["importFiles"]['roles'])) {
                 foreach ($data["importFiles"]['roles'] as $filename) {
-                    $this->importFile($filename, $this->get(RolesImporter::class));
+                    $this->importFile($themeInfo, $filename, $this->rolesImporter);
                 }
             }
             if (isset($data["importFiles"]['settings'])) {
                 foreach ($data["importFiles"]['settings'] as $filename) {
-                    $this->importFile($filename, $this->get(SettingsImporter::class));
+                    $this->importFile($themeInfo, $filename, $this->settingsImporter);
                 }
             }
             if (isset($data["importFiles"]['nodetypes'])) {
                 foreach ($data["importFiles"]['nodetypes'] as $filename) {
-                    $this->importFile($filename, $this->get(NodeTypesImporter::class));
+                    $this->importFile($themeInfo, $filename, $this->nodeTypesImporter);
                 }
             }
             if (isset($data["importFiles"]['tags'])) {
                 foreach ($data["importFiles"]['tags'] as $filename) {
-                    $this->importFile($filename, $this->get(TagsImporter::class));
+                    $this->importFile($themeInfo, $filename, $this->tagsImporter);
                 }
             }
             if (isset($data["importFiles"]['attributes'])) {
                 foreach ($data["importFiles"]['attributes'] as $filename) {
-                    $this->importFile($filename, $this->get(AttributeImporter::class));
+                    $this->importFile($themeInfo, $filename, $this->attributeImporter);
                 }
             }
             if ($this->io->isVeryVerbose()) {
@@ -181,18 +191,19 @@ class ThemeInstallCommand extends Command implements ContainerAwareInterface
                 );
             }
         } else {
-            $this->io->warning('Config file "' . $this->themeConfigPath . '" has no data to import.');
+            $this->io->warning('Config file "' . $themeConfigPath . '" has no data to import.');
         }
     }
 
     /**
-     * @param string                  $filename
+     * @param ThemeInfo|null $themeInfo
+     * @param string $filename
      * @param EntityImporterInterface $importer
      */
-    protected function importFile(string $filename, EntityImporterInterface $importer): void
+    protected function importFile(?ThemeInfo $themeInfo, string $filename, EntityImporterInterface $importer): void
     {
-        if (null !== $this->themeInfo) {
-            $file = new File($this->themeInfo->getThemePath() . "/" . $filename);
+        if (null !== $themeInfo) {
+            $file = new File($themeInfo->getThemePath() . "/" . $filename);
         } else {
             $file = new File(realpath($filename));
         }
@@ -219,30 +230,11 @@ class ThemeInstallCommand extends Command implements ContainerAwareInterface
         );
     }
 
-    protected function importThemeNodes()
-    {
-        $data = $this->getThemeConfig();
-
-        if (false !== $data && isset($data["importFiles"])) {
-            if (isset($data["importFiles"]['nodes'])) {
-                foreach ($data["importFiles"]['nodes'] as $filename) {
-                    try {
-                        $this->importFile($filename, $this->get(NodesImporter::class));
-                    } catch (EntityNotFoundException $e) {
-                        $this->io->writeln('* <error>' . $e->getMessage() . '</error>');
-                    }
-                }
-            }
-        } else {
-            $this->io->warning('Config file "' . $this->themeConfigPath . '" has no nodes to import.');
-        }
-    }
-
     /**
      * @return array
      */
-    protected function getThemeConfig()
+    protected function getThemeConfig(string $themeConfigPath)
     {
-        return Yaml::parse(file_get_contents($this->themeConfigPath));
+        return Yaml::parse(file_get_contents($themeConfigPath));
     }
 }

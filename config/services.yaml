@@ -12,6 +12,9 @@ services:
             $maxPixelSize: '%roadiz_core.assets_processing.max_pixel_size%'
             $imageDriver: '%roadiz_core.assets_processing.driver%'
             $appNamespace: '%roadiz_core.app_namespace%'
+            $projectDir: '%kernel.project_dir%'
+            $publicDir: '%kernel.project_dir%/public'
+            $cacheDir: '%kernel.project_dir%/var/cache'
             $exportDir: '%kernel.project_dir%/var/export'
             $privateKeyName: '%roadiz_core.private_key_name%'
             $generatedEntitiesDir: '%kernel.project_dir%/generated'
@@ -72,9 +75,6 @@ services:
         calls:
             - [ setAnnotationReader, [ "@annotation_reader" ] ]
 
-    RZ\Roadiz\CoreBundle\Cache\ReverseProxyCacheLocator:
-        arguments: ['%roadiz_core.reverse_proxy_cache.frontends%']
-
     Symfony\Component\Asset\VersionStrategy\VersionStrategyInterface:
         alias: 'assets.empty_version_strategy'
 
@@ -86,6 +86,8 @@ services:
 
     RZ\Roadiz\CoreBundle\Filesystem\RoadizFileDirectories:
         arguments: ['%kernel.project_dir%']
+
+    RZ\Roadiz\Random\PasswordGenerator:
 
     RZ\Crypto\KeyChain\KeyChainInterface:
         alias: RZ\Crypto\KeyChain\AsymmetricFilesystemKeyChain
@@ -120,6 +122,10 @@ services:
     RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\NodeChrootChainResolver:
         arguments:
             - ['@RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\RoadizUserNodeChrootResolver']
+
+    RZ\Roadiz\CoreBundle\Cache\Clearer\AssetsFileClearer:
+        arguments:
+            - '%kernel.project_dir%/public/assets'
 
     #
     # Markdown
