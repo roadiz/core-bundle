@@ -7,28 +7,33 @@ use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use RZ\Roadiz\CoreBundle\Exception\SolrServerNotAvailableException;
+use RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry;
 use RZ\Roadiz\CoreBundle\SearchEngine\SolariumFactoryInterface;
 use Solarium\Client;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 abstract class AbstractIndexer implements Indexer
 {
-    private ?Client $solr;
+    private ClientRegistry $clientRegistry;
     protected SolariumFactoryInterface $solariumFactory;
     protected LoggerInterface $logger;
     protected ?SymfonyStyle $io = null;
     protected ManagerRegistry $managerRegistry;
 
     /**
-     * @param ?Client $solr
+     * @param ClientRegistry $clientRegistry
      * @param ManagerRegistry $managerRegistry
      * @param SolariumFactoryInterface $solariumFactory
      * @param LoggerInterface|null $logger
      */
-    public function __construct(?Client $solr, ManagerRegistry $managerRegistry, SolariumFactoryInterface $solariumFactory, ?LoggerInterface $logger = null)
-    {
+    public function __construct(
+        ClientRegistry $clientRegistry,
+        ManagerRegistry $managerRegistry,
+        SolariumFactoryInterface $solariumFactory,
+        ?LoggerInterface $logger = null
+    ) {
         $this->solariumFactory = $solariumFactory;
-        $this->solr = $solr;
+        $this->clientRegistry = $clientRegistry;
         $this->logger = $logger ?? new NullLogger();
         $this->managerRegistry = $managerRegistry;
     }
@@ -38,10 +43,11 @@ abstract class AbstractIndexer implements Indexer
      */
     public function getSolr(): Client
     {
-        if (null === $this->solr) {
+        $solr = $this->clientRegistry->getClient();
+        if (null === $solr) {
             throw new SolrServerNotAvailableException();
         }
-        return $this->solr;
+        return $solr;
     }
 
     /**

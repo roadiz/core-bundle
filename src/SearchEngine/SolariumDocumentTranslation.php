@@ -19,25 +19,25 @@ use Solarium\QueryType\Update\Query\Query;
  */
 class SolariumDocumentTranslation extends AbstractSolarium
 {
-    const DOCUMENT_TYPE = 'DocumentTranslation';
-    const IDENTIFIER_KEY = 'document_translation_id_i';
+    public const DOCUMENT_TYPE = 'DocumentTranslation';
+    public const IDENTIFIER_KEY = 'document_translation_id_i';
 
     protected ?DocumentInterface $rzDocument = null;
     protected ?DocumentTranslation $documentTranslation = null;
 
     /**
      * @param DocumentTranslation    $documentTranslation
-     * @param Client|null            $client
-     * @param LoggerInterface|null   $logger
-     * @param MarkdownInterface|null $markdown
+     * @param ClientRegistry $clientRegistry
+     * @param LoggerInterface   $logger
+     * @param MarkdownInterface $markdown
      */
     public function __construct(
         DocumentTranslation $documentTranslation,
-        Client $client = null,
-        LoggerInterface $logger = null,
-        MarkdownInterface $markdown = null
+        ClientRegistry $clientRegistry,
+        LoggerInterface $logger,
+        MarkdownInterface $markdown
     ) {
-        parent::__construct($client, $logger, $markdown);
+        parent::__construct($clientRegistry, $logger, $markdown);
 
         $this->documentTranslation = $documentTranslation;
         $this->rzDocument = $documentTranslation->getDocument();

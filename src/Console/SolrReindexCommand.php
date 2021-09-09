@@ -3,10 +3,11 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use RZ\Roadiz\Core\SearchEngine\Indexer\DocumentIndexer;
-use RZ\Roadiz\Core\SearchEngine\Indexer\NodesSourcesIndexer;
-use RZ\Roadiz\Core\SearchEngine\SolariumDocumentTranslation;
-use RZ\Roadiz\Core\SearchEngine\SolariumNodeSource;
+use RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry;
+use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\DocumentIndexer;
+use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\NodesSourcesIndexer;
+use RZ\Roadiz\CoreBundle\SearchEngine\SolariumDocumentTranslation;
+use RZ\Roadiz\CoreBundle\SearchEngine\SolariumNodeSource;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -20,6 +21,23 @@ use Symfony\Component\Stopwatch\Stopwatch;
 class SolrReindexCommand extends SolrCommand implements ThemeAwareCommandInterface
 {
     protected ?QuestionHelper $questionHelper = null;
+    protected NodesSourcesIndexer $nodesSourcesIndexer;
+    protected DocumentIndexer $documentIndexer;
+
+    /**
+     * @param ClientRegistry $clientRegistry
+     * @param NodesSourcesIndexer $nodesSourcesIndexer
+     * @param DocumentIndexer $documentIndexer
+     */
+    public function __construct(
+        ClientRegistry $clientRegistry,
+        NodesSourcesIndexer $nodesSourcesIndexer,
+        DocumentIndexer $documentIndexer
+    ) {
+        parent::__construct($clientRegistry);
+        $this->nodesSourcesIndexer = $nodesSourcesIndexer;
+        $this->documentIndexer = $documentIndexer;
+    }
 
     protected function configure()
     {
@@ -31,48 +49,41 @@ class SolrReindexCommand extends SolrCommand implements ThemeAwareCommandInterfa
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->questionHelper = $this->getHelper('question');
-        $this->solr = $this->getHelper('solr')->getSolr();
+        $solr = $this->clientRegistry->getClient();
         $this->io = new SymfonyStyle($input, $output);
 
-        if (null !== $this->solr) {
-            if (true === $this->getHelper('solr')->ready()) {
+        if (null !== $solr) {
+            if (true === $this->clientRegistry->isClientReady($solr)) {
                 if ($this->io->confirm(
                     'Are you sure to reindex your Node and Document database?',
                     !$input->isInteractive()
                 )) {
                     $stopwatch = new Stopwatch();
                     $stopwatch->start('global');
-
-                    /** @var NodesSourcesIndexer $nodesSourcesIndexer */
-                    $nodesSourcesIndexer = $this->getHelper('kernel')->getKernel()->get(NodesSourcesIndexer::class);
-                    /** @var DocumentIndexer $documentIndexer */
-                    $documentIndexer = $this->getHelper('kernel')->getKernel()->get(DocumentIndexer::class);
-
-                    $nodesSourcesIndexer->setIo($this->io);
-                    $documentIndexer->setIo($this->io);
+                    $this->nodesSourcesIndexer->setIo($this->io);
+                    $this->documentIndexer->setIo($this->io);
 
                     if ($input->getOption('documents')) {
                         // Empty first
-                        $documentIndexer->emptySolr(SolariumDocumentTranslation::DOCUMENT_TYPE);
-                        $documentIndexer->reindexAll();
+                        $this->documentIndexer->emptySolr(SolariumDocumentTranslation::DOCUMENT_TYPE);
+                        $this->documentIndexer->reindexAll();
 
                         $stopwatch->stop('global');
                         $duration = $stopwatch->getEvent('global')->getDuration();
                         $this->io->success(sprintf('Document database has been re-indexed in %.2d ms.', $duration));
                     } elseif ($input->getOption('nodes')) {
                         // Empty first
-                        $nodesSourcesIndexer->emptySolr(SolariumNodeSource::DOCUMENT_TYPE);
-                        $nodesSourcesIndexer->reindexAll();
+                        $this->nodesSourcesIndexer->emptySolr(SolariumNodeSource::DOCUMENT_TYPE);
+                        $this->nodesSourcesIndexer->reindexAll();
 
                         $stopwatch->stop('global');
                         $duration = $stopwatch->getEvent('global')->getDuration();
                         $this->io->success(sprintf('Node database has been re-indexed in %.2d ms.', $duration));
                     } else {
                         // Empty first
-                        $nodesSourcesIndexer->emptySolr();
-                        $documentIndexer->reindexAll();
-                        $nodesSourcesIndexer->reindexAll();
+                        $this->nodesSourcesIndexer->emptySolr();
+                        $this->documentIndexer->reindexAll();
+                        $this->nodesSourcesIndexer->reindexAll();
 
                         $stopwatch->stop('global');
                         $duration = $stopwatch->getEvent('global')->getDuration();

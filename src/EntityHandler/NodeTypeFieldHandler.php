@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
 use Doctrine\Persistence\ObjectManager;
-use Pimple\Container;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\Core\Handlers\AbstractHandler;
 
@@ -13,8 +12,8 @@ use RZ\Roadiz\Core\Handlers\AbstractHandler;
  */
 class NodeTypeFieldHandler extends AbstractHandler
 {
+    private HandlerFactory $handlerFactory;
     private ?NodeTypeField $nodeTypeField = null;
-    private Container $container;
 
     public function getNodeTypeField(): NodeTypeField
     {
@@ -38,12 +37,12 @@ class NodeTypeFieldHandler extends AbstractHandler
      * Create a new node-type-field handler with node-type-field to handle.
      *
      * @param ObjectManager $objectManager
-     * @param Container $container
+     * @param HandlerFactory $handlerFactory
      */
-    public function __construct(ObjectManager $objectManager, Container $container)
+    public function __construct(ObjectManager $objectManager, HandlerFactory $handlerFactory)
     {
         parent::__construct($objectManager);
-        $this->container = $container;
+        $this->handlerFactory = $handlerFactory;
     }
 
     /**
@@ -56,8 +55,7 @@ class NodeTypeFieldHandler extends AbstractHandler
     {
         if ($this->nodeTypeField->getNodeType() !== null) {
             /** @var NodeTypeHandler $nodeTypeHandler */
-            $nodeTypeHandler = $this->container['factory.handler']
-                                    ->getHandler($this->nodeTypeField->getNodeType());
+            $nodeTypeHandler = $this->handlerFactory->getHandler($this->nodeTypeField->getNodeType());
             return $nodeTypeHandler->cleanPositions();
         }
 

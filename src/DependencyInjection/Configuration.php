@@ -29,16 +29,13 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('timezone')
                 ->defaultValue('Europe/Paris')
             ->end()
+            ->booleanNode('useNativeJsonColumnType')
+                ->defaultValue(true)
+            ->end()
             ->arrayNode('security')
                 ->addDefaultsIfNotSet()
                 ->children()
                     ->scalarNode('private_key_name')
-                        ->beforeNormalization()
-                            ->ifString()
-                            ->then(function ($v) {
-                                return $this->resolveKernelVars($v);
-                            })
-                        ->end()
                         ->defaultValue('default')
                         ->info('Asymmetric cryptographic key name.')
                     ->end()
@@ -132,7 +129,8 @@ EOD
         $node = $builder->getRootNode();
 
         $node->children()
-                ->arrayNode('endpoint')
+                ->scalarNode('timeout')->defaultValue(3)->end()
+                ->arrayNode('endpoints')
                     ->useAttributeAsKey('name')
                     ->prototype('array')
                         ->children()
@@ -144,7 +142,6 @@ EOD
                                 ->values(['http', 'https'])
                                 ->defaultValue('http')
                             ->end()
-                            ->scalarNode('timeout')->defaultValue(3)->end()
                             ->scalarNode('port')->defaultValue(8983)->end()
                             ->scalarNode('path')->defaultValue('/')->end()
                         ->end()
@@ -162,7 +159,6 @@ EOD
     {
         $builder = new TreeBuilder('reverseProxyCache');
         $node = $builder->getRootNode();
-        $node->addDefaultsIfNotSet();
         $node->children()
                 ->arrayNode('frontend')
                     ->isRequired()

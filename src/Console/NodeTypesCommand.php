@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use Symfony\Component\Console\Command\Command;
@@ -16,7 +17,16 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class NodeTypesCommand extends Command
 {
-    private $entityManager;
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+    }
 
     protected function configure()
     {
@@ -31,18 +41,17 @@ class NodeTypesCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $io = new SymfonyStyle($input, $output);
         $name = $input->getArgument('name');
 
         if ($name) {
-            $nodetype = $this->entityManager
+            $nodetype = $this->managerRegistry
                 ->getRepository(NodeType::class)
                 ->findOneByName($name);
 
             if ($nodetype !== null) {
                 /** @var array<NodeTypeField> $fields */
-                $fields = $this->entityManager->getRepository(NodeTypeField::class)
+                $fields = $this->managerRegistry->getRepository(NodeTypeField::class)
                     ->findBy([
                         'nodeType' => $nodetype,
                     ], ['position' => 'ASC']);
@@ -60,12 +69,12 @@ class NodeTypesCommand extends Command
                 }
                 $io->table(['Id', 'Label', 'Name', 'Type', 'Visible', 'Index'], $tableContent);
             } else {
-                $io->error($name . ' node type does not exist.');
-                return 1;
+                $io->note($name . ' node type does not exist.');
+                return 0;
             }
         } else {
             /** @var array<NodeType> $nodetypes */
-            $nodetypes = $this->entityManager
+            $nodetypes = $this->managerRegistry
                 ->getRepository(NodeType::class)
                 ->findBy([], ['name' => 'ASC']);
 
@@ -82,8 +91,7 @@ class NodeTypesCommand extends Command
 
                 $io->table(['Id', 'Title', 'Visible'], $tableContent);
             } else {
-                $io->error('No available node-types…');
-                return 1;
+                $io->note('No available node-types…');
             }
         }
         return 0;

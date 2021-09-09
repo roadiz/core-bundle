@@ -16,27 +16,27 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  */
 class SolariumNodeSource extends AbstractSolarium
 {
-    const DOCUMENT_TYPE = 'NodesSources';
-    const IDENTIFIER_KEY = 'node_source_id_i';
+    public const DOCUMENT_TYPE = 'NodesSources';
+    public const IDENTIFIER_KEY = 'node_source_id_i';
 
     protected NodesSources $nodeSource;
     protected EventDispatcherInterface $dispatcher;
 
     /**
      * @param NodesSources             $nodeSource
-     * @param Client                   $client
+     * @param ClientRegistry $clientRegistry
      * @param EventDispatcherInterface $dispatcher
-     * @param LoggerInterface|null     $logger
-     * @param MarkdownInterface|null   $markdown
+     * @param LoggerInterface     $logger
+     * @param MarkdownInterface   $markdown
      */
     public function __construct(
         NodesSources $nodeSource,
-        Client $client,
+        ClientRegistry $clientRegistry,
         EventDispatcherInterface $dispatcher,
         LoggerInterface $logger = null,
         MarkdownInterface $markdown = null
     ) {
-        parent::__construct($client, $logger, $markdown);
+        parent::__construct($clientRegistry, $logger, $markdown);
         $this->nodeSource = $nodeSource;
         $this->dispatcher = $dispatcher;
     }

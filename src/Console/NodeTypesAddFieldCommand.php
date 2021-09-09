@@ -5,6 +5,7 @@ namespace RZ\Roadiz\CoreBundle\Console;
 
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
+use RZ\Roadiz\CoreBundle\EntityHandler\NodeTypeHandler;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -13,7 +14,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Command line utils for managing node-types from terminal.
  */
-class NodeTypesAddFieldCommand extends NodeTypesCreationCommand
+final class NodeTypesAddFieldCommand extends NodeTypesCreationCommand
 {
     protected function configure()
     {
@@ -29,22 +30,22 @@ class NodeTypesAddFieldCommand extends NodeTypesCreationCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $name = $input->getArgument('name');
 
         /** @var NodeType|null $nodeType */
-        $nodeType = $this->entityManager
+        $nodeType = $this->managerRegistry
             ->getRepository(NodeType::class)
             ->findOneBy(['name' => $name]);
 
         if ($nodeType !== null) {
-            $latestPosition = $this->entityManager
+            $latestPosition = $this->managerRegistry
                 ->getRepository(NodeTypeField::class)
                 ->findLatestPositionInNodeType($nodeType);
             $this->addNodeTypeField($nodeType, $latestPosition + 1, $io);
-            $this->entityManager->flush();
+            $this->managerRegistry->getManagerForClass(NodeTypeField::class)->flush();
 
-            $handler = $this->getHelper('handlerFactory')->getHandler($nodeType);
+            /** @var NodeTypeHandler $handler */
+            $handler = $this->handlerFactory->getHandler($nodeType);
             $handler->regenerateEntityClass();
 
             $io->success('Node type ' . $nodeType->getName() . ' has been updated.' . PHP_EOL .

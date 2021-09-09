@@ -10,10 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
-use RZ\Roadiz\Core\Kernel;
 use RZ\Roadiz\EntityGenerator\EntityGeneratorFactory;
-use RZ\Roadiz\Utils\Clearer\DoctrineCacheClearer;
-use RZ\Roadiz\Utils\Clearer\OPCacheClearer;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use RZ\Roadiz\Core\Handlers\AbstractHandler;
@@ -24,10 +21,10 @@ use RZ\Roadiz\Core\Handlers\AbstractHandler;
 class NodeTypeHandler extends AbstractHandler
 {
     private ?NodeType $nodeType = null;
-    private Kernel $kernel;
     private EntityGeneratorFactory $entityGeneratorFactory;
     private HandlerFactory $handlerFactory;
     private ManagerRegistry $managerRegistry;
+    private string $generatedEntitiesDir;
 
     /**
      * @return NodeType
@@ -54,23 +51,23 @@ class NodeTypeHandler extends AbstractHandler
      * Create a new node-type handler with node-type to handle.
      *
      * @param ObjectManager $objectManager
-     * @param Kernel $kernel
      * @param EntityGeneratorFactory $entityGeneratorFactory
      * @param HandlerFactory $handlerFactory
      * @param ManagerRegistry $managerRegistry
+     * @param string $generatedEntitiesDir
      */
     public function __construct(
         ObjectManager $objectManager,
-        Kernel $kernel,
         EntityGeneratorFactory $entityGeneratorFactory,
         HandlerFactory $handlerFactory,
-        ManagerRegistry $managerRegistry
+        ManagerRegistry $managerRegistry,
+        string $generatedEntitiesDir
     ) {
         parent::__construct($objectManager);
-        $this->kernel = $kernel;
         $this->entityGeneratorFactory = $entityGeneratorFactory;
         $this->handlerFactory = $handlerFactory;
         $this->managerRegistry = $managerRegistry;
+        $this->generatedEntitiesDir = $generatedEntitiesDir;
     }
 
     /**
@@ -78,7 +75,7 @@ class NodeTypeHandler extends AbstractHandler
      */
     public function getGeneratedEntitiesFolder(): string
     {
-        return $this->kernel->getRootDir() . '/gen-src/' . NodeType::getGeneratedEntitiesNamespace();
+        return $this->generatedEntitiesDir;
     }
 
     /**
@@ -138,7 +135,7 @@ class NodeTypeHandler extends AbstractHandler
     public function getSourceClassPath(): string
     {
         $folder = $this->getGeneratedEntitiesFolder();
-        return $folder.'/'.$this->nodeType->getSourceEntityClassName().'.php';
+        return $folder . DIRECTORY_SEPARATOR . $this->nodeType->getSourceEntityClassName() . '.php';
     }
 
     /**

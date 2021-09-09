@@ -70,7 +70,7 @@ class NodeSourceSearchHandler extends AbstractSearchHandler implements NodeSourc
                 ]);
             }
 
-            $solrRequest = $this->client->execute($query);
+            $solrRequest = $this->getSolr()->execute($query);
             return $solrRequest->getData();
         } else {
             return null;

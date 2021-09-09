@@ -21,18 +21,18 @@ class SolariumDocument extends AbstractSolarium
     /**
      * @param Document                 $rzDocument
      * @param SolariumFactoryInterface $solariumFactory
-     * @param Client|null              $client
-     * @param LoggerInterface|null     $logger
-     * @param MarkdownInterface|null   $markdown
+     * @param ClientRegistry $clientRegistry
+     * @param LoggerInterface     $logger
+     * @param MarkdownInterface   $markdown
      */
     public function __construct(
         Document $rzDocument,
         SolariumFactoryInterface $solariumFactory,
-        Client $client = null,
-        LoggerInterface $logger = null,
-        MarkdownInterface $markdown = null
+        ClientRegistry $clientRegistry,
+        LoggerInterface $logger,
+        MarkdownInterface $markdown
     ) {
-        parent::__construct($client, $logger, $markdown);
+        parent::__construct($clientRegistry, $logger, $markdown);
         $this->documentTranslationItems = [];
 
         foreach ($rzDocument->getDocumentTranslations() as $documentTranslation) {

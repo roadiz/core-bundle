@@ -4,8 +4,11 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
+use RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory;
+use RZ\Roadiz\CoreBundle\EntityHandler\NodeTypeHandler;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -19,10 +22,19 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class NodeTypesCreationCommand extends Command
 {
+    protected ManagerRegistry $managerRegistry;
+    protected HandlerFactory $handlerFactory;
+
     /**
-     * @var EntityManager
+     * @param ManagerRegistry $managerRegistry
+     * @param HandlerFactory $handlerFactory
      */
-    protected $entityManager;
+    public function __construct(ManagerRegistry $managerRegistry, HandlerFactory $handlerFactory)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+        $this->handlerFactory = $handlerFactory;
+    }
 
     protected function configure()
     {
@@ -38,7 +50,6 @@ class NodeTypesCreationCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $name = $input->getArgument('name');
 
         if (empty($name)) {
@@ -46,7 +57,7 @@ class NodeTypesCreationCommand extends Command
         }
 
         /** @var NodeType|null $nodeType */
-        $nodeType = $this->entityManager
+        $nodeType = $this->managerRegistry
             ->getRepository(NodeType::class)
             ->findOneBy(['name' => $name]);
 
@@ -75,13 +86,15 @@ class NodeTypesCreationCommand extends Command
         $question1 = new Question('<question>Enter your node-type description</question>', ucwords($name));
         $description = $io->askQuestion($question1);
         $nt->setDescription($description);
-        $this->entityManager->persist($nt);
+        $this->managerRegistry->getManagerForClass(NodeType::class)->persist($nt);
 
         // Begin nt-field creation loop
         $this->addNodeTypeField($nt, 1, $io);
 
-        $this->entityManager->flush();
-        $handler = $this->getHelper('handlerFactory')->getHandler($nt);
+        $this->managerRegistry->getManagerForClass(NodeType::class)->flush();
+
+        /** @var NodeTypeHandler $handler */
+        $handler = $this->handlerFactory->getHandler($nt);
         $handler->regenerateEntityClass();
 
         $io->success('Node type ' . $nt->getName() . ' has been created.' . PHP_EOL .
@@ -137,7 +150,7 @@ class NodeTypesCreationCommand extends Command
 
         // Need to populate each side
         $nodeType->getFields()->add($field);
-        $this->entityManager->persist($field);
+        $this->managerRegistry->getManagerForClass(NodeType::class)->persist($field);
         $field->setNodeType($nodeType);
 
         $questionAdd = new ConfirmationQuestion('<question>Do you want to add another field?</question>', true);

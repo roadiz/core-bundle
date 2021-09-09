@@ -8,13 +8,13 @@ use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
-use RZ\Roadiz\CoreBundle\Event\DocumentDeletedEvent;
-use RZ\Roadiz\CoreBundle\Event\DocumentFileUploadedEvent;
-use RZ\Roadiz\CoreBundle\Event\DocumentInFolderEvent;
-use RZ\Roadiz\CoreBundle\Event\DocumentOutFolderEvent;
+use RZ\Roadiz\Core\Events\DocumentDeletedEvent;
+use RZ\Roadiz\Core\Events\DocumentFileUploadedEvent;
+use RZ\Roadiz\Core\Events\DocumentInFolderEvent;
+use RZ\Roadiz\Core\Events\DocumentOutFolderEvent;
+use RZ\Roadiz\Core\Events\DocumentUpdatedEvent;
+use RZ\Roadiz\Core\Events\FilterDocumentEvent;
 use RZ\Roadiz\CoreBundle\Event\DocumentTranslationUpdatedEvent;
-use RZ\Roadiz\CoreBundle\Event\DocumentUpdatedEvent;
-use RZ\Roadiz\CoreBundle\Event\FilterDocumentEvent;
 use RZ\Roadiz\CoreBundle\Event\FilterNodeEvent;
 use RZ\Roadiz\CoreBundle\Event\Folder\FolderUpdatedEvent;
 use RZ\Roadiz\CoreBundle\Event\Node\NodeCreatedEvent;
@@ -44,9 +44,8 @@ class SolariumSubscriber implements EventSubscriberInterface
     /**
      * @param MessageBusInterface $messageBus
      */
-    public function __construct(
-        MessageBusInterface $messageBus
-    ) {
+    public function __construct(MessageBusInterface $messageBus)
+    {
         $this->messageBus = $messageBus;
     }
 

@@ -3,15 +3,13 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Event;
 
+use RZ\Roadiz\Core\Events\FilterDocumentEvent;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\Core\Models\DocumentInterface;
 
 final class DocumentTranslationUpdatedEvent extends FilterDocumentEvent
 {
-    /**
-     * @var DocumentTranslation|null
-     */
-    protected $documentTranslation;
+    protected ?DocumentTranslation $documentTranslation;
 
     public function __construct(DocumentInterface $document, ?DocumentTranslation $documentTranslation = null)
     {

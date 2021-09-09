@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\ORM\EntityManager;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
@@ -15,10 +15,16 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class NodesDetailsCommand extends Command
 {
+    protected ManagerRegistry $managerRegistry;
+
     /**
-     * @var EntityManager
+     * @param ManagerRegistry $managerRegistry
      */
-    private $entityManager;
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+    }
 
     protected function configure()
     {
@@ -32,13 +38,12 @@ class NodesDetailsCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
 
-        $translation = $this->entityManager->getRepository(Translation::class)
+        $translation = $this->managerRegistry->getRepository(Translation::class)
                                            ->findOneBy(['locale' => $input->getArgument('locale')]);
 
         /** @var NodesSources|null $source */
-        $source = $this->entityManager->getRepository(NodesSources::class)
+        $source = $this->managerRegistry->getRepository(NodesSources::class)
                                     ->setDisplayingNotPublishedNodes(true)
                                     ->findOneBy([
                                         'node.nodeName' => $input->getArgument('nodeName'),
@@ -62,7 +67,7 @@ class NodesDetailsCommand extends Command
                         $data = $data->format('c');
                     }
                     if ($data instanceof \stdClass) {
-                        $data = json_encode($data);
+                        $data = \json_encode($data);
                     }
 
                     if (!empty($data)) {

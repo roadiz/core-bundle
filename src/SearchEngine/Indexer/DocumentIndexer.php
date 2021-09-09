@@ -62,7 +62,7 @@ class DocumentIndexer extends AbstractIndexer
         $iterableResult = $q->iterate();
 
         if (null !== $this->io) {
-            $this->io->progressStart($countQuery->getSingleScalarResult());
+            $this->io->progressStart((int) $countQuery->getSingleScalarResult());
         }
 
         while (($row = $iterableResult->next()) !== false) {

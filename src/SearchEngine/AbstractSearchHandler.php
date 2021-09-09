@@ -7,30 +7,40 @@ use Doctrine\Persistence\ObjectManager;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
-use Solarium\Core\Client\Client;
+use RZ\Roadiz\CoreBundle\Exception\SolrServerNotAvailableException;
+use Solarium\Client;
 use Solarium\Core\Query\Helper;
 use Solarium\QueryType\Select\Query\Query;
 
 abstract class AbstractSearchHandler implements SearchHandlerInterface
 {
-    protected ?Client $client = null;
+    private ClientRegistry $clientRegistry;
     protected ?ObjectManager $em = null;
     protected LoggerInterface $logger;
     protected int $highlightingFragmentSize = 150;
 
     /**
-     * @param Client $client
+     * @param ClientRegistry $clientRegistry
      * @param ObjectManager $em
      * @param LoggerInterface|null $logger
      */
     public function __construct(
-        Client $client,
+        ClientRegistry $clientRegistry,
         ObjectManager $em,
         ?LoggerInterface $logger = null
     ) {
-        $this->client = $client;
+        $this->clientRegistry = $clientRegistry;
         $this->em = $em;
         $this->logger = $logger ?? new NullLogger();
+    }
+
+    public function getSolr(): Client
+    {
+        $solr = $this->clientRegistry->getClient();
+        if (null === $solr) {
+            throw new SolrServerNotAvailableException();
+        }
+        return $solr;
     }
 
     /**
@@ -379,7 +389,7 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      */
     protected function createSolrQuery(array &$args = [], $rows = 20, $page = 1)
     {
-        $query = $this->client->createSelect();
+        $query = $this->getSolr()->createSelect();
 
         foreach ($args as $key => $value) {
             if (is_array($value)) {

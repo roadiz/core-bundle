@@ -4,10 +4,10 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\ORM\QueryBuilder;
-use Doctrine\Persistence\ObjectManager;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Node;
-use RZ\Roadiz\Core\Handlers\NodeHandler;
-use RZ\Roadiz\Core\Kernel;
+use RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory;
+use RZ\Roadiz\CoreBundle\EntityHandler\NodeHandler;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -16,6 +16,20 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class NodesEmptyTrashCommand extends Command
 {
+    protected ManagerRegistry $managerRegistry;
+    protected HandlerFactory $handlerFactory;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param HandlerFactory $handlerFactory
+     */
+    public function __construct(ManagerRegistry $managerRegistry, HandlerFactory $handlerFactory)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+        $this->handlerFactory = $handlerFactory;
+    }
+
     protected function configure()
     {
         $this
@@ -27,12 +41,9 @@ class NodesEmptyTrashCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        /** @var ObjectManager $em */
-        $em = $this->getHelper('doctrine')->getEntityManager();
-        /** @var Kernel $kernel */
-        $kernel = $this->getHelper('kernel')->getKernel();
 
-        $countQb = $this->createNodeQueryBuilder($em);
+        $em = $this->managerRegistry->getManagerForClass(Node::class);
+        $countQb = $this->createNodeQueryBuilder();
         $countQuery = $countQb->select($countQb->expr()->count('n'))
             ->andWhere($countQb->expr()->eq('n.status', Node::DELETED))
             ->getQuery();
@@ -47,7 +58,7 @@ class NodesEmptyTrashCommand extends Command
                 $batchSize = 100;
                 $io->progressStart($emptiedCount);
 
-                $qb = $this->createNodeQueryBuilder($em);
+                $qb = $this->createNodeQueryBuilder();
                 $q = $qb->select('n')
                     ->andWhere($countQb->expr()->eq('n.status', Node::DELETED))
                     ->getQuery();
@@ -55,7 +66,7 @@ class NodesEmptyTrashCommand extends Command
 
                 while (($row = $iterableResult->next()) !== false) {
                     /** @var NodeHandler $nodeHandler */
-                    $nodeHandler = $kernel->get('node.handler')->setNode($row[0]);
+                    $nodeHandler = $this->handlerFactory->getHandler($row[0]);
                     $nodeHandler->removeWithChildrenAndAssociations();
                     $io->progressAdvance();
                     ++$i;
@@ -80,9 +91,9 @@ class NodesEmptyTrashCommand extends Command
         return 0;
     }
 
-    protected function createNodeQueryBuilder(ObjectManager $em): QueryBuilder
+    protected function createNodeQueryBuilder(): QueryBuilder
     {
-        return $em
+        return $this->managerRegistry
             ->getRepository(Node::class)
             ->createQueryBuilder('n');
     }

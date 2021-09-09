@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\LoginAttempt;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -18,6 +18,17 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class PurgeLoginAttemptCommand extends Command
 {
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+    }
+
     protected function configure()
     {
         $this->setName('login-attempts:purge')
@@ -31,10 +42,8 @@ class PurgeLoginAttemptCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        /** @var EntityManagerInterface $entityManager */
-        $entityManager = $this->getHelper('doctrine')->getEntityManager();
-
-        $entityManager->getRepository(LoginAttempt::class)
+        $this->managerRegistry
+            ->getRepository(LoginAttempt::class)
             ->purgeLoginAttempts($input->getArgument('ip-address'));
 
         $io->success('All login attempts were deleted for ' . $input->getArgument('ip-address'));

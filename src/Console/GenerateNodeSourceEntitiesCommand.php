@@ -3,9 +3,10 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\ORM\EntityManager;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
-use RZ\Roadiz\Core\Handlers\NodeTypeHandler;
+use RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory;
+use RZ\Roadiz\CoreBundle\EntityHandler\NodeTypeHandler;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -14,12 +15,21 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Command line utils for managing node-types from terminal.
  */
-class NodesSourcesCommand extends Command
+class GenerateNodeSourceEntitiesCommand extends Command
 {
+    protected ManagerRegistry $managerRegistry;
+    protected HandlerFactory $handlerFactory;
+
     /**
-     * @var EntityManager
+     * @param ManagerRegistry $managerRegistry
+     * @param HandlerFactory $handlerFactory
      */
-    private $entityManager;
+    public function __construct(ManagerRegistry $managerRegistry, HandlerFactory $handlerFactory)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+        $this->handlerFactory = $handlerFactory;
+    }
 
     protected function configure()
     {
@@ -29,10 +39,9 @@ class NodesSourcesCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $io = new SymfonyStyle($input, $output);
 
-        $nodetypes = $this->entityManager
+        $nodetypes = $this->managerRegistry
             ->getRepository(NodeType::class)
             ->findAll();
 
@@ -40,8 +49,7 @@ class NodesSourcesCommand extends Command
             /** @var NodeType $nt */
             foreach ($nodetypes as $nt) {
                 /** @var NodeTypeHandler $handler */
-                $handler = $this->getHelper('handlerFactory')->getHandler($nt);
-
+                $handler = $this->handlerFactory->getHandler($nt);
                 $handler->removeSourceEntityClass();
                 $handler->generateSourceEntityClass();
                 $io->writeln("* Source class <info>".$nt->getSourceEntityClassName()."</info> has been generated.");

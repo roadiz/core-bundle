@@ -4,8 +4,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\SearchEngine;
 
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
-use RZ\Roadiz\CoreBundle\Exception\SolrServerNotConfiguredException;
+use RZ\Roadiz\CoreBundle\Exception\SolrServerNotAvailableException;
 use RZ\Roadiz\Markdown\MarkdownInterface;
 use Solarium\Client;
 use Solarium\Core\Query\DocumentInterface;
@@ -18,9 +17,9 @@ use Solarium\QueryType\Update\Query\Query;
  */
 abstract class AbstractSolarium
 {
-    const DOCUMENT_TYPE = 'AbstractDocument';
-    const IDENTIFIER_KEY = 'abstract_id_i';
-    const TYPE_DISCRIMINATOR = 'document_type_s';
+    public const DOCUMENT_TYPE = 'AbstractDocument';
+    public const IDENTIFIER_KEY = 'abstract_id_i';
+    public const TYPE_DISCRIMINATOR = 'document_type_s';
 
     public static array $availableLocalizedTextFields = [
         'en',
@@ -55,28 +54,34 @@ abstract class AbstractSolarium
         'tr',
     ];
 
-    protected ?Client $client = null;
+    protected ClientRegistry $clientRegistry;
     protected bool $indexed = false;
     protected ?DocumentInterface $document = null;
     protected LoggerInterface $logger;
-    protected ?MarkdownInterface $markdown = null;
+    protected MarkdownInterface $markdown;
 
     /**
-     * @param Client|null            $client
-     * @param LoggerInterface|null   $logger
-     * @param MarkdownInterface|null $markdown
+     * @param ClientRegistry $clientRegistry
+     * @param LoggerInterface   $logger
+     * @param MarkdownInterface $markdown
      */
     public function __construct(
-        ?Client $client,
-        ?LoggerInterface $logger = null,
-        ?MarkdownInterface $markdown = null
+        ClientRegistry $clientRegistry,
+        LoggerInterface $logger,
+        MarkdownInterface $markdown
     ) {
-        if (null === $client) {
-            throw new SolrServerNotConfiguredException("No Solr server available", 1);
-        }
-        $this->client = $client;
-        $this->logger = $logger ?? new NullLogger();
+        $this->logger = $logger;
         $this->markdown = $markdown;
+        $this->clientRegistry = $clientRegistry;
+    }
+
+    public function getSolr(): Client
+    {
+        $solr = $this->clientRegistry->getClient();
+        if (null === $solr) {
+            throw new SolrServerNotAvailableException();
+        }
+        return $solr;
     }
 
     /**
@@ -89,7 +94,7 @@ abstract class AbstractSolarium
      */
     public function indexAndCommit()
     {
-        $update = $this->client->createUpdate();
+        $update = $this->getSolr()->createUpdate();
         $this->createEmptyDocument($update);
 
         if (true === $this->index()) {
@@ -97,7 +102,7 @@ abstract class AbstractSolarium
             $update->addDocument($this->getDocument());
             $update->addCommit();
 
-            return $this->client->update($update);
+            return $this->getSolr()->update($update);
         }
 
         return false;
@@ -113,12 +118,12 @@ abstract class AbstractSolarium
      */
     public function updateAndCommit()
     {
-        $update = $this->client->createUpdate();
+        $update = $this->getSolr()->createUpdate();
         $this->update($update);
         $update->addCommit(true, true, false);
 
         $this->logger->debug('[Solr] Document updated.');
-        return $this->client->update($update);
+        return $this->getSolr()->update($update);
     }
 
     /**
@@ -164,11 +169,11 @@ abstract class AbstractSolarium
      */
     public function removeAndCommit()
     {
-        $update = $this->client->createUpdate();
+        $update = $this->getSolr()->createUpdate();
 
         if (true === $this->remove($update)) {
             $update->addCommit(true, true, false);
-            $this->client->update($update);
+            $this->getSolr()->update($update);
         }
     }
     /**
@@ -178,11 +183,11 @@ abstract class AbstractSolarium
      */
     public function cleanAndCommit()
     {
-        $update = $this->client->createUpdate();
+        $update = $this->getSolr()->createUpdate();
 
         if (true === $this->clean($update)) {
             $update->addCommit(true, true, false);
-            $this->client->update($update);
+            $this->getSolr()->update($update);
         }
     }
 
@@ -194,7 +199,7 @@ abstract class AbstractSolarium
      */
     public function index()
     {
-        if (null !== $this->document && $this->document instanceof Document) {
+        if ($this->document instanceof Document) {
             $this->document->setField('id', uniqid());
 
             try {
@@ -254,12 +259,12 @@ abstract class AbstractSolarium
      */
     public function getDocumentFromIndex()
     {
-        $query = $this->client->createSelect();
+        $query = $this->getSolr()->createSelect();
         $query->setQuery(static::IDENTIFIER_KEY . ':' . $this->getDocumentId());
         $query->createFilterQuery('type')->setQuery(static::TYPE_DISCRIMINATOR . ':' . static::DOCUMENT_TYPE);
 
         // this executes the query and returns the result
-        $resultset = $this->client->select($query);
+        $resultset = $this->getSolr()->select($query);
 
         if (0 === $resultset->getNumFound()) {
             return false;

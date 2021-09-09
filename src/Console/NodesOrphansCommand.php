@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\NoResultException;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -13,15 +13,20 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Class NodesOrphansCommand
  * @package RZ\Roadiz\CoreBundle\Console
  */
 class NodesOrphansCommand extends Command
 {
+    protected ManagerRegistry $managerRegistry;
+
     /**
-     * @var EntityManager
+     * @param ManagerRegistry $managerRegistry
      */
-    private $entityManager;
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+    }
 
     protected function configure()
     {
@@ -45,10 +50,9 @@ class NodesOrphansCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $io = new SymfonyStyle($input, $output);
-
-        $qb = $this->entityManager->createQueryBuilder();
+        $entityManager = $this->managerRegistry->getManagerForClass(Node::class);
+        $qb = $entityManager->createQueryBuilder();
         $qb->select('n')
             ->from(Node::class, 'n')
             ->leftJoin('n.nodeSources', 'ns')
@@ -81,9 +85,9 @@ class NodesOrphansCommand extends Command
             if ($input->getOption('delete')) {
                 /** @var Node $orphan */
                 foreach ($orphans as $orphan) {
-                    $this->entityManager->remove($orphan);
+                    $entityManager->remove($orphan);
                 }
-                $this->entityManager->flush();
+                $entityManager->flush();
 
                 $io->success('Orphan nodes have been removed from your database.');
             } else {

@@ -3,7 +3,10 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
+use RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory;
+use RZ\Roadiz\CoreBundle\EntityHandler\NodeTypeHandler;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -16,7 +19,19 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class NodeTypesDeleteCommand extends Command
 {
-    private $entityManager;
+    protected ManagerRegistry $managerRegistry;
+    protected HandlerFactory $handlerFactory;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param HandlerFactory $handlerFactory
+     */
+    public function __construct(ManagerRegistry $managerRegistry, HandlerFactory $handlerFactory)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+        $this->handlerFactory = $handlerFactory;
+    }
 
     protected function configure()
     {
@@ -32,7 +47,6 @@ class NodeTypesDeleteCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
         $name = $input->getArgument('name');
 
         if (empty($name)) {
@@ -40,7 +54,7 @@ class NodeTypesDeleteCommand extends Command
         }
 
         /** @var NodeType|null $nodeType */
-        $nodeType = $this->entityManager
+        $nodeType = $this->managerRegistry
             ->getRepository(NodeType::class)
             ->findOneByName($name);
 
@@ -57,10 +71,11 @@ class NodeTypesDeleteCommand extends Command
             if ($io->askQuestion(
                 $question
             )) {
-                $handler = $this->getHelper('handlerFactory')->getHandler($nodeType);
+                /** @var NodeTypeHandler $handler */
+                $handler = $this->handlerFactory->getHandler($nodeType);
                 $handler->removeSourceEntityClass();
-                $this->entityManager->remove($nodeType);
-                $this->entityManager->flush();
+                $this->managerRegistry->getManagerForClass(NodeType::class)->remove($nodeType);
+                $this->managerRegistry->getManagerForClass(NodeType::class)->flush();
                 $io->success('Node-type deleted.' . PHP_EOL .
                     'Do not forget to update database schema! ' . PHP_EOL .
                     'bin/roadiz orm:schema-tool:update --dump-sql --force');

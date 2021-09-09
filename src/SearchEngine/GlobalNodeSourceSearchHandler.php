@@ -15,7 +15,6 @@ use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
 class GlobalNodeSourceSearchHandler
 {
     private ObjectManager $em;
-    private NodesSourcesRepository $repository;
 
     /**
      * @param ObjectManager $em
@@ -23,7 +22,11 @@ class GlobalNodeSourceSearchHandler
     public function __construct(ObjectManager $em)
     {
         $this->em = $em;
-        $this->repository = $this->em->getRepository(NodesSources::class);
+    }
+
+    protected function getRepository(): NodesSourcesRepository
+    {
+        return $this->em->getRepository(NodesSources::class);
     }
 
     /**
@@ -33,7 +36,7 @@ class GlobalNodeSourceSearchHandler
      */
     public function setDisplayNonPublishedNodes(bool $displayNonPublishedNodes)
     {
-        $this->repository->setDisplayingNotPublishedNodes($displayNonPublishedNodes);
+        $this->getRepository()->setDisplayingNotPublishedNodes($displayNonPublishedNodes);
         return $this;
     }
 
@@ -51,7 +54,7 @@ class GlobalNodeSourceSearchHandler
          * First try with Solr
          */
         /** @var array $nodesSources */
-        $nodesSources = $this->repository->findBySearchQuery(
+        $nodesSources = $this->getRepository()->findBySearchQuery(
             $safeSearchTerms,
             $resultCount
         );
@@ -60,7 +63,7 @@ class GlobalNodeSourceSearchHandler
          * Second try with sources fields
          */
         if (count($nodesSources) === 0) {
-            $nodesSources = $this->repository->searchBy(
+            $nodesSources = $this->getRepository()->searchBy(
                 $safeSearchTerms,
                 [],
                 [],
@@ -71,7 +74,7 @@ class GlobalNodeSourceSearchHandler
                 /*
                  * Then try with node name.
                  */
-                $qb = $this->repository->createQueryBuilder('ns');
+                $qb = $this->getRepository()->createQueryBuilder('ns');
 
                 $qb->select('ns, n')
                     ->innerJoin('ns.node', 'n')

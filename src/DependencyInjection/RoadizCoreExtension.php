@@ -3,12 +3,32 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\DependencyInjection;
 
+use League\CommonMark\Environment\Environment;
+use League\CommonMark\MarkdownConverter;
 use RZ\Roadiz\CoreBundle\Cache\ReverseProxyCache;
+use RZ\Roadiz\CoreBundle\Entity\CustomForm;
+use RZ\Roadiz\CoreBundle\Entity\Document;
+use RZ\Roadiz\CoreBundle\Entity\Node;
+use RZ\Roadiz\CoreBundle\Entity\NodesCustomForms;
+use RZ\Roadiz\CoreBundle\Entity\NodesSources;
+use RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments;
+use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\Theme;
+use RZ\Roadiz\CoreBundle\Entity\Translation;
+use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
+use RZ\Roadiz\Markdown\CommonMark;
+use RZ\Roadiz\Markdown\MarkdownInterface;
+use Solarium\Client;
+use Solarium\Core\Client\Adapter\Curl;
+use Solarium\Core\Client\Endpoint;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
+use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\Stopwatch\Stopwatch;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class RoadizCoreExtension extends Extension
 {
@@ -81,5 +101,182 @@ class RoadizCoreExtension extends Extension
             );
         }
         $container->setParameter('roadiz_core.reverse_proxy_cache.frontends', $reverseProxyCacheFrontends);
+        $container->setParameter('roadiz_core.use_native_json_column_type', $config['useNativeJsonColumnType']);
+
+        /*
+         * EntityGeneratorFactory options
+         */
+        $entityGeneratorFactoryOptions = [
+            'parent_class' => NodesSources::class,
+            'repository_class' => NodesSourcesRepository::class,
+            'node_class' => Node::class,
+            'document_class' => Document::class,
+            'document_proxy_class' => NodesSourcesDocuments::class,
+            'custom_form_class' => CustomForm::class,
+            'custom_form_proxy_class' => NodesCustomForms::class,
+            'translation_class' => Translation::class,
+            'namespace' => NodeType::getGeneratedEntitiesNamespace(),
+            'use_native_json' => $config['useNativeJsonColumnType']
+        ];
+        $container->setParameter('roadiz_core.entity_generator_factory.options', $entityGeneratorFactoryOptions);
+
+        /*
+         * Solarium and Solr configuration
+         */
+        $solrEndpoints = [];
+        $container->setDefinition(
+            'roadiz_core.solr.adapter',
+            (new Definition())
+                ->setClass(Curl::class)
+                ->setPublic(true)
+                ->addMethodCall('setTimeout', [$config['solr']['timeout']])
+                ->addMethodCall('setConnectionTimeout', [$config['solr']['timeout']])
+        );
+        foreach ($config['solr']['endpoints'] as $name => $endpoint) {
+            $container->setDefinition(
+                'roadiz_core.solr.endpoints.' . $name,
+                (new Definition())
+                    ->setClass(Endpoint::class)
+                    ->setPublic(true)
+                    ->setArguments([
+                        $endpoint
+                    ])
+                    ->addMethodCall('setKey', [$name])
+            );
+            $solrEndpoints[] = 'roadiz_core.solr.endpoints.' . $name;
+        }
+        $container->setDefinition(
+            'roadiz_core.solr.client',
+            (new Definition())
+                ->setClass(Client::class)
+                ->setLazy(true)
+                ->setPublic(true)
+                ->setShared(true)
+                ->setArguments([
+                    new Reference('roadiz_core.solr.adapter'),
+                    new Reference(EventDispatcherInterface::class)
+                ])
+                ->addMethodCall('setEndpoints', [array_map(function (string $endpointId) {
+                    return new Reference($endpointId);
+                }, $solrEndpoints)])
+        );
+        $container->setParameter('roadiz_core.solr.clients', $solrEndpoints);
+
+        /*
+         * Markdown
+         */
+        $this->loadMarkdown($config, $container);
+    }
+
+    /**
+     * @param array $config
+     * @param ContainerBuilder $container
+     */
+    private function loadMarkdown(array $config, ContainerBuilder $container): void
+    {
+        $container->setParameter('roadiz_core.markdown_config_default', [
+            'external_link' => [
+                'open_in_new_window' => true,
+                'noopener' => 'external',
+                'noreferrer' => 'external',
+            ]
+        ]);
+        $container->setParameter(
+            'roadiz_core.markdown_config_text_converter',
+            array_merge($container->getParameter('roadiz_core.markdown_config_default'), [
+                'html_input' => 'allow'
+            ])
+        );
+        $container->setParameter(
+            'roadiz_core.markdown_config_text_extra_converter',
+            array_merge($container->getParameter('roadiz_core.markdown_config_default'), [
+                'html_input' => 'allow'
+            ])
+        );
+        $container->setParameter(
+            'roadiz_core.markdown_config_line_converter',
+            array_merge($container->getParameter('roadiz_core.markdown_config_default'), [
+                'html_input' => 'escape'
+            ])
+        );
+
+        $container->setDefinition(
+            'roadiz_core.markdown.environments.text_converter',
+            (new Definition())
+                ->setClass(Environment::class)
+                ->setShared(true)
+                ->setPublic(true)
+                ->setArguments([
+                    '%roadiz_core.markdown_config_text_converter%',
+                ])
+        );
+
+        $container->setDefinition(
+            'roadiz_core.markdown.converters.text_converter',
+            (new Definition())
+                ->setClass(MarkdownConverter::class)
+                ->setShared(true)
+                ->setPublic(true)
+                ->setArguments([
+                    new Reference('roadiz_core.markdown.environments.text_converter')
+                ])
+        );
+
+        $container->setDefinition(
+            'roadiz_core.markdown.environments.text_extra_converter',
+            (new Definition())
+                ->setClass(Environment::class)
+                ->setShared(true)
+                ->setPublic(true)
+                ->setArguments([
+                    '%roadiz_core.markdown_config_text_extra_converter%',
+                ])
+        );
+
+        $container->setDefinition(
+            'roadiz_core.markdown.converters.text_extra_converter',
+            (new Definition())
+                ->setClass(MarkdownConverter::class)
+                ->setShared(true)
+                ->setPublic(true)
+                ->setArguments([
+                    new Reference('roadiz_core.markdown.environments.text_extra_converter')
+                ])
+        );
+
+        $container->setDefinition(
+            'roadiz_core.markdown.environments.line_converter',
+            (new Definition())
+                ->setClass(Environment::class)
+                ->setShared(true)
+                ->setPublic(true)
+                ->setArguments([
+                    '%roadiz_core.markdown_config_line_converter%',
+                ])
+        );
+
+        $container->setDefinition(
+            'roadiz_core.markdown.converters.line_converter',
+            (new Definition())
+                ->setClass(MarkdownConverter::class)
+                ->setShared(true)
+                ->setPublic(true)
+                ->setArguments([
+                    new Reference('roadiz_core.markdown.environments.line_converter')
+                ])
+        );
+
+        $container->setDefinition(
+            MarkdownInterface::class,
+            (new Definition())
+                ->setClass(CommonMark::class)
+                ->setShared(true)
+                ->setArguments([
+                    new Reference('roadiz_core.markdown.converters.text_converter'),
+                    new Reference('roadiz_core.markdown.converters.text_extra_converter'),
+                    new Reference('roadiz_core.markdown.converters.line_converter'),
+                    new Reference(Stopwatch::class),
+                ])
+        );
     }
 }

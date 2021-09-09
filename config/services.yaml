@@ -14,6 +14,7 @@ services:
             $appNamespace: '%roadiz_core.app_namespace%'
             $exportDir: '%kernel.project_dir%/var/export'
             $privateKeyName: '%roadiz_core.private_key_name%'
+            $generatedEntitiesDir: '%kernel.project_dir%/generated'
 
     RZ\Roadiz\CoreBundle\:
         resource: '../src/'
@@ -28,6 +29,7 @@ services:
         resource: '../src/EntityHandler'
         # Recreate handlers for each usage
         shared: false
+        public: true
 
     RZ\Roadiz\CoreBundle\Mailer\EmailManager:
         # Recreate manager for each usage
@@ -39,7 +41,7 @@ services:
 
     RZ\Roadiz\CoreBundle\Preview\RequestPreviewRevolver:
         arguments:
-            - Symfony\Component\HttpFoundation\RequestStack
+            - '@Symfony\Component\HttpFoundation\RequestStack'
             - 'ROLE_BACKEND_USER'
 
     RZ\Roadiz\Utils\Asset\Packages:
@@ -48,6 +50,18 @@ services:
 
     RZ\Roadiz\Core\Handlers\HandlerFactoryInterface:
         alias: RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory
+
+    RZ\Roadiz\Contracts\NodeType\NodeTypeResolverInterface:
+        alias: RZ\Roadiz\CoreBundle\Bag\NodeTypes
+
+    RZ\Roadiz\EntityGenerator\EntityGeneratorFactory:
+        arguments:
+            - '@RZ\Roadiz\CoreBundle\Bag\NodeTypes'
+            - '%roadiz_core.entity_generator_factory.options%'
+
+    RZ\Roadiz\CoreBundle\EntityHandler\TranslationHandler:
+        arguments:
+            - '@doctrine.orm.cache.provider.cache.doctrine.orm.default.result'
 
     Gedmo\Loggable\LoggableListener:
         alias: RZ\Roadiz\CoreBundle\Doctrine\Loggable\UserLoggableListener
@@ -99,3 +113,35 @@ services:
 
     Solarium\Core\Client\Client:
         factory: ['RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry', 'getClient']
+
+    RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\NodeChrootResolver:
+        alias: RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\NodeChrootChainResolver
+
+    RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\NodeChrootChainResolver:
+        arguments:
+            - ['@RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\RoadizUserNodeChrootResolver']
+
+    #
+    # Markdown
+    #
+    League\CommonMark\Extension\Autolink\AutolinkExtension:
+        tags: ['roadiz_core.markdown.text_extra_converter.extension']
+    League\CommonMark\Extension\ExternalLink\ExternalLinkExtension:
+        tags: ['roadiz_core.markdown.line_converter.extension', 'roadiz_core.markdown.text_converter.extension', 'roadiz_core.markdown.text_extra_converter.extension']
+    League\CommonMark\Extension\Footnote\FootnoteExtension:
+        tags: ['roadiz_core.markdown.text_extra_converter.extension']
+    League\CommonMark\Extension\InlinesOnly\InlinesOnlyExtension:
+        tags: ['roadiz_core.markdown.line_converter.extension']
+    League\CommonMark\Extension\SmartPunct\SmartPunctExtension:
+        tags: ['roadiz_core.markdown.text_extra_converter.extension']
+    League\CommonMark\Extension\Strikethrough\StrikethroughExtension:
+        tags: ['roadiz_core.markdown.text_converter.extension', 'roadiz_core.markdown.text_extra_converter.extension']
+    League\CommonMark\Extension\TaskList\TaskListExtension:
+        tags: ['roadiz_core.markdown.text_extra_converter.extension']
+    League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension:
+        tags: ['roadiz_core.markdown.text_converter.extension', 'roadiz_core.markdown.text_extra_converter.extension']
+    League\CommonMark\Extension\Table\TableExtension:
+        tags: ['roadiz_core.markdown.text_converter.extension', 'roadiz_core.markdown.text_extra_converter.extension']
+
+    RZ\Roadiz\Markdown\Twig\MarkdownExtension:
+        tags: ['twig.extension']

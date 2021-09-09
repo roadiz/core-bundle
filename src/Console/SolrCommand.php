@@ -3,8 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\ORM\EntityManagerInterface;
-use Solarium\Client;
+use RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -16,8 +15,16 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class SolrCommand extends Command
 {
     protected ?SymfonyStyle $io = null;
-    protected ?EntityManagerInterface $entityManager = null;
-    protected ?Client $solr = null;
+    protected ClientRegistry $clientRegistry;
+
+    /**
+     * @param ClientRegistry $clientRegistry
+     */
+    public function __construct(ClientRegistry $clientRegistry)
+    {
+        parent::__construct();
+        $this->clientRegistry = $clientRegistry;
+    }
 
     protected function configure()
     {
@@ -27,12 +34,11 @@ class SolrCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->entityManager = $this->getHelper('doctrine')->getEntityManager();
-        $this->solr = $this->getHelper('solr')->getSolr();
+        $client = $this->clientRegistry->getClient();
         $this->io = new SymfonyStyle($input, $output);
 
-        if (null !== $this->solr) {
-            if (true === $this->getHelper('solr')->ready()) {
+        if (null !== $client) {
+            if (true === $this->clientRegistry->isClientReady($client)) {
                 $this->io->writeln('<info>Solr search engine server is running…</info>');
             } else {
                 $this->io->error('Solr search engine server does not respond…');

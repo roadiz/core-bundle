@@ -23,7 +23,6 @@ class TranslationHandler extends AbstractHandler
         $this->resultCache = $resultCache;
     }
 
-
     /**
      * @return Translation
      */
