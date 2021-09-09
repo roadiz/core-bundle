@@ -30,6 +30,7 @@
         "sensio/framework-extra-bundle": "^6.1",
         "symfony/asset": "5.3.*",
         "symfony-cmf/routing": "^2.3.3",
+        "symfony-cmf/routing-bundle": "^2.5",
         "symfony/console": "5.3.*",
         "symfony/dotenv": "5.3.*",
         "symfony/cache": "5.3.*",

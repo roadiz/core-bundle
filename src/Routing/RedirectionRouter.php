@@ -6,18 +6,18 @@ namespace RZ\Roadiz\CoreBundle\Routing;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 use Symfony\Cmf\Component\Routing\VersatileGeneratorInterface;
-use Symfony\Component\Routing\Matcher\UrlMatcherInterface;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\Router;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-final class RedirectionRouter extends Router implements VersatileGeneratorInterface
+class RedirectionRouter extends Router implements VersatileGeneratorInterface
 {
     protected ManagerRegistry $managerRegistry;
     protected ?Stopwatch $stopwatch;
 
     /**
+     * @param RedirectionMatcher $matcher
      * @param ManagerRegistry $managerRegistry
      * @param array $options
      * @param RequestContext|null $context
@@ -25,6 +25,7 @@ final class RedirectionRouter extends Router implements VersatileGeneratorInterf
      * @param Stopwatch|null $stopwatch
      */
     public function __construct(
+        RedirectionMatcher $matcher,
         ManagerRegistry $managerRegistry,
         array $options = [],
         RequestContext $context = null,
@@ -40,6 +41,7 @@ final class RedirectionRouter extends Router implements VersatileGeneratorInterf
         );
         $this->stopwatch = $stopwatch;
         $this->managerRegistry = $managerRegistry;
+        $this->matcher = $matcher;
     }
 
     /**
@@ -56,25 +58,6 @@ final class RedirectionRouter extends Router implements VersatileGeneratorInterf
     public function generate($name, $parameters = [], $referenceType = self::ABSOLUTE_PATH): string
     {
         return '';
-    }
-
-    /**
-     * Gets the UrlMatcher instance associated with this Router.
-     *
-     * @return RedirectionMatcher|UrlMatcherInterface A UrlMatcherInterface instance
-     */
-    public function getMatcher(): UrlMatcherInterface
-    {
-        if (null !== $this->matcher) {
-            return $this->matcher;
-        }
-
-        return $this->matcher = new RedirectionMatcher(
-            $this->context,
-            $this->managerRegistry,
-            $this->stopwatch,
-            $this->logger
-        );
     }
 
     /**

@@ -19,9 +19,6 @@ use Symfony\Component\Stopwatch\Stopwatch;
  */
 class NodeUrlMatcher extends DynamicUrlMatcher
 {
-    /**
-     * @var PathResolverInterface
-     */
     protected PathResolverInterface $pathResolver;
     /**
      * @var class-string
@@ -51,7 +48,7 @@ class NodeUrlMatcher extends DynamicUrlMatcher
      * @param PreviewResolverInterface $previewResolver
      * @param Stopwatch $stopwatch
      * @param LoggerInterface $logger
-     * @param class-string<AbstractController> $defaultControllerClass
+     * @param class-string $defaultControllerClass
      */
     public function __construct(
         PathResolverInterface $pathResolver,
@@ -104,6 +101,7 @@ class NodeUrlMatcher extends DynamicUrlMatcher
                 $nodeSource->getNode(),
                 $this->theme,
                 $this->previewResolver,
+                $this->logger,
                 $this->defaultControllerClass
             );
 
@@ -121,6 +119,7 @@ class NodeUrlMatcher extends DynamicUrlMatcher
                 '_route' => RouteObjectInterface::OBJECT_BASED_ROUTE_NAME,
                 '_format' => $resourceInfo->getFormat(),
                 'node' => $nodeSource->getNode(),
+                'nodeSource' => $nodeSource,
                 RouteObjectInterface::ROUTE_OBJECT => $resourceInfo->getResource(),
                 'translation' => $resourceInfo->getTranslation(),
                 'theme' => $this->theme,

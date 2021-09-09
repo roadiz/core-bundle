@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Routing;
 
+use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\Theme;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
@@ -22,23 +23,27 @@ final class NodeRouteHelper
      * @var class-string
      */
     private string $defaultControllerClass;
+    private LoggerInterface $logger;
 
     /**
      * @param Node $node
      * @param Theme|null $theme
      * @param PreviewResolverInterface $previewResolver
+     * @param LoggerInterface $logger
      * @param class-string<AbstractController> $defaultControllerClass
      */
     public function __construct(
         Node $node,
         ?Theme $theme,
         PreviewResolverInterface $previewResolver,
+        LoggerInterface $logger,
         string $defaultControllerClass
     ) {
         $this->node = $node;
         $this->theme = $theme;
         $this->previewResolver = $previewResolver;
         $this->defaultControllerClass = $defaultControllerClass;
+        $this->logger = $logger;
     }
 
     /**
@@ -86,9 +91,11 @@ final class NodeRouteHelper
     public function isViewable(): bool
     {
         if (!class_exists($this->getController())) {
+            $this->logger->debug($this->getController() . ' controller does not exist.');
             return false;
         }
         if (!method_exists($this->getController(), $this->getMethod())) {
+            $this->logger->debug($this->getController() . ':' . $this->getMethod() . ' controller method does not exist.');
             return false;
         }
         /*

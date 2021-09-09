@@ -19,6 +19,7 @@ services:
             $privateKeyName: '%roadiz_core.private_key_name%'
             $generatedEntitiesDir: '%kernel.project_dir%/generated'
             $debug: '%kernel.debug%'
+            $defaultControllerClass: 'RZ\Roadiz\CoreBundle\Controller\DefaultNodeSourceController'
 
     RZ\Roadiz\CoreBundle\:
         resource: '../src/'
@@ -42,6 +43,14 @@ services:
     RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber\:
         resource: '../src/Doctrine/EventSubscriber'
         tags: ['doctrine.event_subscriber']
+
+    RZ\Roadiz\CoreBundle\Controller\:
+        resource: '../src/Controller'
+        tags: ['controller.service_arguments']
+
+    RZ\Roadiz\CoreBundle\Security\Authorization\Voter\:
+        resource: '../src/Security/Authorization/Voter'
+        tags: [ 'security.voter' ]
 
     RZ\Roadiz\CoreBundle\Preview\RequestPreviewRevolver:
         arguments:
@@ -153,8 +162,9 @@ services:
     RZ\Roadiz\Markdown\Twig\MarkdownExtension:
         tags: ['twig.extension']
 
-
     RZ\Roadiz\CoreBundle\Routing\RedirectionRouter:
-        tags: [ 'cmf_routing.router' ]
+        lazy: true
+        tags: [ { name: 'router', priority: 100 } ]
     RZ\Roadiz\CoreBundle\Routing\NodeRouter:
-        tags: [ 'cmf_routing.router' ]
+        lazy: true
+        tags: [ { name: 'router', priority: 0 } ]

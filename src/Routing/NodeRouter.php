@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Routing;
 
 use Psr\Log\LoggerInterface;
+use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Event\NodesSources\NodesSourcesPathGeneratingEvent;
 use RZ\Roadiz\CoreBundle\Theme\ThemeResolverInterface;
@@ -11,7 +12,6 @@ use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Cmf\Component\Routing\VersatileGeneratorInterface;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\HttpFoundation\ParameterBag;
 use Symfony\Component\Routing\Exception\InvalidParameterException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
 use Symfony\Component\Routing\Matcher\UrlMatcherInterface;
@@ -27,28 +27,28 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
     public const NO_CACHE_PARAMETER = '_no_cache';
     private ThemeResolverInterface $themeResolver;
     private AdapterInterface $nodeSourceUrlCacheAdapter;
-    private ParameterBag $settingsBag;
+    private Settings $settingsBag;
     private EventDispatcherInterface $eventDispatcher;
 
     /**
-     * @param UrlMatcherInterface $matcher
+     * @param NodeUrlMatcher $matcher
      * @param ThemeResolverInterface $themeResolver
-     * @param ParameterBag $settingsBag
+     * @param Settings $settingsBag
      * @param EventDispatcherInterface $eventDispatcher
      * @param AdapterInterface $nodeSourceUrlCacheAdapter
      * @param array $options
-     * @param RequestContext|null $context
-     * @param LoggerInterface|null $logger
+     * @param RequestContext $context
+     * @param LoggerInterface $logger
      */
     public function __construct(
-        UrlMatcherInterface $matcher,
+        NodeUrlMatcher $matcher,
         ThemeResolverInterface $themeResolver,
-        ParameterBag $settingsBag,
+        Settings $settingsBag,
         EventDispatcherInterface $eventDispatcher,
         AdapterInterface $nodeSourceUrlCacheAdapter,
-        array $options = [],
-        RequestContext $context = null,
-        LoggerInterface $logger = null
+        RequestContext $context,
+        LoggerInterface $logger,
+        array $options = []
     ) {
         parent::__construct(
             new NullLoader(),
@@ -149,7 +149,7 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
             $route = null;
         }
 
-        if (null === $route || !$route instanceof NodesSources) {
+        if (!$route instanceof NodesSources) {
             throw new RouteNotFoundException();
         }
 

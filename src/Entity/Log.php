@@ -25,15 +25,15 @@ use JMS\Serializer\Annotation as Serializer;
  */
 class Log extends AbstractEntity
 {
-    const EMERGENCY = Logger::EMERGENCY;
-    const CRITICAL =  Logger::CRITICAL;
-    const ALERT =     Logger::ALERT;
-    const ERROR =     Logger::ERROR;
-    const WARNING =   Logger::WARNING;
-    const NOTICE =    Logger::NOTICE;
-    const INFO =      Logger::INFO;
-    const DEBUG =     Logger::DEBUG;
-    const LOG =       Logger::INFO;
+    public const EMERGENCY = Logger::EMERGENCY;
+    public const CRITICAL =  Logger::CRITICAL;
+    public const ALERT =     Logger::ALERT;
+    public const ERROR =     Logger::ERROR;
+    public const WARNING =   Logger::WARNING;
+    public const NOTICE =    Logger::NOTICE;
+    public const INFO =      Logger::INFO;
+    public const DEBUG =     Logger::DEBUG;
+    public const LOG =       Logger::INFO;
 
     /**
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\User")

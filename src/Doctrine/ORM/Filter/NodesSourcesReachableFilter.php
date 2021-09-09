@@ -4,11 +4,11 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Doctrine\ORM\Filter;
 
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
+use RZ\Roadiz\CoreBundle\Doctrine\Event\FilterNodesSourcesQueryBuilderCriteriaEvent;
+use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryNodesSourcesEvent;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
-use RZ\Roadiz\CoreBundle\Event\FilterNodesSourcesQueryBuilderCriteriaEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderNodesSourcesApplyEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderNodesSourcesBuildEvent;
-use RZ\Roadiz\CoreBundle\Event\QueryNodesSourcesEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -19,7 +19,7 @@ final class NodesSourcesReachableFilter implements EventSubscriberInterface
 {
     private NodeTypes $nodeTypesBag;
 
-    const PARAMETER = [
+    public const PARAMETER = [
         'node.nodeType.reachable',
         'reachable'
     ];

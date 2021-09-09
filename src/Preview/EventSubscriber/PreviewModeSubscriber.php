@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Preview\EventSubscriber;
 
 use RZ\Roadiz\CoreBundle\Preview\Exception\PreviewNotAllowedException;
-use RZ\Roadiz\CoreBundle\Preview\PreviewAwareInterface;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
@@ -14,6 +13,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\Security;
 
 class PreviewModeSubscriber implements EventSubscriberInterface
 {
@@ -21,21 +21,21 @@ class PreviewModeSubscriber implements EventSubscriberInterface
 
     protected PreviewResolverInterface $previewResolver;
     protected TokenStorageInterface $tokenStorage;
-    protected AuthorizationCheckerInterface $authorizationChecker;
+    protected Security $security;
 
     /**
      * @param PreviewResolverInterface $previewResolver
      * @param TokenStorageInterface $tokenStorage
-     * @param AuthorizationCheckerInterface $authorizationChecker
+     * @param Security $security
      */
     public function __construct(
         PreviewResolverInterface $previewResolver,
         TokenStorageInterface $tokenStorage,
-        AuthorizationCheckerInterface $authorizationChecker
+        Security $security
     ) {
         $this->previewResolver = $previewResolver;
         $this->tokenStorage = $tokenStorage;
-        $this->authorizationChecker = $authorizationChecker;
+        $this->security = $security;
     }
 
     /**
@@ -67,9 +67,7 @@ class PreviewModeSubscriber implements EventSubscriberInterface
         if ($event->isMainRequest() &&
             $request->query->has(static::QUERY_PARAM_NAME) &&
             (bool) ($request->query->get(static::QUERY_PARAM_NAME, 0)) === true) {
-            if ($request instanceof PreviewAwareInterface) {
-                $request->setPreview(true);
-            }
+            $request->attributes->set('preview', true);
         }
     }
 
@@ -89,7 +87,7 @@ class PreviewModeSubscriber implements EventSubscriberInterface
             if (null === $token || !$token->isAuthenticated()) {
                 throw new PreviewNotAllowedException('You are not authenticated to use preview mode.');
             }
-            if (!$this->authorizationChecker->isGranted($this->previewResolver->getRequiredRole())) {
+            if (!$this->security->isGranted($this->previewResolver->getRequiredRole())) {
                 throw new PreviewNotAllowedException('You are not granted to use preview mode.');
             }
         }
