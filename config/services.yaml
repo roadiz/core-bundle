@@ -152,3 +152,9 @@ services:
 
     RZ\Roadiz\Markdown\Twig\MarkdownExtension:
         tags: ['twig.extension']
+
+
+    RZ\Roadiz\CoreBundle\Routing\RedirectionRouter:
+        tags: [ 'cmf_routing.router' ]
+    RZ\Roadiz\CoreBundle\Routing\NodeRouter:
+        tags: [ 'cmf_routing.router' ]
