@@ -3,17 +3,12 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 
-use Pimple\Container;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use RZ\Roadiz\CMS\Controllers\AppController;
-use RZ\Roadiz\Core\ContainerAwareInterface;
-use RZ\Roadiz\Core\ContainerAwareTrait;
 use RZ\Roadiz\CoreBundle\Entity\Theme;
+use RZ\Roadiz\CoreBundle\Exception\ExceptionViewer;
 use RZ\Roadiz\CoreBundle\Exception\MaintenanceModeException;
-use RZ\Roadiz\CoreBundle\Exception\NoTranslationAvailableException;
-use RZ\Roadiz\Core\Viewers\ExceptionViewer;
-use RZ\Roadiz\Utils\Theme\ThemeResolverInterface;
+use RZ\Roadiz\CoreBundle\Theme\ThemeResolverInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,45 +24,29 @@ use Twig\Error\RuntimeError;
 /**
  * @package RZ\Roadiz\CoreBundle\Event
  */
-class ExceptionSubscriber implements EventSubscriberInterface, ContainerAwareInterface
+final class ExceptionSubscriber implements EventSubscriberInterface
 {
-    use ContainerAwareTrait;
+    protected LoggerInterface $logger;
+    protected bool $debug;
+    protected ExceptionViewer $viewer;
+    private ThemeResolverInterface $themeResolver;
 
     /**
-     * @var LoggerInterface
-     */
-    protected $logger;
-    /**
-     * @var bool
-     */
-    protected $debug;
-    /**
-     * @var ExceptionViewer
-     */
-    protected $viewer;
-    /**
-     * @var ThemeResolverInterface
-     */
-    private $themeResolver;
-
-    /**
-     * @param Container $container
      * @param ThemeResolverInterface $themeResolver
+     * @param ExceptionViewer $viewer
      * @param LoggerInterface|null $logger
      * @param bool $debug
      */
     public function __construct(
-        Container $container,
         ThemeResolverInterface $themeResolver,
-        ?LoggerInterface $logger = null,
-        bool $debug = false
+        ExceptionViewer $viewer,
+        ?LoggerInterface $logger,
+        bool $debug
     ) {
         $this->logger = $logger ?? new NullLogger();
         $this->debug = $debug;
-
-        $this->viewer = new ExceptionViewer();
+        $this->viewer = $viewer;
         $this->themeResolver = $themeResolver;
-        $this->container = $container;
     }
 
     /**
@@ -88,41 +67,43 @@ class ExceptionSubscriber implements EventSubscriberInterface, ContainerAwareInt
      */
     public function onKernelException(ExceptionEvent $event)
     {
+        if ($this->debug) {
+            return;
+        }
+
         // You get the exception object from the received event
         $exception = $event->getThrowable();
 
         /*
          * Get previous exception if thrown in Twig execution context.
          */
-        if ($exception instanceof RuntimeError &&
-            null !== $exception->getPrevious()) {
+        if ($exception instanceof RuntimeError && null !== $exception->getPrevious()) {
             $exception = $exception->getPrevious();
         }
 
         if (!$this->viewer->isFormatJson($event->getRequest())) {
-            /**
-             * Do not prevent Symfony Debug tool to perform
-             * in debug mode.
-             * Only if response is not JSON
-             */
-            if ($this->debug) {
-                return;
-            }
-            /*
-             * Themed exception pages…
-             */
-            if ($exception instanceof MaintenanceModeException &&
-                null !== $ctrl = $exception->getController()) {
-                try {
-                    $response = $ctrl->maintenanceAction($event->getRequest());
-                    // Set http code according to status
-                    $response->setStatusCode($this->viewer->getHttpStatusCode($exception));
-                    $event->setResponse($response);
-                    return;
-                } catch (LoaderError $error) {
-                    // Twig template does not exist
+            if ($exception instanceof MaintenanceModeException) {
+                /*
+                 * Themed exception pages…
+                 */
+                $ctrl = $exception->getController();
+                if (
+                    null !== $ctrl &&
+                    method_exists($ctrl, 'maintenanceAction')
+                ) {
+                    try {
+                        /** @var Response $response */
+                        $response = $ctrl->maintenanceAction($event->getRequest());
+                        // Set http code according to status
+                        $response->setStatusCode($this->viewer->getHttpStatusCode($exception));
+                        $event->setResponse($response);
+                        return;
+                    } catch (LoaderError $error) {
+                        // Twig template does not exist
+                    }
                 }
-            } elseif (null !== $theme = $this->isNotFoundExceptionWithTheme($event)) {
+            }
+            if (null !== $theme = $this->isNotFoundExceptionWithTheme($event)) {
                 $event->setResponse($this->createThemeNotFoundResponse($theme, $exception, $event));
                 return;
             }
@@ -149,12 +130,12 @@ class ExceptionSubscriber implements EventSubscriberInterface, ContainerAwareInt
     /**
      * Create an emergency response to be sent instead of error logs.
      *
-     * @param \Exception $e
+     * @param \Exception|\TypeError $e
      * @param Request $request
      *
      * @return Response
      */
-    protected function getEmergencyResponse(\Exception $e, Request $request)
+    protected function getEmergencyResponse($e, Request $request): Response
     {
         /*
          * Log error before displaying a fallback page.
@@ -185,7 +166,7 @@ class ExceptionSubscriber implements EventSubscriberInterface, ContainerAwareInt
      * @param ExceptionEvent $event
      * @return null|Theme
      */
-    protected function isNotFoundExceptionWithTheme(ExceptionEvent $event)
+    protected function isNotFoundExceptionWithTheme(ExceptionEvent $event): ?Theme
     {
         $exception = $event->getThrowable();
         $request = $event->getRequest();
@@ -198,9 +179,7 @@ class ExceptionSubscriber implements EventSubscriberInterface, ContainerAwareInt
                 /*
                  * 404 page
                  */
-                if ($request instanceof \RZ\Roadiz\Core\HttpFoundation\Request) {
-                    $request->setTheme($theme);
-                }
+                $request->attributes->set('theme', $theme);
 
                 return $theme;
             }
@@ -210,13 +189,13 @@ class ExceptionSubscriber implements EventSubscriberInterface, ContainerAwareInt
     }
 
     /**
-     * @param Theme          $theme
-     * @param \Exception     $exception
+     * @param Theme $theme
+     * @param \Exception|\TypeError $exception
      * @param ExceptionEvent $event
      *
      * @return Response
      */
-    protected function createThemeNotFoundResponse(Theme $theme, \Exception $exception, ExceptionEvent $event)
+    protected function createThemeNotFoundResponse(Theme $theme, $exception, ExceptionEvent $event)
     {
         /*
          * Create a new controller for serving
@@ -224,18 +203,6 @@ class ExceptionSubscriber implements EventSubscriberInterface, ContainerAwareInt
          */
         $ctrlClass = $theme->getClassName();
         $controller = new $ctrlClass();
-
-        if ($controller instanceof ContainerAwareInterface) {
-            $controller->setContainer($this->getContainer());
-        }
-        if ($controller instanceof AppController) {
-            $controller->__init();
-        }
-
-        if ($exception instanceof NoTranslationAvailableException ||
-            $exception->getPrevious() instanceof NoTranslationAvailableException) {
-            $event->getRequest()->setLocale($this->get('defaultTranslation')->getLocale());
-        }
 
         return call_user_func_array([$controller, 'throw404'], [
             'message' => $exception->getMessage()

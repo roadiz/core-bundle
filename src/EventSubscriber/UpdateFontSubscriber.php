@@ -11,7 +11,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  *
  * @package RZ\Roadiz\CoreBundle\Event
  */
-class UpdateFontSubscriber implements EventSubscriberInterface
+final class UpdateFontSubscriber implements EventSubscriberInterface
 {
     private FontLifeCycleSubscriber $fontSubscriber;
 

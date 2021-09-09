@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Mailer;
 
 use InlineStyle\InlineStyle;
+use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
-use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -125,9 +125,7 @@ class EmailManager
 
         if (empty($this->assignation['headerImageSrc']) && null !== $this->settingsBag) {
             $adminImage = $this->settingsBag->getDocument('admin_image');
-            if (null !== $adminImage &&
-                $adminImage instanceof Document &&
-                null !== $this->documentUrlGenerator) {
+            if ($adminImage instanceof DocumentInterface && null !== $this->documentUrlGenerator) {
                 $this->documentUrlGenerator->setDocument($adminImage);
                 $this->assignation['headerImageSrc'] = $this->documentUrlGenerator->getUrl(true);
             }

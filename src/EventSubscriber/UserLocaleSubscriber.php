@@ -14,7 +14,7 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
 use Symfony\Component\Security\Http\SecurityEvents;
 
-class UserLocaleSubscriber implements EventSubscriberInterface
+final class UserLocaleSubscriber implements EventSubscriberInterface
 {
     private RequestStack $requestStack;
     private TokenStorageInterface $tokenStorage;

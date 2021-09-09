@@ -11,7 +11,7 @@ use Symfony\Component\Routing\RouteCollection;
  *
  * TODO: Use \Symfony\Cmf\Component\Routing\LazyRouteCollection
  */
-class DeferredRouteCollection extends RouteCollection
+abstract class DeferredRouteCollection extends RouteCollection
 {
     /**
      * Method to parse and get routes from external resources

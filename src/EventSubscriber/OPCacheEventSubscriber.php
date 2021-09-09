@@ -7,7 +7,7 @@ use RZ\Roadiz\CoreBundle\Cache\Clearer\OPCacheClearer;
 use RZ\Roadiz\CoreBundle\Event\Cache\CachePurgeRequestEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class OPCacheEventSubscriber implements EventSubscriberInterface
+final class OPCacheEventSubscriber implements EventSubscriberInterface
 {
     /**
      * @inheritDoc

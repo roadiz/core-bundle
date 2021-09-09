@@ -13,7 +13,6 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Routing
- * @deprecated Convert logic into Symfony\Cmf\Component\Routing\RouteProviderInterface
  */
 class RoadizRouteCollection extends DeferredRouteCollection
 {

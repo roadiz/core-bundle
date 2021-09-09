@@ -12,7 +12,7 @@ use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\Router;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-class RedirectionRouter extends Router implements VersatileGeneratorInterface
+final class RedirectionRouter extends Router implements VersatileGeneratorInterface
 {
     protected ManagerRegistry $managerRegistry;
     protected ?Stopwatch $stopwatch;

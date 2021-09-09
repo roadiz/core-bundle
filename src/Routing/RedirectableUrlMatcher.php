@@ -6,7 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Routing;
 use RZ\Roadiz\CoreBundle\Controller\RedirectionController;
 use Symfony\Component\Routing\Matcher\RedirectableUrlMatcher as BaseMatcher;
 
-class RedirectableUrlMatcher extends BaseMatcher
+final class RedirectableUrlMatcher extends BaseMatcher
 {
     /**
      * Redirects the user to another URL.

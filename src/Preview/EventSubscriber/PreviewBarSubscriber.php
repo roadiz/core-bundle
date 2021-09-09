@@ -40,7 +40,7 @@ class PreviewBarSubscriber implements EventSubscriberInterface
     {
         $response = $event->getResponse();
         if ($this->previewResolver->isPreview() &&
-            $event->isMasterRequest() &&
+            $event->isMainRequest() &&
             $response->getStatusCode() === Response::HTTP_OK &&
             false !== strpos($response->headers->get('Content-Type'), 'text/html')) {
             return true;

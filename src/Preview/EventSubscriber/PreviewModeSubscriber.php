@@ -17,7 +17,7 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 class PreviewModeSubscriber implements EventSubscriberInterface
 {
-    const QUERY_PARAM_NAME = '_preview';
+    public const QUERY_PARAM_NAME = '_preview';
 
     protected PreviewResolverInterface $previewResolver;
     protected TokenStorageInterface $tokenStorage;
@@ -64,7 +64,7 @@ class PreviewModeSubscriber implements EventSubscriberInterface
     public function onKernelRequest(RequestEvent $event)
     {
         $request = $event->getRequest();
-        if ($event->isMasterRequest() &&
+        if ($event->isMainRequest() &&
             $request->query->has(static::QUERY_PARAM_NAME) &&
             (bool) ($request->query->get(static::QUERY_PARAM_NAME, 0)) === true) {
             if ($request instanceof PreviewAwareInterface) {
@@ -83,7 +83,7 @@ class PreviewModeSubscriber implements EventSubscriberInterface
      */
     public function onControllerMatched(ControllerEvent $event)
     {
-        if ($this->supports() && $event->isMasterRequest()) {
+        if ($this->supports() && $event->isMainRequest()) {
             /** @var TokenInterface|null $token */
             $token = $this->tokenStorage->getToken();
             if (null === $token || !$token->isAuthenticated()) {

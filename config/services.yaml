@@ -18,6 +18,7 @@ services:
             $exportDir: '%kernel.project_dir%/var/export'
             $privateKeyName: '%roadiz_core.private_key_name%'
             $generatedEntitiesDir: '%kernel.project_dir%/generated'
+            $debug: '%kernel.debug%'
 
     RZ\Roadiz\CoreBundle\:
         resource: '../src/'

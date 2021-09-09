@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Node;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
@@ -62,11 +63,11 @@ final class UniversalDataDuplicator
                             $this->duplicateNonVirtualField($source, $otherSource, $universalField);
                         } else {
                             switch ($universalField->getType()) {
-                                case NodeTypeField::DOCUMENTS_T:
+                                case AbstractField::DOCUMENTS_T:
                                     $this->duplicateDocumentsField($source, $otherSource, $universalField);
                                     break;
-                                case NodeTypeField::MANY_TO_ONE_T:
-                                case NodeTypeField::MANY_TO_MANY_T:
+                                case AbstractField::MANY_TO_ONE_T:
+                                case AbstractField::MANY_TO_MANY_T:
                                     $this->duplicateNonVirtualField($source, $otherSource, $universalField);
                                     break;
                             }

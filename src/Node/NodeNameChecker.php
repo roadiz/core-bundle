@@ -117,8 +117,8 @@ class NodeNameChecker implements NodeNamePolicyInterface
             ->getRepository(Node::class)
             ->setDisplayingNotPublishedNodes(true);
 
-        if (false === (boolean) $urlAliasRepo->exists($nodeName) &&
-            false === (boolean) $nodeRepo->exists($nodeName)) {
+        if (false === (bool) $urlAliasRepo->exists($nodeName) &&
+            false === (bool) $nodeRepo->exists($nodeName)) {
             return false;
         }
         return true;
