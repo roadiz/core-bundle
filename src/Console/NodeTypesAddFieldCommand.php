@@ -47,10 +47,9 @@ final class NodeTypesAddFieldCommand extends NodeTypesCreationCommand
             /** @var NodeTypeHandler $handler */
             $handler = $this->handlerFactory->getHandler($nodeType);
             $handler->regenerateEntityClass();
+            $this->schemaUpdater->updateNodeTypesSchema();
 
-            $io->success('Node type ' . $nodeType->getName() . ' has been updated.' . PHP_EOL .
-                'Do not forget to update database schema!' . PHP_EOL .
-                'bin/roadiz orm:schema-tool:update --dump-sql --force');
+            $io->success('Node type ' . $nodeType->getName() . ' has been updated.');
             return 0;
         } else {
             $io->error('Node-type "' . $name . '" does not exist.');

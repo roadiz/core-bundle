@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CoreBundle\Doctrine\SchemaUpdater;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory;
 use RZ\Roadiz\CoreBundle\EntityHandler\NodeTypeHandler;
@@ -21,16 +22,19 @@ class NodeTypesDeleteCommand extends Command
 {
     protected ManagerRegistry $managerRegistry;
     protected HandlerFactory $handlerFactory;
+    protected SchemaUpdater $schemaUpdater;
 
     /**
      * @param ManagerRegistry $managerRegistry
      * @param HandlerFactory $handlerFactory
+     * @param SchemaUpdater $schemaUpdater
      */
-    public function __construct(ManagerRegistry $managerRegistry, HandlerFactory $handlerFactory)
+    public function __construct(ManagerRegistry $managerRegistry, HandlerFactory $handlerFactory, SchemaUpdater $schemaUpdater)
     {
         parent::__construct();
         $this->managerRegistry = $managerRegistry;
         $this->handlerFactory = $handlerFactory;
+        $this->schemaUpdater = $schemaUpdater;
     }
 
     protected function configure()
@@ -76,9 +80,8 @@ class NodeTypesDeleteCommand extends Command
                 $handler->removeSourceEntityClass();
                 $this->managerRegistry->getManagerForClass(NodeType::class)->remove($nodeType);
                 $this->managerRegistry->getManagerForClass(NodeType::class)->flush();
-                $io->success('Node-type deleted.' . PHP_EOL .
-                    'Do not forget to update database schema! ' . PHP_EOL .
-                    'bin/roadiz orm:schema-tool:update --dump-sql --force');
+                $this->schemaUpdater->updateNodeTypesSchema();
+                $io->success('Node-type deleted.');
             }
         } else {
             $io->error('"' . $name . '" node type does not exist');

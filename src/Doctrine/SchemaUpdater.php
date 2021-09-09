@@ -3,46 +3,76 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Doctrine;
 
-use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
-use RZ\Roadiz\CoreBundle\Console\RoadizApplication;
-use RZ\Roadiz\Core\Kernel;
-use RZ\Roadiz\Utils\Clearer\ClearerInterface;
-use RZ\Roadiz\Utils\Clearer\DoctrineCacheClearer;
-use RZ\Roadiz\Utils\Clearer\OPCacheClearer;
-use Symfony\Component\Console\Application;
+use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\HttpKernel\KernelInterface;
 
 final class SchemaUpdater
 {
-    private ManagerRegistry $managerRegistry;
-    private Kernel $kernel;
+    private KernelInterface $kernel;
     private LoggerInterface $logger;
 
     /**
-     * @param ManagerRegistry $managerRegistry
-     * @param Kernel $kernel
-     * @param LoggerInterface|null $logger
+     * @param KernelInterface $kernel
+     * @param LoggerInterface $logger
      */
-    public function __construct(ManagerRegistry $managerRegistry, Kernel $kernel, ?LoggerInterface $logger = null)
-    {
+    public function __construct(
+        KernelInterface $kernel,
+        LoggerInterface $logger
+    ) {
         $this->kernel = $kernel;
-        $this->logger = $logger ?? new NullLogger();
-        $this->managerRegistry = $managerRegistry;
+        $this->logger = $logger;
     }
 
     public function clearMetadata(): void
     {
-        $clearers = [
-            new DoctrineCacheClearer($this->managerRegistry, $this->kernel),
-            new OPCacheClearer(),
-        ];
+        $input = new ArrayInput([
+            'command' => 'cache:pool:clear',
+            'pools' => [
+                'cache.app',
+                'cache.annotations',
+                'cache.doctrine.orm.default.metadata',
+                'cache.doctrine.orm.default.result',
+            ],
+            '--no-interaction' => true,
+        ]);
+        $output = new BufferedOutput();
+        $exitCode = $this->createApplication()->run($input, $output);
+        $content = $output->fetch();
+        if ($exitCode === 0) {
+            $this->logger->info('Cleared cache pool.');
+        } else {
+            throw new \RuntimeException('Cannot clear cache pool: ' . $content);
+        }
 
-        /** @var ClearerInterface $clearer */
-        foreach ($clearers as $clearer) {
-            $clearer->clear();
+        $input = new ArrayInput([
+            'command' => 'doctrine:cache:clear-result',
+            '--no-interaction' => true,
+            '--flush' => true,
+        ]);
+        $output = new BufferedOutput();
+        $exitCode = $this->createApplication()->run($input, $output);
+        $content = $output->fetch();
+        if ($exitCode === 0) {
+            $this->logger->info('Cleared all result cache for an entity manager.');
+        } else {
+            throw new \RuntimeException('Cannot clear result cache for an entity manager: ' . $content);
+        }
+
+        $input = new ArrayInput([
+            'command' => 'doctrine:cache:clear-metadata',
+            '--no-interaction' => true,
+            '--flush' => true,
+        ]);
+        $output = new BufferedOutput();
+        $exitCode = $this->createApplication()->run($input, $output);
+        $content = $output->fetch();
+        if ($exitCode === 0) {
+            $this->logger->info('Cleared all Metadata cache entries.');
+        } else {
+            throw new \RuntimeException('Cannot clear all Metadata cache entries: ' . $content);
         }
     }
 
@@ -52,9 +82,7 @@ final class SchemaUpdater
          * Very important, when using standard-edition,
          * Kernel class is AppKernel or DevAppKernel.
          */
-        /** @var class-string<Kernel> $kernelClass */
-        $kernelClass = get_class($this->kernel);
-        $application = new RoadizApplication(new $kernelClass('dev', true));
+        $application = new Application($this->kernel);
         $application->setAutoExit(false);
         return $application;
     }
@@ -72,7 +100,7 @@ final class SchemaUpdater
          * Execute pending application migrations
          */
         $input = new ArrayInput([
-            'command' => 'migrations:migrate',
+            'command' => 'doctrine:migrations:migrate',
             '--no-interaction' => true,
             '--allow-no-migration' => true
         ]);
@@ -94,26 +122,14 @@ final class SchemaUpdater
         /*
          * Execute pending application migrations
          */
-        $input = new ArrayInput([
-            'command' => 'migrations:migrate',
-            '--no-interaction' => true,
-            '--allow-no-migration' => true
-        ]);
-        $output = new BufferedOutput();
-        $exitCode = $this->createApplication()->run($input, $output);
-        $content = $output->fetch();
-        if ($exitCode === 0) {
-            $this->logger->info('Executed pending migrations.', ['migration' => $content]);
-        } else {
-            throw new \RuntimeException('Migrations failed: ' . $content);
-        }
+        $this->updateSchema();
 
         /*
          * Update schema with new node-types
          * without creating any migration
          */
         $input = new ArrayInput([
-            'command' => 'orm:schema-tool:update',
+            'command' => 'doctrine:schema:update',
             '--dump-sql' => true,
             '--force' => true,
         ]);
