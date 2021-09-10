@@ -71,7 +71,8 @@
         "ext-zip": "*"
     },
     "replace": {
-        "roadiz/roadiz": "*"
+        "roadiz/roadiz": "*",
+        "pimple/pimple": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "^9.5",

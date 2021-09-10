@@ -123,3 +123,4 @@ modules.xml
 /phpcs.xml
 ###< squizlabs/php_codesniffer ###
 /report.txt
+/composer.lock

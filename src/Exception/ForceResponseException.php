@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ForceResponseException extends \Exception
 {
-    protected $response;
+    protected Response $response;
 
     public function __construct(Response $response)
     {
@@ -23,7 +23,7 @@ class ForceResponseException extends \Exception
      *
      * @return Response
      */
-    public function getResponse()
+    public function getResponse(): Response
     {
         return $this->response;
     }
