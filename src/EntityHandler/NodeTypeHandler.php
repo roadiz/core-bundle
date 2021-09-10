@@ -7,6 +7,8 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\ORM\EntityManagerInterface;
+use RZ\Roadiz\CoreBundle\Cache\Clearer\OPCacheClearer;
+use RZ\Roadiz\CoreBundle\Doctrine\SchemaUpdater;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
@@ -23,8 +25,8 @@ class NodeTypeHandler extends AbstractHandler
     private ?NodeType $nodeType = null;
     private EntityGeneratorFactory $entityGeneratorFactory;
     private HandlerFactory $handlerFactory;
-    private ManagerRegistry $managerRegistry;
     private string $generatedEntitiesDir;
+    private SchemaUpdater $schemaUpdater;
 
     /**
      * @return NodeType
@@ -53,21 +55,21 @@ class NodeTypeHandler extends AbstractHandler
      * @param ObjectManager $objectManager
      * @param EntityGeneratorFactory $entityGeneratorFactory
      * @param HandlerFactory $handlerFactory
-     * @param ManagerRegistry $managerRegistry
+     * @param SchemaUpdater $schemaUpdater
      * @param string $generatedEntitiesDir
      */
     public function __construct(
         ObjectManager $objectManager,
         EntityGeneratorFactory $entityGeneratorFactory,
         HandlerFactory $handlerFactory,
-        ManagerRegistry $managerRegistry,
+        SchemaUpdater $schemaUpdater,
         string $generatedEntitiesDir
     ) {
         parent::__construct($objectManager);
         $this->entityGeneratorFactory = $entityGeneratorFactory;
         $this->handlerFactory = $handlerFactory;
-        $this->managerRegistry = $managerRegistry;
         $this->generatedEntitiesDir = $generatedEntitiesDir;
+        $this->schemaUpdater = $schemaUpdater;
     }
 
     /**
@@ -183,17 +185,7 @@ class NodeTypeHandler extends AbstractHandler
      */
     protected function clearCaches(bool $recreateProxies = true)
     {
-        $clearers = [
-            new OPCacheClearer(),
-        ];
-
-        if ($this->objectManager instanceof EntityManagerInterface) {
-            $clearers[] = new DoctrineCacheClearer($this->managerRegistry, $this->kernel, $recreateProxies);
-        }
-
-        foreach ($clearers as $clearer) {
-            $clearer->clear();
-        }
+        $this->schemaUpdater->clearMetadata();
     }
 
     /**

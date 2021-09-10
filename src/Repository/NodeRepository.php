@@ -709,7 +709,7 @@ final class NodeRepository extends StatusAwareRepository
      * @return null|Node
      * @throws NonUniqueResultException
      */
-    public function findOneWithUrlAlias(UrlAlias $urlAlias)
+    public function findOneWithUrlAlias(UrlAlias $urlAlias): ?Node
     {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select('n, ns')

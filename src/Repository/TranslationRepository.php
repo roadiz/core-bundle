@@ -12,7 +12,6 @@ use RZ\Roadiz\CoreBundle\Entity\Translation;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @package RZ\Roadiz\CoreBundle\Repository
  * @extends EntityRepository<Translation>
  */
 final class TranslationRepository extends EntityRepository

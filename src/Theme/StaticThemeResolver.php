@@ -42,7 +42,7 @@ class StaticThemeResolver implements ThemeResolverInterface
     }
 
     /**
-     * @inheritDoc
+     * @return string
      */
     public function getBackendClassName(): string
     {

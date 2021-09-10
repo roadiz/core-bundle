@@ -189,8 +189,8 @@ class ExceptionViewer
                 $data['error_trace'] =  $e->getTrace();
             }
             return new JsonResponse($data, $this->getHttpStatusCode($e));
-        } elseif (class_exists('RZ\\Roadiz\\CMS\\Controllers\\CmsController')) {
-            $html = file_get_contents(\RZ\Roadiz\CMS\Controllers\CmsController::getViewsFolder() . '/emerg.html');
+        } else {
+            $html = file_get_contents(dirname(__DIR__) . '/../templates/emerg.html');
             $html = str_replace('{{ http_code }}', (string) $this->getHttpStatusCode($e), $html);
             $html = str_replace('{{ human_message }}', $humanMessage, $html);
 

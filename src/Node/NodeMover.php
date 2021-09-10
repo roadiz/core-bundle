@@ -17,6 +17,7 @@ use RZ\Roadiz\CoreBundle\Routing\NodeRouter;
 use RZ\Roadiz\CoreBundle\Node\Exception\SameNodeUrlException;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\Cache\Adapter\AdapterInterface;
+use Symfony\Component\Cache\ResettableInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -100,7 +101,9 @@ class NodeMover
             $nodeHandler->cleanPositions();
         }
 
-        $this->cacheAdapter->reset();
+        if ($this->cacheAdapter instanceof ResettableInterface) {
+            $this->cacheAdapter->reset();
+        }
 
         return $node;
     }
@@ -126,7 +129,9 @@ class NodeMover
                 throw new SameNodeUrlException('NodeSource URL are the same between translations.');
             }
             $paths[$nodeSource->getTranslation()->getLocale()] = $url;
-            $this->logger->debug('Redirect '.$nodeSource->getId().' '.$nodeSource->getTranslation()->getLocale().': '.$url);
+            $this->logger->debug(
+                'Redirect '.$nodeSource->getId().' '.$nodeSource->getTranslation()->getLocale().': '.$url
+            );
             $lastUrl = $url;
         }
         return $paths;
@@ -143,7 +148,11 @@ class NodeMover
             /** @var NodesSources $nodeSource */
             foreach ($node->getNodeSources() as $nodeSource) {
                 if (!empty($previousPaths[$nodeSource->getTranslation()->getLocale()])) {
-                    $this->redirect($nodeSource, $previousPaths[$nodeSource->getTranslation()->getLocale()], $permanently);
+                    $this->redirect(
+                        $nodeSource,
+                        $previousPaths[$nodeSource->getTranslation()->getLocale()],
+                        $permanently
+                    );
                 }
             }
         }

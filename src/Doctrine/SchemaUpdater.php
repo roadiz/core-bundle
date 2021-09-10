@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Doctrine;
 
 use Psr\Log\LoggerInterface;
+use RZ\Roadiz\CoreBundle\Cache\Clearer\OPCacheClearer;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
@@ -13,21 +14,26 @@ final class SchemaUpdater
 {
     private KernelInterface $kernel;
     private LoggerInterface $logger;
+    private OPCacheClearer $opCacheClearer;
 
     /**
      * @param KernelInterface $kernel
+     * @param OPCacheClearer $opCacheClearer
      * @param LoggerInterface $logger
      */
     public function __construct(
         KernelInterface $kernel,
+        OPCacheClearer $opCacheClearer,
         LoggerInterface $logger
     ) {
         $this->kernel = $kernel;
         $this->logger = $logger;
+        $this->opCacheClearer = $opCacheClearer;
     }
 
     public function clearMetadata(): void
     {
+        $this->opCacheClearer->clear();
         $input = new ArrayInput([
             'command' => 'cache:pool:clear',
             'pools' => [

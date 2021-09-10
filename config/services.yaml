@@ -168,3 +168,15 @@ services:
     RZ\Roadiz\CoreBundle\Routing\NodeRouter:
         lazy: true
         tags: [ { name: 'router', priority: 0 } ]
+
+    RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface:
+        alias: RZ\Roadiz\CoreBundle\Routing\DocumentUrlGenerator
+
+    RZ\Roadiz\CoreBundle\TwigExtension\BlockRenderExtension:
+        arguments: [ '@fragment.handler' ]
+
+    RZ\Roadiz\CoreBundle\TwigExtension\RoutingExtension:
+        decorates: 'twig.extension.routing'
+        autoconfigure: false
+        arguments:
+            - '@.inner'

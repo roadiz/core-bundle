@@ -50,7 +50,7 @@ final class ThemeInfo
     /**
      * @param string $themeName
      *
-     * @return class-string
+     * @return class-string|string
      */
     protected function guessClassnameFromThemeName(string $themeName): string
     {

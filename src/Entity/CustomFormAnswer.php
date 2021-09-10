@@ -27,7 +27,7 @@ class CustomFormAnswer extends AbstractEntity
      * @ORM\Column(type="datetime", name="submitted_at")
      * @var \DateTime
      */
-    private ?\DateTime $submittedAt;
+    private $submittedAt;
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomFormFieldAttribute",
      *            mappedBy="customFormAnswer",

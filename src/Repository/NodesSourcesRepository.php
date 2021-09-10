@@ -494,7 +494,7 @@ final class NodesSourcesRepository extends StatusAwareRepository
      * @return array
      */
     public function findByTextQuery(
-        $textQuery,
+        string $textQuery,
         int $limit = 0,
         array $nodeTypes = [],
         bool $onlyVisible = false,
