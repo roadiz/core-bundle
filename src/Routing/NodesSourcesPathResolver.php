@@ -17,19 +17,19 @@ use Symfony\Component\Stopwatch\Stopwatch;
 final class NodesSourcesPathResolver implements PathResolverInterface
 {
     private ManagerRegistry $managerRegistry;
-    private ?Stopwatch $stopwatch;
+    private Stopwatch $stopwatch;
     private static string $nodeNamePattern = '[a-zA-Z0-9\-\_\.]+';
     private PreviewResolverInterface $previewResolver;
 
     /**
      * @param ManagerRegistry $managerRegistry
      * @param PreviewResolverInterface $previewResolver
-     * @param Stopwatch|null $stopwatch
+     * @param Stopwatch $stopwatch
      */
     public function __construct(
         ManagerRegistry $managerRegistry,
         PreviewResolverInterface $previewResolver,
-        ?Stopwatch $stopwatch
+        Stopwatch $stopwatch
     ) {
         $this->stopwatch = $stopwatch;
         $this->previewResolver = $previewResolver;
@@ -83,23 +83,15 @@ final class NodesSourcesPathResolver implements PathResolverInterface
             }
         }
 
-        if (null !== $this->stopwatch) {
-            $this->stopwatch->start('parseTranslation');
-        }
+        $this->stopwatch->start('parseTranslation');
         $translation = $this->parseTranslation($tokens);
-        if (null !== $this->stopwatch) {
-            $this->stopwatch->stop('parseTranslation');
-        }
+        $this->stopwatch->stop('parseTranslation');
         /*
          * Try with URL Aliases OR nodeName
          */
-        if (null !== $this->stopwatch) {
-            $this->stopwatch->start('parseFromIdentifier');
-        }
+        $this->stopwatch->start('parseFromIdentifier');
         $nodeSource = $this->parseFromIdentifier($tokens, $translation);
-        if (null !== $this->stopwatch) {
-            $this->stopwatch->stop('parseFromIdentifier');
-        }
+        $this->stopwatch->stop('parseFromIdentifier');
 
         if (null === $nodeSource) {
             throw new ResourceNotFoundException();

@@ -28,17 +28,17 @@ final class RedirectionMatcher extends UrlMatcher
      * @param RequestContext $context
      * @param ManagerRegistry $managerRegistry
      * @param Stopwatch $stopwatch
-     * @param LoggerInterface|null $logger
+     * @param LoggerInterface $logger
      */
     public function __construct(
         RequestContext $context,
         ManagerRegistry $managerRegistry,
         Stopwatch $stopwatch,
-        ?LoggerInterface $logger = null
+        LoggerInterface $logger
     ) {
         parent::__construct(new RouteCollection(), $context);
         $this->stopwatch = $stopwatch;
-        $this->logger = $logger ?? new NullLogger();
+        $this->logger = $logger;
         $this->managerRegistry = $managerRegistry;
     }
 
@@ -47,10 +47,7 @@ final class RedirectionMatcher extends UrlMatcher
      */
     public function match($pathinfo)
     {
-        if (null !== $this->stopwatch) {
-            $this->stopwatch->start('findRedirection');
-        }
-
+        $this->stopwatch->start('findRedirection');
         $decodedUrl = rawurldecode($pathinfo);
 
         /*
@@ -58,18 +55,14 @@ final class RedirectionMatcher extends UrlMatcher
          */
         if (null !== $redirection = $this->matchRedirection($decodedUrl)) {
             $this->logger->debug('Matched redirection.', ['query' => $redirection->getQuery()]);
-            if (null !== $this->stopwatch) {
-                $this->stopwatch->stop('findRedirection');
-            }
+            $this->stopwatch->stop('findRedirection');
             return [
                 '_controller' => RedirectionController::class . '::redirectAction',
                 'redirection' => $redirection,
                 '_route' => null,
             ];
         }
-        if (null !== $this->stopwatch) {
-            $this->stopwatch->stop('findRedirection');
-        }
+        $this->stopwatch->stop('findRedirection');
 
         throw new ResourceNotFoundException(sprintf('%s did not match any Doctrine Redirection', $pathinfo));
     }

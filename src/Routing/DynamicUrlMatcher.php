@@ -20,7 +20,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
 abstract class DynamicUrlMatcher extends UrlMatcher
 {
     protected ?Theme $theme;
-    protected ?Stopwatch $stopwatch;
+    protected Stopwatch $stopwatch;
     protected LoggerInterface $logger;
     protected ThemeResolverInterface $themeResolver;
     protected PreviewResolverInterface $previewResolver;
@@ -29,14 +29,14 @@ abstract class DynamicUrlMatcher extends UrlMatcher
      * @param RequestContext $context
      * @param ThemeResolverInterface $themeResolver
      * @param PreviewResolverInterface $previewResolver
-     * @param Stopwatch|null $stopwatch
+     * @param Stopwatch $stopwatch
      * @param LoggerInterface|null $logger
      */
     public function __construct(
         RequestContext $context,
         ThemeResolverInterface $themeResolver,
         PreviewResolverInterface $previewResolver,
-        Stopwatch $stopwatch = null,
+        Stopwatch $stopwatch,
         ?LoggerInterface $logger = null
     ) {
         parent::__construct(new RouteCollection(), $context);

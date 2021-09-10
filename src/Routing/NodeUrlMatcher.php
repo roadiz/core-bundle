@@ -69,13 +69,9 @@ class NodeUrlMatcher extends DynamicUrlMatcher
      */
     public function match($pathinfo)
     {
-        if (null !== $this->stopwatch) {
-            $this->stopwatch->start('findTheme');
-        }
+        $this->stopwatch->start('findTheme');
         $this->theme = $this->themeResolver->findTheme($this->context->getHost());
-        if (null !== $this->stopwatch) {
-            $this->stopwatch->stop('findTheme');
-        }
+        $this->stopwatch->stop('findTheme');
 
         $decodedUrl = rawurldecode($pathinfo);
         /*
