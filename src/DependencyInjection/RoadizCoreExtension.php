@@ -56,8 +56,6 @@ class RoadizCoreExtension extends Extension
         $container->setParameter('roadiz_core.static_domain_name', $config['staticDomainName'] ?? '');
         $container->setParameter('roadiz_core.private_key_name', $config['security']['private_key_name']);
 
-        date_default_timezone_set($config['timezone']);
-
         /*
          * Assets config
          */
