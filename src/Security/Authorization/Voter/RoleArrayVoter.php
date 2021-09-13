@@ -8,7 +8,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\RoleVoter;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
 /**
- * @deprecated BC break temporary fix for is_granted on Role array.
+ * @deprecated BC break temporary fix for is_granted on Role array. Twig templates and controller should not test Role arrays.
  */
 class RoleArrayVoter extends RoleVoter
 {
