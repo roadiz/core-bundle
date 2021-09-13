@@ -52,6 +52,9 @@ services:
         resource: '../src/Security/Authorization/Voter'
         tags: [ 'security.voter' ]
 
+    RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface:
+        alias: RZ\Roadiz\CoreBundle\Preview\RequestPreviewRevolver
+
     RZ\Roadiz\CoreBundle\Preview\RequestPreviewRevolver:
         arguments:
             - '@Symfony\Component\HttpFoundation\RequestStack'
@@ -159,8 +162,59 @@ services:
     League\CommonMark\Extension\Table\TableExtension:
         tags: ['roadiz_core.markdown.text_converter.extension', 'roadiz_core.markdown.text_extra_converter.extension']
 
+    #
+    # Twig extensions
+    #
+    RZ\Roadiz\TwigExtension\DocumentExtension:
+        tags: ['twig.extension']
     RZ\Roadiz\Markdown\Twig\MarkdownExtension:
         tags: ['twig.extension']
+
+    RZ\Roadiz\Document\DocumentFinderInterface:
+        alias: RZ\Roadiz\CoreBundle\Document\DocumentFinder
+
+    RZ\Roadiz\Utils\MediaFinders\EmbedFinderFactory:
+
+    RZ\Roadiz\Document\Renderer\ChainRenderer:
+        arguments: [[]]
+        lazy: true
+
+    #
+    # Media finders
+    #
+    RZ\Roadiz\CoreBundle\Document\MediaFinder\UnsplashPictureFinder:
+        arguments:
+            - '%roadiz_core.medias.unsplash_client_id%'
+    RZ\Roadiz\Utils\MediaFinders\RandomImageFinder:
+        alias: RZ\Roadiz\CoreBundle\Document\MediaFinder\UnsplashPictureFinder
+    RZ\Roadiz\Document\Renderer\ImageRenderer:
+        tags: [ 'roadiz_core.document_renderer' ]
+    RZ\Roadiz\Document\Renderer\PictureRenderer:
+        tags: [ 'roadiz_core.document_renderer' ]
+    RZ\Roadiz\Document\Renderer\VideoRenderer:
+        tags: [ 'roadiz_core.document_renderer' ]
+    RZ\Roadiz\Document\Renderer\AudioRenderer:
+        tags: [ 'roadiz_core.document_renderer' ]
+    RZ\Roadiz\Document\Renderer\PdfRenderer:
+        tags: [ 'roadiz_core.document_renderer' ]
+    RZ\Roadiz\Document\Renderer\SvgRenderer:
+        tags: [ 'roadiz_core.document_renderer' ]
+    RZ\Roadiz\Document\Renderer\InlineSvgRenderer:
+        tags: [ 'roadiz_core.document_renderer' ]
+    RZ\Roadiz\Document\Renderer\EmbedRenderer:
+        tags: [ 'roadiz_core.document_renderer' ]
+    RZ\Roadiz\Document\Renderer\ThumbnailRenderer:
+        tags: [ 'roadiz_core.document_renderer' ]
+    RZ\Roadiz\Document\Renderer\RendererInterface:
+        alias: RZ\Roadiz\Document\Renderer\ChainRenderer
+
+    # Default AbstractDocumentFactory is the public one.
+    RZ\Roadiz\Utils\Document\AbstractDocumentFactory:
+        alias: RZ\Roadiz\CoreBundle\Document\DocumentFactory
+
+    RZ\Roadiz\CoreBundle\Form\SettingDocumentType:
+        arguments:
+            - '@RZ\Roadiz\CoreBundle\Document\DocumentFactory'
 
     RZ\Roadiz\CoreBundle\Routing\RedirectionRouter:
         lazy: true
@@ -180,3 +234,4 @@ services:
         autoconfigure: false
         arguments:
             - '@.inner'
+

@@ -19,6 +19,11 @@ class GroupVoter extends RoleVoter
         parent::__construct($prefix);
     }
 
+    protected function supports(string $attribute, $subject): bool
+    {
+        return $subject instanceof Group;
+    }
+
     protected function extractRoles(TokenInterface $token)
     {
         return $this->roleHierarchy->getReachableRoleNames($token->getRoleNames());

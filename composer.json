@@ -68,6 +68,8 @@
         "solarium/solarium":                       "^6.0.4",
         "inlinestyle/inlinestyle":                 "~1.2.7",
         "scienta/doctrine-json-functions":         "^4.2",
+        "rollerworks/password-strength-validator": "^1.6",
+        "rollerworks/password-strength-bundle": "^2.2",
         "ext-zip": "*"
     },
     "replace": {

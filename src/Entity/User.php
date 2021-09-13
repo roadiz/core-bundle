@@ -26,7 +26,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * })
  * @ORM\HasLifecycleCallbacks
  */
-class User extends AbstractHuman implements AdvancedUserInterface, \Serializable, EquatableInterface, PasswordAuthenticatedUserInterface
+class User extends AbstractHuman implements UserInterface, AdvancedUserInterface, \Serializable, EquatableInterface, PasswordAuthenticatedUserInterface
 {
     /**
      * Email confirmation link TTL (in seconds) to change

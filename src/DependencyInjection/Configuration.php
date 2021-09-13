@@ -43,6 +43,7 @@ class Configuration implements ConfigurationInterface
             ->append($this->addThemesNode())
             ->append($this->addInheritanceNode())
             ->append($this->addReverseProxyCacheNode())
+            ->append($this->addMediasNode())
         ;
         return $builder;
     }
@@ -80,29 +81,44 @@ EOD
     /**
      * @return ArrayNodeDefinition|NodeDefinition
      */
+    protected function addMediasNode()
+    {
+        $builder = new TreeBuilder('medias');
+        $node = $builder->getRootNode();
+        $node->addDefaultsIfNotSet()
+            ->children()
+            ->scalarNode('unsplash_client_id')->defaultNull()->end()
+            ->end();
+
+        return $node;
+    }
+
+    /**
+     * @return ArrayNodeDefinition|NodeDefinition
+     */
     protected function addAssetsNode()
     {
         $builder = new TreeBuilder('assetsProcessing');
         $node = $builder->getRootNode();
         $node->addDefaultsIfNotSet()
             ->children()
-                ->enumNode('driver')
-                    ->values(['gd', 'imagick'])
-                    ->defaultValue('gd')
-                    ->info('GD does not support TIFF and PSD formats, but iMagick must be installed')
-                ->end()
-                ->integerNode('defaultQuality')
-                    ->min(10)
-                    ->max(100)
-                    ->defaultValue(95)
-                ->end()
-                ->integerNode('maxPixelSize')
-                    ->min(600)
-                    ->defaultValue(2500)
-                    ->info('Pixel width limit after Roadiz should create a smaller copy')
-                ->end()
-                ->scalarNode('jpegoptimPath')->defaultNull()->end()
-                ->scalarNode('pngquantPath')->defaultNull()->end()
+            ->enumNode('driver')
+                ->values(['gd', 'imagick'])
+                ->defaultValue('gd')
+                ->info('GD does not support TIFF and PSD formats, but iMagick must be installed')
+            ->end()
+            ->integerNode('defaultQuality')
+                ->min(10)
+                ->max(100)
+                ->defaultValue(95)
+            ->end()
+            ->integerNode('maxPixelSize')
+                ->min(600)
+                ->defaultValue(2500)
+                ->info('Pixel width limit after Roadiz should create a smaller copy')
+            ->end()
+            ->scalarNode('jpegoptimPath')->defaultNull()->end()
+            ->scalarNode('pngquantPath')->defaultNull()->end()
             ->arrayNode('subscribers')
                 ->prototype('array')
                     ->children()

@@ -73,6 +73,11 @@ class RoadizCoreExtension extends Extension
         );
 
         /*
+         * Media config
+         */
+        $container->setParameter('roadiz_core.medias.unsplash_client_id', $config['medias']['unsplash_client_id'] ?? '');
+
+        /*
          * Themes config
          */
         $frontendThemes = [];
