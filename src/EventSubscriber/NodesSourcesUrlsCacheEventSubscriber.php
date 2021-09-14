@@ -26,6 +26,7 @@ final class NodesSourcesUrlsCacheEventSubscriber implements EventSubscriberInter
     {
         return [
             CachePurgeRequestEvent::class => ['onPurgeRequest', 3],
+            \RZ\Roadiz\Core\Events\Cache\CachePurgeRequestEvent::class => ['onPurgeRequest', 3],
         ];
     }
 

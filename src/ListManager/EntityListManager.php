@@ -19,11 +19,11 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class EntityListManager extends AbstractEntityListManager
 {
-    protected ?ObjectManager $entityManager = null;
     /**
      * @var class-string|string
      */
     protected string $entityName;
+    protected ObjectManager $entityManager;
     protected ?Paginator $paginator = null;
     protected ?array $orderingArray = null;
     protected ?array $filteringArray = null;

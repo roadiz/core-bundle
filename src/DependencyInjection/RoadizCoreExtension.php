@@ -20,6 +20,9 @@ use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
 use RZ\Roadiz\Markdown\CommonMark;
 use RZ\Roadiz\Markdown\MarkdownInterface;
+use RZ\Roadiz\CoreBundle\Webhook\Message\GenericJsonPostMessage;
+use RZ\Roadiz\CoreBundle\Webhook\Message\GitlabPipelineTriggerMessage;
+use RZ\Roadiz\CoreBundle\Webhook\Message\NetlifyBuildHookMessage;
 use Solarium\Client;
 use Solarium\Core\Client\Adapter\Curl;
 use Solarium\Core\Client\Endpoint;
@@ -59,23 +62,36 @@ class RoadizCoreExtension extends Extension
         /*
          * Assets config
          */
-        $container->setParameter(
-            'roadiz_core.assets_processing.max_pixel_size',
-            $config['assetsProcessing']['maxPixelSize'] ?? 2500
-        );
-        $container->setParameter(
-            'roadiz_core.assets_processing.driver',
-            $config['assetsProcessing']['driver'] ?? 'gd'
-        );
-        $container->setParameter(
-            'roadiz_core.assets_processing.default_quality',
-            $config['assetsProcessing']['defaultQuality'] ?? 90
-        );
+        if (extension_loaded('gd')) {
+            $gd_infos = gd_info();
+            $container->setParameter('roadiz_core.assets_processing.supports_webp', (bool) $gd_infos['WebP Support']);
+        } else {
+            $container->setParameter('roadiz_core.assets_processing.supports_webp', false);
+        }
 
         /*
          * Media config
          */
         $container->setParameter('roadiz_core.medias.unsplash_client_id', $config['medias']['unsplash_client_id'] ?? '');
+        $container->setParameter('roadiz_core.medias.supported_platforms', [
+            'youtube' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\YoutubeEmbedFinder::class,
+            'vimeo' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\VimeoEmbedFinder::class,
+            'deezer' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\DeezerEmbedFinder::class,
+            'dailymotion' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\DailymotionEmbedFinder::class,
+            'soundcloud' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\SoundcloudEmbedFinder::class,
+            'mixcloud' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\MixcloudEmbedFinder::class,
+            'spotify' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\SpotifyEmbedFinder::class,
+            'ted' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\TedEmbedFinder::class,
+            'podcast' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\PodcastFinder::class,
+            'twitch' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\TwitchEmbedFinder::class
+        ]);
+
+        $container->setParameter('roadiz_core.webhook.message_types', [
+            'webhook.type.generic_json_post' => GenericJsonPostMessage::class,
+            'webhook.type.gitlab_pipeline' => GitlabPipelineTriggerMessage::class,
+            'webhook.type.netlify_build_hook' => NetlifyBuildHookMessage::class,
+        ]);
+
 
         /*
          * Themes config

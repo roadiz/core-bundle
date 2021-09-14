@@ -25,6 +25,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\NotBlank;
@@ -287,7 +288,7 @@ class ContactFormManager extends EmailManager
                     'publicKey' => $publicKey,
                 ],
                 'constraints' => [
-                    new Recaptcha($this->request, [
+                    new Recaptcha($this->getRequest(), [
                         'fieldName' => $validatorFieldName,
                         'privateKey' => $privateKey,
                         'verifyUrl' => $verifyUrl,
@@ -323,28 +324,24 @@ class ContactFormManager extends EmailManager
                 try {
                     $this->handleFiles();
                     $this->handleFormData($this->form);
-
-                    if ($this->send() > 0) {
-                        if ($returnJson) {
-                            $responseArray = [
-                                'statusCode' => Response::HTTP_OK,
-                                'status' => 'success',
-                                'message' => $this->translator->trans($this->successMessage),
-                            ];
-                            return new JsonResponse($responseArray);
-                        } else {
-                            if ($request->hasPreviousSession()) {
-                                /** @var Session $session */
-                                $session = $request->getSession();
-                                $session->getFlashBag()
-                                    ->add('confirm', $this->translator->trans($this->successMessage));
-                            }
-
-                            $this->redirectUrl = $this->redirectUrl !== null ? $this->redirectUrl : $request->getUri();
-                            return new RedirectResponse($this->redirectUrl);
-                        }
+                    $this->send();
+                    if ($returnJson) {
+                        $responseArray = [
+                            'statusCode' => Response::HTTP_OK,
+                            'status' => 'success',
+                            'message' => $this->translator->trans($this->successMessage),
+                        ];
+                        return new JsonResponse($responseArray);
                     } else {
-                        $this->form->addError(new FormError('Contact form could not be sent.'));
+                        if ($request->hasPreviousSession()) {
+                            /** @var Session $session */
+                            $session = $request->getSession();
+                            $session->getFlashBag()
+                                ->add('confirm', $this->translator->trans($this->successMessage));
+                        }
+
+                        $this->redirectUrl = $this->redirectUrl !== null ? $this->redirectUrl : $request->getUri();
+                        return new RedirectResponse($this->redirectUrl);
                     }
                 } catch (BadFormRequestException $e) {
                     if (null !== $e->getFieldErrored() && $this->form->has($e->getFieldErrored())) {
@@ -352,6 +349,8 @@ class ContactFormManager extends EmailManager
                     } else {
                         $this->form->addError(new FormError($e->getMessage()));
                     }
+                } catch (TransportExceptionInterface $exception) {
+                    $this->form->addError(new FormError('Contact form could not be sent.'));
                 }
             }
             if ($returnJson) {

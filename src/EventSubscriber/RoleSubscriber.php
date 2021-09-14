@@ -36,8 +36,11 @@ class RoleSubscriber implements EventSubscriberInterface
     {
         return [
             PreCreatedRoleEvent::class => 'onRoleChanged',
+            \RZ\Roadiz\Core\Events\Role\PreCreatedRoleEvent::class => 'onRoleChanged',
             PreUpdatedRoleEvent::class => 'onRoleChanged',
+            \RZ\Roadiz\Core\Events\Role\PreUpdatedRoleEvent::class => 'onRoleChanged',
             PreDeletedRoleEvent::class => 'onRoleChanged',
+            \RZ\Roadiz\Core\Events\Role\PreDeletedRoleEvent::class => 'onRoleChanged',
         ];
     }
 

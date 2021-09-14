@@ -16,6 +16,7 @@ final class OPCacheEventSubscriber implements EventSubscriberInterface
     {
         return [
             CachePurgeRequestEvent::class => ['onPurgeRequest', 3],
+            \RZ\Roadiz\Core\Events\Cache\CachePurgeRequestEvent::class => ['onPurgeRequest', 3],
         ];
     }
 

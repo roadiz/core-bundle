@@ -42,6 +42,7 @@ final class NodeNameSubscriber implements EventSubscriberInterface
     {
         return [
             NodesSourcesPreUpdatedEvent::class => ['onBeforeUpdate', 0],
+            \RZ\Roadiz\Core\Events\NodesSources\NodesSourcesPreUpdatedEvent::class => ['onBeforeUpdate', 0],
         ];
     }
 

@@ -39,13 +39,15 @@ class NodeTypesType extends AbstractType
             if ($options['showInvisible'] === false) {
                 $criteria['visible'] = true;
             }
-            $nodeTypes = $this->managerRegistry->getRepository(NodeType::class)->findBy($criteria);
+            if (null !== $this->managerRegistry) {
+                $nodeTypes = $this->managerRegistry->getRepository(NodeType::class)->findBy($criteria);
 
-            /** @var NodeType $nodeType */
-            foreach ($nodeTypes as $nodeType) {
-                $choices[$nodeType->getDisplayName()] = $nodeType->getId();
+                /** @var NodeType $nodeType */
+                foreach ($nodeTypes as $nodeType) {
+                    $choices[$nodeType->getDisplayName()] = $nodeType->getId();
+                }
+                ksort($choices);
             }
-            ksort($choices);
 
             return $choices;
         });

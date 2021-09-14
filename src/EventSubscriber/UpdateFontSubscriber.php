@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 
+use RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber\FontLifeCycleSubscriber;
 use RZ\Roadiz\CoreBundle\Event\Font\PreUpdatedFontEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -29,7 +30,8 @@ final class UpdateFontSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            PreUpdatedFontEvent::class => 'onPreUpdatedFont'
+            PreUpdatedFontEvent::class => 'onPreUpdatedFont',
+            \RZ\Roadiz\Core\Events\Font\PreUpdatedFontEvent::class => 'onPreUpdatedFont',
         ];
     }
 

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace RZ\Roadiz\CoreBundle\EventSubscriber;
+namespace RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber;
 
 use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Events;

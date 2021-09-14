@@ -51,7 +51,9 @@ final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
     {
         return [
             CachePurgeRequestEvent::class => ['onBanRequest', 3],
+            \RZ\Roadiz\Core\Events\Cache\CachePurgeRequestEvent::class => ['onBanRequest', 3],
             NodesSourcesUpdatedEvent::class => ['onPurgeRequest', 3],
+            \RZ\Roadiz\Core\Events\NodesSources\NodesSourcesUpdatedEvent::class => ['onPurgeRequest', 3],
         ];
     }
 

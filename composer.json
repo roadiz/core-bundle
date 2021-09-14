@@ -70,6 +70,9 @@
         "scienta/doctrine-json-functions":         "^4.2",
         "rollerworks/password-strength-validator": "^1.6",
         "rollerworks/password-strength-bundle": "^2.2",
+        "phpoffice/phpspreadsheet":                "^1.15",
+        "rezozero/intervention-request-bundle":    "dev-master",
+        "symfony/rate-limiter":                    "^5.3",
         "ext-zip": "*"
     },
     "replace": {

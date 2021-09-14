@@ -39,6 +39,7 @@ final class UserLocaleSubscriber implements EventSubscriberInterface
             KernelEvents::REQUEST => [['onKernelRequest', 32]],
             SecurityEvents::INTERACTIVE_LOGIN => [['onInteractiveLogin', 15]],
             UserUpdatedEvent::class => [['onUserUpdated']],
+            \RZ\Roadiz\Core\Events\User\UserUpdatedEvent::class => [['onUserUpdated']],
         ];
     }
 

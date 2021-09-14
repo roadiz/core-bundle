@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 
-use RZ\Roadiz\Config\CollectionFieldConfiguration;
-use RZ\Roadiz\Config\JoinNodeTypeFieldConfiguration;
-use RZ\Roadiz\Config\ProviderFieldConfiguration;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\CoreBundle\Configuration\CollectionFieldConfiguration;
+use RZ\Roadiz\CoreBundle\Configuration\JoinNodeTypeFieldConfiguration;
+use RZ\Roadiz\CoreBundle\Configuration\ProviderFieldConfiguration;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField as NodeTypeFieldEntity;
 use RZ\Roadiz\CoreBundle\Explorer\AbstractExplorerProvider;
 use Symfony\Component\Config\Definition\Processor;
