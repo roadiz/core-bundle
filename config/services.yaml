@@ -33,7 +33,18 @@ services:
             - '../src/Event/'
 
     RZ\Roadiz\CoreBundle\EntityHandler\:
-        resource: '../src/EntityHandler'
+        resource: '../src/EntityHandler/'
+        # Recreate handlers for each usage
+        shared: false
+        public: true
+
+    RZ\Roadiz\Document\EventSubscriber\:
+        resource: '%kernel.project_dir%/vendor/roadiz/documents/src/Roadiz/Document/EventSubscriber/'
+        autowire: true
+        autoconfigure: true
+
+    RZ\Roadiz\CoreBundle\SearchEngine\Indexer\:
+        resource: '../src/SearchEngine/Indexer/'
         # Recreate handlers for each usage
         shared: false
         public: true
@@ -189,6 +200,8 @@ services:
         alias: RZ\Roadiz\CoreBundle\Document\DocumentFinder
 
     RZ\Roadiz\Utils\MediaFinders\EmbedFinderFactory:
+        arguments:
+            - '%roadiz_core.medias.supported_platforms%'
 
     RZ\Roadiz\Document\Renderer\ChainRenderer:
         arguments: [[]]
@@ -217,7 +230,7 @@ services:
     RZ\Roadiz\Document\Renderer\InlineSvgRenderer:
         tags: [ 'roadiz_core.document_renderer' ]
     RZ\Roadiz\Document\Renderer\EmbedRenderer:
-        tags: [ 'roadiz_core.document_renderer' ]
+        tags: [ { name: 'roadiz_core.document_renderer', priority: -128 } ]
     RZ\Roadiz\Document\Renderer\ThumbnailRenderer:
         tags: [ 'roadiz_core.document_renderer' ]
     RZ\Roadiz\Document\Renderer\RendererInterface:

@@ -3,16 +3,24 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Role;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Do not extend Roadiz or Service repository to prevent cyclic dependencies.
  *
- * @package RZ\Roadiz\CoreBundle\Repository
- * @extends \Doctrine\ORM\EntityRepository<Role>
+ * @extends EntityRepository<Role>
  */
-final class RoleRepository extends \Doctrine\ORM\EntityRepository
+final class RoleRepository extends EntityRepository
 {
+    public function __construct(
+        ManagerRegistry $registry,
+        EventDispatcherInterface $dispatcher
+    ) {
+        parent::__construct($registry, Role::class, $dispatcher);
+    }
+
     /**
      * @param string $roleName
      *

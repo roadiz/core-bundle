@@ -165,13 +165,7 @@ class NodeHandler extends AbstractHandler
      */
     public function cleanNodesFromField(NodeTypeField $field, bool $flush = true)
     {
-        $nodesToNodes = $this->objectManager
-            ->getRepository(NodesToNodes::class)
-            ->findBy(['nodeA' => $this->getNode(), 'field' => $field]);
-
-        foreach ($nodesToNodes as $ntn) {
-            $this->objectManager->remove($ntn);
-        }
+        $this->node->clearBNodesForField($field);
 
         if (true === $flush) {
             $this->objectManager->flush();
@@ -193,18 +187,20 @@ class NodeHandler extends AbstractHandler
     {
         $ntn = new NodesToNodes($this->getNode(), $node, $field);
 
-        if (null === $position) {
-            $latestPosition = $this->objectManager
-                ->getRepository(NodesToNodes::class)
-                ->getLatestPosition($this->getNode(), $field);
-            $ntn->setPosition($latestPosition + 1);
-        } else {
-            $ntn->setPosition($position);
-        }
-
-        $this->objectManager->persist($ntn);
-        if (true === $flush) {
-            $this->objectManager->flush();
+        if (!$this->node->hasBNode($ntn)) {
+            if (null === $position) {
+                $latestPosition = $this->objectManager
+                    ->getRepository(NodesToNodes::class)
+                    ->getLatestPosition($this->getNode(), $field);
+                $ntn->setPosition($latestPosition + 1);
+            } else {
+                $ntn->setPosition($position);
+            }
+            $this->node->addBNode($ntn);
+            $this->objectManager->persist($ntn);
+            if (true === $flush) {
+                $this->objectManager->flush();
+            }
         }
 
         return $this;

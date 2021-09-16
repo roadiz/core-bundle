@@ -10,4 +10,11 @@ roadiz_core:
     reverseProxyCache:
         frontend: { }
     solr:
-        endpoints: []
+        timeout: 3
+        endpoints:
+            docker:
+                host: '%env(string:SOLR_HOST)%'
+                core: '%env(string:SOLR_CORE_NAME)%'
+                port: '%env(string:SOLR_PORT)%'
+                path: /
+

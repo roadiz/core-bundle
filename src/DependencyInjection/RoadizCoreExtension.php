@@ -58,6 +58,7 @@ class RoadizCoreExtension extends Extension
         $container->setParameter('roadiz_core.inheritance_type', $config['inheritance']['type']);
         $container->setParameter('roadiz_core.static_domain_name', $config['staticDomainName'] ?? '');
         $container->setParameter('roadiz_core.private_key_name', $config['security']['private_key_name']);
+        $container->setParameter('roadiz_core.use_native_json_column_type', $config['useNativeJsonColumnType']);
 
         /*
          * Assets config
@@ -92,10 +93,15 @@ class RoadizCoreExtension extends Extension
             'webhook.type.netlify_build_hook' => NetlifyBuildHookMessage::class,
         ]);
 
+        $this->registerThemes($config, $container);
+        $this->registerReverseProxyCache($config, $container);
+        $this->registerEntityGenerator($config, $container);
+        $this->registerSolr($config, $container);
+        $this->registerMarkdown($config, $container);
+    }
 
-        /*
-         * Themes config
-         */
+    private function registerThemes(array $config, ContainerBuilder $container)
+    {
         $frontendThemes = [];
         foreach ($config['themes'] as $index => $themeConfig) {
             $theme = new Theme();
@@ -109,10 +115,10 @@ class RoadizCoreExtension extends Extension
             $frontendThemes[] = $theme;
         }
         $container->setParameter('roadiz_core.themes', $frontendThemes);
+    }
 
-        /*
-         * Reverse Proxy cache config
-         */
+    private function registerReverseProxyCache(array $config, ContainerBuilder $container): void
+    {
         $reverseProxyCacheFrontendsReferences = [];
         foreach ($config['reverseProxyCache']['frontend'] as $name => $frontend) {
             $definitionName = 'roadiz_core.reverse_proxy_cache.frontends.' . $name;
@@ -163,12 +169,10 @@ class RoadizCoreExtension extends Extension
                     )
                 ])
         );
+    }
 
-        $container->setParameter('roadiz_core.use_native_json_column_type', $config['useNativeJsonColumnType']);
-
-        /*
-         * EntityGeneratorFactory options
-         */
+    private function registerEntityGenerator(array $config, ContainerBuilder $container): void
+    {
         $entityGeneratorFactoryOptions = [
             'parent_class' => NodesSources::class,
             'repository_class' => NodesSourcesRepository::class,
@@ -182,10 +186,10 @@ class RoadizCoreExtension extends Extension
             'use_native_json' => $config['useNativeJsonColumnType']
         ];
         $container->setParameter('roadiz_core.entity_generator_factory.options', $entityGeneratorFactoryOptions);
+    }
 
-        /*
-         * Solarium and Solr configuration
-         */
+    private function registerSolr(array $config, ContainerBuilder $container): void
+    {
         $solrEndpoints = [];
         $container->setDefinition(
             'roadiz_core.solr.adapter',
@@ -224,18 +228,9 @@ class RoadizCoreExtension extends Extension
                 }, $solrEndpoints)])
         );
         $container->setParameter('roadiz_core.solr.clients', $solrEndpoints);
-
-        /*
-         * Markdown
-         */
-        $this->loadMarkdown($config, $container);
     }
 
-    /**
-     * @param array $config
-     * @param ContainerBuilder $container
-     */
-    private function loadMarkdown(array $config, ContainerBuilder $container): void
+    private function registerMarkdown(array $config, ContainerBuilder $container): void
     {
         $container->setParameter('roadiz_core.markdown_config_default', [
             'external_link' => [

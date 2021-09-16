@@ -33,6 +33,9 @@ final class RequestPreviewRevolver implements PreviewResolverInterface
     public function isPreview(): bool
     {
         $request = $this->requestStack->getMainRequest();
+        if (null === $request) {
+            return false;
+        }
         return $request->attributes->get('preview', false);
     }
 

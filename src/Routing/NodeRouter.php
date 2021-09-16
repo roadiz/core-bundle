@@ -18,6 +18,7 @@ use Symfony\Component\Routing\Matcher\UrlMatcherInterface;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\Router;
+use Symfony\Component\String\UnicodeString;
 
 class NodeRouter extends Router implements VersatileGeneratorInterface
 {
@@ -212,7 +213,8 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
     protected function getResourcePath(NodesSources $source, $parameters = [], bool $noCache = false): NodePathInfo
     {
         if ($noCache) {
-            $cacheKey = $source->getId() . '_' .  $this->getContext()->getHost() . '_' . serialize($parameters);
+            $parametersHash = sha1(serialize($parameters));
+            $cacheKey = 'ns_url_' . $source->getId() . '_' .  $this->getContext()->getHost() . '_' . $parametersHash;
             $cacheItem = $this->nodeSourceUrlCacheAdapter->getItem($cacheKey);
             if (!$cacheItem->isHit()) {
                 $cacheItem->set($this->getNodesSourcesPath($source, $parameters));

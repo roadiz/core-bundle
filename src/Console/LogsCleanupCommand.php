@@ -32,6 +32,7 @@ class LogsCleanupCommand extends Command
             ->setName('logs:cleanup')
             ->setDescription('Clean up logs entries <info>older than 6 months</info> from database.')
             ->addOption('erase', null, InputOption::VALUE_NONE, 'Actually delete outdated log entries.')
+            ->addOption('since', null, InputOption::VALUE_REQUIRED, 'Change default deletion duration from now.')
         ;
     }
 
@@ -41,7 +42,11 @@ class LogsCleanupCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $now = new \DateTime('now');
-        $now->add(\DateInterval::createFromDateString('-6 months'));
+        $since = '-6 months';
+        if (\is_string($input->getOption('since'))) {
+            $since = '-' . $input->getOption('since');
+        }
+        $now->add(\DateInterval::createFromDateString($since));
         $io = new SymfonyStyle($input, $output);
 
         /** @var LogRepository $logRepository */
@@ -58,7 +63,7 @@ class LogsCleanupCommand extends Command
             $logs = 0;
         }
 
-        $io->note($logs . ' log entries found before '. $now->format('Y-m-d') . '.');
+        $io->note($logs . ' log entries found before '. $now->format('Y-m-d H:i:s') . '.');
 
         if ($input->getOption('erase') && $logs > 0) {
             $qb2 = $logRepository->createQueryBuilder('l');

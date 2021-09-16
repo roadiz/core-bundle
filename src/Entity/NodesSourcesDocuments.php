@@ -20,25 +20,35 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
 class NodesSourcesDocuments extends AbstractPositioned
 {
     /**
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\NodesSources", inversedBy="documentsByFields", fetch="EAGER", cascade={"persist"})
+     * @ORM\ManyToOne(
+     *     targetEntity="RZ\Roadiz\CoreBundle\Entity\NodesSources",
+     *     inversedBy="documentsByFields",
+     *     fetch="EAGER",
+     *     cascade={"persist"}
+     * )
      * @ORM\JoinColumn(name="ns_id", referencedColumnName="id", onDelete="CASCADE")
      * @var NodesSources|null
      */
-    protected $nodeSource;
+    protected ?NodesSources $nodeSource;
 
     /**
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Document", inversedBy="nodesSourcesByFields", fetch="EAGER", cascade={"persist"})
+     * @ORM\ManyToOne(
+     *     targetEntity="RZ\Roadiz\CoreBundle\Entity\Document",
+     *     inversedBy="nodesSourcesByFields",
+     *      fetch="EAGER",
+     *     cascade={"persist"}
+     * )
      * @ORM\JoinColumn(name="document_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Document|null
      */
-    protected $document;
+    protected ?Document $document;
 
     /**
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\NodeTypeField")
      * @ORM\JoinColumn(name="node_type_field_id", referencedColumnName="id", onDelete="CASCADE")
      * @var NodeTypeField|null
      */
-    protected $field;
+    protected ?NodeTypeField $field;
 
     /**
      * Create a new relation between NodeSource, a Document and a NodeTypeField.
@@ -75,11 +85,11 @@ class NodesSourcesDocuments extends AbstractPositioned
     /**
      * Sets the value of nodeSource.
      *
-     * @param NodesSources $nodeSource the node source
+     * @param NodesSources|null $nodeSource the node source
      *
      * @return self
      */
-    public function setNodeSource(NodesSources $nodeSource): NodesSourcesDocuments
+    public function setNodeSource(?NodesSources $nodeSource): NodesSourcesDocuments
     {
         $this->nodeSource = $nodeSource;
 
@@ -89,9 +99,9 @@ class NodesSourcesDocuments extends AbstractPositioned
     /**
      * Gets the value of document.
      *
-     * @return Document
+     * @return Document|null
      */
-    public function getDocument(): Document
+    public function getDocument(): ?Document
     {
         return $this->document;
     }
@@ -99,11 +109,11 @@ class NodesSourcesDocuments extends AbstractPositioned
     /**
      * Sets the value of document.
      *
-     * @param Document $document the document
+     * @param Document|null $document the document
      *
      * @return self
      */
-    public function setDocument(Document $document): NodesSourcesDocuments
+    public function setDocument(?Document $document): NodesSourcesDocuments
     {
         $this->document = $document;
 
@@ -113,9 +123,9 @@ class NodesSourcesDocuments extends AbstractPositioned
     /**
      * Gets the value of field.
      *
-     * @return NodeTypeField
+     * @return NodeTypeField|null
      */
-    public function getField(): NodeTypeField
+    public function getField(): ?NodeTypeField
     {
         return $this->field;
     }
@@ -123,11 +133,11 @@ class NodesSourcesDocuments extends AbstractPositioned
     /**
      * Sets the value of field.
      *
-     * @param NodeTypeField $field the field
+     * @param NodeTypeField|null $field the field
      *
      * @return self
      */
-    public function setField(NodeTypeField $field): NodesSourcesDocuments
+    public function setField(?NodeTypeField $field): NodesSourcesDocuments
     {
         $this->field = $field;
 
