@@ -27,6 +27,7 @@ services:
         exclude:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
+            - '../src/Traits/'
             - '../src/Kernel.php'
             - '../src/Tests/'
             - '../src/Event/'
@@ -141,6 +142,19 @@ services:
         arguments:
             - '%kernel.project_dir%/public/assets'
 
+    RZ\Roadiz\CoreBundle\Importer\AttributeImporter:
+        tags: ['roadiz_core.importer']
+    RZ\Roadiz\CoreBundle\Importer\GroupsImporter:
+        tags: ['roadiz_core.importer']
+    RZ\Roadiz\CoreBundle\Importer\NodeTypesImporter:
+        tags: ['roadiz_core.importer']
+    RZ\Roadiz\CoreBundle\Importer\RolesImporter:
+        tags: ['roadiz_core.importer']
+    RZ\Roadiz\CoreBundle\Importer\SettingsImporter:
+        tags: ['roadiz_core.importer']
+    RZ\Roadiz\CoreBundle\Importer\TagsImporter:
+        tags: ['roadiz_core.importer']
+
     #
     # Markdown
     #
@@ -216,10 +230,6 @@ services:
     RZ\Roadiz\CoreBundle\Form\NodesType:
         arguments: ['@doctrine']
         tags: [ 'form.type' ]
-
-    RZ\Roadiz\CoreBundle\Form\SettingDocumentType:
-        arguments:
-            - '@RZ\Roadiz\CoreBundle\Document\DocumentFactory'
 
     RZ\Roadiz\CoreBundle\Routing\RedirectionRouter:
         lazy: true

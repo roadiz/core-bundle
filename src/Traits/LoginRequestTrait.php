@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace RZ\Roadiz\CoreBundle\Controller;
+namespace RZ\Roadiz\CoreBundle\Traits;
 
 use Doctrine\Persistence\ObjectManager;
 use Psr\Log\LoggerInterface;

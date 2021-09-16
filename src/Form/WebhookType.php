@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
 
-use RZ\Roadiz\CoreBundle\Form\NodesType;
-use RZ\Roadiz\CoreBundle\Form\YamlType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\Exception\TransformationFailedException;
@@ -21,7 +19,7 @@ use Symfony\Component\Validator\Constraints\Url;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
-final class WebhookType extends AbstractType
+class WebhookType extends AbstractType
 {
     private array $webhookMessageTypes;
 
@@ -78,7 +76,7 @@ final class WebhookType extends AbstractType
         ]);
 
         $builder->get('payload')->addModelTransformer(new CallbackTransformer(function (?array $model) {
-            return $model ? Yaml::dump($model): null;
+            return $model ? Yaml::dump($model) : null;
         }, function (?string $yaml) {
             try {
                 return $yaml ? Yaml::parse($yaml) : null;

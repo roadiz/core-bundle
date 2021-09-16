@@ -54,8 +54,8 @@ class UserViewer
     public function sendPasswordResetLink(
         UrlGeneratorInterface $urlGenerator,
         $route = 'loginResetPage',
-        string $htmlTemplate = 'users/reset_password_email.html.twig',
-        string $txtTemplate = 'users/reset_password_email.txt.twig'
+        string $htmlTemplate = '@RoadizCore/email/users/reset_password_email.html.twig',
+        string $txtTemplate = '@RoadizCore/email/users/reset_password_email.txt.twig'
     ): bool {
         $emailContact = $this->getContactEmail();
         $siteName = $this->getSiteName();

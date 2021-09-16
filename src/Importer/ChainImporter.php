@@ -10,7 +10,7 @@ class ChainImporter implements EntityImporterInterface
     /**
      * @param array<EntityImporterInterface> $importers
      */
-    public function __construct(array $importers)
+    public function __construct(array $importers = [])
     {
         $this->importers = $importers;
     }
