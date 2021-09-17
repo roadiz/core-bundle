@@ -25,3 +25,7 @@ customFormSentAction:
     controller: RZ\Roadiz\CoreBundle\Controller\CustomFormController::sentAction
     requirements:
         customFormId: "[0-9]+"
+
+roadiz_core_themes:
+    resource: .
+    type: themes

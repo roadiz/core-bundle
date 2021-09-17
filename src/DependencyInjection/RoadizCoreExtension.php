@@ -18,6 +18,8 @@ use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\Theme;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
+use RZ\Roadiz\CoreBundle\Theme\StaticThemeResolver;
+use RZ\Roadiz\CoreBundle\Twig\RoadizLoader;
 use RZ\Roadiz\Markdown\CommonMark;
 use RZ\Roadiz\Markdown\MarkdownInterface;
 use RZ\Roadiz\CoreBundle\Webhook\Message\GenericJsonPostMessage;
@@ -27,6 +29,7 @@ use RZ\Roadiz\OpenId\Discovery;
 use Solarium\Client;
 use Solarium\Core\Client\Adapter\Curl;
 use Solarium\Core\Client\Endpoint;
+use Symfony\Component\Asset\PathPackage;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -35,6 +38,7 @@ use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\Stopwatch\Stopwatch;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class RoadizCoreExtension extends Extension
@@ -130,17 +134,55 @@ class RoadizCoreExtension extends Extension
     {
         $frontendThemes = [];
         foreach ($config['themes'] as $index => $themeConfig) {
-            $theme = new Theme();
-            $theme->setId($index);
-            $theme->setAvailable(true);
-            $theme->setClassName($themeConfig['classname']);
-            $theme->setBackendTheme(false);
-            $theme->setStaticTheme(false);
-            $theme->setHostname($themeConfig['hostname']);
-            $theme->setRoutePrefix($themeConfig['routePrefix']);
-            $frontendThemes[] = $theme;
+            $themeSlug = (new AsciiSlugger())->slug($themeConfig['classname'], '_');
+            $serviceId = 'roadiz_core.themes.' . $themeSlug;
+            /** @var class-string $className */
+            $className = $themeConfig['classname'];
+            $themeDir = $className::getThemeDir();
+            $container->setDefinition(
+                $serviceId,
+                (new Definition())
+                    ->setClass(Theme::class)
+                    ->setPublic(true)
+                    ->addMethodCall('setId', [$index])
+                    ->addMethodCall('setAvailable', [true])
+                    ->addMethodCall('setClassName', [$className])
+                    ->addMethodCall('setHostname', [$themeConfig['hostname']])
+                    ->addMethodCall('setRoutePrefix', [$themeConfig['routePrefix']])
+                    ->addMethodCall('setBackendTheme', [false])
+                    ->addMethodCall('setStaticTheme', [false])
+                    ->addTag('roadiz_core.theme')
+            );
+            $frontendThemes[] = new Reference($serviceId);
+
+            // Register asset packages
+            $container->setDefinition(
+                'roadiz_core.assets._package' . $themeSlug,
+                (new Definition())
+                    ->setClass(PathPackage::class)
+                    ->setArguments([
+                        'themes/' . $themeDir . '/static',
+                        new Reference('assets.empty_version_strategy'),
+                        new Reference('assets.context')
+                    ])
+                    ->addTag('assets.package', [
+                        'package' => $themeDir
+                    ])
+            );
+
+            // Add Twig paths
+            $container->getDefinition('roadiz_core.twig_loader')
+                ->addMethodCall('prependPath', [
+                    $className::getViewsFolder()
+                ])
+                ->addMethodCall('prependPath', [
+                    $className::getViewsFolder(), $themeDir
+                ]);
         }
-        $container->setParameter('roadiz_core.themes', $frontendThemes);
+
+        if ($container->hasDefinition(StaticThemeResolver::class)) {
+            $container->getDefinition(StaticThemeResolver::class)->setArgument('$themes', $frontendThemes);
+        }
     }
 
     private function registerReverseProxyCache(array $config, ContainerBuilder $container): void
@@ -359,7 +401,7 @@ class RoadizCoreExtension extends Extension
                     new Reference('roadiz_core.markdown.converters.text_converter'),
                     new Reference('roadiz_core.markdown.converters.text_extra_converter'),
                     new Reference('roadiz_core.markdown.converters.line_converter'),
-                    new Reference(Stopwatch::class),
+//                    new Reference(Stopwatch::class),
                 ])
         );
     }

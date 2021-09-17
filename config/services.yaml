@@ -18,7 +18,6 @@ services:
             $cmsVersion: '2.0.0'
             $cmsVersionPrefix: 'alpha'
             $staticDomain: '%roadiz_core.static_domain_name%'
-            $themes: '%roadiz_core.themes%'
             $inheritanceType: '%roadiz_core.inheritance_type%'
             $maxPixelSize: '%rz_intervention_request.max_pixel_size%'
             $imageDriver: '%rz_intervention_request.driver%'
@@ -211,25 +210,6 @@ services:
         tags: ['roadiz_core.markdown.text_converter.extension', 'roadiz_core.markdown.text_extra_converter.extension']
 
     #
-    # Twig extensions
-    #
-    RZ\Roadiz\TwigExtension\DocumentExtension:
-        tags: ['twig.extension']
-    RZ\Roadiz\Markdown\Twig\MarkdownExtension:
-        tags: ['twig.extension']
-
-    RZ\Roadiz\Document\DocumentFinderInterface:
-        alias: RZ\Roadiz\CoreBundle\Document\DocumentFinder
-
-    RZ\Roadiz\Utils\MediaFinders\EmbedFinderFactory:
-        arguments:
-            - '%roadiz_core.medias.supported_platforms%'
-
-    RZ\Roadiz\Document\Renderer\ChainRenderer:
-        arguments: [[]]
-        lazy: true
-
-    #
     # Media finders
     #
     RZ\Roadiz\CoreBundle\Document\MediaFinder\UnsplashPictureFinder:
@@ -262,6 +242,11 @@ services:
     RZ\Roadiz\Utils\Document\AbstractDocumentFactory:
         alias: RZ\Roadiz\CoreBundle\Document\DocumentFactory
 
+    #
+    # Routing
+    #
+    RZ\Roadiz\CoreBundle\Routing\ThemeRoutesLoader:
+        tags: [ routing.loader ]
     RZ\Roadiz\CoreBundle\Routing\RedirectionRouter:
         lazy: true
         tags: [ { name: 'router', priority: 100 } ]
@@ -272,14 +257,39 @@ services:
     RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface:
         alias: RZ\Roadiz\CoreBundle\Routing\DocumentUrlGenerator
 
+    #
+    # Twig
+    #
+    roadiz_core.twig_loader:
+        class: Twig\Loader\FilesystemLoader
+        calls:
+            - prependPath: ['%kernel.project_dir%/vendor/roadiz/documents/src/Roadiz/Resources/views']
+        tags: ['twig.loader']
+    #
+    # Twig extensions
+    #
+    RZ\Roadiz\TwigExtension\DocumentExtension:
+        tags: ['twig.extension']
+    RZ\Roadiz\Markdown\Twig\MarkdownExtension:
+        tags: ['twig.extension']
     RZ\Roadiz\CoreBundle\TwigExtension\BlockRenderExtension:
         arguments: [ '@fragment.handler' ]
-
     RZ\Roadiz\CoreBundle\TwigExtension\RoutingExtension:
         decorates: 'twig.extension.routing'
         autoconfigure: false
         arguments:
             - '@.inner'
+
+    RZ\Roadiz\Document\DocumentFinderInterface:
+        alias: RZ\Roadiz\CoreBundle\Document\DocumentFinder
+
+    RZ\Roadiz\Utils\MediaFinders\EmbedFinderFactory:
+        arguments:
+            - '%roadiz_core.medias.supported_platforms%'
+
+    RZ\Roadiz\Document\Renderer\ChainRenderer:
+        arguments: [[]]
+        lazy: true
 
     #
     # Open ID

@@ -12,7 +12,6 @@ class StaticThemeResolver implements ThemeResolverInterface
      * @var array<Theme>
      */
     protected array $themes;
-    protected array $frontendThemes = [];
     protected Stopwatch $stopwatch;
     protected bool $installMode = false;
 
@@ -115,7 +114,7 @@ class StaticThemeResolver implements ThemeResolverInterface
      */
     public function getFrontendThemes(): array
     {
-        return $this->frontendThemes;
+        return $this->themes;
     }
 
     /**
