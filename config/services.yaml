@@ -57,6 +57,12 @@ services:
         resource: '../src/Doctrine/EventSubscriber'
         tags: ['doctrine.event_subscriber']
 
+    RZ\Roadiz\Core\Events\DocumentLifeCycleSubscriber:
+        tags: ['doctrine.event_subscriber']
+
+    RZ\Roadiz\Core\Events\LeafEntityLifeCycleSubscriber:
+        tags: ['doctrine.event_subscriber']
+
     RZ\Roadiz\CoreBundle\Controller\:
         resource: '../src/Controller'
         tags: ['controller.service_arguments']
