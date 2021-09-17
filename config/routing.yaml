@@ -1,0 +1,27 @@
+#
+# Fonts serving
+#
+FontFile:
+    path:     /fonts/files/{filename}_{variant}.{extension}
+    controller: RZ\Roadiz\CoreBundle\Controller\FontFaceController::fontFileAction
+    requirements:
+        filename: "[a-zA-Z0-9\\-_]+"
+        variant: "[0-9]+"
+        extension: "[a-z0-9]+"
+FontFaceCSS:
+    path:     /font-faces.css
+    controller: RZ\Roadiz\CoreBundle\Controller\FontFaceController::fontFacesAction
+#
+# InterventionRequest is hard coded before run app
+#
+
+customFormSendAction:
+    path:     /custom-form/{customFormId}
+    controller: RZ\Roadiz\CoreBundle\Controller\CustomFormController::addAction
+    requirements:
+        customFormId: "[0-9]+"
+customFormSentAction:
+    path:     /custom-form/{customFormId}/sent
+    controller: RZ\Roadiz\CoreBundle\Controller\CustomFormController::sentAction
+    requirements:
+        customFormId: "[0-9]+"

@@ -26,18 +26,18 @@ class UserViewer
      * @param Settings $settingsBag
      * @param TranslatorInterface $translator
      * @param EmailManager $emailManager
-     * @param LoggerInterface|null $logger
+     * @param LoggerInterface $logger
      */
     public function __construct(
         Settings $settingsBag,
         TranslatorInterface $translator,
         EmailManager $emailManager,
-        ?LoggerInterface $logger = null
+        LoggerInterface $logger
     ) {
         $this->settingsBag = $settingsBag;
         $this->translator = $translator;
         $this->emailManager = $emailManager;
-        $this->logger = $logger ?? new NullLogger();
+        $this->logger = $logger;
     }
 
     /**
@@ -57,6 +57,9 @@ class UserViewer
         string $htmlTemplate = '@RoadizCore/email/users/reset_password_email.html.twig',
         string $txtTemplate = '@RoadizCore/email/users/reset_password_email.txt.twig'
     ): bool {
+        if (null === $this->user) {
+            throw new \InvalidArgumentException('User should be defined before sending email.');
+        }
         $emailContact = $this->getContactEmail();
         $siteName = $this->getSiteName();
 

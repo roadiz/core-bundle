@@ -20,10 +20,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class AttributeDocumentType extends AbstractType
 {
-    /**
-     * @var EntityManagerInterface
-     */
-    protected $entityManager;
+    protected EntityManagerInterface $entityManager;
 
     /**
      * @param EntityManagerInterface $entityManager

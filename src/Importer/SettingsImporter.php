@@ -42,7 +42,7 @@ class SettingsImporter implements EntityImporterInterface
      */
     public function import(string $serializedData): bool
     {
-        $this->serializer->deserialize(
+        $settings = $this->serializer->deserialize(
             $serializedData,
             'array<' . Setting::class . '>',
             'json',

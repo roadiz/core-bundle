@@ -26,7 +26,7 @@ class Setting extends AbstractEntity
      *
      * These string will be used as translation key.
      *
-     * @var array
+     * @var array<int, string>
      * @Serializer\Exclude()
      */
     public static $typeToHuman = [
@@ -84,7 +84,7 @@ class Setting extends AbstractEntity
      * @Serializer\Groups({"setting"})
      * @Serializer\Type("string")
      */
-    private $description = null;
+    private ?string $description = null;
 
     /**
      * @return string|null
@@ -111,7 +111,7 @@ class Setting extends AbstractEntity
      * @Serializer\Groups({"setting", "nodes_sources"})
      * @Serializer\Type("string")
      */
-    private $value = null;
+    private ?string $value = null;
 
     /**
      * Holds clear setting value after value is decoded by postLoad Doctrine event.
@@ -121,7 +121,7 @@ class Setting extends AbstractEntity
      * @var string|null
      * @Serializer\Exclude()
      */
-    private $clearValue = null;
+    private ?string $clearValue = null;
 
     /**
      * @return string|null
@@ -134,7 +134,7 @@ class Setting extends AbstractEntity
     /**
      * Getter for setting value OR clear value, if encrypted.
      *
-     * @return bool|\DateTime|int|null
+     * @return string|bool|\DateTime|int|null
      * @throws \Exception
      */
     public function getValue()
@@ -145,15 +145,15 @@ class Setting extends AbstractEntity
             $value = $this->value;
         }
 
-        if ($this->getType() == NodeTypeField::BOOLEAN_T) {
-            return (boolean) $value;
+        if ($this->getType() == AbstractField::BOOLEAN_T) {
+            return (bool) $value;
         }
 
         if (null !== $value) {
-            if ($this->getType() == NodeTypeField::DATETIME_T) {
+            if ($this->getType() == AbstractField::DATETIME_T) {
                 return new \DateTime($value);
             }
-            if ($this->getType() == NodeTypeField::DOCUMENTS_T) {
+            if ($this->getType() == AbstractField::DOCUMENTS_T) {
                 return (int) $value;
             }
         }
@@ -167,7 +167,7 @@ class Setting extends AbstractEntity
      */
     public function setValue($value)
     {
-        if (($this->getType() === NodeTypeField::DATETIME_T || $this->getType() === NodeTypeField::DATE_T) &&
+        if (($this->getType() === AbstractField::DATETIME_T || $this->getType() === AbstractField::DATE_T) &&
             $value instanceof \DateTime) {
             $this->value = $value->format('c'); // $value is instance of \DateTime
         } else {
@@ -196,22 +196,23 @@ class Setting extends AbstractEntity
      * @Serializer\Groups({"setting"})
      * @Serializer\Type("bool")
      */
-    private $visible = true;
+    private bool $visible = true;
+
     /**
      * @return boolean
      */
-    public function isVisible()
+    public function isVisible(): bool
     {
         return $this->visible;
     }
     /**
-     * @param boolean $visible
+     * @param bool $visible
      *
      * @return $this
      */
-    public function setVisible($visible)
+    public function setVisible(bool $visible)
     {
-        $this->visible = (boolean) $visible;
+        $this->visible = $visible;
 
         return $this;
     }
@@ -221,7 +222,7 @@ class Setting extends AbstractEntity
      * @Serializer\Groups({"setting"})
      * @Serializer\Type("bool")
      */
-    private $encrypted = false;
+    private bool $encrypted = false;
 
     /**
      * @return bool
@@ -244,7 +245,12 @@ class Setting extends AbstractEntity
     }
 
     /**
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\SettingGroup", inversedBy="settings", cascade={"persist", "merge"}, fetch="EAGER")
+     * @ORM\ManyToOne(
+     *     targetEntity="RZ\Roadiz\CoreBundle\Entity\SettingGroup",
+     *     inversedBy="settings",
+     *     cascade={"persist", "merge"},
+     *     fetch="EAGER"
+     * )
      * @ORM\JoinColumn(name="setting_group_id", referencedColumnName="id", onDelete="SET NULL")
      * @Serializer\Groups({"setting"})
      * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\SettingGroup")
@@ -252,7 +258,7 @@ class Setting extends AbstractEntity
      * @Serializer\AccessType("public_method")
      * @var SettingGroup|null
      */
-    private $settingGroup;
+    private ?SettingGroup $settingGroup;
 
     /**
      * @return SettingGroup|null
@@ -281,24 +287,24 @@ class Setting extends AbstractEntity
      * @Serializer\Groups({"setting"})
      * @Serializer\Type("int")
      */
-    private $type = NodeTypeField::STRING_T;
+    private int $type = AbstractField::STRING_T;
 
     /**
-     * @return integer
+     * @return int
      */
-    public function getType()
+    public function getType(): int
     {
         return $this->type;
     }
 
     /**
-     * @param integer $type
+     * @param int $type
      *
      * @return $this
      */
-    public function setType($type)
+    public function setType(int $type)
     {
-        $this->type = (int) $type;
+        $this->type = $type;
 
         return $this;
     }
@@ -311,22 +317,22 @@ class Setting extends AbstractEntity
      * @Serializer\Groups({"setting"})
      * @Serializer\Type("string")
      */
-    private $defaultValues;
+    private ?string $defaultValues;
 
     /**
      * @return string|null
      */
-    public function getDefaultValues()
+    public function getDefaultValues(): ?string
     {
         return $this->defaultValues;
     }
 
     /**
-     * @param string $defaultValues
+     * @param string|null $defaultValues
      *
      * @return Setting
      */
-    public function setDefaultValues($defaultValues)
+    public function setDefaultValues(?string $defaultValues)
     {
         $this->defaultValues = $defaultValues;
 

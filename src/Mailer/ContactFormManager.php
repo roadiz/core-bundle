@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Mailer;
 
-use RZ\Roadiz\CMS\Forms\Constraints\Recaptcha;
-use RZ\Roadiz\CMS\Forms\HoneypotType;
-use RZ\Roadiz\CMS\Forms\RecaptchaType;
+use RZ\Roadiz\CoreBundle\Form\Constraint\Recaptcha;
+use RZ\Roadiz\CoreBundle\Form\HoneypotType;
+use RZ\Roadiz\CoreBundle\Form\RecaptchaType;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Exception\BadFormRequestException;
 use RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface;
@@ -27,6 +27,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\NotNull;
@@ -564,7 +565,7 @@ class ContactFormManager extends EmailManager
          * So you must return error email to receiver instead
          * of sender (who is your visitor).
          */
-        $this->message->to($this->getReceiver());
+        $this->message->to(...$this->getReceiver());
         $this->message->returnPath($this->getReceiverEmail());
 
         /** @var UploadedFile $uploadedFile */
@@ -577,13 +578,12 @@ class ContactFormManager extends EmailManager
     }
 
     /**
-     * @return bool|null|string
+     * @return null|array<Address>
      */
-    public function getReceiver()
+    public function getReceiver(): ?array
     {
-        return (null !== parent::getReceiver() && parent::getReceiver() != "") ?
-            (parent::getReceiver()) :
-            ($this->settingsBag->get('email_sender'));
+        $defaultReceivers = [new Address($this->settingsBag->get('email_sender'))];
+        return parent::getReceiver() ?? $defaultReceivers;
     }
 
     /**

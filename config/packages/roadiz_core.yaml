@@ -4,7 +4,9 @@ roadiz_core:
     useNativeJsonColumnType: true
     security:
         private_key_name: default
-    themes: { }
+    themes: []
+    medias:
+        unsplash_client_id: '%env(string:APP_UNSPLASH_CLIENT_ID)%'
     inheritance:
         type: single_table
     reverseProxyCache:
@@ -17,4 +19,5 @@ roadiz_core:
                 core: '%env(string:SOLR_CORE_NAME)%'
                 port: '%env(string:SOLR_PORT)%'
                 path: /
+
 

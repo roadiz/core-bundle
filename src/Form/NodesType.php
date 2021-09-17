@@ -6,7 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Form;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Node;
-use RZ\Roadiz\Core\Repositories\NodeRepository;
+use RZ\Roadiz\CoreBundle\Repository\NodeRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;

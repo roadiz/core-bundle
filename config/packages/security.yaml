@@ -3,12 +3,10 @@ security:
     enable_authenticator_manager: true
     # https://symfony.com/doc/current/security.html#c-hashing-passwords
     password_hashers:
-        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+            algorithm: auto
+
     # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
-
-    encoders:
-        RZ\Roadiz\CoreBundle\Entity\User: sha512
-
     providers:
         roadiz_user_provider:
             entity:
@@ -27,10 +25,15 @@ security:
             # https://symfony.com/doc/current/security.html#firewalls-authentication
 
             # https://symfony.com/doc/current/security/impersonating_user.html
-            switch_user: true
+            switch_user: { role: ROLE_SUPERADMIN, parameter: _su }
+            # ...
+            logout:
+                path: logoutPage
+            custom_authenticator: RZ\Roadiz\RozierBundle\Security\RozierAuthenticator
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
+        - { path: ^/rz-admin/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/rz-admin, roles: ROLE_BACKEND_USER }
         # - { path: ^/profile, roles: ROLE_USER }

@@ -201,5 +201,13 @@
                 "name": "Admin"
             }
         ]
+    },
+    {
+        "name": "ROLE_ALLOWED_TO_SWITCH",
+        "groups": [
+            {
+                "name": "Admin"
+            }
+        ]
     }
 ]

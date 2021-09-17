@@ -25,9 +25,7 @@ class SettingObjectConstructor extends AbstractTypedObjectConstructor
         if (null === $data['name'] || $data['name'] === '') {
             throw new ObjectConstructionException('Setting name can not be empty');
         }
-        return $this->entityManager
-            ->getRepository(Setting::class)
-            ->findOneByName($data['name']);
+        return $this->entityManager->getRepository(Setting::class)->findOneByName($data['name']);
     }
 
     protected function fillIdentifier(object $object, array $data): void

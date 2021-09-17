@@ -18,9 +18,9 @@ use Symfony\Component\String\UnicodeString;
  */
 class Role implements PersistableInterface
 {
-    const ROLE_DEFAULT = 'ROLE_USER';
-    const ROLE_SUPERADMIN = 'ROLE_SUPERADMIN';
-    const ROLE_BACKEND_USER = 'ROLE_BACKEND_USER';
+    public const ROLE_DEFAULT = 'ROLE_USER';
+    public const ROLE_SUPERADMIN = 'ROLE_SUPERADMIN';
+    public const ROLE_BACKEND_USER = 'ROLE_BACKEND_USER';
 
     /**
      * @ORM\Id
@@ -53,7 +53,7 @@ class Role implements PersistableInterface
      * @Serializer\Type("string")
      * @var string
      */
-    private $name = '';
+    private string $name = '';
 
     /**
      * @param string $role
@@ -113,7 +113,11 @@ class Role implements PersistableInterface
     }
 
     /**
-     * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Group", mappedBy="roles", cascade={"persist", "merge"})
+     * @ORM\ManyToMany(
+     *     targetEntity="RZ\Roadiz\CoreBundle\Entity\Group",
+     *     mappedBy="roles",
+     *     cascade={"persist", "merge"}
+     * )
      * @Serializer\Groups({"role"})
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Group>")
      * @Serializer\Accessor(getter="getGroups", setter="setGroups")

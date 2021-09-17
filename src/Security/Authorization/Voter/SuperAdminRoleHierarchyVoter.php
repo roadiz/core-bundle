@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Security\Authorization\Voter;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\Core\Entities\Role;
+use RZ\Roadiz\CoreBundle\Entity\Role;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
 final class SuperAdminRoleHierarchyVoter extends RoleArrayVoter

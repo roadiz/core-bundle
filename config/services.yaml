@@ -121,6 +121,11 @@ services:
     RZ\Crypto\KeyChain\AsymmetricFilesystemKeyChain:
         arguments: ['%kernel.project_dir%/var/secret', true]
 
+
+    roadiz_core.serialized_name_annotation_strategy:
+        class: JMS\Serializer\Naming\SerializedNameAnnotationStrategy
+        arguments: ['@jms_serializer.identical_property_naming_strategy']
+
     JMS\Serializer\Construction\ObjectConstructorInterface:
         alias: RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\ObjectConstructor
 
@@ -129,7 +134,8 @@ services:
         arguments:
             - '@doctrine.orm.default_entity_manager'
             - '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\ObjectConstructor'
-            - ['@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TranslationObjectConstructor',
+            - [
+                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TranslationObjectConstructor',
                 '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TagObjectConstructor',
                 '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\NodeObjectConstructor',
                 '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\NodeTypeObjectConstructor',
@@ -137,7 +143,8 @@ services:
                 '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\RoleObjectConstructor',
                 '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\GroupObjectConstructor',
                 '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\SettingObjectConstructor',
-                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\SettingGroupObjectConstructor']
+                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\SettingGroupObjectConstructor'
+            ]
 
     Solarium\Core\Client\Client:
         factory: ['RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry', 'getClient']
@@ -239,10 +246,6 @@ services:
     # Default AbstractDocumentFactory is the public one.
     RZ\Roadiz\Utils\Document\AbstractDocumentFactory:
         alias: RZ\Roadiz\CoreBundle\Document\DocumentFactory
-
-    RZ\Roadiz\CoreBundle\Form\NodesType:
-        arguments: ['@doctrine']
-        tags: [ 'form.type' ]
 
     RZ\Roadiz\CoreBundle\Routing\RedirectionRouter:
         lazy: true

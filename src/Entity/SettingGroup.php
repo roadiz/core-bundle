@@ -24,12 +24,12 @@ class SettingGroup extends AbstractEntity
      * @Serializer\Type("string")
      * @var string
      */
-    private $name = '';
+    private string $name = '';
 
     /**
      * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
@@ -38,7 +38,7 @@ class SettingGroup extends AbstractEntity
      *
      * @return SettingGroup
      */
-    public function setName($name)
+    public function setName(string $name)
     {
         $this->name = $name;
         return $this;
@@ -49,21 +49,21 @@ class SettingGroup extends AbstractEntity
      * @Serializer\Groups({"setting", "setting_group"})
      * @Serializer\Type("bool")
      */
-    protected $inMenu = false;
+    protected bool $inMenu = false;
 
     /**
-     * @return boolean
+     * @return bool
      */
-    public function isInMenu()
+    public function isInMenu(): bool
     {
         return $this->inMenu;
     }
 
     /**
-     * @param boolean $newinMenu
+     * @param bool $newinMenu
      * @return SettingGroup
      */
-    public function setInMenu($newinMenu)
+    public function setInMenu(bool $newinMenu)
     {
         $this->inMenu = $newinMenu;
 
@@ -75,7 +75,8 @@ class SettingGroup extends AbstractEntity
      * @var Collection<Setting>
      * @Serializer\Groups({"setting_group"})
      */
-    private $settings;
+    private Collection $settings;
+
     /**
      * @{inheritdoc}
      */
@@ -84,7 +85,7 @@ class SettingGroup extends AbstractEntity
         $this->settings = new ArrayCollection();
     }
     /**
-     * @return Collection
+     * @return Collection<Setting>
      */
     public function getSettings()
     {
@@ -94,7 +95,7 @@ class SettingGroup extends AbstractEntity
      * @param Setting $setting
      * @return SettingGroup
      */
-    public function addSetting($setting)
+    public function addSetting(Setting $setting)
     {
         if (!$this->getSettings()->contains($setting)) {
             $this->settings->add($setting);
@@ -103,10 +104,10 @@ class SettingGroup extends AbstractEntity
     }
 
     /**
-     * @param ArrayCollection $settings
+     * @param Collection<Setting> $settings
      * @return SettingGroup
      */
-    public function addSettings($settings)
+    public function addSettings(Collection $settings)
     {
         foreach ($settings as $setting) {
             if (!$this->getSettings()->contains($setting)) {

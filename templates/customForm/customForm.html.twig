@@ -1,4 +1,4 @@
-{% extends 'base_custom_form.html.twig' %}
+{% extends '@RoadizCore/customForm/base_custom_form.html.twig' %}
 
 {% block title %}{{ customForm.displayName }}{% endblock %}
 
@@ -11,7 +11,7 @@
     </header>
 
     <article class="content">
-        {% form_theme form 'customForms.html.twig' %}
+        {% form_theme form '@RoadizCore/customForm/customForms.html.twig' %}
         {{ form_start(form, { attr: {id: 'add-custom-form-form'}}) }}
             {{ form_widget(form) }}
             <fieldset data-uk-margin>

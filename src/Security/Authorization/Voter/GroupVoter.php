@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Security\Authorization\Voter;
 
 use RZ\Roadiz\CoreBundle\Entity\Group;
+use RZ\Roadiz\CoreBundle\Entity\User;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\RoleVoter;
 use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
@@ -36,6 +37,7 @@ class GroupVoter extends RoleVoter
     {
         $result = VoterInterface::ACCESS_ABSTAIN;
         $roles = $this->extractRoles($token);
+        $user = $token->getUser();
 
         foreach ($attributes as $attribute) {
             if (!($attribute instanceof Group)) {
@@ -43,6 +45,28 @@ class GroupVoter extends RoleVoter
             }
 
             $result = VoterInterface::ACCESS_GRANTED;
+
+            /*
+             * If super-admin, group is always granted
+             */
+            if (\in_array('ROLE_SUPER_ADMIN', $roles) || \in_array('ROLE_SUPERADMIN', $roles)) {
+                return $result;
+            }
+            /*
+             * If user is part of current tested group, grant it.
+             */
+            if (
+                $user instanceof User &&
+                $user->getGroups()->exists(function ($key, Group $group) use ($attribute) {
+                    return $attribute->getId() === $group->getId();
+                })
+            ) {
+                return $result;
+            }
+
+            /*
+             * Test if user has all roles contained in Group to grant it access.
+             */
             foreach ($this->extractGroupRoles($attribute) as $role) {
                 if (!$this->isRoleContained($role, $roles)) {
                     $result = VoterInterface::ACCESS_DENIED;

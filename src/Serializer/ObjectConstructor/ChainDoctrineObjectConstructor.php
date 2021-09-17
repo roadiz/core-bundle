@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ObjectManager;
 use JMS\Serializer\Construction\ObjectConstructorInterface;
 use JMS\Serializer\DeserializationContext;

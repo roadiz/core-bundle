@@ -14,10 +14,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class AttributeGroupsType extends AbstractType
 {
-    /**
-     * @var EntityManagerInterface
-     */
-    protected $entityManager;
+    protected EntityManagerInterface $entityManager;
 
     /**
      * @param EntityManagerInterface $entityManager

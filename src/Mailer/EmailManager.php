@@ -10,6 +10,7 @@ use RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
@@ -22,11 +23,11 @@ class EmailManager
     protected ?string $subject = null;
     protected ?string $emailTitle = null;
     protected ?string $emailType = null;
-    /** @var string|array|null  */
-    protected $receiver = null;
-    /** @var string|array|null  */
-    protected $sender = null;
-    protected ?string $origin = null;
+    /** @var Address[]|null  */
+    protected ?array $receiver = null;
+    /** @var Address[]|null  */
+    protected ?array $sender = null;
+    protected ?Address $origin = null;
     protected string $successMessage = 'email.successfully.sent';
     protected string $failMessage = 'email.has.errors';
     protected TranslatorInterface $translator;
@@ -144,7 +145,7 @@ class EmailManager
         $this->message = (new Email())
             ->subject($this->getSubject())
             ->from($this->getOrigin())
-            ->to($this->getReceiver())
+            ->to(...$this->getReceiver())
             // Force using string and only one email
             ->returnPath($this->getSenderEmail());
 
@@ -160,7 +161,7 @@ class EmailManager
          * to keep From: header with a know domain email.
          */
         if (null !== $this->getSender()) {
-            $this->message->replyTo($this->getSender());
+            $this->message->replyTo(...$this->getSender());
         }
 
         return $this->message;
@@ -225,9 +226,9 @@ class EmailManager
     /**
      * Message destination email(s).
      *
-     * @return null|array|string
+     * @return null|Address[]
      */
-    public function getReceiver()
+    public function getReceiver(): ?array
     {
         return $this->receiver;
     }
@@ -240,41 +241,36 @@ class EmailManager
     public function getReceiverEmail(): ?string
     {
         if (is_array($this->receiver) && count($this->receiver) > 0) {
-            $emails = array_keys($this->receiver);
-            return $emails[0];
+            return $this->receiver[0]->getAddress();
         }
 
-        return $this->receiver;
+        return $this->receiver->getAddress();
     }
 
     /**
      * Sets the value of receiver.
      *
-     * @param string|array $receiver the receiver
+     * @param string|array<string, string>|array<Address> $receiver the receiver
      *
      * @return EmailManager
      * @throws \Exception
      */
     public function setReceiver($receiver)
     {
-        if (is_string($receiver)) {
-            if (false === filter_var($receiver, FILTER_VALIDATE_EMAIL)) {
-                throw new \InvalidArgumentException("Sender must be a valid email address.", 1);
-            }
-        } elseif (is_array($receiver)) {
+        if (\is_string($receiver)) {
+            $this->receiver = [new Address($receiver)];
+        } elseif (\is_array($receiver)) {
+            $this->receiver = [];
             foreach ($receiver as $email => $name) {
-                /*
-                 * Allow simple array with email as value as well as assoc. array
-                 * with email as key and name as value.
-                 */
-                if (false === filter_var($name, FILTER_VALIDATE_EMAIL) &&
-                    false === filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                    throw new \InvalidArgumentException("Sender must be a valid email address.", 1);
+                if ($name instanceof Address) {
+                    $this->receiver[] = $name;
+                } elseif (\is_string($email)) {
+                    $this->receiver[] = new Address($email, $name);
+                } else {
+                    $this->receiver[] = new Address($name);
                 }
             }
         }
-
-        $this->receiver = $receiver;
 
         return $this;
     }
@@ -284,9 +280,9 @@ class EmailManager
      *
      * This email will be used as ReplyTo: and ReturnPath:
      *
-     * @return null|array<string>|string
+     * @return null|Address[]
      */
-    public function getSender()
+    public function getSender(): ?array
     {
         return $this->sender;
     }
@@ -298,36 +294,41 @@ class EmailManager
      */
     public function getSenderEmail(): ?string
     {
-        if (is_array($this->sender) && count($this->sender) > 0) {
-            $emails = array_keys($this->sender);
-            return $emails[0];
+        if (null === $this->sender) {
+            return null;
+        }
+        if (\is_array($this->sender) && \count($this->sender) > 0) {
+            return $this->sender[0]->getAddress();
         }
 
-        return $this->sender;
+        return $this->sender->getAddress();
     }
 
     /**
      * Sets the value of sender.
      *
-     * @param string|array $sender the sender
+     * @param string|array<string, string> $sender
      * @return EmailManager
      * @throws \Exception
      */
     public function setSender($sender)
     {
-        if (is_string($sender)) {
-            if (false === filter_var($sender, FILTER_VALIDATE_EMAIL)) {
-                throw new \InvalidArgumentException("Sender must be a valid email address.", 1);
-            }
-        } elseif (is_array($sender)) {
+        if (\is_string($sender)) {
+            $this->sender = [new Address($sender)];
+        } elseif (\is_array($sender)) {
+            $this->sender = [];
             foreach ($sender as $email => $name) {
-                if (false === filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                    throw new \InvalidArgumentException("Sender must be a valid email address.", 1);
+                if ($name instanceof Address) {
+                    $this->sender[] = $name;
+                } elseif (\is_string($email)) {
+                    $this->sender[] = new Address($email, $name);
+                } else {
+                    $this->sender[] = new Address($name);
                 }
             }
+        } else {
+            throw new \InvalidArgumentException('Sender should be string or array<string>');
         }
-
-        $this->sender = $sender;
 
         return $this;
     }
@@ -490,15 +491,15 @@ class EmailManager
      * This must be an email address with a know
      * domain name to be validated on your SMTP server.
      *
-     * @return null|string
+     * @return null|Address
      */
-    public function getOrigin(): ?string
+    public function getOrigin(): ?Address
     {
         $defaultSender = 'origin@roadiz.io';
         if (null !== $this->settingsBag && $this->settingsBag->get('email_sender')) {
             $defaultSender = $this->settingsBag->get('email_sender');
         }
-        return (null !== $this->origin && $this->origin != "") ? ($this->origin) : ($defaultSender);
+        return $this->origin ?? new Address($defaultSender);
     }
 
     /**
@@ -507,11 +508,7 @@ class EmailManager
      */
     public function setOrigin(string $origin)
     {
-        if (false === filter_var($origin, FILTER_VALIDATE_EMAIL)) {
-            throw new \InvalidArgumentException("Origin must be a valid email address.", 1);
-        }
-
-        $this->origin = $origin;
+        $this->origin = new Address($origin);
         return $this;
     }
 

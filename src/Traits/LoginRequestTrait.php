@@ -59,6 +59,7 @@ trait LoginRequestTrait
                     $user->setPasswordRequestedAt(null);
                     $user->setConfirmationToken(null);
                     $entityManager->flush();
+                    $logger->error($e->getMessage());
                     $form->addError(new FormError($e->getMessage()));
                 }
             } else {
