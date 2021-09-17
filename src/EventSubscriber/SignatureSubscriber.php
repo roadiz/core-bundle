@@ -38,7 +38,7 @@ final class SignatureSubscriber implements EventSubscriberInterface
      */
     public function onKernelResponse(ResponseEvent $event)
     {
-        if (!$event->isMasterRequest() || $this->settingsBag->get('hide_roadiz_version', false)) {
+        if (!$event->isMainRequest() || $this->settingsBag->get('hide_roadiz_version', false)) {
             return;
         }
 

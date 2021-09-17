@@ -5,10 +5,12 @@ namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use RZ\Roadiz\CompatBundle\Controller\AppController;
 use RZ\Roadiz\CoreBundle\Entity\Theme;
 use RZ\Roadiz\CoreBundle\Exception\ExceptionViewer;
 use RZ\Roadiz\CoreBundle\Exception\MaintenanceModeException;
 use RZ\Roadiz\CoreBundle\Theme\ThemeResolverInterface;
+use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,16 +32,12 @@ final class ExceptionSubscriber implements EventSubscriberInterface
     protected bool $debug;
     protected ExceptionViewer $viewer;
     private ThemeResolverInterface $themeResolver;
+    private ContainerInterface $serviceLocator;
 
-    /**
-     * @param ThemeResolverInterface $themeResolver
-     * @param ExceptionViewer $viewer
-     * @param LoggerInterface|null $logger
-     * @param bool $debug
-     */
     public function __construct(
         ThemeResolverInterface $themeResolver,
         ExceptionViewer $viewer,
+        ContainerInterface $serviceLocator,
         ?LoggerInterface $logger,
         bool $debug
     ) {
@@ -47,6 +45,8 @@ final class ExceptionSubscriber implements EventSubscriberInterface
         $this->debug = $debug;
         $this->viewer = $viewer;
         $this->themeResolver = $themeResolver;
+        $this->serviceLocator = $serviceLocator;
+        $this->logger = $logger;
     }
 
     /**
@@ -171,9 +171,16 @@ final class ExceptionSubscriber implements EventSubscriberInterface
         $exception = $event->getThrowable();
         $request = $event->getRequest();
 
-        if ($exception instanceof ResourceNotFoundException ||
+        if (
+            $exception instanceof ResourceNotFoundException ||
             $exception instanceof NotFoundHttpException ||
-            (null !== $exception->getPrevious() && $exception->getPrevious() instanceof ResourceNotFoundException)
+            (
+                null !== $exception->getPrevious() &&
+                (
+                    $exception->getPrevious() instanceof ResourceNotFoundException ||
+                    $exception->getPrevious() instanceof NotFoundHttpException
+                )
+            )
         ) {
             if (null !== $theme = $this->themeResolver->findTheme($request->getHost())) {
                 /*
@@ -203,6 +210,14 @@ final class ExceptionSubscriber implements EventSubscriberInterface
          */
         $ctrlClass = $theme->getClassName();
         $controller = new $ctrlClass();
+        $serviceId = get_class($controller);
+
+        if ($this->serviceLocator->has($serviceId)) {
+            $controller = $this->serviceLocator->get($serviceId);
+        }
+        if ($controller instanceof AppController) {
+            $controller->prepareBaseAssignation();
+        }
 
         return call_user_func_array([$controller, 'throw404'], [
             'message' => $exception->getMessage()

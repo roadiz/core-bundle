@@ -12,7 +12,6 @@ use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 use Symfony\Component\Security\Core\Security;
 
 class PreviewModeSubscriber implements EventSubscriberInterface
@@ -64,9 +63,11 @@ class PreviewModeSubscriber implements EventSubscriberInterface
     public function onKernelRequest(RequestEvent $event)
     {
         $request = $event->getRequest();
-        if ($event->isMainRequest() &&
+        if (
+            $event->isMainRequest() &&
             $request->query->has(static::QUERY_PARAM_NAME) &&
-            (bool) ($request->query->get(static::QUERY_PARAM_NAME, 0)) === true) {
+            (bool) ($request->query->get(static::QUERY_PARAM_NAME, 0)) === true
+        ) {
             $request->attributes->set('preview', true);
         }
     }
