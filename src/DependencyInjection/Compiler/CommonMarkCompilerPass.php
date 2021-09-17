@@ -24,7 +24,7 @@ class CommonMarkCompilerPass implements CompilerPassInterface
             foreach ($taggedServices as $id => $tags) {
                 $definition->addMethodCall(
                     'addExtension',
-                    array(new Reference($id))
+                    [new Reference($id)]
                 );
             }
         }

@@ -23,7 +23,7 @@ class DocumentRendererCompilerPass implements CompilerPassInterface
             foreach ($taggedServices as $id => $tags) {
                 $definition->addMethodCall(
                     'addRenderer',
-                    array(new Reference($id))
+                    [new Reference($id)]
                 );
             }
         }

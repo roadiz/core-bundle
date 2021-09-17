@@ -43,6 +43,7 @@ class Configuration implements ConfigurationInterface
             ->append($this->addInheritanceNode())
             ->append($this->addReverseProxyCacheNode())
             ->append($this->addMediasNode())
+            ->append($this->addOpenIdNode())
         ;
         return $builder;
     }
@@ -74,6 +75,70 @@ EOD
                 ->end()
             ->end()
         ;
+        return $node;
+    }
+
+    /**
+     * @return ArrayNodeDefinition|NodeDefinition
+     */
+    protected function addOpenIdNode()
+    {
+        $builder = new TreeBuilder('open_id');
+        $node = $builder->getRootNode();
+        $node->addDefaultsIfNotSet()
+            ->children()
+                ->booleanNode('verify_user_info')
+                    ->defaultTrue()
+                    ->info(<<<EOD
+Verify User info in JWT at each login
+EOD
+                    )
+                ->end()
+                ->scalarNode('discovery_url')
+                    ->defaultValue('')
+                    ->info(<<<EOD
+Standard OpenID autodiscovery URL, required to enable OpenId login in Roadiz CMS.
+EOD
+                    )
+                ->end()
+                ->scalarNode('hosted_domain')
+                    ->defaultNull()
+                    ->info(<<<EOD
+For public identity providers (such as Google), restrict users emails by their domain.
+EOD
+                    )
+                ->end()
+                ->scalarNode('oauth_client_id')
+                    ->defaultNull()
+                    ->info(<<<EOD
+OpenID identity provider OAuth2 client ID
+EOD
+                    )
+                ->end()
+                ->scalarNode('oauth_client_secret')
+                    ->defaultNull()
+                    ->info(<<<EOD
+OpenID identity provider OAuth2 client secret
+EOD
+                    )
+                ->end()
+                ->scalarNode('openid_username_claim')
+                    ->defaultValue('email')
+                    ->info(<<<EOD
+OpenID identity provider identifier claim field
+EOD
+                    )
+                ->end()
+                ->arrayNode('scopes')
+                    ->prototype('scalar')
+                    ->defaultValue([])
+                    ->info(<<<EOD
+Scopes requested during OpenId authentication process.
+EOD
+                    )
+                ->end()
+            ->end();
+
         return $node;
     }
 

@@ -1,17 +1,5 @@
 [
     {
-        "name": "display_debug_panel",
-        "value": "1",
-        "encrypted": false,
-        "visible": true,
-        "settingGroup": {
-            "name": "Development",
-            "inMenu": true
-        },
-        "type": 5,
-        "defaultValues": ""
-    },
-    {
         "name": "force_locale",
         "visible": true,
         "encrypted": false,
@@ -145,17 +133,6 @@
         "type": 2
     },
     {
-        "name": "openid_discovery",
-        "description": "openid_discovery.help",
-        "visible": true,
-        "encrypted": false,
-        "settingGroup": {
-            "name": "OpenId",
-            "inMenu": true
-        },
-        "type": 0
-    },
-    {
         "name": "openid_default_roles",
         "description": "openid_default_roles.help",
         "visible": true,
@@ -169,39 +146,6 @@
     {
         "name": "openid_button_label",
         "description": "openid_button_label.help",
-        "visible": true,
-        "encrypted": false,
-        "settingGroup": {
-            "name": "OpenId",
-            "inMenu": true
-        },
-        "type": 0
-    },
-    {
-        "name": "openid_hd",
-        "description": "openid_hd.help",
-        "visible": true,
-        "encrypted": false,
-        "settingGroup": {
-            "name": "OpenId",
-            "inMenu": true
-        },
-        "type": 0
-    },
-    {
-        "name": "openid_scopes",
-        "description": "openid_scopes.help",
-        "visible": true,
-        "encrypted": false,
-        "settingGroup": {
-            "name": "OpenId",
-            "inMenu": true
-        },
-        "type": 0
-    },
-    {
-        "name": "openid_username_claim",
-        "description": "openid_username_claim.help",
         "visible": true,
         "encrypted": false,
         "settingGroup": {

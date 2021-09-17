@@ -23,6 +23,7 @@ use RZ\Roadiz\Markdown\MarkdownInterface;
 use RZ\Roadiz\CoreBundle\Webhook\Message\GenericJsonPostMessage;
 use RZ\Roadiz\CoreBundle\Webhook\Message\GitlabPipelineTriggerMessage;
 use RZ\Roadiz\CoreBundle\Webhook\Message\NetlifyBuildHookMessage;
+use RZ\Roadiz\OpenId\Discovery;
 use Solarium\Client;
 use Solarium\Core\Client\Adapter\Curl;
 use Solarium\Core\Client\Endpoint;
@@ -98,6 +99,31 @@ class RoadizCoreExtension extends Extension
         $this->registerEntityGenerator($config, $container);
         $this->registerSolr($config, $container);
         $this->registerMarkdown($config, $container);
+        $this->registerOpenId($config, $container);
+    }
+
+    private function registerOpenId(array $config, ContainerBuilder $container)
+    {
+        $container->setParameter('roadiz_core.open_id.verify_user_info', $config['open_id']['verify_user_info']);
+        $container->setParameter('roadiz_core.open_id.discovery_url', $config['open_id']['discovery_url']);
+        $container->setParameter('roadiz_core.open_id.hosted_domain', $config['open_id']['hosted_domain']);
+        $container->setParameter('roadiz_core.open_id.oauth_client_id', $config['open_id']['oauth_client_id']);
+        $container->setParameter('roadiz_core.open_id.oauth_client_secret', $config['open_id']['oauth_client_secret']);
+        $container->setParameter('roadiz_core.open_id.openid_username_claim', $config['open_id']['openid_username_claim']);
+        $container->setParameter('roadiz_core.open_id.scopes', $config['open_id']['scopes'] ?? []);
+
+        if (!empty($config['open_id']['discovery_url'])) {
+            $container->setDefinition(
+                Discovery::class,
+                (new Definition())
+                    ->setClass(Discovery::class)
+                    ->setPublic(true)
+                    ->setArguments([
+                        $config['open_id']['discovery_url'],
+                        new Reference('doctrine.orm.cache.provider.cache.doctrine.orm.default.metadata')
+                    ])
+            );
+        }
     }
 
     private function registerThemes(array $config, ContainerBuilder $container)

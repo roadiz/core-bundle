@@ -24,7 +24,7 @@ class ImporterCompilerPass implements CompilerPassInterface
             foreach ($taggedServices as $id => $tags) {
                 $definition->addMethodCall(
                     'addImporter',
-                    array(new Reference($id))
+                    [new Reference($id)]
                 );
             }
         }

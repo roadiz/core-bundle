@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\CommonMarkCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\DocumentRendererCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\ImporterCompilerPass;
+use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\JwtRoleStrategyCompilerPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
@@ -23,5 +24,6 @@ class RoadizCoreBundle extends Bundle
         $container->addCompilerPass(new CommonMarkCompilerPass());
         $container->addCompilerPass(new DocumentRendererCompilerPass());
         $container->addCompilerPass(new ImporterCompilerPass());
+        $container->addCompilerPass(new JwtRoleStrategyCompilerPass());
     }
 }

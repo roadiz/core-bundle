@@ -1,11 +1,22 @@
 ---
+parameters:
+    env(APP_NAMESPACE): "roadiz"
+    env(APP_UNSPLASH_CLIENT_ID): ~
+    env(OPEN_ID_CLIENT_ID): ~
+    env(OPEN_ID_CLIENT_SECRET): ~
+    env(OPEN_ID_HOSTED_DOMAIN): ~
+    env(OPEN_ID_DISCOVERY_URL): ~
+    env(SOLR_CORE_NAME): "roadiz"
+    env(SOLR_PORT): "8983"
+
 services:
     # default configuration for services in *this* file
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         bind:
-            $cmsVersion: '2.0.0-alpha'
+            $cmsVersion: '2.0.0'
+            $cmsVersionPrefix: 'alpha'
             $staticDomain: '%roadiz_core.static_domain_name%'
             $themes: '%roadiz_core.themes%'
             $inheritanceType: '%roadiz_core.inheritance_type%'
@@ -79,9 +90,8 @@ services:
             - '@Symfony\Component\HttpFoundation\RequestStack'
             - 'ROLE_BACKEND_USER'
 
-    RZ\Roadiz\Utils\Asset\Packages:
-
-    RZ\Roadiz\Utils\Document\DownscaleImageManager:
+    RZ\Roadiz\Utils\Asset\Packages: ~
+    RZ\Roadiz\Utils\Document\DownscaleImageManager: ~
 
     RZ\Roadiz\Core\Handlers\HandlerFactoryInterface:
         alias: RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory
@@ -119,14 +129,13 @@ services:
     RZ\Roadiz\CoreBundle\Filesystem\RoadizFileDirectories:
         arguments: ['%kernel.project_dir%']
 
-    RZ\Roadiz\Random\PasswordGenerator:
+    RZ\Roadiz\Random\PasswordGenerator: ~
 
     RZ\Crypto\KeyChain\KeyChainInterface:
         alias: RZ\Crypto\KeyChain\AsymmetricFilesystemKeyChain
 
     RZ\Crypto\KeyChain\AsymmetricFilesystemKeyChain:
         arguments: ['%kernel.project_dir%/var/secret', true]
-
 
     roadiz_core.serialized_name_annotation_strategy:
         class: JMS\Serializer\Naming\SerializedNameAnnotationStrategy
@@ -272,3 +281,28 @@ services:
         arguments:
             - '@.inner'
 
+    #
+    # Open ID
+    #
+    RZ\Roadiz\OpenId\OAuth2LinkGenerator:
+        arguments:
+            - '@?RZ\Roadiz\OpenId\Discovery'
+            - '@security.csrf.token_manager'
+            - '%roadiz_core.open_id.hosted_domain%'
+            - '%roadiz_core.open_id.oauth_client_id%'
+            - '%roadiz_core.open_id.scopes%'
+
+    RZ\Roadiz\OpenId\OpenIdJwtConfigurationFactory:
+        arguments:
+            - '@?RZ\Roadiz\OpenId\Discovery'
+            - '@security.csrf.token_manager'
+            - '%roadiz_core.open_id.hosted_domain%'
+            - '%roadiz_core.open_id.oauth_client_id%'
+            - '%roadiz_core.open_id.verify_user_info%'
+
+    RZ\Roadiz\OpenId\Authentication\Provider\SettingsRoleStrategy:
+        arguments: ['@RZ\Roadiz\CoreBundle\Bag\Settings']
+        tags: ['roadiz_core.jwt_role_strategy']
+
+    RZ\Roadiz\OpenId\Authentication\Provider\ChainJwtRoleStrategy: ~
+    RZ\Roadiz\OpenId\Authentication\Provider\OpenIdAccountProvider: ~
