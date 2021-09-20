@@ -161,17 +161,21 @@ class Setting extends AbstractEntity
         return $value;
     }
     /**
-     * @param mixed $value
+     * @param null|mixed $value
      *
      * @return $this
      */
     public function setValue($value)
     {
-        if (($this->getType() === AbstractField::DATETIME_T || $this->getType() === AbstractField::DATE_T) &&
-            $value instanceof \DateTime) {
+        if (null === $value) {
+            $this->value = null;
+        } elseif (
+            ($this->getType() === AbstractField::DATETIME_T || $this->getType() === AbstractField::DATE_T) &&
+            $value instanceof \DateTime
+        ) {
             $this->value = $value->format('c'); // $value is instance of \DateTime
         } else {
-            $this->value = $value;
+            $this->value = (string) $value;
         }
 
         return $this;
