@@ -7,6 +7,7 @@ use InlineStyle\InlineStyle;
 use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface;
+use Solarium\QueryType\Update\Query\Command\Add;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Mailer\MailerInterface;
@@ -240,11 +241,11 @@ class EmailManager
      */
     public function getReceiverEmail(): ?string
     {
-        if (is_array($this->receiver) && count($this->receiver) > 0) {
-            return $this->receiver[0]->getAddress();
+        if (is_array($this->getReceiver()) && count($this->getReceiver()) > 0) {
+            return $this->getReceiver()[0]->getAddress();
         }
 
-        return $this->receiver->getAddress();
+        return null;
     }
 
     /**
@@ -294,14 +295,11 @@ class EmailManager
      */
     public function getSenderEmail(): ?string
     {
-        if (null === $this->sender) {
-            return null;
-        }
         if (\is_array($this->sender) && \count($this->sender) > 0) {
             return $this->sender[0]->getAddress();
         }
 
-        return $this->sender->getAddress();
+        return null;
     }
 
     /**

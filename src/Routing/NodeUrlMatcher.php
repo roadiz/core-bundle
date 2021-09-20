@@ -5,9 +5,8 @@ namespace RZ\Roadiz\CoreBundle\Routing;
 
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
+use RZ\Roadiz\CoreBundle\Entity\Theme;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
-use RZ\Roadiz\CoreBundle\Theme\ThemeResolverInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\RequestContext;
@@ -17,8 +16,9 @@ use Symfony\Component\Stopwatch\Stopwatch;
  * UrlMatcher which tries to grab Node and Translation
  * information for a route.
  */
-class NodeUrlMatcher extends DynamicUrlMatcher
+final class NodeUrlMatcher extends DynamicUrlMatcher implements NodeUrlMatcherInterface
 {
+    protected ?Theme $theme;
     protected PathResolverInterface $pathResolver;
     /**
      * @var class-string
@@ -44,7 +44,6 @@ class NodeUrlMatcher extends DynamicUrlMatcher
     /**
      * @param PathResolverInterface $pathResolver
      * @param RequestContext $context
-     * @param ThemeResolverInterface $themeResolver
      * @param PreviewResolverInterface $previewResolver
      * @param Stopwatch $stopwatch
      * @param LoggerInterface $logger
@@ -53,31 +52,53 @@ class NodeUrlMatcher extends DynamicUrlMatcher
     public function __construct(
         PathResolverInterface $pathResolver,
         RequestContext $context,
-        ThemeResolverInterface $themeResolver,
         PreviewResolverInterface $previewResolver,
         Stopwatch $stopwatch,
         LoggerInterface $logger,
         string $defaultControllerClass
     ) {
-        parent::__construct($context, $themeResolver, $previewResolver, $stopwatch, $logger);
+        parent::__construct($context, $previewResolver, $stopwatch, $logger);
         $this->pathResolver = $pathResolver;
         $this->defaultControllerClass = $defaultControllerClass;
     }
 
     /**
+     * @return Theme|null
+     */
+    public function getTheme(): ?Theme
+    {
+        return $this->theme;
+    }
+
+    /**
+     * @param Theme|null $theme
+     */
+    public function setTheme(?Theme $theme): void
+    {
+        $this->theme = $theme;
+    }
+
+    /**
      * {@inheritdoc}
      */
-    public function match($pathinfo)
+    public function match(string $pathinfo)
     {
-        $this->stopwatch->start('findTheme');
-        $this->theme = $this->themeResolver->findTheme($this->context->getHost());
-        $this->stopwatch->stop('findTheme');
-
         $decodedUrl = rawurldecode($pathinfo);
         /*
          * Try nodes routes
          */
         return $this->matchNode($decodedUrl);
+    }
+
+    protected function getNodeRouteHelper(NodesSources $nodeSource): NodeRouteHelper
+    {
+        return new NodeRouteHelper(
+            $nodeSource->getNode(),
+            $this->getTheme(),
+            $this->previewResolver,
+            $this->logger,
+            $this->defaultControllerClass
+        );
     }
 
     /**
@@ -86,20 +107,14 @@ class NodeUrlMatcher extends DynamicUrlMatcher
      * @return array
      * @throws \ReflectionException
      */
-    protected function matchNode(string $decodedUrl): array
+    public function matchNode(string $decodedUrl): array
     {
         $resourceInfo = $this->pathResolver->resolvePath($decodedUrl, $this->getSupportedFormatExtensions());
         $nodeSource = $resourceInfo->getResource();
 
         if ($nodeSource instanceof NodesSources && !$nodeSource->getNode()->isHome()) {
             $translation = $nodeSource->getTranslation();
-            $nodeRouteHelper = new NodeRouteHelper(
-                $nodeSource->getNode(),
-                $this->theme,
-                $this->previewResolver,
-                $this->logger,
-                $this->defaultControllerClass
-            );
+            $nodeRouteHelper = $this->getNodeRouteHelper($nodeSource);
 
             if (!$this->previewResolver->isPreview() && !$translation->isAvailable()) {
                 throw new ResourceNotFoundException();

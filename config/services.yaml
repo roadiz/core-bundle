@@ -22,9 +22,6 @@ services:
             $maxPixelSize: '%rz_intervention_request.max_pixel_size%'
             $imageDriver: '%rz_intervention_request.driver%'
             $appNamespace: '%roadiz_core.app_namespace%'
-            $projectDir: '%kernel.project_dir%'
-            $publicDir: '%kernel.project_dir%/public'
-            $cacheDir: '%kernel.project_dir%/var/cache'
             $exportDir: '%kernel.project_dir%/var/export'
             $privateKeyName: '%roadiz_core.private_key_name%'
             $generatedEntitiesDir: '%kernel.project_dir%/generated'
@@ -245,8 +242,6 @@ services:
     #
     # Routing
     #
-    RZ\Roadiz\CoreBundle\Routing\ThemeRoutesLoader:
-        tags: [ routing.loader ]
     RZ\Roadiz\CoreBundle\Routing\RedirectionRouter:
         lazy: true
         tags: [ { name: 'router', priority: 100 } ]

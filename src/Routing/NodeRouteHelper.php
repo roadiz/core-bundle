@@ -14,16 +14,17 @@ final class NodeRouteHelper
 {
     private Node $node;
     private ?Theme $theme;
-    /**
-     * @var class-string|null
-     */
-    private ?string $controller = null;
     private PreviewResolverInterface $previewResolver;
+    private LoggerInterface $logger;
+    private string $defaultControllerNamespace;
     /**
      * @var class-string
      */
     private string $defaultControllerClass;
-    private LoggerInterface $logger;
+    /**
+     * @var class-string|null
+     */
+    private ?string $controller = null;
 
     /**
      * @param Node $node
@@ -31,50 +32,56 @@ final class NodeRouteHelper
      * @param PreviewResolverInterface $previewResolver
      * @param LoggerInterface $logger
      * @param class-string<AbstractController> $defaultControllerClass
+     * @param string $defaultControllerNamespace
      */
     public function __construct(
         Node $node,
         ?Theme $theme,
         PreviewResolverInterface $previewResolver,
         LoggerInterface $logger,
-        string $defaultControllerClass
+        string $defaultControllerClass,
+        string $defaultControllerNamespace = '\\App\\Controller'
     ) {
         $this->node = $node;
         $this->theme = $theme;
         $this->previewResolver = $previewResolver;
         $this->defaultControllerClass = $defaultControllerClass;
         $this->logger = $logger;
+        $this->defaultControllerNamespace = $defaultControllerNamespace;
     }
 
     /**
      * Get controller class path for a given node.
      *
      * @return string
-     * @throws \ReflectionException
      */
     public function getController(): string
     {
         if (null === $this->controller) {
-            if (null !== $this->theme) {
-                $refl = new \ReflectionClass($this->theme->getClassName());
-                $namespace = $refl->getNamespaceName() . '\\Controllers';
+            $namespace = $this->getControllerNamespace();
+            $this->controller = $namespace . '\\' .
+                StringHandler::classify($this->node->getNodeType()->getName()) .
+                'Controller';
 
-                $this->controller = $namespace . '\\' .
-                    StringHandler::classify($this->node->getNodeType()->getName()) .
-                    'Controller';
-
-                /*
-                 * Use a default controller if no controller was found in Theme.
-                 */
-                if (!class_exists($this->controller) && $this->node->getNodeType()->isReachable()) {
-                    $this->controller = $this->defaultControllerClass;
-                }
-            } else {
+            /*
+             * Use a default controller if no controller was found in Theme.
+             */
+            if (!class_exists($this->controller) && $this->node->getNodeType()->isReachable()) {
                 $this->controller = $this->defaultControllerClass;
             }
         }
 
         return $this->controller;
+    }
+
+    protected function getControllerNamespace(): string
+    {
+        $namespace = $this->defaultControllerNamespace;
+        if (null !== $this->theme) {
+            $refl = new \ReflectionClass($this->theme->getClassName());
+            $namespace = $refl->getNamespaceName() . '\\Controllers';
+        }
+        return $namespace;
     }
 
     public function getMethod(): string
@@ -95,7 +102,10 @@ final class NodeRouteHelper
             return false;
         }
         if (!method_exists($this->getController(), $this->getMethod())) {
-            $this->logger->debug($this->getController() . ':' . $this->getMethod() . ' controller method does not exist.');
+            $this->logger->debug(
+                $this->getController() . ':' .
+                $this->getMethod() . ' controller method does not exist.'
+            );
             return false;
         }
         /*

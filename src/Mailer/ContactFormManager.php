@@ -91,8 +91,8 @@ class ContactFormManager extends EmailManager
 
         $this->successMessage = 'form.successfully.sent';
         $this->failMessage = 'form.has.errors';
-        $this->emailTemplate = 'forms/contactForm.html.twig';
-        $this->emailPlainTextTemplate = 'forms/contactForm.txt.twig';
+        $this->emailTemplate = '@RoadizCore/email/forms/contactForm.html.twig';
+        $this->emailPlainTextTemplate = '@RoadizCore/email/forms/contactForm.txt.twig';
 
         $this->setSubject($this->translator->trans(
             'new.contact.form.%site%',
@@ -582,6 +582,9 @@ class ContactFormManager extends EmailManager
      */
     public function getReceiver(): ?array
     {
+        if (empty($this->settingsBag->get('email_sender'))) {
+            throw new \InvalidArgumentException('Main "email_sender" is not configured for this website.');
+        }
         $defaultReceivers = [new Address($this->settingsBag->get('email_sender'))];
         return parent::getReceiver() ?? $defaultReceivers;
     }
