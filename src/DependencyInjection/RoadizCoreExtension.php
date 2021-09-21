@@ -33,6 +33,7 @@ use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\Stopwatch\Stopwatch;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class RoadizCoreExtension extends Extension
@@ -338,7 +339,7 @@ class RoadizCoreExtension extends Extension
                     new Reference('roadiz_core.markdown.converters.text_converter'),
                     new Reference('roadiz_core.markdown.converters.text_extra_converter'),
                     new Reference('roadiz_core.markdown.converters.line_converter'),
-//                    new Reference(Stopwatch::class),
+                    new Reference(Stopwatch::class),
                 ])
         );
     }

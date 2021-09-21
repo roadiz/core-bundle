@@ -311,3 +311,10 @@ services:
 
     RZ\Roadiz\OpenId\Authentication\Provider\ChainJwtRoleStrategy: ~
     RZ\Roadiz\OpenId\Authentication\Provider\OpenIdAccountProvider: ~
+
+    #
+    # Workflows
+    #
+    state_machine.node:
+        public: true
+        alias: RZ\Roadiz\CoreBundle\Workflow\NodeWorkflow
