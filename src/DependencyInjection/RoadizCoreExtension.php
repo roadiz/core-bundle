@@ -26,13 +26,18 @@ use RZ\Roadiz\OpenId\Discovery;
 use Solarium\Client;
 use Solarium\Core\Client\Adapter\Curl;
 use Solarium\Core\Client\Endpoint;
+use Symfony\Bundle\FrameworkBundle\DependencyInjection\FrameworkExtension;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\Storage\CacheStorage;
 use Symfony\Component\Stopwatch\Stopwatch;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
