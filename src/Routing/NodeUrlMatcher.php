@@ -18,7 +18,6 @@ use Symfony\Component\Stopwatch\Stopwatch;
  */
 final class NodeUrlMatcher extends DynamicUrlMatcher implements NodeUrlMatcherInterface
 {
-    protected ?Theme $theme;
     protected PathResolverInterface $pathResolver;
     /**
      * @var class-string
@@ -63,22 +62,6 @@ final class NodeUrlMatcher extends DynamicUrlMatcher implements NodeUrlMatcherIn
     }
 
     /**
-     * @return Theme|null
-     */
-    public function getTheme(): ?Theme
-    {
-        return $this->theme;
-    }
-
-    /**
-     * @param Theme|null $theme
-     */
-    public function setTheme(?Theme $theme): void
-    {
-        $this->theme = $theme;
-    }
-
-    /**
      * {@inheritdoc}
      */
     public function match(string $pathinfo)
@@ -87,14 +70,14 @@ final class NodeUrlMatcher extends DynamicUrlMatcher implements NodeUrlMatcherIn
         /*
          * Try nodes routes
          */
-        return $this->matchNode($decodedUrl);
+        return $this->matchNode($decodedUrl, null);
     }
 
-    protected function getNodeRouteHelper(NodesSources $nodeSource): NodeRouteHelper
+    protected function getNodeRouteHelper(NodesSources $nodeSource, ?Theme $theme): NodeRouteHelper
     {
         return new NodeRouteHelper(
             $nodeSource->getNode(),
-            $this->getTheme(),
+            $theme,
             $this->previewResolver,
             $this->logger,
             $this->defaultControllerClass
@@ -103,18 +86,18 @@ final class NodeUrlMatcher extends DynamicUrlMatcher implements NodeUrlMatcherIn
 
     /**
      * @param string $decodedUrl
-     *
+     * @param Theme|null $theme
      * @return array
      * @throws \ReflectionException
      */
-    public function matchNode(string $decodedUrl): array
+    public function matchNode(string $decodedUrl, ?Theme $theme): array
     {
         $resourceInfo = $this->pathResolver->resolvePath($decodedUrl, $this->getSupportedFormatExtensions());
         $nodeSource = $resourceInfo->getResource();
 
         if ($nodeSource instanceof NodesSources && !$nodeSource->getNode()->isHome()) {
             $translation = $nodeSource->getTranslation();
-            $nodeRouteHelper = $this->getNodeRouteHelper($nodeSource);
+            $nodeRouteHelper = $this->getNodeRouteHelper($nodeSource, $theme);
 
             if (!$this->previewResolver->isPreview() && !$translation->isAvailable()) {
                 throw new ResourceNotFoundException();
@@ -133,7 +116,7 @@ final class NodeUrlMatcher extends DynamicUrlMatcher implements NodeUrlMatcherIn
                 'nodeSource' => $nodeSource,
                 RouteObjectInterface::ROUTE_OBJECT => $resourceInfo->getResource(),
                 'translation' => $resourceInfo->getTranslation(),
-                'theme' => $this->theme,
+                'theme' => $theme,
             ];
         }
         throw new ResourceNotFoundException();
