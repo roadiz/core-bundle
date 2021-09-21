@@ -61,7 +61,6 @@
         "symfony/yaml": "5.3.*",
         "twig/extra-bundle": "^2.12|^3.0",
         "twig/twig": "^2.12|^3.0",
-
         "jms/serializer":                          "^3.1.1",
         "jms/serializer-bundle":                   "^3.10.0",
         "gedmo/doctrine-extensions":               "^2.4 || ^3.0.0",
@@ -97,7 +96,7 @@
         "php-coveralls/php-coveralls": "^2.4",
         "phpstan/phpstan": "^0.12.57",
         "phpstan/phpstan-doctrine": "^0.12.25",
-        "squizlabs/php_codesniffer": "^3.5",
+        "squizlabs/php_codesniffer": "^3.5"
     },
     "config": {
         "optimize-autoloader": true,
