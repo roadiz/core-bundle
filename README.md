@@ -44,40 +44,5 @@ return [
 
 ## Configuration
 
-
-- Add rate limiter configuration for Webhooks
-```yaml
-framework:
-    rate_limiter:
-        throttled_webhooks:
-            policy: 'token_bucket'
-            limit: 1
-            rate: { interval: '10 seconds'}
-```
-- Add Doctrine configuration for entities
-```yaml
-doctrine:
-    orm:
-        auto_generate_proxy_classes: true
-        naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
-        auto_mapping: true
-        mappings:
-            RoadizCoreBundle:
-                is_bundle: true
-                type: annotation
-                dir: 'Entity'
-                prefix: 'RZ\Roadiz\CoreBundle\Entity'
-                alias: RoadizCoreBundle
-            RZ\Roadiz\Core:
-                is_bundle: false
-                type: annotation
-                dir: '%kernel.project_dir%/vendor/roadiz/models/src/Roadiz/Core/AbstractEntities'
-                prefix: 'RZ\Roadiz\Core\AbstractEntities'
-                alias: AbstractEntities
-            GeneratedNodeSources:
-                is_bundle: false
-                type: annotation
-                dir: '%kernel.project_dir%/generated'
-                prefix: 'GeneratedNodeSources'
-                alias: GeneratedNodeSources
-```
+- Create folders: `public/assets`, `public/themes`, `public/files`, `themes/`, `generated/`, `var/files` for app documents and runtime classes
+- Copy and merge `@RoadizCoreBundle/config/packages/*` files into your project `config/packages` folder
