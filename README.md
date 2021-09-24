@@ -46,3 +46,13 @@ return [
 
 - Create folders: `public/assets`, `public/themes`, `public/files`, `themes/`, `generated/`, `var/files` for app documents and runtime classes
 - Copy and merge `@RoadizCoreBundle/config/packages/*` files into your project `config/packages` folder
+- Add custom routes:
+```yaml
+# config/routes.yaml
+roadiz_core:
+    resource: "@RoadizCoreBundle/config/routing.yaml"
+
+rz_intervention_request:
+    resource: "@RZInterventionRequestBundle/Resources/config/routing.yml"
+    prefix:   /
+```

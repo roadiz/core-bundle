@@ -57,7 +57,7 @@ class Configuration implements ConfigurationInterface
         $node->addDefaultsIfNotSet()
             ->children()
                 ->scalarNode('type')
-                    ->defaultValue(static::INHERITANCE_TYPE_JOINED)
+                    ->defaultValue(static::INHERITANCE_TYPE_SINGLE_TABLE)
                     ->info(<<<EOD
 Doctrine inheritance strategy for creating NodesSources
 classes table(s). BE CAREFUL, if you change this
