@@ -26,18 +26,13 @@ use RZ\Roadiz\OpenId\Discovery;
 use Solarium\Client;
 use Solarium\Core\Client\Adapter\Curl;
 use Solarium\Core\Client\Endpoint;
-use Symfony\Bundle\FrameworkBundle\DependencyInjection\FrameworkExtension;
 use Symfony\Component\Config\FileLocator;
-use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
-use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
-use Symfony\Component\RateLimiter\Storage\CacheStorage;
 use Symfony\Component\Stopwatch\Stopwatch;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
@@ -78,7 +73,10 @@ class RoadizCoreExtension extends Extension
         /*
          * Media config
          */
-        $container->setParameter('roadiz_core.medias.unsplash_client_id', $config['medias']['unsplash_client_id'] ?? '');
+        $container->setParameter(
+            'roadiz_core.medias.unsplash_client_id',
+            $config['medias']['unsplash_client_id'] ?? ''
+        );
         $container->setParameter('roadiz_core.medias.supported_platforms', [
             'youtube' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\YoutubeEmbedFinder::class,
             'vimeo' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\VimeoEmbedFinder::class,
@@ -131,40 +129,42 @@ class RoadizCoreExtension extends Extension
     private function registerReverseProxyCache(array $config, ContainerBuilder $container): void
     {
         $reverseProxyCacheFrontendsReferences = [];
-        foreach ($config['reverseProxyCache']['frontend'] as $name => $frontend) {
-            $definitionName = 'roadiz_core.reverse_proxy_cache.frontends.' . $name;
-            $container->setDefinition(
-                $definitionName,
-                (new Definition())
-                    ->setClass(ReverseProxyCache::class)
-                    ->setPublic(true)
-                    ->setArguments([
-                        $name,
-                        $frontend['host'],
-                        $frontend['domainName'],
-                        $frontend['timeout'],
-                    ])
-            );
-            $reverseProxyCacheFrontendsReferences[] = new Reference($definitionName);
-        }
+        if (isset($config['reverseProxyCache'])) {
+            foreach ($config['reverseProxyCache']['frontend'] as $name => $frontend) {
+                $definitionName = 'roadiz_core.reverse_proxy_cache.frontends.' . $name;
+                $container->setDefinition(
+                    $definitionName,
+                    (new Definition())
+                        ->setClass(ReverseProxyCache::class)
+                        ->setPublic(true)
+                        ->setArguments([
+                            $name,
+                            $frontend['host'],
+                            $frontend['domainName'],
+                            $frontend['timeout'],
+                        ])
+                );
+                $reverseProxyCacheFrontendsReferences[] = new Reference($definitionName);
+            }
 
-        if (isset($config['reverseProxyCache']['cloudflare']) &&
-            isset($config['reverseProxyCache']['cloudflare']['bearer'])) {
-            $container->setDefinition(
-                'roadiz_core.reverse_proxy_cache.cloudflare',
-                (new Definition())
-                    ->setClass(CloudflareProxyCache::class)
-                    ->setPublic(true)
-                    ->setArguments([
-                        'cloudflare',
-                        $config['reverseProxyCache']['cloudflare']['zone'],
-                        $config['reverseProxyCache']['cloudflare']['version'],
-                        $config['reverseProxyCache']['cloudflare']['bearer'],
-                        $config['reverseProxyCache']['cloudflare']['email'],
-                        $config['reverseProxyCache']['cloudflare']['key'],
-                        $config['reverseProxyCache']['cloudflare']['timeout'],
-                    ])
-            );
+            if (isset($config['reverseProxyCache']['cloudflare']) &&
+                isset($config['reverseProxyCache']['cloudflare']['bearer'])) {
+                $container->setDefinition(
+                    'roadiz_core.reverse_proxy_cache.cloudflare',
+                    (new Definition())
+                        ->setClass(CloudflareProxyCache::class)
+                        ->setPublic(true)
+                        ->setArguments([
+                            'cloudflare',
+                            $config['reverseProxyCache']['cloudflare']['zone'],
+                            $config['reverseProxyCache']['cloudflare']['version'],
+                            $config['reverseProxyCache']['cloudflare']['bearer'],
+                            $config['reverseProxyCache']['cloudflare']['email'],
+                            $config['reverseProxyCache']['cloudflare']['key'],
+                            $config['reverseProxyCache']['cloudflare']['timeout'],
+                        ])
+                );
+            }
         }
 
         $container->setDefinition(
@@ -210,18 +210,20 @@ class RoadizCoreExtension extends Extension
                 ->addMethodCall('setTimeout', [$config['solr']['timeout']])
                 ->addMethodCall('setConnectionTimeout', [$config['solr']['timeout']])
         );
-        foreach ($config['solr']['endpoints'] as $name => $endpoint) {
-            $container->setDefinition(
-                'roadiz_core.solr.endpoints.' . $name,
-                (new Definition())
-                    ->setClass(Endpoint::class)
-                    ->setPublic(true)
-                    ->setArguments([
-                        $endpoint
-                    ])
-                    ->addMethodCall('setKey', [$name])
-            );
-            $solrEndpoints[] = 'roadiz_core.solr.endpoints.' . $name;
+        if (isset($config['solr'])) {
+            foreach ($config['solr']['endpoints'] as $name => $endpoint) {
+                $container->setDefinition(
+                    'roadiz_core.solr.endpoints.' . $name,
+                    (new Definition())
+                        ->setClass(Endpoint::class)
+                        ->setPublic(true)
+                        ->setArguments([
+                            $endpoint
+                        ])
+                        ->addMethodCall('setKey', [$name])
+                );
+                $solrEndpoints[] = 'roadiz_core.solr.endpoints.' . $name;
+            }
         }
         $container->setDefinition(
             'roadiz_core.solr.client',
