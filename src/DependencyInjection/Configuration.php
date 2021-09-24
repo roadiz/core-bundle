@@ -164,7 +164,8 @@ EOD
         $builder = new TreeBuilder('solr');
         $node = $builder->getRootNode();
 
-        $node->children()
+        $node->addDefaultsIfNotSet()
+            ->children()
                 ->scalarNode('timeout')->defaultValue(3)->end()
                 ->arrayNode('endpoints')
                     ->useAttributeAsKey('name')
