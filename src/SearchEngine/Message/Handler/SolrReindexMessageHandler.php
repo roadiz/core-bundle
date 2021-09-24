@@ -27,7 +27,9 @@ final class SolrReindexMessageHandler implements MessageHandlerInterface
     public function __invoke(SolrReindexMessage $message)
     {
         try {
-            $this->indexerFactory->getIndexerFor($message->getClassname())->index($message->getIdentifier());
+            if (!empty($message->getIdentifier())) {
+                $this->indexerFactory->getIndexerFor($message->getClassname())->index($message->getIdentifier());
+            }
         } catch (\LogicException $exception) {
             $this->logger->error($exception);
         }
