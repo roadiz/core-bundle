@@ -24,7 +24,7 @@ services:
             $appNamespace: '%roadiz_core.app_namespace%'
             $exportDir: '%kernel.project_dir%/var/export'
             $privateKeyName: '%roadiz_core.private_key_name%'
-            $generatedEntitiesDir: '%kernel.project_dir%/generated'
+            $generatedEntitiesDir: '%roadiz_core.generated_entities_dir%'
             $debug: '%kernel.debug%'
             $defaultControllerClass: 'RZ\Roadiz\CoreBundle\Controller\DefaultNodeSourceController'
             $webhookMessageTypes: '%roadiz_core.webhook.message_types%'

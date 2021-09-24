@@ -96,8 +96,8 @@ class RoadizCoreExtension extends Extension
             'webhook.type.netlify_build_hook' => NetlifyBuildHookMessage::class,
         ]);
 
-        $this->registerReverseProxyCache($config, $container);
         $this->registerEntityGenerator($config, $container);
+        $this->registerReverseProxyCache($config, $container);
         $this->registerSolr($config, $container);
         $this->registerMarkdown($config, $container);
         $this->registerOpenId($config, $container);

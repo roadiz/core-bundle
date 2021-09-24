@@ -10,7 +10,6 @@ use Symfony\Component\DependencyInjection\Reference;
 
 class ImporterCompilerPass implements CompilerPassInterface
 {
-
     /**
      * @inheritDoc
      */

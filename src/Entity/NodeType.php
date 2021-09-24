@@ -475,7 +475,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      */
     public static function getGeneratedEntitiesNamespace(): string
     {
-        return 'GeneratedNodeSources';
+        return 'App\\GeneratedEntity';
     }
 
     /**
