@@ -83,7 +83,7 @@
         "roadiz/random":                           "~1.7.0 || dev-main",
         "roadiz/jwt":                              "~1.7.0 || dev-main",
         "roadiz/nodetype-contracts":               "~1.1.0 || dev-main",
-        "rezozero/crypto":                         "^0.2.0",
+        "rezozero/crypto":                         "^0.2.0 || dev-master",
         "ext-zip": "*"
     },
     "replace": {
