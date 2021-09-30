@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\CoreBundle\Model\AttributeInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeTrait;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
@@ -36,6 +37,7 @@ class Attribute extends AbstractEntity implements AttributeInterface
      * @ORM\OrderBy({"position" = "ASC"})
      * @var Collection<AttributeDocuments>
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore()
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\AttributeDocuments>")
      */
     protected Collection $attributeDocuments;
@@ -70,8 +72,10 @@ class Attribute extends AbstractEntity implements AttributeInterface
     /**
      * @return Collection<Document>
      * @Serializer\SerializedName("documents")
+     * @SymfonySerializer\SerializedName("documents")
      * @Serializer\VirtualProperty()
      * @Serializer\Groups({"attribute", "node", "nodes_sources"})
+     * @SymfonySerializer\Groups({"attribute", "node", "nodes_sources"})
      */
     public function getDocuments(): Collection
     {

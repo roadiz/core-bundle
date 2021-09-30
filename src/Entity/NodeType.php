@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Contracts\NodeType\SearchableInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
@@ -33,9 +34,10 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * @var string
      * @ORM\Column(type="string", unique=true)
      * @Serializer\Groups({"node_type", "node"})
+     * @SymfonySerializer\Groups({"node_type", "node"})
      * @Serializer\Type("string")
      */
-    private $name = '';
+    private string $name = '';
 
     /**
      * @return string
@@ -58,9 +60,10 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * @var string
      * @ORM\Column(name="display_name", type="string")
      * @Serializer\Groups({"node_type", "node"})
+     * @SymfonySerializer\Groups({"node_type", "node"})
      * @Serializer\Type("string")
      */
-    private $displayName;
+    private string $displayName = '';
 
     /**
      * @return string
@@ -90,9 +93,10 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * @var string|null
      * @ORM\Column(type="text", nullable=true)
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("string")
      */
-    private $description;
+    private ?string $description = null;
 
     /**
      * @return string|null
@@ -106,7 +110,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * @param string|null $description
      * @return $this
      */
-    public function setDescription(string $description = null)
+    public function setDescription(?string $description = null)
     {
         $this->description = $description;
         return $this;
@@ -116,9 +120,10 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * @var bool
      * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("boolean")
      */
-    private $visible = true;
+    private bool $visible = true;
 
     /**
      * @return boolean
@@ -142,9 +147,10 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * @var bool
      * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("boolean")
      */
-    private $publishable = false;
+    private bool $publishable = false;
 
     /**
      * @return bool
@@ -168,14 +174,15 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * Define if this node-type produces nodes that will be
      * viewable from a Controller.
      *
-     * Typically if a node has an URL.
+     * Typically, if a node has a URL.
      *
      * @var bool
      * @ORM\Column(name="reachable", type="boolean", nullable=false, options={"default" = true})
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("boolean")
      */
-    private $reachable = true;
+    private bool $reachable = true;
 
     /**
      * @return bool
@@ -207,9 +214,10 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * @var bool
      * @ORM\Column(name="hiding_nodes",type="boolean", nullable=false, options={"default" = false})
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("boolean")
      */
-    private $hidingNodes = false;
+    private bool $hidingNodes = false;
     /**
      * @return boolean
      */
@@ -232,9 +240,10 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * @var bool
      * @ORM\Column(name="hiding_non_reachable_nodes",type="boolean", nullable=false, options={"default" = false})
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("boolean")
      */
-    private $hidingNonReachableNodes = false;
+    private bool $hidingNonReachableNodes = false;
 
     /**
      * @return bool
@@ -259,9 +268,10 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * @var string|null
      * @ORM\Column(type="string", name="color", unique=false, nullable=true)
      * @Serializer\Groups({"node_type", "color"})
+     * @SymfonySerializer\Groups({"node_type", "color"})
      * @Serializer\Type("string")
      */
-    protected $color = '#000000';
+    protected ?string $color = '#000000';
 
     /**
      * Gets the value of color.
@@ -292,10 +302,11 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * @ORM\OneToMany(targetEntity="NodeTypeField", mappedBy="nodeType", cascade={"persist", "merge"})
      * @ORM\OrderBy({"position" = "ASC"})
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\NodeTypeField>")
      * @Serializer\Accessor(getter="getFields", setter="setFields")
      */
-    private $fields;
+    private Collection $fields;
 
     /**
      * @return Collection<NodeTypeField>
@@ -324,9 +335,10 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * @var int
      * @ORM\Column(type="integer", name="default_ttl", nullable=false, options={"default" = 0})
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("int")
      */
-    private $defaultTtl = 0;
+    private int $defaultTtl = 0;
 
     /**
      * @return int
@@ -354,9 +366,10 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * @var bool
      * @ORM\Column(name="searchable", type="boolean", nullable=false, options={"default" = true})
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("boolean")
      */
-    private $searchable = true;
+    private bool $searchable = true;
 
     /**
      * @return bool

@@ -10,6 +10,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\Utils\StringHandler;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 /**
  * Translations describe language locales to be used by Nodes,
@@ -33,6 +34,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      *
      * @var array
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
     public static $availableLocales = [
         'af_NA' => "Afrikaans (Namibia)",
@@ -473,6 +475,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
     /**
      * @var array
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
     public static $rtlLanguages = [
         'ar_DZ' => "Arabic (Algeria)",
@@ -505,14 +508,16 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      * @ORM\OneToMany(targetEntity="DocumentTranslation", mappedBy="translation", orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Collection<DocumentTranslation>
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
-    protected $documentTranslations;
+    protected Collection $documentTranslations;
     /**
      * @ORM\OneToMany(targetEntity="FolderTranslation", mappedBy="translation", orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Collection<FolderTranslation>
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
-    protected $folderTranslations;
+    protected Collection $folderTranslations;
     /**
      * Language locale
      *
@@ -521,49 +526,56 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      * @var string
      * @ORM\Column(type="string", unique=true, length=10)
      * @Serializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder", "log_sources"})
+     * @SymfonySerializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder", "log_sources"})
      * @Serializer\Type("string")
      */
-    private $locale = '';
+    private string $locale = '';
     /**
      * @var string|null
      * @ORM\Column(type="string", name="override_locale", length=10, unique=true, nullable=true)
      * @Serializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder"})
+     * @SymfonySerializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder"})
      * @Serializer\Type("string")
      */
-    private $overrideLocale = null;
+    private ?string $overrideLocale = null;
     /**
      * @var string
      * @ORM\Column(type="string", unique=true)
      * @Serializer\Groups({"translation"})
+     * @SymfonySerializer\Groups({"translation"})
      * @Serializer\Type("string")
      */
-    private $name = '';
+    private string $name = '';
     /**
      * @var bool
      * @ORM\Column(name="default_translation", type="boolean", nullable=false, options={"default" = false})
      * @Serializer\Groups({"translation"})
+     * @SymfonySerializer\Groups({"translation"})
      * @Serializer\Type("bool")
      */
-    private $defaultTranslation = false;
+    private bool $defaultTranslation = false;
     /**
      * @var bool
      * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
      * @Serializer\Groups({"translation"})
+     * @SymfonySerializer\Groups({"translation"})
      * @Serializer\Type("bool")
      */
-    private $available = true;
+    private bool $available = true;
     /**
      * @ORM\OneToMany(targetEntity="NodesSources", mappedBy="translation", orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Collection<NodesSources>
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
-    private $nodeSources;
+    private Collection $nodeSources;
     /**
      * @ORM\OneToMany(targetEntity="TagTranslation", mappedBy="translation", orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Collection<TagTranslation>
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
-    private $tagTranslations;
+    private Collection $tagTranslations;
 
     public function __construct()
     {
@@ -674,7 +686,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      */
     public function setDefaultTranslation(bool $defaultTranslation): Translation
     {
-        $this->defaultTranslation = (boolean) $defaultTranslation;
+        $this->defaultTranslation = $defaultTranslation;
         return $this;
     }
 

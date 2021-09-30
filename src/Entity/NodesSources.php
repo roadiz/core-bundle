@@ -13,6 +13,7 @@ use Gedmo\Loggable\Loggable;
 use RuntimeException;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -45,12 +46,14 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
     /**
      * @var ObjectManager|null
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
-    protected $objectManager = null;
+    protected ?ObjectManager $objectManager = null;
 
     /**
      * @inheritDoc
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
     public function injectObjectManager(ObjectManager $objectManager, ClassMetadata $classMetadata)
     {
@@ -62,8 +65,9 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @ORM\ManyToOne(targetEntity="Node", inversedBy="nodeSources", fetch="EAGER", cascade={"persist"})
      * @ORM\JoinColumn(name="node_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
+     * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
      */
-    private $node = null;
+    private ?Node $node = null;
 
     /**
      * @return Node|null
@@ -104,8 +108,9 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @ORM\JoinColumn(name="translation_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"nodes_sources", "log_sources"})
      * @Serializer\Exclude(if="!object.isReachable()")
+     * @SymfonySerializer\Ignore
      */
-    private $translation = null;
+    private ?Translation $translation = null;
 
     /**
      * @return Translation
@@ -132,9 +137,11 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\UrlAlias", mappedBy="nodeSource", cascade={"remove"})
      * @var Collection<UrlAlias>
      * @Serializer\Groups({"nodes_sources"})
+     * @SymfonySerializer\Groups({"nodes_sources"})
      * @Serializer\Exclude(if="!object.isReachable()")
+     * @SymfonySerializer\Ignore
      */
-    private $urlAliases;
+    private Collection $urlAliases;
 
     /**
      * @return Collection<UrlAlias>
@@ -168,8 +175,9 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * )
      * @var Collection<NodesSourcesDocuments>
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
-    private $documentsByFields;
+    private Collection $documentsByFields;
 
     /**
      * @return Collection<NodesSourcesDocuments>
@@ -291,8 +299,9 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @ORM\OrderBy({"datetime" = "DESC"})
      * @var Collection<Log>
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
-    protected $logs;
+    protected Collection $logs;
 
     /**
      * Logs related to this node-source.
@@ -318,27 +327,26 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
     /**
      * @ORM\Column(type="string", name="title", unique=false, nullable=true)
      * @Serializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
+     * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
      * @Gedmo\Versioned
      */
-    protected $title = '';
+    protected ?string $title = null;
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getTitle(): string
+    public function getTitle(): ?string
     {
         return $this->title;
     }
 
     /**
      * @param string|null $title
-     *
      * @return $this
      */
-    public function setTitle($title): NodesSources
+    public function setTitle(?string $title): NodesSources
     {
-        $this->title = null !== $title ? trim($title) : '';
-
+        $this->title = null !== $title ? trim($title) : null;
         return $this;
     }
 
@@ -346,10 +354,11 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @var \DateTime|null
      * @ORM\Column(type="datetime", name="published_at", unique=false, nullable=true)
      * @Serializer\Groups({"nodes_sources", "nodes_sources_base"})
+     * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base"})
      * @Gedmo\Versioned
      * @Serializer\Exclude(if="!object.isPublishable()")
      */
-    protected $publishedAt;
+    protected ?\DateTime $publishedAt = null;
 
     /**
      * @return \DateTime|null
@@ -372,10 +381,11 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
     /**
      * @ORM\Column(type="string", name="meta_title", unique=false)
      * @Serializer\Groups({"nodes_sources"})
+     * @SymfonySerializer\Groups({"nodes_sources"})
      * @Gedmo\Versioned
      * @Serializer\Exclude(if="!object.isReachable()")
      */
-    protected $metaTitle = '';
+    protected string $metaTitle = '';
 
     /**
      * @return string
@@ -390,7 +400,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      *
      * @return $this
      */
-    public function setMetaTitle($metaTitle): NodesSources
+    public function setMetaTitle(?string $metaTitle): NodesSources
     {
         $this->metaTitle = null !== $metaTitle ? trim($metaTitle) : '';
 
@@ -399,10 +409,11 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
     /**
      * @ORM\Column(type="text", name="meta_keywords")
      * @Serializer\Groups({"nodes_sources"})
+     * @SymfonySerializer\Groups({"nodes_sources"})
      * @Serializer\Exclude(if="!object.isReachable()")
      * @Gedmo\Versioned
      */
-    protected $metaKeywords = '';
+    protected string $metaKeywords = '';
 
     /**
      * @return string
@@ -417,7 +428,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      *
      * @return $this
      */
-    public function setMetaKeywords($metaKeywords): NodesSources
+    public function setMetaKeywords(?string $metaKeywords): NodesSources
     {
         $this->metaKeywords = null !== $metaKeywords ? trim($metaKeywords) : '';
 
@@ -426,10 +437,11 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
     /**
      * @ORM\Column(type="text", name="meta_description")
      * @Serializer\Groups({"nodes_sources"})
+     * @SymfonySerializer\Groups({"nodes_sources"})
      * @Serializer\Exclude(if="!object.isReachable()")
      * @Gedmo\Versioned
      */
-    protected $metaDescription = '';
+    protected string $metaDescription = '';
 
     /**
      * @return string
@@ -444,7 +456,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      *
      * @return $this
      */
-    public function setMetaDescription($metaDescription): NodesSources
+    public function setMetaDescription(?string $metaDescription): NodesSources
     {
         $this->metaDescription = null !== $metaDescription ? trim($metaDescription) : '';
 
@@ -470,7 +482,9 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @return string
      * @Serializer\VirtualProperty
      * @Serializer\SerializedName("slug")
+     * @SymfonySerializer\SerializedName("slug")
      * @Serializer\Groups({"nodes_sources", "nodes_sources_base"})
+     * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base"})
      */
     public function getIdentifier(): string
     {
@@ -487,6 +501,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      *
      * @return NodesSources|null
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
     public function getParent(): ?NodesSources
     {
@@ -503,7 +518,9 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @return string
      * @Serializer\VirtualProperty
      * @Serializer\Groups({"nodes_sources", "nodes_sources_default"})
+     * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_default"})
      * @Serializer\SerializedName("@type")
+     * @SymfonySerializer\SerializedName("@type")
      */
     public function getNodeTypeName(): string
     {

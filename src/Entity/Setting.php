@@ -5,6 +5,7 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use Symfony\Component\String\UnicodeString;
@@ -28,6 +29,7 @@ class Setting extends AbstractEntity
      *
      * @var array<int, string>
      * @Serializer\Exclude()
+     * @SymfonySerializer\Ignore()
      */
     public static $typeToHuman = [
         AbstractField::STRING_T => 'string.type',
@@ -50,14 +52,15 @@ class Setting extends AbstractEntity
     /**
      * @ORM\Column(type="string", unique=true)
      * @Serializer\Groups({"setting", "nodes_sources"})
+     * @SymfonySerializer\Groups({"setting", "nodes_sources"})
      * @Serializer\Type("string")
      */
-    private $name = '';
+    private string $name = '';
 
     /**
      * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
@@ -67,7 +70,7 @@ class Setting extends AbstractEntity
      *
      * @return $this
      */
-    public function setName($name)
+    public function setName(?string $name)
     {
         $this->name = trim(strtolower($name ?? ''));
         $this->name = (new UnicodeString($this->name))
@@ -82,6 +85,7 @@ class Setting extends AbstractEntity
      * @var string|null
      * @ORM\Column(type="text", unique=false, nullable=true)
      * @Serializer\Groups({"setting"})
+     * @SymfonySerializer\Groups({"setting"})
      * @Serializer\Type("string")
      */
     private ?string $description = null;
@@ -109,6 +113,7 @@ class Setting extends AbstractEntity
     /**
      * @ORM\Column(type="text", nullable=true)
      * @Serializer\Groups({"setting", "nodes_sources"})
+     * @SymfonySerializer\Groups({"setting", "nodes_sources"})
      * @Serializer\Type("string")
      */
     private ?string $value = null;
@@ -120,6 +125,7 @@ class Setting extends AbstractEntity
      *
      * @var string|null
      * @Serializer\Exclude()
+     * @SymfonySerializer\Ignore
      */
     private ?string $clearValue = null;
 
@@ -198,6 +204,7 @@ class Setting extends AbstractEntity
     /**
      * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
      * @Serializer\Groups({"setting"})
+     * @SymfonySerializer\Groups({"setting"})
      * @Serializer\Type("bool")
      */
     private bool $visible = true;
@@ -224,6 +231,7 @@ class Setting extends AbstractEntity
     /**
      * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
      * @Serializer\Groups({"setting"})
+     * @SymfonySerializer\Groups({"setting"})
      * @Serializer\Type("bool")
      */
     private bool $encrypted = false;
@@ -257,6 +265,7 @@ class Setting extends AbstractEntity
      * )
      * @ORM\JoinColumn(name="setting_group_id", referencedColumnName="id", onDelete="SET NULL")
      * @Serializer\Groups({"setting"})
+     * @SymfonySerializer\Groups({"setting"})
      * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\SettingGroup")
      * @Serializer\Accessor(getter="getSettingGroup", setter="setSettingGroup")
      * @Serializer\AccessType("public_method")
@@ -289,6 +298,7 @@ class Setting extends AbstractEntity
      *
      * @ORM\Column(type="integer")
      * @Serializer\Groups({"setting"})
+     * @SymfonySerializer\Groups({"setting"})
      * @Serializer\Type("int")
      */
     private int $type = AbstractField::STRING_T;
@@ -319,6 +329,7 @@ class Setting extends AbstractEntity
      * @var string|null
      * @ORM\Column(name="defaultValues", type="text", nullable=true)
      * @Serializer\Groups({"setting"})
+     * @SymfonySerializer\Groups({"setting"})
      * @Serializer\Type("string")
      */
     private ?string $defaultValues;

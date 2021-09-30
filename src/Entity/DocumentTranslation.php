@@ -7,6 +7,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Loggable\Loggable;
 use Gedmo\Mapping\Annotation as Gedmo;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Core\Models\DocumentInterface;
 
@@ -21,9 +23,10 @@ class DocumentTranslation extends AbstractEntity implements Loggable
      * @ORM\Column(type="string", nullable=true)
      * @var string|null
      * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
      * @Gedmo\Versioned
      */
-    protected $name = null;
+    protected ?string $name = null;
     /**
      * @return string|null
      */
@@ -39,16 +42,16 @@ class DocumentTranslation extends AbstractEntity implements Loggable
     public function setName(?string $name): DocumentTranslation
     {
         $this->name = $name;
-
         return $this;
     }
 
     /**
      * @ORM\Column(type="text", nullable=true)
      * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
      * @Gedmo\Versioned
      */
-    protected $description;
+    protected ?string $description = null;
 
     /**
      * @return string
@@ -66,17 +69,17 @@ class DocumentTranslation extends AbstractEntity implements Loggable
     public function setDescription(?string $description): DocumentTranslation
     {
         $this->description = $description;
-
         return $this;
     }
 
     /**
      * @ORM\Column(type="text", nullable=true)
      * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
      * @Gedmo\Versioned
      * @var string|null
      */
-    private $copyright;
+    private ?string $copyright = null;
 
     /**
      * @return string|null
@@ -102,9 +105,10 @@ class DocumentTranslation extends AbstractEntity implements Loggable
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Translation", inversedBy="documentTranslations", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="translation_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
      * @var Translation|null
      */
-    protected $translation;
+    protected ?TranslationInterface $translation = null;
 
     /**
      * @return Translation
@@ -130,8 +134,9 @@ class DocumentTranslation extends AbstractEntity implements Loggable
      * @ORM\JoinColumn(name="document_id", referencedColumnName="id", onDelete="CASCADE")
      * @var DocumentInterface|null
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
-    protected $document;
+    protected ?DocumentInterface $document;
 
     /**
      * @return DocumentInterface

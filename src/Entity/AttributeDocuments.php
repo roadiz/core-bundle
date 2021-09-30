@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 /**
  * Describes a complex ManyToMany relation
@@ -24,6 +25,7 @@ class AttributeDocuments extends AbstractPositioned
      * @ORM\JoinColumn(name="attribute_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Attribute|null
      * @Serializer\Exclude()
+     * @SymfonySerializer\Ignore()
      */
     protected ?Attribute $attribute = null;
 
@@ -32,6 +34,7 @@ class AttributeDocuments extends AbstractPositioned
      * @ORM\JoinColumn(name="document_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Document|null
      * @Serializer\Groups({"attribute"})
+     * @SymfonySerializer\Groups({"attribute"})
      * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Document")
      */
     protected ?Document $document = null;

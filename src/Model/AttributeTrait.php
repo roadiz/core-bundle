@@ -8,6 +8,7 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\Utils\StringHandler;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 trait AttributeTrait
 {
@@ -15,6 +16,7 @@ trait AttributeTrait
      * @var string
      * @ORM\Column(type="string", nullable=false, unique=true)
      * @Serializer\Groups({"attribute", "node", "nodes_sources"})
+     * @SymfonySerializer\Groups({"attribute", "node", "nodes_sources"})
      * @Serializer\Type("string")
      */
     protected string $code = '';
@@ -23,6 +25,7 @@ trait AttributeTrait
      * @var bool
      * @ORM\Column(type="boolean", nullable=false, unique=false, options={"default" = false})
      * @Serializer\Groups({"attribute"})
+     * @SymfonySerializer\Groups({"attribute"})
      * @Serializer\Type("boolean")
      */
     protected bool $searchable = false;
@@ -31,6 +34,7 @@ trait AttributeTrait
      * @var int
      * @ORM\Column(type="integer", nullable=false, unique=false)
      * @Serializer\Groups({"attribute"})
+     * @SymfonySerializer\Groups({"attribute"})
      * @Serializer\Type("integer")
      */
     protected int $type = AttributeInterface::STRING_T;
@@ -39,6 +43,7 @@ trait AttributeTrait
      * @var string|null
      * @ORM\Column(type="string", length=7, nullable=true, unique=false)
      * @Serializer\Groups({"attribute", "node", "nodes_sources"})
+     * @SymfonySerializer\Groups({"attribute", "node", "nodes_sources"})
      * @Serializer\Type("string")
      */
     protected ?string $color = null;
@@ -53,6 +58,7 @@ trait AttributeTrait
      * )
      * @ORM\JoinColumn(name="group_id", onDelete="SET NULL")
      * @Serializer\Groups({"attribute", "node", "nodes_sources"})
+     * @SymfonySerializer\Groups({"attribute", "node", "nodes_sources"})
      * @Serializer\Type("RZ\Roadiz\CoreBundle\Model\AttributeGroupInterface")
      */
     protected ?AttributeGroupInterface $group = null;
@@ -67,6 +73,7 @@ trait AttributeTrait
      *     orphanRemoval=true
      * )
      * @Serializer\Groups({"attribute", "node", "nodes_sources"})
+     * @SymfonySerializer\Groups({"attribute", "node", "nodes_sources"})
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Model\AttributeTranslationInterface>")
      * @Serializer\Accessor(getter="getAttributeTranslations",setter="setAttributeTranslations")
      */
@@ -82,6 +89,7 @@ trait AttributeTrait
      *     orphanRemoval=true
      * )
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
     protected Collection $attributeValues;
 

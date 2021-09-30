@@ -5,6 +5,7 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Contracts\NodeType\SerializableInterface;
@@ -37,6 +38,7 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
      * @var bool
      * @ORM\Column(name="universal", type="boolean", nullable=false, options={"default" = false})
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("bool")
      */
     private bool $universal = false;
@@ -47,6 +49,7 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
      * @var bool
      * @ORM\Column(name="exclude_from_search", type="boolean", nullable=false, options={"default" = false})
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("bool")
      */
     private bool $excludeFromSearch = false;
@@ -56,12 +59,14 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
      * @ORM\ManyToOne(targetEntity="NodeType", inversedBy="fields")
      * @ORM\JoinColumn(name="node_type_id", onDelete="CASCADE")
      * @Serializer\Exclude()
+     * @SymfonySerializer\Ignore
      */
     private ?NodeTypeInterface $nodeType = null;
 
     /**
      * @var string|null
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("string")
      * @ORM\Column(name="serialization_exclusion_expression", type="text", nullable=true)
      */
@@ -70,6 +75,7 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
     /**
      * @var array|null
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("array<string>")
      * @ORM\Column(name="serialization_groups", type="json", nullable=true)
      */
@@ -78,6 +84,7 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
     /**
      * @var int|null
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("int")
      * @ORM\Column(name="serialization_max_depth", type="integer", nullable=true)
      */
@@ -86,6 +93,7 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
     /**
      * @var bool
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("bool")
      * @ORM\Column(name="excluded_from_serialization", type="boolean", nullable=false, options={"default" = false})
      */
@@ -116,7 +124,9 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
      * @Serializer\VirtualProperty()
      * @Serializer\Type("string")
      * @Serializer\SerializedName("nodeTypeName")
+     * @SymfonySerializer\SerializedName("nodeTypeName")
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      */
     public function getNodeTypeName(): string
     {
@@ -127,9 +137,10 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
      * @var int|null
      * @ORM\Column(name="min_length", type="integer", nullable=true)
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("int")
      */
-    private $minLength = null;
+    private ?int $minLength = null;
 
     /**
      * @return int|null
@@ -140,11 +151,11 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
     }
 
     /**
-     * @param int $minLength
+     * @param int|null $minLength
      *
      * @return $this
      */
-    public function setMinLength($minLength)
+    public function setMinLength(?int $minLength)
     {
         $this->minLength = $minLength;
 
@@ -155,9 +166,10 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
      * @var int|null
      * @ORM\Column(name="max_length", type="integer", nullable=true)
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("int")
      */
-    private $maxLength = null;
+    private ?int $maxLength = null;
 
     /**
      * @return int|null
@@ -168,11 +180,11 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
     }
 
     /**
-     * @param int $maxLength
+     * @param int|null $maxLength
      *
      * @return $this
      */
-    public function setMaxLength($maxLength)
+    public function setMaxLength(?int $maxLength)
     {
         $this->maxLength = $maxLength;
 
@@ -183,9 +195,10 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
      * @var bool
      * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("bool")
      */
-    private $indexed = false;
+    private bool $indexed = false;
 
     /**
      * @return boolean $isIndexed
@@ -196,14 +209,12 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
     }
 
     /**
-     * @param boolean $indexed
-     *
+     * @param bool $indexed
      * @return $this
      */
-    public function setIndexed($indexed)
+    public function setIndexed(bool $indexed)
     {
         $this->indexed = $indexed;
-
         return $this;
     }
 
@@ -211,12 +222,13 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
      * @var bool
      * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
      * @Serializer\Groups({"node_type"})
+     * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("bool")
      */
-    private $visible = true;
+    private bool $visible = true;
 
     /**
-     * @return boolean $isVisible
+     * @return bool
      */
     public function isVisible(): bool
     {
@@ -224,11 +236,10 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
     }
 
     /**
-     * @param boolean $visible
-     *
+     * @param bool $visible
      * @return $this
      */
-    public function setVisible($visible)
+    public function setVisible(bool $visible)
     {
         $this->visible = $visible;
 
@@ -242,7 +253,7 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
      */
     public function isSearchable(): bool
     {
-        return !$this->excludeFromSearch && (boolean) in_array($this->getType(), static::$searchableTypes);
+        return !$this->excludeFromSearch && in_array($this->getType(), static::$searchableTypes);
     }
 
     /**
@@ -258,9 +269,9 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
 
     /**
      * @see Same as isUniversal
-     * @return mixed
+     * @return bool
      */
-    public function getUniversal()
+    public function getUniversal(): bool
     {
         return $this->universal;
     }
@@ -277,16 +288,16 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
      * @param bool $universal
      * @return NodeTypeField
      */
-    public function setUniversal($universal)
+    public function setUniversal(bool $universal)
     {
-        $this->universal = (bool) $universal;
+        $this->universal = $universal;
         return $this;
     }
 
     /**
      * @return bool
      */
-    public function getExcludeFromSearch()
+    public function getExcludeFromSearch(): bool
     {
         return $this->excludeFromSearch;
     }
@@ -294,7 +305,7 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
     /**
      * @return bool
      */
-    public function isExcludeFromSearch()
+    public function isExcludeFromSearch(): bool
     {
         return $this->getExcludeFromSearch();
     }
@@ -302,7 +313,7 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
     /**
      * @return bool
      */
-    public function isExcludedFromSearch()
+    public function isExcludedFromSearch(): bool
     {
         return $this->getExcludeFromSearch();
     }

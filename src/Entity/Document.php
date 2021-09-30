@@ -17,6 +17,7 @@ use RZ\Roadiz\Core\Models\SizeableInterface;
 use RZ\Roadiz\Core\Models\TimeableInterface;
 use RZ\Roadiz\Utils\StringHandler;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 /**
  * Documents entity represent a file on server with datetime and naming.
@@ -39,155 +40,179 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @ORM\OneToOne(targetEntity="Document", inversedBy="downscaledDocument", cascade={"all"}, fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="raw_document", referencedColumnName="id", onDelete="SET NULL")
      * @Serializer\Groups({"document"})
+     * @SymfonySerializer\Groups({"document"})
      * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Document")
      * @var Document|null
      */
-    protected $rawDocument = null;
+    protected ?DocumentInterface $rawDocument = null;
     /**
      * @ORM\Column(type="boolean", name="raw", nullable=false, options={"default" = false})
      * @Serializer\Groups({"document"})
+     * @SymfonySerializer\Groups({"document"})
      * @Serializer\Type("bool")
      */
-    protected $raw = false;
+    protected bool $raw = false;
     /**
      * @ORM\Column(type="string", name="embedId", unique=false, nullable=true)
      * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("string")
      */
-    protected $embedId = null;
+    protected ?string $embedId = null;
     /**
      * @ORM\Column(type="string", name="embedPlatform", unique=false, nullable=true)
      * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("string")
      */
-    protected $embedPlatform = null;
+    protected ?string $embedPlatform = null;
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments", mappedBy="document")
      * @var Collection<NodesSourcesDocuments>
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
-    protected $nodesSourcesByFields;
+    protected Collection $nodesSourcesByFields;
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\TagTranslationDocuments", mappedBy="document")
      * @var Collection<TagTranslationDocuments>
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
-    protected $tagTranslations;
+    protected Collection $tagTranslations;
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\AttributeDocuments", mappedBy="document")
      * @var Collection<AttributeDocuments>
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
-    protected $attributeDocuments;
+    protected Collection $attributeDocuments;
     /**
      * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomFormFieldAttribute", mappedBy="documents")
      * @var Collection<CustomFormFieldAttribute>
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
-    protected $customFormFieldAttributes;
+    protected Collection $customFormFieldAttributes;
     /**
      * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Folder", mappedBy="documents")
      * @ORM\JoinTable(name="documents_folders")
      * @Serializer\Groups({"document"})
+     * @SymfonySerializer\Groups({"document"})
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Folder>")
      * @var Collection<Folder>
      */
-    protected $folders;
+    protected Collection $folders;
     /**
      * @ORM\OneToMany(targetEntity="DocumentTranslation", mappedBy="document", orphanRemoval=true, fetch="EAGER")
      * @var Collection<DocumentTranslation>
      * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\DocumentTranslation>")
      */
-    protected $documentTranslations;
+    protected Collection $documentTranslations;
     /**
      * @ORM\Column(type="string", nullable=true)
      * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("string")
      * @var string|null
      */
-    private $filename = null;
+    private ?string $filename = null;
     /**
      * @ORM\Column(name="mime_type", type="string", nullable=true)
      * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("string")
      * @var string|null
      */
-    private $mimeType = null;
+    private ?string $mimeType = null;
     /**
      * @ORM\OneToOne(targetEntity="Document", mappedBy="rawDocument")
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      * @var Document|null
      */
-    private $downscaledDocument = null;
+    private ?DocumentInterface $downscaledDocument = null;
     /**
      * @ORM\Column(type="string")
      * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("string")
      * @var string
      */
-    private $folder = '';
+    private string $folder = '';
     /**
      * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
      * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("bool")
      * @var bool
      */
-    private $private = false;
+    private bool $private = false;
     /**
      * @var integer
      * @ORM\Column(name="imageWidth", type="integer", nullable=false, options={"default" = 0})
      * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("int")
      */
-    private $imageWidth = 0;
+    private int $imageWidth = 0;
     /**
      * @var integer
      * @ORM\Column(name="imageHeight", type="integer", nullable=false, options={"default" = 0})
      * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("int")
      */
-    private $imageHeight = 0;
+    private int $imageHeight = 0;
     /**
      * @var integer
      * @ORM\Column(type="integer", name="duration", nullable=false, options={"default" = 0})
      * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("int")
      */
-    private $mediaDuration = 0;
+    private int $mediaDuration = 0;
     /**
      * @var string|null
      * @ORM\Column(type="string", name="average_color", length=7, unique=false, nullable=true)
      * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("string")
      */
-    private $imageAverageColor = null;
+    private ?string $imageAverageColor = null;
     /**
      * @var int|null The filesize in bytes.
      * @ORM\Column(type="integer", nullable=true, unique=false)
      * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("int")
      */
-    private $filesize = null;
+    private ?int $filesize = null;
 
     /**
      * @var Collection<Document>
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Document", mappedBy="original")
      * @Serializer\Groups({"document_thumbnails"})
+     * @SymfonySerializer\Groups({"document_thumbnails"})
      * @Serializer\MaxDepth(2)
+     * @SymfonySerializer\MaxDepth(2)
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Document>")
      */
-    private $thumbnails;
+    private Collection $thumbnails;
 
     /**
      * @var Document|null
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Document", inversedBy="thumbnails")
      * @ORM\JoinColumn(name="original", nullable=true, onDelete="SET NULL")
      * @Serializer\Groups({"document_original"})
+     * @SymfonySerializer\Groups({"document_original"})
      * @Serializer\MaxDepth(2)
+     * @SymfonySerializer\MaxDepth(2)
      * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Document")
      */
-    private $original = null;
+    private ?DocumentInterface $original = null;
 
     public function __construct()
     {
@@ -313,7 +338,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      */
     public function setPrivate(bool $private)
     {
-        $this->private = (boolean) $private;
+        $this->private = $private;
         if (null !== $raw = $this->getRawDocument()) {
             $raw->setPrivate($private);
         }
@@ -478,8 +503,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      */
     public function setRaw(bool $raw)
     {
-        $this->raw = (boolean) $raw;
-
+        $this->raw = $raw;
         return $this;
     }
 
@@ -686,7 +710,9 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @return bool
      * @Serializer\Groups({"document"})
+     * @SymfonySerializer\Groups({"document"})
      * @Serializer\SerializedName("hasThumbnail")
+     * @SymfonySerializer\SerializedName("hasThumbnail")
      * @Serializer\VirtualProperty()
      */
     public function hasThumbnails(): bool

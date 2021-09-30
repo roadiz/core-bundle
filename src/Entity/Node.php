@@ -16,6 +16,7 @@ use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\Utils\StringHandler;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Gedmo\Mapping\Annotation as Gedmo;
 
 /**
@@ -52,15 +53,16 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     use LeafTrait;
     use AttributableTrait;
 
-    const DRAFT = 10;
-    const PENDING = 20;
-    const PUBLISHED = 30;
-    const ARCHIVED = 40;
-    const DELETED = 50;
+    public const DRAFT = 10;
+    public const PENDING = 20;
+    public const PUBLISHED = 30;
+    public const ARCHIVED = 40;
+    public const DELETED = 50;
 
     /**
      * @var array
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
     public static $orderingFields = [
         'position' => 'position',
@@ -94,9 +96,10 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @ORM\Column(type="string", name="node_name", unique=true)
      * @Serializer\Groups({"nodes_sources", "nodes_sources_base", "node", "log_sources"})
+     * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base", "node", "log_sources"})
      * @Serializer\Accessor(getter="getNodeName", setter="setNodeName")
      */
-    private $nodeName = '';
+    private string $nodeName = '';
 
     /**
      * @return string
@@ -110,7 +113,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param string $nodeName
      * @return $this
      */
-    public function setNodeName($nodeName): Node
+    public function setNodeName(string $nodeName): Node
     {
         $this->nodeName = StringHandler::slugify($nodeName);
         return $this;
@@ -120,7 +123,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\Column(type="boolean", name="dynamic_node_name", nullable=false, options={"default" = true})
      * @Gedmo\Versioned
      */
-    private $dynamicNodeName = true;
+    private bool $dynamicNodeName = true;
 
     /**
      * Dynamic node name will be updated against default
@@ -140,7 +143,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param bool $dynamicNodeName
      * @return $this
      */
-    public function setDynamicNodeName($dynamicNodeName): Node
+    public function setDynamicNodeName(bool $dynamicNodeName): Node
     {
         $this->dynamicNodeName = (bool) $dynamicNodeName;
         return $this;
@@ -150,8 +153,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\Column(type="boolean", name="home", nullable=false, options={"default" = false})
      * @Serializer\Groups({"nodes_sources_base", "nodes_sources", "node"})
      * @Serializer\Exclude(if="!object.getNodeType().isReachable()")
+     * @SymfonySerializer\Ignore
      */
-    private $home = false;
+    private bool $home = false;
 
     /**
      * @return bool
@@ -175,8 +179,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
      * @Gedmo\Versioned
      * @Serializer\Groups({"nodes_sources_base", "nodes_sources", "node"})
+     * @SymfonySerializer\Groups({"nodes_sources_base", "nodes_sources", "node"})
      */
-    private $visible = true;
+    private bool $visible = true;
 
     /**
      * @return bool
@@ -199,9 +204,10 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @ORM\Column(type="integer")
      * @Serializer\Groups({"node"})
+     * @SymfonySerializer\Groups({"node"})
      * @internal You should use node Workflow to perform change on status.
      */
-    private $status = Node::DRAFT;
+    private int $status = Node::DRAFT;
 
     /**
      * @return int
@@ -216,10 +222,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @return $this
      * @internal You should use node Workflow to perform change on status.
      */
-    public function setStatus($status)
+    public function setStatus(int $status)
     {
-        $this->status = (int) $status;
-
+        $this->status = $status;
         return $this;
     }
 
@@ -228,8 +233,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\Column(type="integer", nullable=false, options={"default" = 0})
      * @Gedmo\Versioned
      * @Serializer\Exclude()
+     * @SymfonySerializer\Ignore
      */
-    private $ttl = 0;
+    private int $ttl = 0;
 
     /**
      * @return int
@@ -247,14 +253,13 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     public function setTtl(int $ttl): Node
     {
         $this->ttl = $ttl;
-
         return $this;
     }
 
     /**
      * @return bool
      */
-    public function isPublished()
+    public function isPublished(): bool
     {
         return ($this->status === Node::PUBLISHED);
     }
@@ -262,7 +267,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @return bool
      */
-    public function isPending()
+    public function isPending(): bool
     {
         return ($this->status === Node::PENDING);
     }
@@ -270,7 +275,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @return bool
      */
-    public function isDraft()
+    public function isDraft(): bool
     {
         return ($this->status === Node::DRAFT);
     }
@@ -278,35 +283,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @return bool
      */
-    public function isDeleted()
+    public function isDeleted(): bool
     {
         return ($this->status === Node::DELETED);
-    }
-
-    /**
-     * @param bool $published
-     *
-     * @return $this
-     * @deprecated You should use node Workflow to perform change on status.
-     */
-    public function setPublished($published)
-    {
-        $this->status = ($published) ? Node::PUBLISHED : Node::PENDING;
-
-        return $this;
-    }
-
-    /**
-     * @param bool $pending
-     *
-     * @return $this
-     * @deprecated You should use node Workflow to perform change on status.
-     */
-    public function setPending($pending)
-    {
-        $this->status = ($pending) ? Node::PENDING : Node::DRAFT;
-
-        return $this;
     }
 
     /**
@@ -314,26 +293,25 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
+     * @SymfonySerializer\Groups({"node"})
      */
-    private $locked = false;
+    private bool $locked = false;
 
     /**
      * @return bool
      */
-    public function isLocked()
+    public function isLocked(): bool
     {
         return $this->locked;
     }
 
     /**
      * @param bool $locked
-     *
      * @return $this
      */
-    public function setLocked($locked)
+    public function setLocked(bool $locked)
     {
-        $this->locked = (boolean) $locked;
-
+        $this->locked = $locked;
         return $this;
     }
 
@@ -341,26 +319,25 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\Column(type="decimal", precision=2, scale=1)
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
+     * @SymfonySerializer\Groups({"node"})
      */
-    private $priority = 0.8;
+    private float $priority = 0.8;
 
     /**
      * @return float
      */
-    public function getPriority()
+    public function getPriority(): float
     {
         return $this->priority;
     }
 
     /**
-     * @param float $priority
-     *
+     * @param float
      * @return $this
      */
-    public function setPriority($priority)
+    public function setPriority(float $priority)
     {
-        $this->priority = (float) $priority;
-
+        $this->priority = $priority;
         return $this;
     }
 
@@ -369,13 +346,14 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\Column(type="boolean", name="hide_children", nullable=false, options={"default" = false})
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
+     * @SymfonySerializer\Groups({"node"})
      */
-    private $hideChildren = false;
+    private bool $hideChildren = false;
 
     /**
      * @return mixed
      */
-    public function getHideChildren()
+    public function getHideChildren(): bool
     {
         return $this->hideChildren;
     }
@@ -384,17 +362,17 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param mixed $hideChildren
      * @return Node
      */
-    public function setHideChildren($hideChildren)
+    public function setHideChildren(bool $hideChildren)
     {
-        $this->hideChildren = (boolean) $hideChildren;
+        $this->hideChildren = $hideChildren;
         return $this;
     }
 
 
     /**
-     * @return boolean
+     * @return bool
      */
-    public function isHidingChildren()
+    public function isHidingChildren(): bool
     {
         return $this->hideChildren;
     }
@@ -404,32 +382,18 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function setHidingChildren($hideChildren)
+    public function setHidingChildren(bool $hideChildren)
     {
-        $this->hideChildren = (boolean) $hideChildren;
-
+        $this->hideChildren = $hideChildren;
         return $this;
     }
 
     /**
      * @return bool
      */
-    public function isArchived()
+    public function isArchived(): bool
     {
         return ($this->status === Node::ARCHIVED);
-    }
-
-    /**
-     * @param bool $archived
-     *
-     * @return $this
-     * @deprecated You should use node Workflow to perform change on status.
-     */
-    public function setArchived($archived)
-    {
-        $this->status = ($archived) ? Node::ARCHIVED : Node::PUBLISHED;
-
-        return $this;
     }
 
     /**
@@ -437,26 +401,25 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
+     * @SymfonySerializer\Groups({"node"})
      */
-    private $sterile = false;
+    private bool $sterile = false;
 
     /**
      * @return bool
      */
-    public function isSterile()
+    public function isSterile(): bool
     {
         return $this->sterile;
     }
 
     /**
      * @param bool $sterile
-     *
      * @return $this
      */
-    public function setSterile($sterile)
+    public function setSterile(bool $sterile)
     {
-        $this->sterile = (boolean) $sterile;
-
+        $this->sterile = $sterile;
         return $this;
     }
 
@@ -465,26 +428,25 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\Column(type="string", name="children_order")
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
+     * @SymfonySerializer\Groups({"node"})
      */
-    private $childrenOrder = 'position';
+    private string $childrenOrder = 'position';
 
     /**
      * @return string
      */
-    public function getChildrenOrder()
+    public function getChildrenOrder(): string
     {
         return $this->childrenOrder;
     }
 
     /**
      * @param string $childrenOrder
-     *
      * @return $this
      */
-    public function setChildrenOrder($childrenOrder)
+    public function setChildrenOrder(string $childrenOrder)
     {
         $this->childrenOrder = $childrenOrder;
-
         return $this;
     }
 
@@ -493,26 +455,25 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\Column(type="string", name="children_order_direction", length=4)
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
+     * @SymfonySerializer\Groups({"node"})
      */
-    private $childrenOrderDirection = 'ASC';
+    private string $childrenOrderDirection = 'ASC';
 
     /**
      * @return string
      */
-    public function getChildrenOrderDirection()
+    public function getChildrenOrderDirection(): string
     {
         return $this->childrenOrderDirection;
     }
 
     /**
      * @param string $childrenOrderDirection
-     *
      * @return $this
      */
-    public function setChildrenOrderDirection($childrenOrderDirection)
+    public function setChildrenOrderDirection(string $childrenOrderDirection)
     {
         $this->childrenOrderDirection = $childrenOrderDirection;
-
         return $this;
     }
 
@@ -520,6 +481,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\ManyToOne(targetEntity="NodeType")
      * @ORM\JoinColumn(name="nodeType_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"node"})
+     * @SymfonySerializer\Groups({"node"})
      * @var NodeType|null
      */
     private ?NodeType $nodeType = null;
@@ -527,20 +489,18 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @return NodeType|null
      */
-    public function getNodeType()
+    public function getNodeType(): ?NodeType
     {
         return $this->nodeType;
     }
 
     /**
      * @param NodeType|null $nodeType
-     *
      * @return $this
      */
-    public function setNodeType(NodeType $nodeType = null)
+    public function setNodeType(?NodeType $nodeType = null)
     {
         $this->nodeType = $nodeType;
-
         return $this;
     }
 
@@ -549,14 +509,16 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\JoinColumn(name="parent_node_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Node|null
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
     protected ?LeafInterface $parent = null;
 
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Node", mappedBy="parent", orphanRemoval=true)
      * @ORM\OrderBy({"position" = "ASC"})
-     * @var ArrayCollection<Node>
+     * @var Collection<Node>
      * @Serializer\Groups({"node_children"})
+     * @SymfonySerializer\Groups({"node_children"})
      */
     protected Collection $children;
 
@@ -565,8 +527,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\JoinTable(name="nodes_tags")
      * @var Collection<Tag>
      * @Serializer\Groups({"nodes_sources", "nodes_sources_base", "node"})
+     * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base", "node"})
      */
-    private $tags;
+    private Collection $tags;
 
     /**
      * @return Collection<Tag>
@@ -619,8 +582,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\OneToMany(targetEntity="NodesCustomForms", mappedBy="node", fetch="EXTRA_LAZY")
      * @var Collection<NodesCustomForms>
      * @Serializer\Exclude()
+     * @SymfonySerializer\Ignore()
      */
-    private $customForms;
+    private Collection $customForms;
 
     /**
      * @return Collection<NodesCustomForms>
@@ -661,8 +625,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * })
      * @var Collection<NodeType>
      * @Serializer\Groups({"node"})
+     * @SymfonySerializer\Groups({"node"})
      */
-    private $stackTypes;
+    private Collection $stackTypes;
 
     /**
      * @return Collection<NodeType>
@@ -703,9 +668,10 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @ORM\OneToMany(targetEntity="NodesSources", mappedBy="node", orphanRemoval=true, fetch="EXTRA_LAZY")
      * @Serializer\Groups({"node"})
+     * @SymfonySerializer\Groups({"node"})
      * @var Collection<NodesSources>
      */
-    private $nodeSources;
+    private Collection $nodeSources;
 
     /**
      * @return Collection<NodesSources>
@@ -767,8 +733,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\OrderBy({"position" = "ASC"})
      * @var Collection<NodesToNodes>
      * @Serializer\Exclude()
+     * @SymfonySerializer\Ignore
      */
-    protected $bNodes;
+    protected Collection $bNodes;
 
     /**
      * Return nodes related to this (B nodes).
@@ -849,8 +816,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\OneToMany(targetEntity="NodesToNodes", mappedBy="nodeB")
      * @var Collection<NodesToNodes>
      * @Serializer\Exclude()
+     * @SymfonySerializer\Ignore
      */
-    protected $aNodes;
+    protected Collection $aNodes;
 
     /**
      * Return nodes which own a relation with this (A nodes).
@@ -867,8 +835,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\AttributeValue", mappedBy="node", orphanRemoval=true)
      * @ORM\OrderBy({"position" = "ASC"})
      * @Serializer\Groups({"nodes_sources", "node"})
+     * @SymfonySerializer\Groups({"nodes_sources", "node"})
      */
-    protected $attributeValues;
+    protected Collection $attributeValues;
 
     /**
      * Create a new empty Node according to given node-type.

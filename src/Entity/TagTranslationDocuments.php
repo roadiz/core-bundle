@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 /**
  * Describes a complex ManyToMany relation
@@ -24,17 +25,19 @@ class TagTranslationDocuments extends AbstractPositioned
      * @ORM\JoinColumn(name="tag_translation_id", referencedColumnName="id", onDelete="CASCADE")
      * @var TagTranslation|null
      * @Serializer\Exclude()
+     * @SymfonySerializer\Ignore
      */
-    protected $tagTranslation = null;
+    protected ?TagTranslation $tagTranslation = null;
 
     /**
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Document", inversedBy="tagTranslations", fetch="EAGER", cascade={"persist", "merge"})
      * @ORM\JoinColumn(name="document_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Document|null
      * @Serializer\Groups({"tag"})
+     * @SymfonySerializer\Groups({"tag"})
      * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Document")
      */
-    protected $document = null;
+    protected ?Document $document = null;
 
     /**
      * Create a new relation between NodeSource, a Document and a NodeTypeField.
@@ -72,7 +75,7 @@ class TagTranslationDocuments extends AbstractPositioned
     /**
      * Sets the value of document.
      *
-     * @param Document $document the document
+     * @param Document|null $document the document
      *
      * @return self
      */
@@ -92,7 +95,7 @@ class TagTranslationDocuments extends AbstractPositioned
     }
 
     /**
-     * @param TagTranslation $tagTranslation
+     * @param TagTranslation|null $tagTranslation
      * @return TagTranslationDocuments
      */
     public function setTagTranslation(?TagTranslation $tagTranslation): TagTranslationDocuments

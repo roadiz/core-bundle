@@ -6,6 +6,8 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 /**
  * Translated representation of Folders.
@@ -22,20 +24,20 @@ class FolderTranslation extends AbstractEntity
     /**
      * @ORM\Column(type="string")
      * @Serializer\Groups({"folder", "document"})
+     * @SymfonySerializer\Groups({"folder", "document"})
      * @var string
      */
-    protected $name;
+    protected string $name = '';
 
     /**
      * @return string
      */
     public function getName(): string
     {
-        return $this->name;
+        return $this->name ?? '';
     }
     /**
      * @param string $name
-     *
      * @return $this
      */
     public function setName(string $name)
@@ -48,20 +50,21 @@ class FolderTranslation extends AbstractEntity
      * @ORM\ManyToOne(targetEntity="Folder", inversedBy="translatedFolders")
      * @ORM\JoinColumn(name="folder_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      * @var Folder|null
      */
-    protected $folder = null;
+    protected ?Folder $folder = null;
 
     /**
      * @ORM\ManyToOne(targetEntity="Translation", inversedBy="folderTranslations", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="translation_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"folder", "document"})
+     * @SymfonySerializer\Groups({"folder", "document"})
      * @var Translation|null
      */
-    protected $translation = null;
+    protected ?TranslationInterface $translation = null;
 
     /**
-     * FolderTranslation constructor.
      * @param Folder $original
      * @param Translation $translation
      */

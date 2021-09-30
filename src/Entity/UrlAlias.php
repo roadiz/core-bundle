@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Utils\StringHandler;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 /**
  * UrlAliases are used to translate Nodes URLs.
@@ -20,8 +21,9 @@ class UrlAlias extends AbstractEntity
      * @ORM\Column(type="string", unique=true)
      * @var string
      * @Serializer\Groups({"url_alias"})
+     * @SymfonySerializer\Groups({"url_alias"})
      */
-    private $alias = '';
+    private string $alias = '';
 
     /**
      * @return string
@@ -46,8 +48,9 @@ class UrlAlias extends AbstractEntity
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\NodesSources", inversedBy="urlAliases")
      * @ORM\JoinColumn(name="ns_id", referencedColumnName="id")
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
-    private $nodeSource;
+    private ?NodesSources $nodeSource = null;
 
     /**
      * @return NodesSources

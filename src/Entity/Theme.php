@@ -11,10 +11,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
  */
 class Theme extends AbstractEntity
 {
-    /**
-     * @var boolean
-     */
-    private $available = false;
+    private bool $available = false;
 
     /**
      * @return boolean

@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 /**
  * A group gather User and Roles.
@@ -20,6 +21,7 @@ class Group extends AbstractEntity
     /**
      * @ORM\Column(type="string", unique=true)
      * @Serializer\Groups({"user", "role", "group"})
+     * @SymfonySerializer\Groups({"user", "role", "group"})
      * @Serializer\Type("string")
      * @var string
      */
@@ -27,6 +29,7 @@ class Group extends AbstractEntity
     /**
      * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\User", mappedBy="groups")
      * @Serializer\Groups({"group_user"})
+     * @SymfonySerializer\Groups({"group_user"})
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\User>")
      * @var Collection<User>
      */
@@ -39,6 +42,7 @@ class Group extends AbstractEntity
      * )
      * @var Collection<Role>
      * @Serializer\Groups({"group"})
+     * @SymfonySerializer\Groups({"group"})
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Role>")
      * @Serializer\Accessor(getter="getRolesEntities", setter="setRolesEntities")
      */
@@ -46,6 +50,7 @@ class Group extends AbstractEntity
     /**
      * @var array|null
      * @Serializer\Groups({"group", "user"})
+     * @SymfonySerializer\Groups({"group", "user"})
      * @Serializer\Type("array<string>")
      */
     private ?array $rolesNames = null;

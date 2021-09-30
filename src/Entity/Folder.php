@@ -8,11 +8,13 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimedPositioned;
+use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
 use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
 use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\Core\Models\FolderInterface;
 use RZ\Roadiz\Utils\StringHandler;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 /**
  * Folders entity represent a directory on server with datetime and naming.
@@ -36,45 +38,52 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @ORM\JoinColumn(name="parent_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Folder|null
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
-    protected $parent = null;
+    protected ?LeafInterface $parent = null;
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Folder", mappedBy="parent", orphanRemoval=true)
      * @ORM\OrderBy({"position" = "ASC"})
      * @var Collection<Folder>
      * @Serializer\Groups({"folder"})
+     * @SymfonySerializer\Groups({"folder"})
      */
-    protected $children;
+    protected Collection $children;
     /**
      * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Document", inversedBy="folders")
      * @ORM\JoinTable(name="documents_folders")
      * @var Collection<Document>
      * @Serializer\Groups({"folder"})
+     * @SymfonySerializer\Groups({"folder"})
      */
-    protected $documents;
+    protected Collection $documents;
     /**
      * @ORM\Column(name="folder_name", type="string", unique=true, nullable=false)
      * @var string
      * @Serializer\Groups({"folder", "document"})
+     * @SymfonySerializer\Groups({"folder", "document"})
      */
-    private $folderName = '';
+    private string $folderName = '';
     /**
      * @var string
      * @Serializer\Exclude()
+     * @SymfonySerializer\Ignore()
      */
-    private $dirtyFolderName = '';
+    private string $dirtyFolderName = '';
     /**
      * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
-     * @var boolean
+     * @var bool
      * @Serializer\Groups({"folder"})
+     * @SymfonySerializer\Groups({"folder"})
      */
-    private $visible = true;
+    private bool $visible = true;
     /**
      * @ORM\OneToMany(targetEntity="FolderTranslation", mappedBy="folder", orphanRemoval=true)
      * @var Collection<FolderTranslation>
      * @Serializer\Groups({"folder", "document"})
+     * @SymfonySerializer\Groups({"folder", "document"})
      */
-    private $translatedFolders;
+    private Collection $translatedFolders;
 
     /**
      * Create a new Folder.

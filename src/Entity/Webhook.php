@@ -5,6 +5,7 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
 use RZ\Roadiz\CoreBundle\Webhook\WebhookInterface;
 
@@ -29,9 +30,10 @@ class Webhook extends AbstractDateTimed implements WebhookInterface
      * @ORM\Column(type="string", length=36)
      * @ORM\GeneratedValue(strategy="UUID")
      * @Serializer\Groups({"id"})
+     * @SymfonySerializer\Groups({"id"})
      * @Serializer\Type("string")
      */
-    protected $id;
+    protected $id = null;
 
     /**
      * @var string|null
@@ -86,6 +88,7 @@ class Webhook extends AbstractDateTimed implements WebhookInterface
      * @var Node|null
      * @ORM\ManyToOne(targetEntity="Node")
      * @ORM\JoinColumn(name="root_node", onDelete="SET NULL")
+     * @SymfonySerializer\Ignore 
      */
     protected ?Node $rootNode = null;
 

@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
 use RZ\Roadiz\Utils\StringHandler;
 
@@ -24,42 +25,49 @@ class CustomForm extends AbstractDateTimed
      * @ORM\Column(type="string", name="color", unique=false, nullable=true)
      * @var string|null
      * @Serializer\Groups({"custom_form", "nodes_sources"})
+     * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
      */
     protected $color = '#000000';
     /**
      * @ORM\Column(type="string", unique=true)
      * @var string
      * @Serializer\Groups({"custom_form", "nodes_sources"})
+     * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
      */
     private $name = 'Untitled';
     /**
      * @ORM\Column(name="display_name", type="string")
      * @var string
      * @Serializer\Groups({"custom_form", "nodes_sources"})
+     * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
      */
     private $displayName = 'Untitled';
     /**
      * @ORM\Column(type="text", nullable=true)
      * @var string|null
      * @Serializer\Groups({"nodes_sources"})
+     * @SymfonySerializer\Groups({"nodes_sources"})
      */
     private $description = null;
     /**
      * @ORM\Column(type="text", nullable=true)
      * @var string|null
      * @Serializer\Groups({"custom_form"})
+     * @SymfonySerializer\Groups({"custom_form"})
      */
     private $email = null;
     /**
      * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
      * @var bool
      * @Serializer\Groups({"custom_form"})
+     * @SymfonySerializer\Groups({"custom_form"})
      */
     private $open = true;
     /**
      * @ORM\Column(name="close_date", type="datetime", nullable=true)
      * @var \DateTime|null
      * @Serializer\Groups({"custom_form"})
+     * @SymfonySerializer\Groups({"custom_form"})
      */
     private $closeDate = null;
     /**
@@ -67,6 +75,7 @@ class CustomForm extends AbstractDateTimed
      * @ORM\OrderBy({"position" = "ASC"})
      * @var Collection<CustomFormField>
      * @Serializer\Groups({"custom_form"})
+     * @SymfonySerializer\Groups({"custom_form"})
      */
     private $fields;
     /**
@@ -77,12 +86,14 @@ class CustomForm extends AbstractDateTimed
      * )
      * @var Collection<CustomFormAnswer>
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
     private $customFormAnswers;
     /**
      * @ORM\OneToMany(targetEntity="NodesCustomForms", mappedBy="customForm", fetch="EXTRA_LAZY")
      * @var Collection<NodesCustomForms>
      * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
     private $nodes;
 

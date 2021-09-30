@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use Symfony\Component\String\UnicodeString;
 
@@ -50,6 +51,7 @@ class Role implements PersistableInterface
     /**
      * @ORM\Column(type="string", unique=true)
      * @Serializer\Groups({"user", "role", "group"})
+     * @SymfonySerializer\Groups({"user", "role", "group"})
      * @Serializer\Type("string")
      * @var string
      */
@@ -119,11 +121,12 @@ class Role implements PersistableInterface
      *     cascade={"persist", "merge"}
      * )
      * @Serializer\Groups({"role"})
+     * @SymfonySerializer\Groups({"role"})
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Group>")
      * @Serializer\Accessor(getter="getGroups", setter="setGroups")
      * @var Collection<Group>
      */
-    private $groups;
+    private Collection $groups;
 
     /**
      * @return Collection
@@ -177,10 +180,11 @@ class Role implements PersistableInterface
     /**
      * Get a classified version of current role name.
      *
-     * It replace underscores by dashes and lowercase.
+     * It replaces underscores by dashes and lowercase.
      *
      * @return string
      * @Serializer\Groups({"role"})
+     * @SymfonySerializer\Groups({"role"})
      */
     public function getClassName(): string
     {
@@ -188,9 +192,9 @@ class Role implements PersistableInterface
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
-    public function required()
+    public function required(): bool
     {
         if ($this->getRole() == static::ROLE_DEFAULT ||
             $this->getRole() == static::ROLE_SUPERADMIN ||
