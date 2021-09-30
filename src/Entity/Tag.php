@@ -354,6 +354,10 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
         return $this;
     }
 
+    /**
+     * @return string
+     * @SymfonySerializer\Ignore
+     */
     public function __toString()
     {
         return '[' . ($this->getId() > 0 ? $this->getId() : 'NULL') . '] ' . $this->getTagName();

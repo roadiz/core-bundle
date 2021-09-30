@@ -108,11 +108,11 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
     }
 
     /**
-     * @param NodeType $nodeType
+     * @param NodeTypeInterface|null $nodeType
      *
      * @return $this
      */
-    public function setNodeType($nodeType)
+    public function setNodeType(?NodeTypeInterface $nodeType)
     {
         $this->nodeType = $nodeType;
 
@@ -258,6 +258,7 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
 
     /**
      * @return string
+     * @SymfonySerializer\Ignore
      */
     public function getOneLineSummary()
     {

@@ -94,6 +94,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
 
     /**
      * @ORM\PreUpdate
+     * @SymfonySerializer\Ignore
      */
     public function preUpdate()
     {
@@ -222,6 +223,12 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
         }
         return $this;
     }
+
+    /**
+     * @param NodesSourcesDocuments $nodesSourcesDocuments
+     * @return bool
+     * @SymfonySerializer\Ignore
+     */
     public function hasNodesSourcesDocuments(NodesSourcesDocuments $nodesSourcesDocuments): bool
     {
         return $this->getDocumentsByFields()->exists(
@@ -275,7 +282,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @param string $fieldName
      * @return Document[]
      */
-    public function getDocumentsByFieldsWithName($fieldName): array
+    public function getDocumentsByFieldsWithName(string $fieldName): array
     {
         $criteria = Criteria::create();
         $criteria->orderBy(['position' => 'ASC']);
@@ -529,6 +536,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
 
     /**
      * @return string
+     * @SymfonySerializer\Ignore
      */
     public function __toString()
     {
@@ -562,6 +570,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      *
      * Be careful not to persist nor flush current entity after
      * calling clone as it empties its relations.
+     * @SymfonySerializer\Ignore
      */
     public function __clone()
     {

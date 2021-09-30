@@ -20,26 +20,26 @@ class Redirection extends AbstractDateTimed
      * @ORM\Column(type="string", unique=true, length=255)
      * @var string
      */
-    private $query = "";
+    private string $query = "";
 
     /**
      * @ORM\Column(name="redirectUri", type="text", nullable=true, length=2048)
      * @var string|null
      */
-    private $redirectUri = null;
+    private ?string $redirectUri = null;
 
     /**
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\NodesSources")
      * @ORM\JoinColumn(name="ns_id", referencedColumnName="id", onDelete="CASCADE")
      * @var NodesSources|null
      */
-    private $redirectNodeSource = null;
+    private ?NodesSources $redirectNodeSource = null;
 
     /**
      * @ORM\Column(type="integer")
      * @var int
      */
-    private $type;
+    private int $type = 301;
 
     /**
      * @return string

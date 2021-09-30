@@ -809,6 +809,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @return bool    true if the user's credentials are non expired, false otherwise
      *
      * @see CredentialsExpiredException
+     * @SymfonySerializer\Ignore
      */
     public function isCredentialsNonExpired(): bool
     {
@@ -873,6 +874,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * {@inheritdoc}
      *
      * @see https://github.com/FriendsOfSymfony/FOSUserBundle/blob/master/Model/User.php
+     * @SymfonySerializer\Ignore
      */
     public function serialize()
     {
@@ -942,7 +944,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     }
 
     /**
-     * @param mixed $name
+     * @param string $name
      *
      * @return bool
      */
@@ -952,7 +954,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     }
 
     /**
-     * @param mixed $role
+     * @param string $role
      *
      * @return bool
      */
@@ -967,6 +969,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @param UserInterface $user
      *
      * @return bool
+     * @SymfonySerializer\Ignore
      */
     public function isEqualTo(UserInterface $user): bool
     {

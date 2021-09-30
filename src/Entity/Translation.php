@@ -590,6 +590,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      * Return available locales in an array.
      *
      * @return array
+     * @SymfonySerializer\Ignore
      */
     public static function getAvailableLocales(): array
     {
@@ -598,6 +599,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
 
     /**
      * @return string
+     * @SymfonySerializer\Ignore
      */
     public function getOneLineSummary(): string
     {
@@ -606,6 +608,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
 
     /**
      * @return string
+     * @SymfonySerializer\Ignore
      */
     public function __toString(): string
     {
@@ -758,6 +761,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
 
     /**
      * @return array
+     * @SymfonySerializer\Ignore
      */
     public static function getRightToLeftLocales(): array
     {
@@ -766,6 +770,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
 
     /**
      * @return Collection
+     * @SymfonySerializer\Ignore
      */
     public function getFolderTranslations(): Collection
     {

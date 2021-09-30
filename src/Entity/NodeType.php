@@ -407,6 +407,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * a simple array.
      *
      * @return array
+     * @SymfonySerializer\Ignore
      */
     public function getFieldsNames(): array
     {
@@ -458,6 +459,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * Get node-source entity class name without its namespace.
      *
      * @return string
+     * @SymfonySerializer\Ignore
      */
     public function getSourceEntityClassName(): string
     {
@@ -467,6 +469,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
     /**
      * @template T of NodesSources
      * @return class-string<T>
+     * @SymfonySerializer\Ignore
      */
     public function getSourceEntityFullQualifiedClassName(): string
     {
@@ -477,6 +480,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * Get node-source entity database table name.
      *
      * @return string
+     * @SymfonySerializer\Ignore
      */
     public function getSourceEntityTableName(): string
     {
@@ -485,6 +489,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
 
     /**
      * @return string
+     * @SymfonySerializer\Ignore
      */
     public static function getGeneratedEntitiesNamespace(): string
     {
@@ -493,6 +498,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
 
     /**
      * @return string
+     * @SymfonySerializer\Ignore
      */
     public function __toString(): string
     {
@@ -503,6 +509,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      * Get every searchable node-type fields as a Doctrine ArrayCollection.
      *
      * @return Collection
+     * @SymfonySerializer\Ignore
      */
     public function getSearchableFields(): Collection
     {

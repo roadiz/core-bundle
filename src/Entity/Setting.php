@@ -141,6 +141,7 @@ class Setting extends AbstractEntity
      * Getter for setting value OR clear value, if encrypted.
      *
      * @return string|bool|\DateTime|int|null
+     * @SymfonySerializer\Ignore
      * @throws \Exception
      */
     public function getValue()

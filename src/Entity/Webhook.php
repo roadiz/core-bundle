@@ -88,7 +88,7 @@ class Webhook extends AbstractDateTimed implements WebhookInterface
      * @var Node|null
      * @ORM\ManyToOne(targetEntity="Node")
      * @ORM\JoinColumn(name="root_node", onDelete="SET NULL")
-     * @SymfonySerializer\Ignore 
+     * @SymfonySerializer\Ignore
      */
     protected ?Node $rootNode = null;
 

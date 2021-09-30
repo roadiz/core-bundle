@@ -216,6 +216,10 @@ class Role implements PersistableInterface
         $this->groups = new ArrayCollection();
     }
 
+    /**
+     * @return string
+     * @SymfonySerializer\Ignore
+     */
     public function __toString(): string
     {
         return $this->getRole();

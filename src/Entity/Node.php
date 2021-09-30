@@ -686,6 +686,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @param TranslationInterface $translation
      * @return Collection
+     * @SymfonySerializer\Ignore
      */
     public function getNodeSourcesByTranslation(TranslationInterface $translation)
     {
@@ -751,6 +752,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param NodeTypeField $field
      *
      * @return ArrayCollection|Collection
+     * @SymfonySerializer\Ignore
      */
     public function getBNodesByField(NodeTypeField $field)
     {
@@ -861,8 +863,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
 
     /**
      * @return string
+     * @SymfonySerializer\Ignore
      */
-    public function getOneLineSummary()
+    public function getOneLineSummary(): string
     {
         return $this->getId() . " — " . $this->getNodeName() . " — " . $this->getNodeType()->getName() .
         " — Visible : " . ($this->isVisible() ? 'true' : 'false') . PHP_EOL;
@@ -870,8 +873,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
 
     /**
      * @return string
+     * @SymfonySerializer\Ignore
      */
-    public function getOneLineSourceSummary()
+    public function getOneLineSourceSummary(): string
     {
         $text = "Source " . $this->getNodeSources()->first()->getId() . PHP_EOL;
 
@@ -934,6 +938,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
 
     /**
      * @return string
+     * @SymfonySerializer\Ignore
      */
     public function __toString()
     {

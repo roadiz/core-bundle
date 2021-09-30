@@ -281,7 +281,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @param string $folder
      * @return $this
      */
-    public function setFolder($folder)
+    public function setFolder(string $folder)
     {
         $this->folder = $folder;
         return $this;
@@ -296,10 +296,10 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     }
 
     /**
-     * @param string $embedId
+     * @param string|null $embedId
      * @return $this
      */
-    public function setEmbedId($embedId)
+    public function setEmbedId(?string $embedId)
     {
         $this->embedId = $embedId;
         return $this;
@@ -314,10 +314,10 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     }
 
     /**
-     * @param string $embedPlatform
+     * @param string|null $embedPlatform
      * @return $this
      */
-    public function setEmbedPlatform($embedPlatform)
+    public function setEmbedPlatform(?string $embedPlatform)
     {
         $this->embedPlatform = $embedPlatform;
 
@@ -348,6 +348,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
 
     /**
      * @return Collection<NodesSourcesDocuments>
+     * @SymfonySerializer\Ignore
      */
     public function getNodesSourcesByFields()
     {
@@ -356,6 +357,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
 
     /**
      * @return Collection<TagTranslationDocuments>
+     * @SymfonySerializer\Ignore
      */
     public function getTagTranslations()
     {
@@ -364,6 +366,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
 
     /**
      * @return Collection<AttributeDocuments>
+     * @SymfonySerializer\Ignore
      */
     public function getAttributeDocuments(): Collection
     {
@@ -452,8 +455,9 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
 
     /**
      * @return bool
+     * @SymfonySerializer\Ignore
      */
-    public function hasTranslations()
+    public function hasTranslations(): bool
     {
         return (boolean) $this->getDocumentTranslations()->count();
     }
@@ -462,6 +466,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * Gets the value of rawDocument.
      *
      * @return DocumentInterface|null
+     * @SymfonySerializer\Ignore
      */
     public function getRawDocument(): ?DocumentInterface
     {
@@ -633,6 +638,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
 
     /**
      * Clone current document.
+     * @SymfonySerializer\Ignore
      */
     public function __clone()
     {
@@ -676,6 +682,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
 
     /**
      * @return HasThumbnailInterface|null
+     * @SymfonySerializer\Ignore
      */
     public function getOriginal(): ?HasThumbnailInterface
     {
@@ -722,12 +729,17 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
 
     /**
      * @return bool
+     * @SymfonySerializer\Ignore
      */
     public function needsThumbnail(): bool
     {
         return !$this->isProcessable();
     }
 
+    /**
+     * @return string
+     * @SymfonySerializer\Ignore
+     */
     public function __toString()
     {
         if (!empty($this->getFilename())) {

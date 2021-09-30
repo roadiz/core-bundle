@@ -52,7 +52,7 @@ class TagTranslationDocuments extends AbstractPositioned
     }
 
     /**
-     *
+     * @SymfonySerializer\Ignore
      */
     public function __clone()
     {

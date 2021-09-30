@@ -181,6 +181,7 @@ class TagTranslation extends AbstractEntity
      *
      * Be careful not to persist nor flush current entity after
      * calling clone as it empties its relations.
+     * @SymfonySerializer\Ignore
      */
     public function __clone()
     {
