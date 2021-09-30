@@ -241,7 +241,6 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
 
     /**
      * @param Collection<TagTranslation> $translatedTags
-     *
      * @return Tag
      */
     public function setTranslatedTags(Collection $translatedTags): self
@@ -257,8 +256,9 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     /**
      * @param Translation $translation
      * @return Collection<TagTranslation>
+     * @SymfonySerializer\Ignore
      */
-    public function getTranslatedTagsByTranslation(Translation $translation)
+    public function getTranslatedTagsByTranslation(Translation $translation): Collection
     {
         return $this->translatedTags->filter(function (TagTranslation $tagTranslation) use ($translation) {
             return $tagTranslation->getTranslation()->getLocale() === $translation->getLocale();

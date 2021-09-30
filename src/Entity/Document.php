@@ -422,7 +422,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
 
     /**
      * @param Translation $translation
-     * @return Collection
+     * @return Collection<DocumentTranslation>
      */
     public function getDocumentTranslationsByTranslation(Translation $translation)
     {
@@ -459,7 +459,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      */
     public function hasTranslations(): bool
     {
-        return (boolean) $this->getDocumentTranslations()->count();
+        return $this->getDocumentTranslations()->count() > 0;
     }
 
     /**
