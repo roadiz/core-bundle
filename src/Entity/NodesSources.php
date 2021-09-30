@@ -53,7 +53,6 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
     /**
      * @inheritDoc
      * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
     public function injectObjectManager(ObjectManager $objectManager, ClassMetadata $classMetadata)
     {
@@ -94,7 +93,6 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
 
     /**
      * @ORM\PreUpdate
-     * @SymfonySerializer\Ignore
      */
     public function preUpdate()
     {
