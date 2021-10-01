@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -30,6 +31,7 @@ use RZ\Roadiz\Utils\StringHandler;
  *     @ORM\Index(columns={"parent_tag_id", "visible"}, name="tag_parent_visible"),
  *     @ORM\Index(columns={"parent_tag_id", "visible", "position"}, name="tag_parent_visible_position")
  * })
+ * @ApiFilter(ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
  */
 class Tag extends AbstractDateTimedPositioned implements LeafInterface
 {

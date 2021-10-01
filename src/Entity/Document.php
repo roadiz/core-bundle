@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -33,6 +34,7 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
  *     @ORM\Index(columns={"raw", "private"}),
  *     @ORM\Index(columns={"mime_type"})
  * })
+ * @ApiFilter(ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
  */
 class Document extends AbstractDocument implements AdvancedDocumentInterface, HasThumbnailInterface, SizeableInterface, TimeableInterface, DisplayableInterface
 {

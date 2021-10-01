@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -47,6 +48,7 @@ use Gedmo\Mapping\Annotation as Gedmo;
  * })
  * @ORM\HasLifecycleCallbacks
  * @Gedmo\Loggable(logEntryClass="RZ\Roadiz\CoreBundle\Entity\UserLogEntry")
+ * @ApiFilter(ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
  */
 class Node extends AbstractDateTimedPositioned implements LeafInterface, AttributableInterface, Loggable
 {

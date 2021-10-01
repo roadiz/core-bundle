@@ -45,6 +45,11 @@ services:
         shared: false
         public: true
 
+    RZ\Roadiz\CoreBundle\Api\Filter\:
+        resource: './src/Api/Filter'
+        autowire: true
+        tags: [ { name: 'api_platform.filter' } ]
+
     RZ\Roadiz\Document\EventSubscriber\:
         resource: '%kernel.project_dir%/vendor/roadiz/documents/src/Roadiz/Document/EventSubscriber/'
         autowire: true

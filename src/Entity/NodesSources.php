@@ -16,6 +16,9 @@ use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
+use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
 
 /**
  * NodesSources store Node content according to a translation and a NodeType.
@@ -40,6 +43,10 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\DiscriminatorColumn(name="discr", type="string")
  * @ORM\HasLifecycleCallbacks
  * @Gedmo\Loggable(logEntryClass="RZ\Roadiz\CoreBundle\Entity\UserLogEntry")
+ * @ApiFilter(ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
+ * @ApiFilter(RoadizFilter\DiscriminatorFilter::class)
+ * @ApiFilter(RoadizFilter\LocaleFilter::class)
+ * @ApiFilter(RoadizFilter\PublishableFilter::class)
  */
 class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggable
 {
@@ -65,6 +72,28 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @ORM\JoinColumn(name="node_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
      * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
+     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
+     *     "node.id": "exact",
+     *     "node.nodeName": "exact",
+     *     "node.parent": "exact",
+     *     "node.tags": "exact",
+     *     "node.tags.tagName": "exact",
+     *     "node.nodeType": "exact",
+     *     "node.nodeType.nodeTypeName": "exact"
+     * })
+     * @ApiFilter(BaseFilter\OrderFilter::class, properties={
+     *     "node.position",
+     *     "node.createdAt",
+     *     "node.updatedAt"
+     * })
+     * @ApiFilter(BaseFilter\DateFilter::class, properties={
+     *     "node.createdAt",
+     *     "node.updatedAt"
+     * })
+     * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
+     *     "node.visible",
+     *     "node.home"
+     * })
      */
     private ?Node $node = null;
 
@@ -108,6 +137,10 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @Serializer\Groups({"nodes_sources", "log_sources"})
      * @Serializer\Exclude(if="!object.isReachable()")
      * @SymfonySerializer\Ignore
+     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
+     *     "translation.id": "exact",
+     *     "translation.locale": "exact",
+     * })
      */
     private ?Translation $translation = null;
 
@@ -334,6 +367,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @Serializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
      * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
      * @Gedmo\Versioned
+     * @ApiFilter(BaseFilter\SearchFilter::class, strategy: 'partial')
      */
     protected ?string $title = null;
 
@@ -362,6 +396,8 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base"})
      * @Gedmo\Versioned
      * @Serializer\Exclude(if="!object.isPublishable()")
+     * @ApiFilter(BaseFilter\DateFilter::class)
+     * @ApiFilter(BaseFilter\OrderFilter::class)
      */
     protected ?\DateTime $publishedAt = null;
 
@@ -389,6 +425,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @SymfonySerializer\Groups({"nodes_sources"})
      * @Gedmo\Versioned
      * @Serializer\Exclude(if="!object.isReachable()")
+     * @ApiFilter(BaseFilter\SearchFilter::class, strategy: 'partial')
      */
     protected string $metaTitle = '';
 
@@ -444,6 +481,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @Serializer\Groups({"nodes_sources"})
      * @SymfonySerializer\Groups({"nodes_sources"})
      * @Serializer\Exclude(if="!object.isReachable()")
+     * @ApiFilter(BaseFilter\SearchFilter::class, strategy: 'partial')
      * @Gedmo\Versioned
      */
     protected string $metaDescription = '';
