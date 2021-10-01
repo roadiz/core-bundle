@@ -46,7 +46,7 @@ services:
         public: true
 
     RZ\Roadiz\CoreBundle\Api\Filter\:
-        resource: './src/Api/Filter'
+        resource: '../src/Api/Filter/'
         autowire: true
         tags: [ { name: 'api_platform.filter' } ]
 
