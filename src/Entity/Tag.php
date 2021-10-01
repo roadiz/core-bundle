@@ -13,6 +13,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimedPositioned;
 use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
 use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
 use RZ\Roadiz\Utils\StringHandler;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 
 /**
  * Tags are hierarchical entities used
@@ -32,6 +33,11 @@ use RZ\Roadiz\Utils\StringHandler;
  *     @ORM\Index(columns={"parent_tag_id", "visible", "position"}, name="tag_parent_visible_position")
  * })
  * @ApiFilter(ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
+ * @ApiFilter(BaseFilter\OrderFilter::class, properties={
+ *     "position",
+ *     "createdAt",
+ *     "updatedAt"
+ * })
  */
 class Tag extends AbstractDateTimedPositioned implements LeafInterface
 {
@@ -51,6 +57,10 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @var Tag|null
      * @Serializer\Exclude
      * @SymfonySerializer\Ignore
+     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
+     *     "parent.id": "exact",
+     *     "parent.nodeName": "exact"
+     * })
      */
     protected ?LeafInterface $parent = null;
     /**
@@ -85,6 +95,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @SymfonySerializer\Groups({"tag", "tag_base", "node", "nodes_sources"})
      * @Serializer\Type("string")
      * @Serializer\Accessor(getter="getTagName", setter="setTagName")
+     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
      */
     private string $tagName = '';
     /**
@@ -98,6 +109,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @Serializer\Groups({"tag", "tag_base", "node", "nodes_sources"})
      * @SymfonySerializer\Groups({"tag", "tag_base", "node", "nodes_sources"})
      * @Serializer\Type("bool")
+     * @ApiFilter(BaseFilter\BooleanFilter::class)
      */
     private bool $visible = true;
 

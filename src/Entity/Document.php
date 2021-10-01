@@ -19,6 +19,7 @@ use RZ\Roadiz\Core\Models\TimeableInterface;
 use RZ\Roadiz\Utils\StringHandler;
 use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 
 /**
  * Documents entity represent a file on server with datetime and naming.
@@ -66,6 +67,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("string")
+     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="exact")
      */
     protected ?string $embedPlatform = null;
     /**
@@ -119,6 +121,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("string")
      * @var string|null
+     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
      */
     private ?string $filename = null;
     /**
@@ -127,6 +130,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("string")
      * @var string|null
+     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="exact")
      */
     private ?string $mimeType = null;
     /**

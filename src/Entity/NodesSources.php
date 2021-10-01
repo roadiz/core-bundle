@@ -367,7 +367,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @Serializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
      * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
      * @Gedmo\Versioned
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy: 'partial')
+     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
      */
     protected ?string $title = null;
 
@@ -425,7 +425,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @SymfonySerializer\Groups({"nodes_sources"})
      * @Gedmo\Versioned
      * @Serializer\Exclude(if="!object.isReachable()")
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy: 'partial')
+     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
      */
     protected string $metaTitle = '';
 
@@ -481,7 +481,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @Serializer\Groups({"nodes_sources"})
      * @SymfonySerializer\Groups({"nodes_sources"})
      * @Serializer\Exclude(if="!object.isReachable()")
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy: 'partial')
+     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
      * @Gedmo\Versioned
      */
     protected string $metaDescription = '';
