@@ -50,6 +50,10 @@ services:
         autowire: true
         tags: [ { name: 'api_platform.filter' } ]
 
+    RZ\Roadiz\CoreBundle\Serializer\TranslationAwareNormalizer:
+        tags:
+            - { name: 'serializer.normalizer', priority: 64 }
+
     RZ\Roadiz\Document\EventSubscriber\:
         resource: '%kernel.project_dir%/vendor/roadiz/documents/src/Roadiz/Document/EventSubscriber/'
         autowire: true
