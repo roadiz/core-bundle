@@ -43,7 +43,7 @@ use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
  * @ORM\DiscriminatorColumn(name="discr", type="string")
  * @ORM\HasLifecycleCallbacks
  * @Gedmo\Loggable(logEntryClass="RZ\Roadiz\CoreBundle\Entity\UserLogEntry")
- * @ApiFilter(ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
+ * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
  * @ApiFilter(RoadizFilter\DiscriminatorFilter::class)
  * @ApiFilter(RoadizFilter\LocaleFilter::class)
  * @ApiFilter(RoadizFilter\PublishableFilter::class)

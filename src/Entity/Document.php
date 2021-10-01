@@ -35,7 +35,12 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
  *     @ORM\Index(columns={"raw", "private"}),
  *     @ORM\Index(columns={"mime_type"})
  * })
- * @ApiFilter(ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
+ * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
+ * @ApiFilter(BaseFilter\OrderFilter::class, properties={
+ *     "createdAt",
+ *     "updatedAt",
+ *     "filesize"
+ * })
  */
 class Document extends AbstractDocument implements AdvancedDocumentInterface, HasThumbnailInterface, SizeableInterface, TimeableInterface, DisplayableInterface
 {

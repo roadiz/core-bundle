@@ -32,7 +32,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
  *     @ORM\Index(columns={"parent_tag_id", "visible"}, name="tag_parent_visible"),
  *     @ORM\Index(columns={"parent_tag_id", "visible", "position"}, name="tag_parent_visible_position")
  * })
- * @ApiFilter(ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
+ * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
  * @ApiFilter(BaseFilter\OrderFilter::class, properties={
  *     "position",
  *     "createdAt",

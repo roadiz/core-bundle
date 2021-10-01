@@ -27,7 +27,7 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
  *     @ORM\Index(columns={"available", "locale"}),
  *     @ORM\Index(columns={"available", "override_locale"})
  * })
- * @ApiFilter(ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
+ * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
  */
 class Translation extends AbstractDateTimed implements TranslationInterface
 {
