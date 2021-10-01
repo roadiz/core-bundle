@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Filter;
 
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryBuilderHelper;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
@@ -74,9 +76,15 @@ final class PublishableFilter extends GeneratedEntityFilter
              */
             if ($resourceClass === NodesSources::class ||
                 preg_match($this->getGeneratedEntityNamespacePattern(), $resourceClass) > 0) {
-                $join = $this->addJoinsForNestedProperty('node', 'o', $queryBuilder, $queryNameGenerator);
+                $alias = QueryBuilderHelper::addJoinOnce(
+                    $queryBuilder,
+                    $queryNameGenerator,
+                    'o',
+                    'node',
+                    Join::INNER_JOIN
+                );
                 $queryBuilder
-                    ->andWhere($queryBuilder->expr()->lte($join['alias'] . '.status', ':status'))
+                    ->andWhere($queryBuilder->expr()->lte($alias . '.status', ':status'))
                     ->setParameter(':status', Node::PUBLISHED);
                 return;
             }
@@ -97,10 +105,16 @@ final class PublishableFilter extends GeneratedEntityFilter
          */
         if ($resourceClass === NodesSources::class ||
             preg_match($this->getGeneratedEntityNamespacePattern(), $resourceClass) > 0) {
-            $join = $this->addJoinsForNestedProperty('node', 'o', $queryBuilder, $queryNameGenerator);
+            $alias = QueryBuilderHelper::addJoinOnce(
+                $queryBuilder,
+                $queryNameGenerator,
+                'o',
+                'node',
+                Join::INNER_JOIN
+            );
             $queryBuilder
                 ->andWhere($queryBuilder->expr()->lte('o.publishedAt', ':lte_published_at'))
-                ->andWhere($queryBuilder->expr()->eq($join['alias'] . '.status', ':status'))
+                ->andWhere($queryBuilder->expr()->eq($alias . '.status', ':status'))
                 ->setParameter(':lte_published_at', new \DateTime())
                 ->setParameter(':status', Node::PUBLISHED);
             return;
@@ -109,9 +123,15 @@ final class PublishableFilter extends GeneratedEntityFilter
          * Apply publication filter for Nodes
          */
         if ($resourceClass === Node::class) {
-            $join = $this->addJoinsForNestedProperty('nodeSources', 'o', $queryBuilder, $queryNameGenerator);
+            $alias = QueryBuilderHelper::addJoinOnce(
+                $queryBuilder,
+                $queryNameGenerator,
+                'o',
+                'nodeSources',
+                Join::INNER_JOIN
+            );
             $queryBuilder
-                ->andWhere($queryBuilder->expr()->lte($join['alias'] . '.publishedAt', ':lte_published_at'))
+                ->andWhere($queryBuilder->expr()->lte($alias . '.publishedAt', ':lte_published_at'))
                 ->andWhere($queryBuilder->expr()->eq('o.status', ':status'))
                 ->setParameter(':lte_published_at', new \DateTime())
                 ->setParameter(':status', Node::PUBLISHED);
