@@ -76,10 +76,11 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      *     "node.id": "exact",
      *     "node.nodeName": "exact",
      *     "node.parent": "exact",
+     *     "node.parent.nodeName": "exact",
      *     "node.tags": "exact",
      *     "node.tags.tagName": "exact",
      *     "node.nodeType": "exact",
-     *     "node.nodeType.nodeTypeName": "exact"
+     *     "node.nodeType.name": "exact"
      * })
      * @ApiFilter(BaseFilter\OrderFilter::class, properties={
      *     "node.position",
@@ -92,7 +93,9 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * })
      * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
      *     "node.visible",
-     *     "node.home"
+     *     "node.home",
+     *     "node.nodeType.reachable",
+     *     "node.nodeType.publishable"
      * })
      */
     private ?Node $node = null;

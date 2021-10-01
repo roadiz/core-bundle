@@ -141,6 +141,15 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @var Collection<Node>
      * @Serializer\Exclude
      * @SymfonySerializer\Ignore
+     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
+     *     "node.id": "exact",
+     *     "node.nodeName": "exact",
+     *     "node.parent": "exact",
+     *     "node.tags": "exact",
+     *     "node.tags.tagName": "exact",
+     *     "node.nodeType": "exact",
+     *     "node.nodeType.name": "exact"
+     * })
      */
     private Collection $nodes;
 
