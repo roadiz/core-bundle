@@ -20,7 +20,7 @@ class AuthenticationSuccessHandler extends DefaultAuthenticationSuccessHandler i
 {
     protected ?RememberMeServicesInterface $rememberMeServices;
     protected ?LoginAttemptManager $loginAttemptManager = null;
-    private ManagerRegistry $managerRegistry;
+    protected ManagerRegistry $managerRegistry;
 
     /**
      * @param HttpUtils $httpUtils
