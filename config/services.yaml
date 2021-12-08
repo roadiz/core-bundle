@@ -110,6 +110,8 @@ services:
             - '%roadiz_core.entity_generator_factory.options%'
 
     RZ\Roadiz\CoreBundle\EntityHandler\TranslationHandler:
+        public: true
+        shared: false
         arguments:
             - '@doctrine.orm.cache.provider.cache.doctrine.orm.default.result'
 
