@@ -11,7 +11,8 @@ use RZ\Roadiz\CoreBundle\Exception\EntityAlreadyExistsException;
 
 class TagObjectConstructor extends AbstractTypedObjectConstructor
 {
-    const EXCEPTION_ON_EXISTING_TAG = 'exception_on_existing_tag';
+    public const EXCEPTION_ON_EXISTING_TAG = 'exception_on_existing_tag';
+
     /**
      * @inheritDoc
      */

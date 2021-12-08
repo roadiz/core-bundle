@@ -7,7 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
-use RZ\Roadiz\Core\Repositories\NodeRepository;
+use RZ\Roadiz\CoreBundle\Repository\NodeRepository;
 use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;

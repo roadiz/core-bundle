@@ -6,9 +6,10 @@ namespace RZ\Roadiz\CoreBundle\Xlsx;
 
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Persistence\ObjectManager;
-use RZ\Roadiz\Core\Entities\NodesSources;
-use RZ\Roadiz\Core\Entities\NodeType;
-use RZ\Roadiz\Core\Entities\NodeTypeField;
+use RZ\Roadiz\Core\AbstractEntities\AbstractField;
+use RZ\Roadiz\CoreBundle\Entity\NodesSources;
+use RZ\Roadiz\CoreBundle\Entity\NodeType;
+use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -115,28 +116,28 @@ class NodeSourceXlsxSerializer extends AbstractXlsxSerializer
 
         if (true === $this->onlyTexts) {
             $criteria['type'] = [
-                NodeTypeField::STRING_T,
-                NodeTypeField::TEXT_T,
-                NodeTypeField::MARKDOWN_T,
-                NodeTypeField::RICHTEXT_T,
+                AbstractField::STRING_T,
+                AbstractField::TEXT_T,
+                AbstractField::MARKDOWN_T,
+                AbstractField::RICHTEXT_T,
             ];
         } else {
             $criteria['type'] = [
-                NodeTypeField::STRING_T,
-                NodeTypeField::DATETIME_T,
-                NodeTypeField::DATE_T,
-                NodeTypeField::RICHTEXT_T,
-                NodeTypeField::TEXT_T,
-                NodeTypeField::MARKDOWN_T,
-                NodeTypeField::BOOLEAN_T,
-                NodeTypeField::INTEGER_T,
-                NodeTypeField::DECIMAL_T,
-                NodeTypeField::EMAIL_T,
-                NodeTypeField::ENUM_T,
-                NodeTypeField::MULTIPLE_T,
-                NodeTypeField::COLOUR_T,
-                NodeTypeField::GEOTAG_T,
-                NodeTypeField::MULTI_GEOTAG_T,
+                AbstractField::STRING_T,
+                AbstractField::DATETIME_T,
+                AbstractField::DATE_T,
+                AbstractField::RICHTEXT_T,
+                AbstractField::TEXT_T,
+                AbstractField::MARKDOWN_T,
+                AbstractField::BOOLEAN_T,
+                AbstractField::INTEGER_T,
+                AbstractField::DECIMAL_T,
+                AbstractField::EMAIL_T,
+                AbstractField::ENUM_T,
+                AbstractField::MULTIPLE_T,
+                AbstractField::COLOUR_T,
+                AbstractField::GEOTAG_T,
+                AbstractField::MULTI_GEOTAG_T,
             ];
         }
 

@@ -19,32 +19,32 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  */
 class Font extends AbstractDateTimed
 {
-    const REGULAR = 0;
-    const ITALIC = 1;
-    const BOLD = 2;
-    const BOLD_ITALIC = 3;
-    const LIGHT = 4;
-    const LIGHT_ITALIC = 5;
-    const MEDIUM = 6;
-    const MEDIUM_ITALIC = 7;
-    const BLACK = 8;
-    const BLACK_ITALIC = 9;
-    const THIN = 10;
-    const THIN_ITALIC = 11;
-    const EXTRA_LIGHT = 12;
-    const EXTRA_LIGHT_ITALIC = 13;
-    const SEMI_BOLD = 14;
-    const SEMI_BOLD_ITALIC = 15;
-    const EXTRA_BOLD = 16;
-    const EXTRA_BOLD_ITALIC = 17;
+    public const REGULAR = 0;
+    public const ITALIC = 1;
+    public const BOLD = 2;
+    public const BOLD_ITALIC = 3;
+    public const LIGHT = 4;
+    public const LIGHT_ITALIC = 5;
+    public const MEDIUM = 6;
+    public const MEDIUM_ITALIC = 7;
+    public const BLACK = 8;
+    public const BLACK_ITALIC = 9;
+    public const THIN = 10;
+    public const THIN_ITALIC = 11;
+    public const EXTRA_LIGHT = 12;
+    public const EXTRA_LIGHT_ITALIC = 13;
+    public const SEMI_BOLD = 14;
+    public const SEMI_BOLD_ITALIC = 15;
+    public const EXTRA_BOLD = 16;
+    public const EXTRA_BOLD_ITALIC = 17;
 
-    const MIME_DEFAULT = 'application/octet-stream';
-    const MIME_SVG = 'image/svg+xml';
-    const MIME_TTF = 'application/x-font-truetype';
-    const MIME_OTF = 'application/x-font-opentype';
-    const MIME_WOFF = 'application/font-woff';
-    const MIME_WOFF2 = 'application/font-woff2';
-    const MIME_EOT = 'application/vnd.ms-fontobject';
+    public const MIME_DEFAULT = 'application/octet-stream';
+    public const MIME_SVG = 'image/svg+xml';
+    public const MIME_TTF = 'application/x-font-truetype';
+    public const MIME_OTF = 'application/x-font-opentype';
+    public const MIME_WOFF = 'application/font-woff';
+    public const MIME_WOFF2 = 'application/font-woff2';
+    public const MIME_EOT = 'application/vnd.ms-fontobject';
 
     /**
      * Get readable variant association

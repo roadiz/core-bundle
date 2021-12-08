@@ -6,7 +6,7 @@ namespace RZ\Roadiz\CoreBundle\ListManager;
 
 interface EntityListManagerInterface
 {
-    const ITEM_PER_PAGE = 20;
+    public const ITEM_PER_PAGE = 20;
 
     /**
      * @return bool

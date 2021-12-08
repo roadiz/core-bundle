@@ -1,14 +1,11 @@
 parameters:
-    level: 3
+    level: 2
     paths:
         - src
     excludes_analyse:
         - */node_modules/*
         - */bower_components/*
         - */static/*
-    doctrine:
-        repositoryClass: RZ\Roadiz\CoreBundle\Repository\EntityRepository
-        objectManagerLoader: ./tests/object-manager.php
     ignoreErrors:
         - '#Class GeneratedNodeSources\\NS([a-zA-Z]+) not found#'
         - '#Call to method ([a-zA-Z]+)\(\) on an unknown class GeneratedNodeSources\\NS([a-zA-Z]+)#'
@@ -37,6 +34,3 @@ parameters:
     reportUnmatchedIgnoredErrors: false
     checkGenericClassInNonGenericObjectType: false
     checkMissingIterableValueType: false
-includes:
-    - vendor/phpstan/phpstan-doctrine/extension.neon
-    - vendor/phpstan/phpstan-doctrine/rules.neon

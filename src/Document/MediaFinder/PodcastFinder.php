@@ -6,8 +6,8 @@ namespace RZ\Roadiz\CoreBundle\Document\MediaFinder;
 
 use Doctrine\Persistence\ObjectManager;
 use GuzzleHttp\Exception\ClientException;
-use RZ\Roadiz\Core\Entities\DocumentTranslation;
-use RZ\Roadiz\Core\Entities\Translation;
+use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
+use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\Utils\MediaFinders\AbstractPodcastFinder;
 

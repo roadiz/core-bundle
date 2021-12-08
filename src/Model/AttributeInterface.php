@@ -13,49 +13,49 @@ interface AttributeInterface extends PersistableInterface
     /**
      * String field is a simple 255 characters long text.
      */
-    const STRING_T = 0;
+    public const STRING_T = 0;
     /**
      * DateTime field is a combined Date and Time.
      */
-    const DATETIME_T = 1;
+    public const DATETIME_T = 1;
     /**
      * Boolean field is a simple switch between 0 and 1.
      */
-    const BOOLEAN_T = 5;
+    public const BOOLEAN_T = 5;
     /**
      * Integer field is a non-floating number.
      */
-    const INTEGER_T = 6;
+    public const INTEGER_T = 6;
     /**
      * Decimal field is a floating number.
      */
-    const DECIMAL_T = 7;
+    public const DECIMAL_T = 7;
     /**
      * Decimal field has a percent for rendering.
      */
-    const PERCENT_T = 26;
+    public const PERCENT_T = 26;
     /**
      * Email field is a short text which must
      * comply with email rules.
      */
-    const EMAIL_T = 8;
+    public const EMAIL_T = 8;
     /**
      * Colour field is a hexadecimal string which is rendered
      * with a colour chooser.
      */
-    const COLOUR_T = 11;
+    public const COLOUR_T = 11;
     /**
      * Enum field is a simple select box with default values.
      */
-    const ENUM_T = 15;
+    public const ENUM_T = 15;
     /**
      * @see \DateTime
      */
-    const DATE_T = 22;
+    public const DATE_T = 22;
     /**
      * ISO Country
      */
-    const COUNTRY_T = 25;
+    public const COUNTRY_T = 25;
 
     /**
      * @return string
