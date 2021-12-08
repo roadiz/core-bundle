@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Serializer;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -47,7 +48,7 @@ class TranslationAwareNormalizer implements ContextAwareNormalizerInterface, Nor
         return $this->normalizer->normalize($object, $format, $context);
     }
 
-    private function getTranslationFromRequest(): ?Translation
+    private function getTranslationFromRequest(): ?TranslationInterface
     {
         $request = $this->requestStack->getMainRequest();
         if (null !== $request && !empty($request->query->get('_locale'))) {

@@ -335,7 +335,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
-     * @param float
+     * @param float $priority
      * @return $this
      */
     public function setPriority(float $priority)
@@ -354,7 +354,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     private bool $hideChildren = false;
 
     /**
-     * @return mixed
+     * @return bool
      */
     public function getHideChildren(): bool
     {
@@ -362,7 +362,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
-     * @param mixed $hideChildren
+     * @param bool $hideChildren
      * @return Node
      */
     public function setHideChildren(bool $hideChildren)
@@ -381,7 +381,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
-     * @param boolean $hideChildren
+     * @param bool $hideChildren
      *
      * @return $this
      */

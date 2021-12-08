@@ -56,7 +56,7 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
     private bool $excludeFromSearch = false;
 
     /**
-     * @var NodeType|null
+     * @var NodeTypeInterface|null
      * @ORM\ManyToOne(targetEntity="NodeType", inversedBy="fields")
      * @ORM\JoinColumn(name="node_type_id", onDelete="CASCADE")
      * @Serializer\Exclude()
@@ -101,9 +101,9 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
     private bool $excludedFromSerialization = false;
 
     /**
-     * @return NodeType|null
+     * @return NodeTypeInterface|null
      */
-    public function getNodeType()
+    public function getNodeType(): ?NodeTypeInterface
     {
         return $this->nodeType;
     }
