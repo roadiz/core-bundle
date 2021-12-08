@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EntityHandler;
@@ -261,7 +262,7 @@ class TagHandler extends AbstractHandler
     {
         $tags = $this->objectManager
             ->getRepository(Tag::class)
-            ->findBy(['parent' => null], ['position'=>'ASC']);
+            ->findBy(['parent' => null], ['position' => 'ASC']);
 
         $i = 1;
         /** @var Tag $child */

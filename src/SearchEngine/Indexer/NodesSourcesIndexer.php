@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\SearchEngine\Indexer;
@@ -91,7 +92,7 @@ class NodesSourcesIndexer extends AbstractIndexer
 
         $baseQb = $this->getAllQueryBuilder()->addSelect('n');
         if ($batchCount > 1) {
-            $limit = round($count/$batchCount);
+            $limit = round($count / $batchCount);
             $offset = $batchNumber * $limit;
             if ($batchNumber === $batchCount - 1) {
                 $limit = $count - $offset;

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EntityHandler;
@@ -117,7 +118,7 @@ class NodeTypeHandler extends AbstractHandler
             $content = $classGenerator->getClassContent();
 
             if (false === @file_put_contents($file, $content)) {
-                throw new IOException("Impossible to write entity class file (".$file.").", 1);
+                throw new IOException("Impossible to write entity class file (" . $file . ").", 1);
             }
             /*
              * Force Zend OPcache to reset file

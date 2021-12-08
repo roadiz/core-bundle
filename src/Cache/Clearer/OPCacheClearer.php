@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Cache\Clearer;
@@ -9,8 +10,10 @@ final class OPCacheClearer implements ClearerInterface
 
     public function clear(): bool
     {
-        if (\function_exists('opcache_reset') &&
-            true === \opcache_reset()) {
+        if (
+            \function_exists('opcache_reset') &&
+            true === \opcache_reset()
+        ) {
             $this->output = 'PHP OPCache has been reset.';
             return true;
         } else {

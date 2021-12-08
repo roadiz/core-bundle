@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -59,15 +60,17 @@ class NodeApplyUniversalFieldsCommand extends Command
             ->setParameter(':translation', $translation);
         try {
             $sources = $qb->getQuery()->getResult();
-            $io->note(count($sources).' node(s) with universal fields were found.');
+            $io->note(count($sources) . ' node(s) with universal fields were found.');
 
             $question = new ConfirmationQuestion(
                 '<question>Are you sure to force every universal fields?</question>',
                 false
             );
-            if ($io->askQuestion(
-                $question
-            )) {
+            if (
+                $io->askQuestion(
+                    $question
+                )
+            ) {
                 $io->progressStart(count($sources));
 
                 /** @var NodesSources $source */

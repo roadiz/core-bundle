@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -53,9 +54,11 @@ class TranslationsDisableCommand extends Command
                 '<question>Are you sure to disable ' . $translation->getName() . ' (' . $translation->getLocale() . ') translation?</question>',
                 false
             );
-            if ($io->askQuestion(
-                $confirmation
-            )) {
+            if (
+                $io->askQuestion(
+                    $confirmation
+                )
+            ) {
                 $translation->setAvailable(false);
                 $this->managerRegistry->getManagerForClass(Translation::class)->flush();
                 $io->success('Translation disabled.');

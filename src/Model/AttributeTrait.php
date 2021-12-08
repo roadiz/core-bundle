@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Model;
@@ -202,8 +203,10 @@ trait AttributeTrait
                 }
             );
 
-            if ($attributeTranslation->first() &&
-                $attributeTranslation->first()->getLabel() !== '') {
+            if (
+                $attributeTranslation->first() &&
+                $attributeTranslation->first()->getLabel() !== ''
+            ) {
                 return $attributeTranslation->first()->getLabel();
             }
         }

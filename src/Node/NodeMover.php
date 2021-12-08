@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Node;
@@ -130,7 +131,7 @@ class NodeMover
             }
             $paths[$nodeSource->getTranslation()->getLocale()] = $url;
             $this->logger->debug(
-                'Redirect '.$nodeSource->getId().' '.$nodeSource->getTranslation()->getLocale().': '.$url
+                'Redirect ' . $nodeSource->getId() . ' ' . $nodeSource->getTranslation()->getLocale() . ': ' . $url
             );
             $lastUrl = $url;
         }

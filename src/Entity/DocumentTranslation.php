@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
@@ -106,23 +107,23 @@ class DocumentTranslation extends AbstractEntity implements Loggable
      * @ORM\JoinColumn(name="translation_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
      * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @var Translation|null
+     * @var TranslationInterface|null
      */
     protected ?TranslationInterface $translation = null;
 
     /**
-     * @return Translation
+     * @return TranslationInterface
      */
-    public function getTranslation(): Translation
+    public function getTranslation(): TranslationInterface
     {
         return $this->translation;
     }
 
     /**
-     * @param Translation $translation
+     * @param TranslationInterface $translation
      * @return $this
      */
-    public function setTranslation(Translation $translation): DocumentTranslation
+    public function setTranslation(TranslationInterface $translation): DocumentTranslation
     {
         $this->translation = $translation;
 

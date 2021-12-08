@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
@@ -21,7 +22,7 @@ class ColorType extends AbstractType
 
         $view->vars['attr']['class'] = 'colorpicker-input';
     }
-    
+
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefault('required', false);

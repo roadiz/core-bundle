@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -52,10 +53,10 @@ class GenerateNodeSourceEntitiesCommand extends Command
                 $handler = $this->handlerFactory->getHandler($nt);
                 $handler->removeSourceEntityClass();
                 $handler->generateSourceEntityClass();
-                $io->writeln("* Source class <info>".$nt->getSourceEntityClassName()."</info> has been generated.");
+                $io->writeln("* Source class <info>" . $nt->getSourceEntityClassName() . "</info> has been generated.");
 
                 if ($output->isVeryVerbose()) {
-                    $io->writeln("\t<info>".$handler->getSourceClassPath()."</info>");
+                    $io->writeln("\t<info>" . $handler->getSourceClassPath() . "</info>");
                 }
             }
             return 0;

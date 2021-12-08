@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
@@ -80,7 +81,7 @@ final class TranslationRepository extends EntityRepository
         $query = $qb->getQuery();
         $query->enableResultCache(120, 'RZTranslationExists-' . $locale);
 
-        return (boolean) $query->getSingleScalarResult();
+        return (bool) $query->getSingleScalarResult();
     }
 
     /**

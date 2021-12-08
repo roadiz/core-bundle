@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
@@ -44,8 +45,10 @@ final class LoggableUsernameSubscriber implements EventSubscriberInterface
         if ($event->isMasterRequest()) {
             $token = $this->tokenStorage->getToken();
             if ($token && $token->getUsername() !== '') {
-                if ($this->loggableListener instanceof UserLoggableListener &&
-                    $token->getUser() instanceof User) {
+                if (
+                    $this->loggableListener instanceof UserLoggableListener &&
+                    $token->getUser() instanceof User
+                ) {
                     $this->loggableListener->setUser($token->getUser());
                 } else {
                     $this->loggableListener->setUsername($token->getUsername());

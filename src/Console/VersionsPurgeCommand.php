@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -90,9 +91,11 @@ EOT
             $count,
             $dateTime->format('c')
         ), false);
-        if (!$input->isInteractive() || $io->askQuestion(
-            $question
-        )) {
+        if (
+            !$input->isInteractive() || $io->askQuestion(
+                $question
+            )
+        ) {
             $qb = $em->getRepository(UserLogEntry::class)->createQueryBuilder('l');
             $result = $qb->delete(UserLogEntry::class, 'l')
                 ->where($qb->expr()->lt('l.loggedAt', ':loggedAt'))
@@ -115,9 +118,11 @@ EOT
             'Do you want to purge all entities versions and to keep only the <info>latest %s</info>?',
             $count
         ), false);
-        if (!$input->isInteractive() || $io->askQuestion(
-            $question
-        )) {
+        if (
+            !$input->isInteractive() || $io->askQuestion(
+                $question
+            )
+        ) {
             $qb = $em->getRepository(UserLogEntry::class)->createQueryBuilder('l');
             $objects = $qb->select('MAX(l.version) as maxVersion', 'l.objectId', 'l.objectClass')
                 ->groupBy('l.objectId', 'l.objectClass')

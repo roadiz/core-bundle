@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
@@ -110,10 +111,12 @@ final class NodeRepository extends StatusAwareRepository
      */
     protected function filterByTranslation(array $criteria, QueryBuilder $qb, TranslationInterface $translation = null)
     {
-        if (isset($criteria['translation']) ||
+        if (
+            isset($criteria['translation']) ||
             isset($criteria['translation.locale']) ||
             isset($criteria['translation.id']) ||
-            isset($criteria['translation.available'])) {
+            isset($criteria['translation.available'])
+        ) {
             $qb->innerJoin(static::NODE_ALIAS . '.nodeSources', static::NODESSOURCES_ALIAS);
             $qb->innerJoin(static::NODESSOURCES_ALIAS . '.translation', static::TRANSLATION_ALIAS);
         } else {
@@ -322,8 +325,10 @@ final class NodeRepository extends StatusAwareRepository
         $query = $qb->getQuery();
         $this->dispatchQueryEvent($query);
 
-        if (null !== $limit &&
-            null !== $offset) {
+        if (
+            null !== $limit &&
+            null !== $offset
+        ) {
             /*
              * We need to use Doctrine paginator
              * if a limit is set because of the default inner join
@@ -659,7 +664,7 @@ final class NodeRepository extends StatusAwareRepository
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select('n, ns, ua')
             ->innerJoin('n.nodeSources', static::NODESSOURCES_ALIAS)
-            ->leftJoin(static::NODESSOURCES_ALIAS.'.urlAliases', 'ua')
+            ->leftJoin(static::NODESSOURCES_ALIAS . '.urlAliases', 'ua')
             ->andWhere($qb->expr()->eq('ns.translation', ':translation'))
             ->setParameter('translation', $translation)
             ->addOrderBy('n.position', 'ASC')
@@ -787,7 +792,7 @@ final class NodeRepository extends StatusAwareRepository
             ->setMaxResults(1)
         ;
 
-        return (boolean) $qb->getQuery()->getSingleScalarResult();
+        return (bool) $qb->getQuery()->getSingleScalarResult();
     }
 
     /**

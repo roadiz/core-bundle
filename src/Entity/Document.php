@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
@@ -761,7 +762,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
             return $translation->getName();
         }
         if (!empty($this->getEmbedPlatform())) {
-            return $this->getEmbedPlatform() . ' ('.$this->getEmbedId().')';
+            return $this->getEmbedPlatform() . ' (' . $this->getEmbedId() . ')';
         }
         return (string) $this->getId();
     }

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Filter;
@@ -47,8 +48,10 @@ final class LocaleFilter extends GeneratedEntityFilter
             /*
              * Apply translation filter only for NodesSources
              */
-            if ($resourceClass === NodesSources::class ||
-                preg_match($this->getGeneratedEntityNamespacePattern(), $resourceClass) > 0) {
+            if (
+                $resourceClass === NodesSources::class ||
+                preg_match($this->getGeneratedEntityNamespacePattern(), $resourceClass) > 0
+            ) {
                 $translation = $this->managerRegistry
                     ->getRepository(Translation::class)
                     ->findOneAvailableByLocaleOrOverrideLocale($value);

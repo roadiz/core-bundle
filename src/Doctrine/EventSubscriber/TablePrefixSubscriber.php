@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber;
@@ -44,7 +45,7 @@ final class TablePrefixSubscriber implements EventSubscriber
         if (!empty($this->tablesPrefix) && $this->tablesPrefix !== '') {
             // the $metadata is all the mapping info for this class
             $metadata = $eventArgs->getClassMetadata();
-            $metadata->table['name'] = $this->tablesPrefix.'_'.$metadata->table['name'];
+            $metadata->table['name'] = $this->tablesPrefix . '_' . $metadata->table['name'];
 
             /*
              * Prefix join tables
@@ -52,7 +53,7 @@ final class TablePrefixSubscriber implements EventSubscriber
             foreach ($metadata->associationMappings as $key => $association) {
                 if (!empty($association['joinTable']['name'])) {
                     $metadata->associationMappings[$key]['joinTable']['name'] =
-                        $this->tablesPrefix.'_'.$association['joinTable']['name'];
+                        $this->tablesPrefix . '_' . $association['joinTable']['name'];
                 }
             }
         }

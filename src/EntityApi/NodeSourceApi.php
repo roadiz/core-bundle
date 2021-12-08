@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EntityApi;
@@ -25,10 +26,12 @@ class NodeSourceApi extends AbstractApi
         if (isset($criteria['node.nodeType']) && $criteria['node.nodeType'] instanceof NodeType) {
             $this->repository = $criteria['node.nodeType']->getSourceEntityFullQualifiedClassName();
             unset($criteria['node.nodeType']);
-        } elseif (isset($criteria['node.nodeType']) &&
+        } elseif (
+            isset($criteria['node.nodeType']) &&
             is_array($criteria['node.nodeType']) &&
             count($criteria['node.nodeType']) === 1 &&
-            $criteria['node.nodeType'][0] instanceof NodeType) {
+            $criteria['node.nodeType'][0] instanceof NodeType
+        ) {
             $this->repository = $criteria['node.nodeType'][0]->getSourceEntityFullQualifiedClassName();
             unset($criteria['node.nodeType']);
         } else {

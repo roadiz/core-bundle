@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -63,7 +64,7 @@ class LogsCleanupCommand extends Command
             $logs = 0;
         }
 
-        $io->note($logs . ' log entries found before '. $now->format('Y-m-d H:i:s') . '.');
+        $io->note($logs . ' log entries found before ' . $now->format('Y-m-d H:i:s') . '.');
 
         if ($input->getOption('erase') && $logs > 0) {
             $qb2 = $logRepository->createQueryBuilder('l');
@@ -73,7 +74,7 @@ class LogsCleanupCommand extends Command
             ;
             try {
                 $numDeleted = $qb2->getQuery()->execute();
-                $io->success($numDeleted.' log entries were deleted.');
+                $io->success($numDeleted . ' log entries were deleted.');
             } catch (NoResultException $e) {
                 $io->writeln('No log entries were deleted.');
             }

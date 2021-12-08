@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Doctrine\ORM\Filter;
@@ -52,10 +53,11 @@ class NodeTranslationFilter implements EventSubscriberInterface
                 $qb = $event->getQueryBuilder();
                 $baseKey = $simpleQB->getParameterKey($event->getProperty());
 
-                if (!$simpleQB->joinExists(
-                    $simpleQB->getRootAlias(),
-                    EntityRepository::NODESSOURCES_ALIAS
-                )
+                if (
+                    !$simpleQB->joinExists(
+                        $simpleQB->getRootAlias(),
+                        EntityRepository::NODESSOURCES_ALIAS
+                    )
                 ) {
                     $qb->innerJoin(
                         $simpleQB->getRootAlias() . '.nodeSources',
@@ -63,10 +65,11 @@ class NodeTranslationFilter implements EventSubscriberInterface
                     );
                 }
 
-                if (!$simpleQB->joinExists(
-                    $simpleQB->getRootAlias(),
-                    EntityRepository::TRANSLATION_ALIAS
-                )
+                if (
+                    !$simpleQB->joinExists(
+                        $simpleQB->getRootAlias(),
+                        EntityRepository::TRANSLATION_ALIAS
+                    )
                 ) {
                     $qb->innerJoin(
                         EntityRepository::NODESSOURCES_ALIAS . '.translation',
@@ -94,10 +97,12 @@ class NodeTranslationFilter implements EventSubscriberInterface
                 $qb = $event->getQueryBuilder();
                 $baseKey = $simpleQB->getParameterKey($event->getProperty());
 
-                if (!$simpleQB->joinExists(
-                    $simpleQB->getRootAlias(),
-                    EntityRepository::NODESSOURCES_ALIAS
-                )) {
+                if (
+                    !$simpleQB->joinExists(
+                        $simpleQB->getRootAlias(),
+                        EntityRepository::NODESSOURCES_ALIAS
+                    )
+                ) {
                     $qb->innerJoin(
                         $simpleQB->getRootAlias() . '.nodeSources',
                         EntityRepository::NODESSOURCES_ALIAS

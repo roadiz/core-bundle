@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
@@ -196,9 +197,11 @@ class Role implements PersistableInterface
      */
     public function required(): bool
     {
-        if ($this->getRole() == static::ROLE_DEFAULT ||
+        if (
+            $this->getRole() == static::ROLE_DEFAULT ||
             $this->getRole() == static::ROLE_SUPERADMIN ||
-            $this->getRole() == static::ROLE_BACKEND_USER) {
+            $this->getRole() == static::ROLE_BACKEND_USER
+        ) {
             return true;
         }
 

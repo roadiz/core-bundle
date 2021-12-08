@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
@@ -254,10 +255,12 @@ abstract class EntityRepository extends ServiceEntityRepository
         foreach ($cols as $col) {
             $field = $metadata->getFieldName($col);
             $type = $metadata->getTypeOfField($field);
-            if (in_array($type, $this->searchableTypes) &&
+            if (
+                in_array($type, $this->searchableTypes) &&
                 $field != 'folder' &&
                 $field != 'childrenOrder' &&
-                $field != 'childrenOrderDirection') {
+                $field != 'childrenOrderDirection'
+            ) {
                 $criteriaFields[$field] = '%' . strip_tags((string) $pattern) . '%';
             }
         }
@@ -313,11 +316,15 @@ abstract class EntityRepository extends ServiceEntityRepository
 
         // Add ordering
         foreach ($orders as $key => $value) {
-            if (strpos($key, static::NODE_ALIAS . '.') !== false &&
-                $this->hasJoinedNode($qb, $alias)) {
+            if (
+                strpos($key, static::NODE_ALIAS . '.') !== false &&
+                $this->hasJoinedNode($qb, $alias)
+            ) {
                 $qb->addOrderBy($key, $value);
-            } elseif (strpos($key, static::NODESSOURCES_ALIAS . '.') !== false &&
-                $this->hasJoinedNodesSources($qb, $alias)) {
+            } elseif (
+                strpos($key, static::NODESSOURCES_ALIAS . '.') !== false &&
+                $this->hasJoinedNodesSources($qb, $alias)
+            ) {
                 $qb->addOrderBy($key, $value);
             } else {
                 $qb->addOrderBy($alias . '.' . $key, $value);
@@ -335,8 +342,10 @@ abstract class EntityRepository extends ServiceEntityRepository
         $query = $qb->getQuery();
         $this->dispatchQueryEvent($query);
 
-        if (null !== $limit &&
-            null !== $offset) {
+        if (
+            null !== $limit &&
+            null !== $offset
+        ) {
             /*
              * We need to use Doctrine paginator
              * if a limit is set because of the default inner join
@@ -386,8 +395,10 @@ abstract class EntityRepository extends ServiceEntityRepository
                 if (count($criteria['tags']) === 0) {
                     return;
                 }
-                if (in_array("tagExclusive", array_keys($criteria))
-                    && $criteria["tagExclusive"] === true) {
+                if (
+                    in_array("tagExclusive", array_keys($criteria))
+                    && $criteria["tagExclusive"] === true
+                ) {
                     // To get an exclusive tag filter
                     // we need to filter against each tag id
                     // and to inner join with a different alias for each tag
@@ -492,9 +503,11 @@ abstract class EntityRepository extends ServiceEntityRepository
     {
         if (isset($qb->getDQLPart('join')[$rootAlias])) {
             foreach ($qb->getDQLPart('join')[$rootAlias] as $join) {
-                if (null !== $join &&
+                if (
+                    null !== $join &&
                     $join instanceof Join &&
-                    $join->getAlias() === $joinAlias) {
+                    $join->getAlias() === $joinAlias
+                ) {
                     return true;
                 }
             }

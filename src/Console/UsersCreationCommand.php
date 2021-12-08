@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -93,7 +94,8 @@ final class UsersCreationCommand extends UsersCommand
                 $email = $io->askQuestion(
                     $questionEmail
                 );
-            } while (!filter_var($email, FILTER_VALIDATE_EMAIL) ||
+            } while (
+                !filter_var($email, FILTER_VALIDATE_EMAIL) ||
                 $this->managerRegistry->getRepository(User::class)->emailExists($email)
             );
         } else {
@@ -116,9 +118,11 @@ final class UsersCreationCommand extends UsersCommand
                 '<question>Is user a backend user?</question>',
                 false
             );
-            if ($io->askQuestion(
-                $questionBack
-            )) {
+            if (
+                $io->askQuestion(
+                    $questionBack
+                )
+            ) {
                 $user->addRole($this->getRole(Role::ROLE_BACKEND_USER));
             }
         } elseif ($input->getOption('back-end') === true) {
@@ -130,9 +134,11 @@ final class UsersCreationCommand extends UsersCommand
                 '<question>Is user a super-admin user?</question>',
                 false
             );
-            if ($io->askQuestion(
-                $questionAdmin
-            )) {
+            if (
+                $io->askQuestion(
+                    $questionAdmin
+                )
+            ) {
                 $user->addRole($this->getRole(Role::ROLE_SUPERADMIN));
             }
         } elseif ($input->getOption('super-admin') === true) {

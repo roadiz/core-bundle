@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\Constraint;
@@ -53,7 +54,7 @@ class UniqueNodeNameValidator extends ConstraintValidator
      */
     protected function urlAliasExists($name)
     {
-        return (boolean) $this->managerRegistry->getRepository(UrlAlias::class)->exists($name);
+        return (bool) $this->managerRegistry->getRepository(UrlAlias::class)->exists($name);
     }
 
     /**
@@ -67,6 +68,6 @@ class UniqueNodeNameValidator extends ConstraintValidator
         /** @var NodeRepository $nodeRepo */
         $nodeRepo = $this->managerRegistry->getRepository(Node::class);
         $nodeRepo->setDisplayingNotPublishedNodes(true);
-        return (boolean) $nodeRepo->exists($name);
+        return (bool) $nodeRepo->exists($name);
     }
 }

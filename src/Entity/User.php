@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
@@ -608,8 +609,10 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      */
     public function isAccountNonExpired(): bool
     {
-        if ($this->expiresAt !== null &&
-            $this->expiresAt->getTimestamp() < time()) {
+        if (
+            $this->expiresAt !== null &&
+            $this->expiresAt->getTimestamp() < time()
+        ) {
             return false;
         }
 
@@ -753,7 +756,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     public function getGravatarUrl(string $type = "identicon", string $size = "200"): string
     {
         if (null !== $this->getEmail()) {
-            return "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->getEmail()))) . "?d=".$type."&s=".$size;
+            return "https://www.gravatar.com/avatar/" . md5(strtolower(trim($this->getEmail()))) . "?d=" . $type . "&s=" . $size;
         }
         return '';
     }
@@ -813,8 +816,10 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      */
     public function isCredentialsNonExpired(): bool
     {
-        if ($this->credentialsExpiresAt !== null &&
-            $this->credentialsExpiresAt->getTimestamp() < time()) {
+        if (
+            $this->credentialsExpiresAt !== null &&
+            $this->credentialsExpiresAt->getTimestamp() < time()
+        ) {
             return false;
         }
 

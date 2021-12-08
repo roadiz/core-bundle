@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber;
@@ -73,14 +74,18 @@ class UserLifeCycleSubscriber implements EventSubscriber
     {
         $user = $event->getEntity();
         if ($user instanceof User) {
-            if ($event->hasChangedField('enabled') &&
-                true === $event->getNewValue('enabled')) {
+            if (
+                $event->hasChangedField('enabled') &&
+                true === $event->getNewValue('enabled')
+            ) {
                 $userEvent = new UserEnabledEvent($user);
                 $this->dispatcher->dispatch($userEvent);
             }
 
-            if ($event->hasChangedField('enabled') &&
-                false === $event->getNewValue('enabled')) {
+            if (
+                $event->hasChangedField('enabled') &&
+                false === $event->getNewValue('enabled')
+            ) {
                 $userEvent = new UserDisabledEvent($user);
                 $this->dispatcher->dispatch($userEvent);
             }
@@ -102,9 +107,11 @@ class UserLifeCycleSubscriber implements EventSubscriber
             /*
              * Encode user password
              */
-            if ($event->hasChangedField('password') &&
+            if (
+                $event->hasChangedField('password') &&
                 null !== $user->getPlainPassword() &&
-                '' !== $user->getPlainPassword()) {
+                '' !== $user->getPlainPassword()
+            ) {
                 $this->setPassword($user, $user->getPlainPassword());
                 $userEvent = new UserPasswordChangedEvent($user);
                 $this->dispatcher->dispatch($userEvent);
@@ -175,9 +182,11 @@ class UserLifeCycleSubscriber implements EventSubscriber
     {
         $user = $event->getEntity();
         if ($user instanceof User) {
-            if ($user->willSendCreationConfirmationEmail() &&
+            if (
+                $user->willSendCreationConfirmationEmail() &&
                 (null === $user->getPlainPassword() ||
-                $user->getPlainPassword() === '')) {
+                $user->getPlainPassword() === '')
+            ) {
                 /*
                  * Do not generate password for new users
                  * just send them a password reset link.

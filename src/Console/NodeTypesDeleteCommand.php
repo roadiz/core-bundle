@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -72,9 +73,11 @@ class NodeTypesDeleteCommand extends Command
                 '<question>Are you sure to delete ' . $nodeType->getName() . ' node-type?</question>',
                 false
             );
-            if ($io->askQuestion(
-                $question
-            )) {
+            if (
+                $io->askQuestion(
+                    $question
+                )
+            ) {
                 /** @var NodeTypeHandler $handler */
                 $handler = $this->handlerFactory->getHandler($nodeType);
                 $handler->removeSourceEntityClass();

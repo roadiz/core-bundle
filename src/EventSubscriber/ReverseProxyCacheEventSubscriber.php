@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
@@ -90,7 +91,7 @@ final class ReverseProxyCacheEventSubscriber implements EventSubscriberInterface
             $event->addMessage(
                 'Reverse proxy cache cleared.',
                 static::class,
-                'Reverse proxy cache ['.$name.']'
+                'Reverse proxy cache [' . $name . ']'
             );
         }
     }

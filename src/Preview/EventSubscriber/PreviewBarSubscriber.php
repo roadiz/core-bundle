@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Preview\EventSubscriber;
@@ -39,10 +40,12 @@ class PreviewBarSubscriber implements EventSubscriberInterface
     protected function supports(ResponseEvent $event)
     {
         $response = $event->getResponse();
-        if ($this->previewResolver->isPreview() &&
+        if (
+            $this->previewResolver->isPreview() &&
             $event->isMainRequest() &&
             $response->getStatusCode() === Response::HTTP_OK &&
-            false !== strpos($response->headers->get('Content-Type'), 'text/html')) {
+            false !== strpos($response->headers->get('Content-Type'), 'text/html')
+        ) {
             return true;
         }
 
@@ -56,8 +59,10 @@ class PreviewBarSubscriber implements EventSubscriberInterface
     {
         if ($this->supports($event)) {
             $response = $event->getResponse();
-            if (false !== strpos($response->getContent(), '</body>') &&
-                false !== strpos($response->getContent(), '</head>')) {
+            if (
+                false !== strpos($response->getContent(), '</body>') &&
+                false !== strpos($response->getContent(), '</head>')
+            ) {
                 $content = str_replace(
                     '</head>',
                     "<style>#roadiz-preview-bar { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen-Sans, Ubuntu, Cantarell, \"Helvetica Neue\", Helvetica, Arial, sans-serif; position: fixed; display: inline-flex; align-items: center; font-size: 9px; padding: 6px 10px 5px; bottom: 0; left: 1em; background-color: #ffe200; color: #923f00; border-radius: 3px 3px 0 0; text-transform: uppercase; letter-spacing: 0.005em; z-index: 9999;} #roadiz-preview-bar svg { width: 14px; margin-right: 5px;}</style></head>",

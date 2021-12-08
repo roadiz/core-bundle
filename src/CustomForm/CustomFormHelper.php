@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\CustomForm;
@@ -183,7 +184,7 @@ class CustomFormHelper
                         $data[$name] = new \DateTime($attribute->getValue());
                         break;
                     case AbstractField::BOOLEAN_T:
-                        $data[$name] = (boolean) $attribute->getValue();
+                        $data[$name] = (bool) $attribute->getValue();
                         break;
                     case AbstractField::MULTIPLE_T:
                     case AbstractField::CHECK_GROUP_T:

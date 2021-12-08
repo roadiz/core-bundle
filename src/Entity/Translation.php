@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
@@ -38,7 +39,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      * @Serializer\Exclude
      * @SymfonySerializer\Ignore
      */
-    public static $availableLocales = [
+    public static array $availableLocales = [
         'af_NA' => "Afrikaans (Namibia)",
         'af_ZA' => "Afrikaans (South Africa)",
         'af' => "Afrikaans",
@@ -479,7 +480,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      * @Serializer\Exclude
      * @SymfonySerializer\Ignore
      */
-    public static $rtlLanguages = [
+    public static array $rtlLanguages = [
         'ar_DZ' => "Arabic (Algeria)",
         'ar_BH' => "Arabic (Bahrain)",
         'ar_EG' => "Arabic (Egypt)",

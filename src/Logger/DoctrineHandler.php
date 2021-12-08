@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Logger;
@@ -89,8 +90,10 @@ final class DoctrineHandler extends AbstractProcessingHandler
             /*
              * Use available securityAuthorizationChecker to provide a valid user
              */
-            if (null !== $this->getTokenStorage() &&
-                null !== $token = $this->getTokenStorage()->getToken()) {
+            if (
+                null !== $this->getTokenStorage() &&
+                null !== $token = $this->getTokenStorage()->getToken()
+            ) {
                 $user = $token->getUser();
                 if ($user instanceof UserInterface) {
                     if ($user instanceof User) {
@@ -113,9 +116,11 @@ final class DoctrineHandler extends AbstractProcessingHandler
             /*
              * Add a related node-source entity
              */
-            if (isset($record['context']['source']) &&
+            if (
+                isset($record['context']['source']) &&
                 null !== $record['context']['source'] &&
-                $record['context']['source'] instanceof NodesSources) {
+                $record['context']['source'] instanceof NodesSources
+            ) {
                 $log->setNodeSource($record['context']['source']);
             }
 

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
@@ -205,8 +206,10 @@ class CustomForm extends AbstractDateTimed
     {
         $nowDate = new \DateTime();
 
-        if ($this->closeDate >= $nowDate &&
-            $this->open === true) {
+        if (
+            $this->closeDate >= $nowDate &&
+            $this->open === true
+        ) {
             return true;
         } else {
             return false;

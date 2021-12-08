@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
@@ -67,8 +68,10 @@ final class TagRepository extends EntityRepository
         if (key_exists('nodes', $criteria)) {
             if ($criteria['nodes'] instanceof Node) {
                 $qb->setParameter('nodes', $criteria['nodes']->getId());
-            } elseif (is_array($criteria['nodes']) ||
-                $criteria['nodes'] instanceof Collection) {
+            } elseif (
+                is_array($criteria['nodes']) ||
+                $criteria['nodes'] instanceof Collection
+            ) {
                 $qb->setParameter('nodes', $criteria['nodes']);
             } elseif (is_integer($criteria['nodes'])) {
                 $qb->setParameter('nodes', (int) $criteria['nodes']);
@@ -106,9 +109,11 @@ final class TagRepository extends EntityRepository
      */
     protected function filterByTranslation($criteria, QueryBuilder $qb, TranslationInterface $translation = null)
     {
-        if (isset($criteria['translation']) ||
+        if (
+            isset($criteria['translation']) ||
             isset($criteria['translation.locale']) ||
-            isset($criteria['translation.id'])) {
+            isset($criteria['translation.id'])
+        ) {
             $qb->leftJoin('tg.translatedTags', 'tt');
             $qb->leftJoin('tt.translation', static::TRANSLATION_ALIAS);
         } else {
@@ -245,8 +250,10 @@ final class TagRepository extends EntityRepository
         $query = $qb->getQuery();
         $this->dispatchQueryEvent($query);
 
-        if (null !== $limit &&
-            null !== $offset) {
+        if (
+            null !== $limit &&
+            null !== $offset
+        ) {
             /*
              * We need to use Doctrine paginator
              * if a limit is set because of the default inner join

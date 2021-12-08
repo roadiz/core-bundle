@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
@@ -63,21 +64,25 @@ final class NodeNameSubscriber implements EventSubscriberInterface
          * Update node name if dynamic option enabled and
          * default translation
          */
-        if ("" != $title &&
+        if (
+            "" != $title &&
             true === $nodeSource->getNode()->isDynamicNodeName() &&
-            $nodeSource->getTranslation()->isDefaultTranslation()) {
+            $nodeSource->getTranslation()->isDefaultTranslation()
+        ) {
             $testingNodeName = $this->nodeNamePolicy->getCanonicalNodeName($nodeSource);
 
             /*
              * Node name wont be updated if name already taken OR
              * if it is ALREADY suffixed with a unique ID.
              */
-            if ($testingNodeName != $nodeSource->getNode()->getNodeName() &&
+            if (
+                $testingNodeName != $nodeSource->getNode()->getNodeName() &&
                 $this->nodeNamePolicy->isNodeNameValid($testingNodeName) &&
                 !$this->nodeNamePolicy->isNodeNameWithUniqId(
                     $testingNodeName,
                     $nodeSource->getNode()->getNodeName()
-                )) {
+                )
+            ) {
                 try {
                     if ($nodeSource->isReachable()) {
                         $oldPaths = $this->nodeMover->getNodeSourcesUrls($nodeSource->getNode());

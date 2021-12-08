@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\ListManager;
@@ -38,15 +39,19 @@ final class SolrSearchListManager extends AbstractEntityListManager
 
         $query = trim($this->request->query->get('search') ?? '');
 
-        if ($this->request->query->has('page') &&
-            $this->request->query->get('page') > 1) {
+        if (
+            $this->request->query->has('page') &&
+            $this->request->query->get('page') > 1
+        ) {
             $this->setPage((int) $this->request->query->get('page'));
         } else {
             $this->setPage(1);
         }
 
-        if ($this->request->query->has('itemsPerPage') &&
-            $this->request->query->get('itemsPerPage') > 0) {
+        if (
+            $this->request->query->has('itemsPerPage') &&
+            $this->request->query->get('itemsPerPage') > 0
+        ) {
             $this->setItemPerPage((int) $this->request->query->get('itemsPerPage'));
         }
 

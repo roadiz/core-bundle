@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -64,10 +65,10 @@ class InstallCommand extends Command
             false
         );
 
-        if ($input->getOption('no-interaction') ||
+        if (
+            $input->getOption('no-interaction') ||
             $io->askQuestion($question)
         ) {
-
             $fixturesRoot = dirname(__DIR__) . '/../config';
             $data = Yaml::parse(file_get_contents($fixturesRoot . "/fixtures.yaml"));
 

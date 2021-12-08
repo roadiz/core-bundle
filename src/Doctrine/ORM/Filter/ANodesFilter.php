@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Doctrine\ORM\Filter;
@@ -60,20 +61,24 @@ class ANodesFilter implements EventSubscriberInterface
                 $qb = $event->getQueryBuilder();
                 $baseKey = $simpleQB->getParameterKey($event->getProperty());
 
-                if (!$simpleQB->joinExists(
-                    $simpleQB->getRootAlias(),
-                    $this->getNodeJoinAlias()
-                )) {
+                if (
+                    !$simpleQB->joinExists(
+                        $simpleQB->getRootAlias(),
+                        $this->getNodeJoinAlias()
+                    )
+                ) {
                     $qb->innerJoin(
                         $simpleQB->getRootAlias() . '.' . $this->getProperty(),
                         $this->getNodeJoinAlias()
                     );
                 }
                 if (false !== strpos($event->getProperty(), $this->getProperty() . '.field.')) {
-                    if (!$simpleQB->joinExists(
-                        $simpleQB->getRootAlias(),
-                        $this->getNodeFieldJoinAlias()
-                    )) {
+                    if (
+                        !$simpleQB->joinExists(
+                            $simpleQB->getRootAlias(),
+                            $this->getNodeFieldJoinAlias()
+                        )
+                    ) {
                         $qb->innerJoin(
                             $this->getNodeJoinAlias() . '.field',
                             $this->getNodeFieldJoinAlias()
@@ -104,10 +109,11 @@ class ANodesFilter implements EventSubscriberInterface
                 $qb = $event->getQueryBuilder();
                 $baseKey = $simpleQB->getParameterKey($event->getProperty());
 
-                if (!$simpleQB->joinExists(
-                    $simpleQB->getRootAlias(),
-                    EntityRepository::NODE_ALIAS
-                )
+                if (
+                    !$simpleQB->joinExists(
+                        $simpleQB->getRootAlias(),
+                        EntityRepository::NODE_ALIAS
+                    )
                 ) {
                     $qb->innerJoin(
                         $simpleQB->getRootAlias() . '.node',
@@ -115,20 +121,24 @@ class ANodesFilter implements EventSubscriberInterface
                     );
                 }
 
-                if (!$simpleQB->joinExists(
-                    $simpleQB->getRootAlias(),
-                    $this->getNodeJoinAlias()
-                )) {
+                if (
+                    !$simpleQB->joinExists(
+                        $simpleQB->getRootAlias(),
+                        $this->getNodeJoinAlias()
+                    )
+                ) {
                     $qb->innerJoin(
                         EntityRepository::NODE_ALIAS . '.' . $this->getProperty(),
                         $this->getNodeJoinAlias()
                     );
                 }
                 if (false !== strpos($event->getProperty(), 'node.' . $this->getProperty() . '.field.')) {
-                    if (!$simpleQB->joinExists(
-                        $simpleQB->getRootAlias(),
-                        $this->getNodeFieldJoinAlias()
-                    )) {
+                    if (
+                        !$simpleQB->joinExists(
+                            $simpleQB->getRootAlias(),
+                            $this->getNodeFieldJoinAlias()
+                        )
+                    ) {
                         $qb->innerJoin(
                             $this->getNodeJoinAlias() . '.field',
                             $this->getNodeFieldJoinAlias()

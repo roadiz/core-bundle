@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\ListManager;
@@ -93,8 +94,10 @@ class EntityListManager extends AbstractEntityListManager
                     // test if parent key exist
                     if (is_array($this->filteringArray["parent"])) {
                         // test if multiple parent id
-                        if (count(array_intersect($this->filteringArray["parent"], $ids))
-                            != count($this->filteringArray["parent"])) {
+                        if (
+                            count(array_intersect($this->filteringArray["parent"], $ids))
+                            != count($this->filteringArray["parent"])
+                        ) {
                             // test if all parent are in the chroot
                             $this->filteringArray["parent"] = -1; // -1 for make the search return []
                         }
@@ -117,8 +120,10 @@ class EntityListManager extends AbstractEntityListManager
         }
 
         if (false === $disabled && null !== $this->request) {
-            if ($this->request->query->get('field') &&
-                $this->request->query->get('ordering')) {
+            if (
+                $this->request->query->get('field') &&
+                $this->request->query->get('ordering')
+            ) {
                 $this->orderingArray = [
                     $this->request->query->get('field') => $this->request->query->get('ordering')
                 ];
@@ -131,13 +136,17 @@ class EntityListManager extends AbstractEntityListManager
                 $this->queryArray['search'] = $this->request->query->get('search');
             }
 
-            if ($this->request->query->has('item_per_page') &&
-                $this->request->query->get('item_per_page') > 0) {
+            if (
+                $this->request->query->has('item_per_page') &&
+                $this->request->query->get('item_per_page') > 0
+            ) {
                 $this->setItemPerPage((int) $this->request->query->get('item_per_page'));
             }
 
-            if ($this->request->query->has('page') &&
-                $this->request->query->get('page') > 1) {
+            if (
+                $this->request->query->has('page') &&
+                $this->request->query->get('page') > 1
+            ) {
                 $this->setPage((int) $this->request->query->get('page'));
             } else {
                 $this->setPage(1);
@@ -160,10 +169,12 @@ class EntityListManager extends AbstractEntityListManager
 
     protected function createPaginator()
     {
-        if ($this->entityName === Node::class ||
+        if (
+            $this->entityName === Node::class ||
             $this->entityName === 'RZ\Roadiz\CoreBundle\Entity\Node' ||
             $this->entityName === '\RZ\Roadiz\CoreBundle\Entity\Node' ||
-            $this->entityName === "Node") {
+            $this->entityName === "Node"
+        ) {
             $this->paginator = new NodePaginator(
                 $this->entityManager,
                 $this->entityName,
@@ -171,11 +182,13 @@ class EntityListManager extends AbstractEntityListManager
                 $this->filteringArray
             );
             $this->paginator->setTranslation($this->translation);
-        } elseif ($this->entityName == NodesSources::class ||
+        } elseif (
+            $this->entityName == NodesSources::class ||
             $this->entityName == 'RZ\Roadiz\CoreBundle\Entity\NodesSources' ||
             $this->entityName == '\RZ\Roadiz\CoreBundle\Entity\NodesSources' ||
             $this->entityName == "NodesSources" ||
-            strpos($this->entityName, NodeType::getGeneratedEntitiesNamespace()) !== false) {
+            strpos($this->entityName, NodeType::getGeneratedEntitiesNamespace()) !== false
+        ) {
             $this->paginator = new NodesSourcesPaginator(
                 $this->entityManager,
                 $this->entityName,
@@ -210,8 +223,10 @@ class EntityListManager extends AbstractEntityListManager
      */
     public function getItemCount(): int
     {
-        if ($this->pagination === true &&
-            null !== $this->paginator) {
+        if (
+            $this->pagination === true &&
+            null !== $this->paginator
+        ) {
             return $this->paginator->getTotalCount();
         }
 
@@ -223,8 +238,10 @@ class EntityListManager extends AbstractEntityListManager
      */
     public function getPageCount(): int
     {
-        if ($this->pagination === true &&
-            null !== $this->paginator) {
+        if (
+            $this->pagination === true &&
+            null !== $this->paginator
+        ) {
             return $this->paginator->getPageCount();
         }
 

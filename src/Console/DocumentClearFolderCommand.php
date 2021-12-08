@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -73,10 +74,12 @@ class DocumentClearFolderCommand extends Command
             return 0;
         }
 
-        if ($this->io->askQuestion(new ConfirmationQuestion(
-            sprintf('Are you sure to delete permanently %d documents?', $count),
-            false
-        ))) {
+        if (
+            $this->io->askQuestion(new ConfirmationQuestion(
+                sprintf('Are you sure to delete permanently %d documents?', $count),
+                false
+            ))
+        ) {
             $results = $this->getDocumentQueryBuilder($em, $folder)
                 ->select('d')
                 ->getQuery()

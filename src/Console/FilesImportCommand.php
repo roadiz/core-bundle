@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -69,9 +70,11 @@ class FilesImportCommand extends Command
         $zipArchivePath = $input->getArgument('input');
         $zip = new ZipArchive();
         if (true === $zip->open($zipArchivePath)) {
-            if ($io->askQuestion(
-                $confirmation
-            )) {
+            if (
+                $io->askQuestion(
+                    $confirmation
+                )
+            ) {
                 $zip->extractTo($tempDir);
 
                 $fs = new Filesystem();

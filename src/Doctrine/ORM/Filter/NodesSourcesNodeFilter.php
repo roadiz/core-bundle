@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Doctrine\ORM\Filter;
@@ -44,10 +45,12 @@ class NodesSourcesNodeFilter implements EventSubscriberInterface
             $qb = $event->getQueryBuilder();
             $baseKey = $simpleQB->getParameterKey($event->getProperty());
 
-            if (!$simpleQB->joinExists(
-                $simpleQB->getRootAlias(),
-                EntityRepository::NODE_ALIAS
-            )) {
+            if (
+                !$simpleQB->joinExists(
+                    $simpleQB->getRootAlias(),
+                    EntityRepository::NODE_ALIAS
+                )
+            ) {
                 $qb->innerJoin(
                     $simpleQB->getRootAlias() . '.node',
                     EntityRepository::NODE_ALIAS

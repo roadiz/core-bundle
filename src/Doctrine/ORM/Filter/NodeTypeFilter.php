@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Doctrine\ORM\Filter;
@@ -43,10 +44,11 @@ class NodeTypeFilter implements EventSubscriberInterface
             $qb = $event->getQueryBuilder();
             $baseKey = $simpleQB->getParameterKey($event->getProperty());
 
-            if (!$simpleQB->joinExists(
-                $simpleQB->getRootAlias(),
-                EntityRepository::NODETYPE_ALIAS
-            )
+            if (
+                !$simpleQB->joinExists(
+                    $simpleQB->getRootAlias(),
+                    EntityRepository::NODETYPE_ALIAS
+                )
             ) {
                 $qb->addSelect(EntityRepository::NODETYPE_ALIAS);
                 $qb->innerJoin(
@@ -74,20 +76,22 @@ class NodeTypeFilter implements EventSubscriberInterface
                 $qb = $event->getQueryBuilder();
                 $baseKey = $simpleQB->getParameterKey($event->getProperty());
 
-                if (!$simpleQB->joinExists(
-                    $simpleQB->getRootAlias(),
-                    EntityRepository::NODE_ALIAS
-                )
+                if (
+                    !$simpleQB->joinExists(
+                        $simpleQB->getRootAlias(),
+                        EntityRepository::NODE_ALIAS
+                    )
                 ) {
                     $qb->innerJoin(
                         $simpleQB->getRootAlias() . '.node',
                         EntityRepository::NODE_ALIAS
                     );
                 }
-                if (!$simpleQB->joinExists(
-                    $simpleQB->getRootAlias(),
-                    EntityRepository::NODETYPE_ALIAS
-                )
+                if (
+                    !$simpleQB->joinExists(
+                        $simpleQB->getRootAlias(),
+                        EntityRepository::NODETYPE_ALIAS
+                    )
                 ) {
                     $qb->addSelect(EntityRepository::NODETYPE_ALIAS);
                     $qb->innerJoin(

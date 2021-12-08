@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Translation;
@@ -95,7 +96,7 @@ final class TranslationViewer
         $attr = $request->attributes->all();
         $query = $request->query->all();
         $name = '';
-        $forceLocale = (boolean) $this->settingsBag->get('force_locale');
+        $forceLocale = (bool) $this->settingsBag->get('force_locale');
         $useStaticRouting = !empty($attr['_route']) &&
             is_string($attr['_route']) &&
             $attr['_route'] !== RouteObjectInterface::OBJECT_BASED_ROUTE_NAME;

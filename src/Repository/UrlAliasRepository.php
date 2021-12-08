@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
@@ -50,6 +51,6 @@ final class UrlAliasRepository extends EntityRepository
             WHERE ua.alias = :alias')
                         ->setParameter('alias', $alias);
 
-        return (boolean) $query->getSingleScalarResult();
+        return (bool) $query->getSingleScalarResult();
     }
 }

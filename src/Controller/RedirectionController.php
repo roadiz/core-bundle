@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Controller;
@@ -43,8 +44,10 @@ final class RedirectionController
             );
         }
 
-        if (null !== $redirection->getRedirectUri() &&
-            strlen($redirection->getRedirectUri()) > 0) {
+        if (
+            null !== $redirection->getRedirectUri() &&
+            strlen($redirection->getRedirectUri()) > 0
+        ) {
             return new RedirectResponse($redirection->getRedirectUri(), $redirection->getType());
         }
 

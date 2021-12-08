@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EntityHandler;
@@ -54,7 +55,7 @@ class TranslationHandler extends AbstractHandler
     {
         $defaults = $this->objectManager
             ->getRepository(Translation::class)
-            ->findBy(['defaultTranslation'=>true]);
+            ->findBy(['defaultTranslation' => true]);
 
         /** @var Translation $default */
         foreach ($defaults as $default) {

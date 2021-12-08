@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\DependencyInjection;
@@ -147,8 +148,10 @@ class RoadizCoreExtension extends Extension
                 $reverseProxyCacheFrontendsReferences[] = new Reference($definitionName);
             }
 
-            if (isset($config['reverseProxyCache']['cloudflare']) &&
-                isset($config['reverseProxyCache']['cloudflare']['bearer'])) {
+            if (
+                isset($config['reverseProxyCache']['cloudflare']) &&
+                isset($config['reverseProxyCache']['cloudflare']['bearer'])
+            ) {
                 $container->setDefinition(
                     'roadiz_core.reverse_proxy_cache.cloudflare',
                     (new Definition())

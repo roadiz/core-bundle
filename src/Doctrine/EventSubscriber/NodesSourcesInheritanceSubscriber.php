@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber;
@@ -98,7 +99,7 @@ final class NodesSourcesInheritanceSubscriber implements EventSubscriber
                         });
                         /** @var NodeTypeFieldInterface $indexedField */
                         foreach ($indexedFields as $indexedField) {
-                            $nodeSourceTableAnnotation['indexes']['nsapp_'.$indexedField->getName()] = [
+                            $nodeSourceTableAnnotation['indexes']['nsapp_' . $indexedField->getName()] = [
                                 'columns' => [$indexedField->getName()],
                             ];
                         }

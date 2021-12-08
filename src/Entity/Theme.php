@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
@@ -45,7 +46,7 @@ class Theme extends AbstractEntity
      */
     public function isStaticTheme(): bool
     {
-        return (boolean) $this->staticTheme;
+        return (bool) $this->staticTheme;
     }
 
     /**
@@ -54,7 +55,7 @@ class Theme extends AbstractEntity
      */
     public function setStaticTheme(bool $staticTheme): Theme
     {
-        $this->staticTheme = (boolean) $staticTheme;
+        $this->staticTheme = (bool) $staticTheme;
         return $this;
     }
 
@@ -110,10 +111,10 @@ class Theme extends AbstractEntity
             $reflector = new \ReflectionClass($class);
             if ($reflector->isSubclassOf('\\RZ\\Roadiz\\CMS\\Controllers\\AppController')) {
                 return [
-                    'name'=> call_user_func([$class, 'getThemeName']),
-                    'author'=> call_user_func([$class, 'getThemeAuthor']),
-                    'copyright'=> call_user_func([$class, 'getThemeCopyright']),
-                    'dir'=> call_user_func([$class, 'getThemeDir'])
+                    'name' => call_user_func([$class, 'getThemeName']),
+                    'author' => call_user_func([$class, 'getThemeAuthor']),
+                    'copyright' => call_user_func([$class, 'getThemeCopyright']),
+                    'dir' => call_user_func([$class, 'getThemeDir'])
                 ];
             }
         }

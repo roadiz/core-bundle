@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
@@ -502,7 +503,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
      */
     public function __toString(): string
     {
-        return '[#' . $this->getId() . '] ' . $this->getName() . ' ('.$this->getDisplayName().')';
+        return '[#' . $this->getId() . '] ' . $this->getName() . ' (' . $this->getDisplayName() . ')';
     }
 
     /**

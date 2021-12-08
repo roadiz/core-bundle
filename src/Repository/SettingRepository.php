@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
@@ -35,7 +36,7 @@ final class SettingRepository extends EntityRepository
                 ->setParameter(':name', $name);
 
         $query = $builder->getQuery();
-        $query->enableResultCache(3600, 'RZSettingValue_'.$name);
+        $query->enableResultCache(3600, 'RZSettingValue_' . $name);
 
         return $query->getSingleScalarResult();
     }
@@ -54,9 +55,9 @@ final class SettingRepository extends EntityRepository
             ->setParameter(':name', $name);
 
         $query = $builder->getQuery();
-        $query->enableResultCache(3600, 'RZSettingExists_'.$name);
+        $query->enableResultCache(3600, 'RZSettingExists_' . $name);
 
-        return (boolean) $query->getSingleScalarResult();
+        return (bool) $query->getSingleScalarResult();
     }
 
     /**

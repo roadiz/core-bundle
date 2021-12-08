@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Exception;
@@ -168,9 +169,9 @@ class ExceptionViewer
         if (php_sapi_name() === 'cli') {
             return new Response(
                 implode(PHP_EOL, [
-                    $this->getColoredString('['.$class.']', 'white', 'red'),
+                    $this->getColoredString('[' . $class . ']', 'white', 'red'),
                     $this->getColoredString($e->getMessage(), 'red', null),
-                ]).PHP_EOL,
+                ]) . PHP_EOL,
                 $this->getHttpStatusCode($e),
                 [
                     'content-type' => 'text/plain',
@@ -236,13 +237,13 @@ class ExceptionViewer
     protected function addTwigSource($e, string $trace): string
     {
         if ($e instanceof SyntaxError && null !== $e->getSourceContext()) {
-            return '<table cellpadding="0" cellspacing="0"><tr><td class="cell-title">Template</td><td>'.$e->getSourceContext()->getName().'</td></tr>' . PHP_EOL .
-                '<tr><td class="cell-title">Line number</td><td>'.$e->getTemplateLine().'</td></tr>' . PHP_EOL .
-                '<tr><td class="cell-title">Path</td><td>'.$e->getSourceContext()->getPath().'</td></tr></table>' . PHP_EOL .
+            return '<table cellpadding="0" cellspacing="0"><tr><td class="cell-title">Template</td><td>' . $e->getSourceContext()->getName() . '</td></tr>' . PHP_EOL .
+                '<tr><td class="cell-title">Line number</td><td>' . $e->getTemplateLine() . '</td></tr>' . PHP_EOL .
+                '<tr><td class="cell-title">Path</td><td>' . $e->getSourceContext()->getPath() . '</td></tr></table>' . PHP_EOL .
                 $trace;
         } elseif ($e instanceof Error && null !== $e->getSourceContext()) {
-            return '<table cellpadding="0" cellspacing="0"><tr><td class="cell-title">Template</td><td>'.$e->getSourceContext()->getName().'</td></tr>' . PHP_EOL .
-                '<tr><td class="cell-title" colspan="2"><code>'.$e->getSourceContext()->getPath().'</code></td></tr></table>' . PHP_EOL .
+            return '<table cellpadding="0" cellspacing="0"><tr><td class="cell-title">Template</td><td>' . $e->getSourceContext()->getName() . '</td></tr>' . PHP_EOL .
+                '<tr><td class="cell-title" colspan="2"><code>' . $e->getSourceContext()->getPath() . '</code></td></tr></table>' . PHP_EOL .
                 $trace;
         }
         return $trace;
@@ -254,13 +255,17 @@ class ExceptionViewer
      */
     public function isFormatJson(Request $request): bool
     {
-        if ($request->attributes->has('_format') &&
-            $request->attributes->get('_format') == 'json') {
+        if (
+            $request->attributes->has('_format') &&
+            $request->attributes->get('_format') == 'json'
+        ) {
             return true;
         }
 
-        if ($request->headers->get('Content-Type') &&
-            0 === strpos($request->headers->get('Content-Type'), 'application/json')) {
+        if (
+            $request->headers->get('Content-Type') &&
+            0 === strpos($request->headers->get('Content-Type'), 'application/json')
+        ) {
             return true;
         }
 

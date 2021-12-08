@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Webhook;
@@ -32,8 +33,10 @@ final class ThrottledWebhookDispatcher implements WebhookDispatcher
     public function dispatch(WebhookInterface $webhook): void
     {
         $doNotTriggerBefore = $webhook->doNotTriggerBefore();
-        if (null !== $doNotTriggerBefore &&
-            $doNotTriggerBefore > new \DateTime()) {
+        if (
+            null !== $doNotTriggerBefore &&
+            $doNotTriggerBefore > new \DateTime()
+        ) {
             throw new TooManyWebhookTriggeredException(\DateTimeImmutable::createFromMutable($doNotTriggerBefore));
         }
         $limiter = $this->throttledWebhooksLimiter->create($webhook->getId());

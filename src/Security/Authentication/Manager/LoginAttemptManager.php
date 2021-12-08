@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Security\Authentication\Manager;
@@ -47,11 +48,13 @@ class LoginAttemptManager
          * Checks if there are more than 10 failed attempts
          * from same IP address in the last 20 minutes
          */
-        if ($this->getLoginAttemptRepository()->isIpAddressBlocked(
-            $this->requestStack->getMainRequest()->getClientIp(),
-            $this->getIpAttemptGraceTime(),
-            $this->getIpAttemptCount()
-        )) {
+        if (
+            $this->getLoginAttemptRepository()->isIpAddressBlocked(
+                $this->requestStack->getMainRequest()->getClientIp(),
+                $this->getIpAttemptGraceTime(),
+                $this->getIpAttemptCount()
+            )
+        ) {
             throw new TooManyLoginAttemptsException(
                 'Too many login attempts for current IP address, wait before trying again.',
                 Response::HTTP_TOO_MANY_REQUESTS

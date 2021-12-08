@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\ListManager;
@@ -47,8 +48,10 @@ class QueryBuilderListManager extends AbstractEntityListManager
     public function handle($disabled = false)
     {
         if (false === $disabled && null !== $this->request) {
-            if ($this->request->query->get('field') &&
-                $this->request->query->get('ordering')) {
+            if (
+                $this->request->query->get('field') &&
+                $this->request->query->get('ordering')
+            ) {
                 $this->queryBuilder->addOrderBy(
                     sprintf('%s.%s', $this->identifier, $this->request->query->get('field')),
                     $this->request->query->get('ordering')
@@ -62,13 +65,17 @@ class QueryBuilderListManager extends AbstractEntityListManager
                 $this->queryArray['search'] = $this->request->query->get('search');
             }
 
-            if ($this->request->query->has('item_per_page') &&
-                $this->request->query->get('item_per_page') > 0) {
+            if (
+                $this->request->query->has('item_per_page') &&
+                $this->request->query->get('item_per_page') > 0
+            ) {
                 $this->setItemPerPage((int) $this->request->query->get('item_per_page'));
             }
 
-            if ($this->request->query->has('page') &&
-                $this->request->query->get('page') > 1) {
+            if (
+                $this->request->query->has('page') &&
+                $this->request->query->get('page') > 1
+            ) {
                 $this->setPage((int) $this->request->query->get('page'));
             } else {
                 $this->setPage(1);

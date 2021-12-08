@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
@@ -56,10 +57,12 @@ class AttributeValueIndexingSubscriber implements EventSubscriberInterface
                             * Use locale to create field name
                             * with right language
                             */
-                            if (in_array(
-                                $event->getNodeSource()->getTranslation()->getLocale(),
-                                AbstractSolarium::$availableLocalizedTextFields
-                            )) {
+                            if (
+                                in_array(
+                                    $event->getNodeSource()->getTranslation()->getLocale(),
+                                    AbstractSolarium::$availableLocalizedTextFields
+                                )
+                            ) {
                                 $lang = $event->getNodeSource()->getTranslation()->getLocale();
                                 $fieldName .= '_txt_' . $lang;
                             } else {
@@ -76,7 +79,7 @@ class AttributeValueIndexingSubscriber implements EventSubscriberInterface
                             $associations['collection_txt'][] = $content;
                             if (null !== $lang) {
                                 // Compile all text content into a single localized text field.
-                                $associations['collection_txt_'.$lang] = implode(PHP_EOL, $associations['collection_txt']);
+                                $associations['collection_txt_' . $lang] = implode(PHP_EOL, $associations['collection_txt']);
                             }
                             break;
                     }

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
@@ -35,7 +36,7 @@ final class UserRepository extends EntityRepository
             ->setParameter('username', $username)
             ->setCacheable(true);
 
-        return (boolean) $qb->getQuery()->getSingleScalarResult();
+        return (bool) $qb->getQuery()->getSingleScalarResult();
     }
 
     /**
@@ -51,6 +52,6 @@ final class UserRepository extends EntityRepository
             ->setParameter('email', $email)
             ->setCacheable(true);
 
-        return (boolean) $qb->getQuery()->getSingleScalarResult();
+        return (bool) $qb->getQuery()->getSingleScalarResult();
     }
 }

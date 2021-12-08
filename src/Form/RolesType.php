@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
@@ -54,8 +55,10 @@ class RolesType extends AbstractType
 
             /** @var Role $role */
             foreach ($roles as $role) {
-                if ($this->authorizationChecker->isGranted($role->getRole()) &&
-                    !$options['roles']->contains($role)) {
+                if (
+                    $this->authorizationChecker->isGranted($role->getRole()) &&
+                    !$options['roles']->contains($role)
+                ) {
                     $choices[$role->getRole()] = $role->getId();
                 }
             }

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Routing;
@@ -64,18 +65,20 @@ final class NodesSourcesPathResolver implements PathResolverInterface
             /*
              * Prevent searching nodes with special characters.
              */
-            if (0 === preg_match('#'.static::$nodeNamePattern.'#', $identifier)) {
+            if (0 === preg_match('#' . static::$nodeNamePattern . '#', $identifier)) {
                 throw new ResourceNotFoundException();
             }
 
             /*
              * Look for any supported format extension after last token.
              */
-            if (0 !== preg_match(
-                '#^('.static::$nodeNamePattern.')\.('.implode('|', $supportedFormatExtensions).')$#',
-                $identifier,
-                $matches
-            )) {
+            if (
+                0 !== preg_match(
+                    '#^(' . static::$nodeNamePattern . ')\.(' . implode('|', $supportedFormatExtensions) . ')$#',
+                    $identifier,
+                    $matches
+                )
+            ) {
                 $realIdentifier = $matches[1];
                 $_format = $matches[2];
                 // replace last token with real node-name without extension.

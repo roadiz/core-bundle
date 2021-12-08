@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EntityHandler;
@@ -172,7 +173,7 @@ class FolderHandler extends AbstractHandler
         /** @var Folder[] $folders */
         $folders = $this->objectManager
             ->getRepository(Folder::class)
-            ->findBy(['parent' => null], ['position'=>'ASC']);
+            ->findBy(['parent' => null], ['position' => 'ASC']);
 
         $i = 1;
         foreach ($folders as $child) {

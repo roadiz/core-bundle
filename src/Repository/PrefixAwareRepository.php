@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
@@ -185,8 +186,10 @@ abstract class PrefixAwareRepository extends EntityRepository
         $query = $qb->getQuery();
         $this->dispatchQueryEvent($query);
 
-        if (null !== $limit &&
-            null !== $offset) {
+        if (
+            null !== $limit &&
+            null !== $offset
+        ) {
             /*
              * We need to use Doctrine paginator
              * if a limit is set because of the default inner join
@@ -275,8 +278,10 @@ abstract class PrefixAwareRepository extends EntityRepository
         $query = $qb->getQuery();
         $this->dispatchQueryEvent($query);
 
-        if (null !== $limit &&
-            null !== $offset) {
+        if (
+            null !== $limit &&
+            null !== $offset
+        ) {
             /*
              * We need to use Doctrine paginator
              * if a limit is set because of the default inner join
@@ -295,7 +300,7 @@ abstract class PrefixAwareRepository extends EntityRepository
     public function countSearchBy($pattern, array $criteria = [])
     {
         $qb = $this->createQueryBuilder($this->getDefaultPrefix());
-        $qb->select($qb->expr()->countDistinct($this->getDefaultPrefix().'.id'));
+        $qb->select($qb->expr()->countDistinct($this->getDefaultPrefix() . '.id'));
         $qb = $this->createSearchBy($pattern, $qb, $criteria);
 
         $this->dispatchQueryBuilderEvent($qb, $this->getEntityName());
@@ -325,10 +330,12 @@ abstract class PrefixAwareRepository extends EntityRepository
         foreach ($cols as $col) {
             $field = $metadatas->getFieldName($col);
             $type = $metadatas->getTypeOfField($field);
-            if (in_array($type, $this->searchableTypes) &&
+            if (
+                in_array($type, $this->searchableTypes) &&
                 $field != 'folder' &&
                 $field != 'childrenOrder' &&
-                $field != 'childrenOrderDirection') {
+                $field != 'childrenOrderDirection'
+            ) {
                 $criteriaFields[$field] = '%' . strip_tags((string) $pattern) . '%';
             }
         }

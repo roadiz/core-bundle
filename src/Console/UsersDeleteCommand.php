@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -42,9 +43,11 @@ final class UsersDeleteCommand extends UsersCommand
                     '<question>Do you really want to delete user “' . $user->getUsername() . '”?</question>',
                     false
                 );
-                if (!$input->isInteractive() || $io->askQuestion(
-                    $confirmation
-                )) {
+                if (
+                    !$input->isInteractive() || $io->askQuestion(
+                        $confirmation
+                    )
+                ) {
                     $this->managerRegistry->getManagerForClass(User::class)->remove($user);
                     $this->managerRegistry->getManagerForClass(User::class)->flush();
                     $io->success('User “' . $name . '” deleted.');

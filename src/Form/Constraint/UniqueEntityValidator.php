@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\Constraint;
@@ -40,7 +41,7 @@ class UniqueEntityValidator extends ConstraintValidator
     public function validate($entity, Constraint $constraint)
     {
         if (!$constraint instanceof UniqueEntity) {
-            throw new UnexpectedTypeException($constraint, __NAMESPACE__.'\UniqueEntity');
+            throw new UnexpectedTypeException($constraint, __NAMESPACE__ . '\UniqueEntity');
         }
         if (!is_array($constraint->fields) && !is_string($constraint->fields)) {
             throw new UnexpectedTypeException($constraint->fields, 'array');

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\Constraint;
@@ -79,6 +80,6 @@ class UniqueTagNameValidator extends ConstraintValidator
      */
     protected function isMulti($value)
     {
-        return (boolean) strpos($value ?? '', ',');
+        return (bool) strpos($value ?? '', ',');
     }
 }

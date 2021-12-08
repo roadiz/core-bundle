@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Node;
@@ -108,7 +109,7 @@ final class NodeTranstyper
         /** @var NodesSources $existingSource */
         foreach ($existingSources as $existingSource) {
             $this->doTranstypeSingleSource($node, $existingSource, $sourceClass, $fieldAssociations);
-            $this->logger->debug('Transtyped: '.$existingSource->getTranslation()->getLocale());
+            $this->logger->debug('Transtyped: ' . $existingSource->getTranslation()->getLocale());
         }
 
         $node->setNodeType($destinationNodeType);

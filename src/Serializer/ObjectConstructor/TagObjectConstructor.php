@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor;
@@ -31,7 +32,8 @@ class TagObjectConstructor extends AbstractTypedObjectConstructor
             ->getRepository(Tag::class)
             ->findOneByTagName($data['tagName']);
 
-        if (null !== $tag &&
+        if (
+            null !== $tag &&
             $context->hasAttribute(static::EXCEPTION_ON_EXISTING_TAG) &&
             true === $context->hasAttribute(static::EXCEPTION_ON_EXISTING_TAG)
         ) {

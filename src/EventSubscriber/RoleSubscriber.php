@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
@@ -48,8 +49,10 @@ class RoleSubscriber implements EventSubscriberInterface
     {
         $manager = $this->managerRegistry->getManagerForClass(Role::class);
         // Clear result cache
-        if ($manager instanceof EntityManagerInterface &&
-            $manager->getConfiguration()->getResultCacheImpl() instanceof CacheProvider) {
+        if (
+            $manager instanceof EntityManagerInterface &&
+            $manager->getConfiguration()->getResultCacheImpl() instanceof CacheProvider
+        ) {
             $manager->getConfiguration()->getResultCacheImpl()->deleteAll();
         }
         // Clear memory roles bag

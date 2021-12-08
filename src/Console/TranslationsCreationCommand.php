@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -70,9 +71,11 @@ class TranslationsCreationCommand extends Command
                 $io->error('Translation locale ' . $locale . ' is already used.');
                 return 1;
             } else {
-                if ($io->askQuestion(
-                    $confirmation
-                )) {
+                if (
+                    $io->askQuestion(
+                        $confirmation
+                    )
+                ) {
                     $newTrans = new Translation();
                     $newTrans->setName($name)
                         ->setLocale($locale);

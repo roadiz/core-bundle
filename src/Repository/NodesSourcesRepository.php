@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
@@ -381,8 +382,10 @@ final class NodesSourcesRepository extends StatusAwareRepository
         $query = $qb->getQuery();
         $this->dispatchQueryEvent($query);
 
-        if (null !== $limit &&
-            null !== $offset) {
+        if (
+            null !== $limit &&
+            null !== $offset
+        ) {
             /*
              * We need to use Doctrine paginator
              * if a limit is set because of the default inner join

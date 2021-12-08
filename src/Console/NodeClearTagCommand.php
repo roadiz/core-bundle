@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -74,10 +75,12 @@ class NodeClearTagCommand extends Command
             return 0;
         }
 
-        if ($this->io->askQuestion(new ConfirmationQuestion(
-            sprintf('Are you sure to delete permanently %d nodes?', $count),
-            false
-        ))) {
+        if (
+            $this->io->askQuestion(new ConfirmationQuestion(
+                sprintf('Are you sure to delete permanently %d nodes?', $count),
+                false
+            ))
+        ) {
             $results = $this->getNodeQueryBuilder($tag)
                 ->select('n')
                 ->getQuery()

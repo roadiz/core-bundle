@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
@@ -8,6 +9,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Gedmo\Mapping\Annotation as Gedmo;
 
@@ -51,12 +53,12 @@ class TagTranslation extends AbstractEntity
     /**
      * @ORM\ManyToOne(targetEntity="Translation", inversedBy="tagTranslations", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="translation_id", referencedColumnName="id", onDelete="CASCADE")
-     * @var Translation|null
+     * @var TranslationInterface|null
      * @Serializer\Groups({"tag", "node", "nodes_sources"})
      * @SymfonySerializer\Groups({"tag", "node", "nodes_sources"})
      * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Translation")
      */
-    protected ?Translation $translation = null;
+    protected ?TranslationInterface $translation = null;
     /**
      * @ORM\OneToMany(
      *     targetEntity="RZ\Roadiz\CoreBundle\Entity\TagTranslationDocuments",
@@ -75,9 +77,9 @@ class TagTranslation extends AbstractEntity
      * Create a new TagTranslation with its origin Tag and Translation.
      *
      * @param Tag|null         $original
-     * @param Translation|null $translation
+     * @param TranslationInterface|null $translation
      */
-    public function __construct(Tag $original = null, Translation $translation = null)
+    public function __construct(Tag $original = null, TranslationInterface $translation = null)
     {
         $this->setTag($original);
         $this->setTranslation($translation);
@@ -155,9 +157,9 @@ class TagTranslation extends AbstractEntity
     /**
      * Gets the value of translation.
      *
-     * @return Translation
+     * @return TranslationInterface|null
      */
-    public function getTranslation(): ?Translation
+    public function getTranslation(): ?TranslationInterface
     {
         return $this->translation;
     }
@@ -165,11 +167,11 @@ class TagTranslation extends AbstractEntity
     /**
      * Sets the value of translation.
      *
-     * @param Translation|null $translation the translation
+     * @param TranslationInterface|null $translation the translation
      *
      * @return self
      */
-    public function setTranslation(?Translation $translation): TagTranslation
+    public function setTranslation(?TranslationInterface $translation): TagTranslation
     {
         $this->translation = $translation;
 

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\SearchEngine;
@@ -87,7 +88,7 @@ class DocumentSearchHandler extends AbstractSearchHandler
                 $tmp .= (string) $args['mimeType'];
             } else {
                 $value = implode(' AND ', $args['mimeType']);
-                $tmp .= '('.$value.')';
+                $tmp .= '(' . $value . ')';
             }
             unset($args['mimeType']);
             $args["fq"][] = $tmp;

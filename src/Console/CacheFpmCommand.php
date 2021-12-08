@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -53,7 +54,7 @@ class CacheFpmCommand extends Command
         $scriptName = 'clear_cache.php';
 
         if ($input->getOption('domain') != '') {
-            $url = 'http://'. $input->getOption('domain') . '/' . $scriptName;
+            $url = 'http://' . $input->getOption('domain') . '/' . $scriptName;
         }
 
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
@@ -65,7 +66,7 @@ class CacheFpmCommand extends Command
             $client->get($url, [
                 'headers' => [
                     'Accept' => 'application/json',
-                    'User-Agent' => 'Roadiz_CLI/'.$this->cmsVersion,
+                    'User-Agent' => 'Roadiz_CLI/' . $this->cmsVersion,
                 ],
                 'query' => [
                     'env' => $this->kernel->getEnvironment(),
@@ -76,7 +77,7 @@ class CacheFpmCommand extends Command
             if ($io->getVerbosity() >= OutputInterface::VERBOSITY_VERY_VERBOSE) {
                 $io->note('Call web entry-point: ' . $url);
             }
-            $io->success('PHP-FPM caches were cleared for '.$this->kernel->getEnvironment().' environement.');
+            $io->success('PHP-FPM caches were cleared for ' . $this->kernel->getEnvironment() . ' environement.');
         } catch (ConnectException $exception) {
             $io->warning('Cannot reach ' . $url . ' [' . $exception->getCode() . ']');
         } catch (ClientException $exception) {

@@ -1,10 +1,12 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\TwigExtension;
 
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
+
 use function Symfony\Component\String\u;
 
 class CentralTruncateExtension extends AbstractExtension

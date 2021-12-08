@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -56,10 +57,12 @@ class SolrReindexCommand extends SolrCommand implements ThemeAwareCommandInterfa
 
         if (null !== $solr) {
             if (true === $this->clientRegistry->isClientReady($solr)) {
-                if ($this->io->confirm(
-                    'Are you sure to reindex your Node and Document database?',
-                    !$input->isInteractive()
-                )) {
+                if (
+                    $this->io->confirm(
+                        'Are you sure to reindex your Node and Document database?',
+                        !$input->isInteractive()
+                    )
+                ) {
                     $stopwatch = new Stopwatch();
                     $stopwatch->start('global');
                     $this->nodesSourcesIndexer->setIo($this->io);

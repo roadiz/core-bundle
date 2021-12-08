@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Xlsx;
@@ -76,8 +77,10 @@ class XlsxExporter
              * If headers have changed
              * we print them
              */
-            if (false === $hasGlobalHeader &&
-                $headerkeys != array_keys($answer)) {
+            if (
+                false === $hasGlobalHeader &&
+                $headerkeys != array_keys($answer)
+            ) {
                 $headerkeys = array_keys($answer);
                 foreach ($headerkeys as $key => $value) {
                     $columnAlpha = Coordinate::stringFromColumnIndex($key + 1);
@@ -94,8 +97,10 @@ class XlsxExporter
             foreach ($answer as $k => $value) {
                 $columnAlpha = Coordinate::stringFromColumnIndex($k + 1);
 
-                if ($value instanceof Collection ||
-                    is_array($value)) {
+                if (
+                    $value instanceof Collection ||
+                    is_array($value)
+                ) {
                     continue;
                 }
 

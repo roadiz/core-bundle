@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -56,12 +57,14 @@ final class UsersPasswordCommand extends UsersCommand
                     '<question>Do you really want to regenerate user “' . $user->getUsername() . '” password?</question>',
                     false
                 );
-                if (!$input->isInteractive() || $io->askQuestion(
-                    $confirmation
-                )) {
+                if (
+                    !$input->isInteractive() || $io->askQuestion(
+                        $confirmation
+                    )
+                ) {
                     $user->setPlainPassword($this->passwordGenerator->generatePassword(12));
                     $this->managerRegistry->getManagerForClass(User::class)->flush();
-                    $io->success('A new password was regenerated for '.$name.': '. $user->getPlainPassword());
+                    $io->success('A new password was regenerated for ' . $name . ': ' . $user->getPlainPassword());
                 } else {
                     $io->warning('User password was not changed.');
                 }

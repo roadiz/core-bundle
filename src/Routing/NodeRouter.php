@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Routing;
@@ -127,20 +128,20 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
     {
         if ($name instanceof NodesSources) {
             @trigger_error('Passing an object as route name is deprecated since version 1.5. Pass the `RouteObjectInterface::OBJECT_BASED_ROUTE_NAME` as route name and the object in the parameters with key `RouteObjectInterface::ROUTE_OBJECT` resp the content id with content_id.', E_USER_DEPRECATED);
-            return '['.$name->getTranslation()->getLocale().']' .
+            return '[' . $name->getTranslation()->getLocale() . ']' .
                 $name->getTitle() . ' - ' .
                 $name->getNode()->getNodeName() .
-                '['.$name->getNode()->getId().']';
+                '[' . $name->getNode()->getId() . ']';
         } elseif (RouteObjectInterface::OBJECT_BASED_ROUTE_NAME === $name) {
             if (
                 array_key_exists(RouteObjectInterface::ROUTE_OBJECT, $parameters) &&
                 $parameters[RouteObjectInterface::ROUTE_OBJECT] instanceof NodesSources
             ) {
                 $route = $parameters[RouteObjectInterface::ROUTE_OBJECT];
-                return '['.$route->getTranslation()->getLocale().']' .
+                return '[' . $route->getTranslation()->getLocale() . ']' .
                     $route->getTitle() . ' - ' .
                     $route->getNode()->getNodeName() .
-                    '['.$route->getNode()->getId().']';
+                    '[' . $route->getNode()->getId() . ']';
             }
         }
         return (string) $name;

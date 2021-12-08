@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\DataTransformer;
@@ -44,8 +45,10 @@ class JoinDataTransformer implements DataTransformerInterface
         /*
          * If model is already an AbstractEntity
          */
-        if (!empty($entitiesToForm) &&
-            $entitiesToForm instanceof AbstractEntity) {
+        if (
+            !empty($entitiesToForm) &&
+            $entitiesToForm instanceof AbstractEntity
+        ) {
             return $entitiesToForm->getId();
         } elseif (!empty($entitiesToForm) && is_array($entitiesToForm)) {
             /*

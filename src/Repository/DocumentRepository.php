@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
@@ -73,8 +74,10 @@ final class DocumentRepository extends EntityRepository
                 if (count($criteria['folders']) === 0) {
                     return;
                 }
-                if (in_array("folderExclusive", array_keys($criteria))
-                    && $criteria["folderExclusive"] === true) {
+                if (
+                    in_array("folderExclusive", array_keys($criteria))
+                    && $criteria["folderExclusive"] === true
+                ) {
                     // To get an exclusive folder filter
                     // we need to filter against each folder id
                     // and to inner join with a different alias for each folder
@@ -276,9 +279,11 @@ final class DocumentRepository extends EntityRepository
      */
     protected function filterByTranslation(&$criteria, QueryBuilder $qb, TranslationInterface $translation = null)
     {
-        if (isset($criteria['translation']) ||
+        if (
+            isset($criteria['translation']) ||
             isset($criteria['translation.locale']) ||
-            isset($criteria['translation.id'])) {
+            isset($criteria['translation.id'])
+        ) {
             $qb->leftJoin('d.documentTranslations', 'dt');
             $qb->leftJoin('dt.translation', 't');
         } else {
@@ -402,8 +407,10 @@ final class DocumentRepository extends EntityRepository
         $query = $qb->getQuery();
         $this->dispatchQueryEvent($query);
 
-        if (null !== $limit &&
-            null !== $offset) {
+        if (
+            null !== $limit &&
+            null !== $offset
+        ) {
             /*
              * We need to use Doctrine paginator
              * if a limit is set because of the default inner join

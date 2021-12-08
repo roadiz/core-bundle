@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\SearchEngine;
@@ -71,7 +72,7 @@ class SolariumNodeSource extends AbstractSolarium
     {
         $update->addDeleteQuery(
             static::IDENTIFIER_KEY . ':"' . $this->nodeSource->getId() . '"' .
-            '&'.static::TYPE_DISCRIMINATOR.':"' . static::DOCUMENT_TYPE . '"' .
+            '&' . static::TYPE_DISCRIMINATOR . ':"' . static::DOCUMENT_TYPE . '"' .
             '&locale_s:"' . $this->nodeSource->getTranslation()->getLocale() . '"'
         );
 

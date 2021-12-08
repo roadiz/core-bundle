@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
@@ -13,6 +14,7 @@ use Gedmo\Loggable\Loggable;
 use RuntimeException;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Doctrine\ORM\Mapping as ORM;
@@ -134,7 +136,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
     }
 
     /**
-     * @var Translation|null
+     * @var TranslationInterface|null
      * @ORM\ManyToOne(targetEntity="Translation", inversedBy="nodeSources")
      * @ORM\JoinColumn(name="translation_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"nodes_sources", "log_sources"})
@@ -145,12 +147,12 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      *     "translation.locale": "exact",
      * })
      */
-    private ?Translation $translation = null;
+    private ?TranslationInterface $translation = null;
 
     /**
-     * @return Translation
+     * @return TranslationInterface
      */
-    public function getTranslation(): Translation
+    public function getTranslation(): TranslationInterface
     {
         if (null === $this->translation) {
             throw new RuntimeException('Node source translation cannot be null.');
@@ -158,11 +160,11 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
         return $this->translation;
     }
     /**
-     * @param Translation $translation
+     * @param TranslationInterface $translation
      *
      * @return $this
      */
-    public function setTranslation(Translation $translation): NodesSources
+    public function setTranslation(TranslationInterface $translation): NodesSources
     {
         $this->translation = $translation;
         return $this;
@@ -512,10 +514,10 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
     /**
      * Create a new NodeSource with its Node and Translation.
      *
-     * @param Node        $node
-     * @param Translation $translation
+     * @param Node $node
+     * @param TranslationInterface $translation
      */
-    public function __construct(Node $node, Translation $translation)
+    public function __construct(Node $node, TranslationInterface $translation)
     {
         $this->setNode($node);
         $this->translation = $translation;
@@ -551,9 +553,11 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      */
     public function getParent(): ?NodesSources
     {
-        if (null !== $this->getNode()->getParent()) {
+        /** @var Node|null $parent */
+        $parent = $this->getNode()->getParent();
+        if (null !== $parent) {
             /** @var NodesSources|false $nodeSources */
-            $nodeSources = $this->getNode()->getParent()->getNodeSourcesByTranslation($this->translation)->first();
+            $nodeSources = $parent->getNodeSourcesByTranslation($this->translation)->first();
             return $nodeSources ?: null;
         } else {
             return null;
@@ -616,22 +620,16 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
         if ($this->id) {
             $this->id = null;
             $documentsByFields = $this->getDocumentsByFields();
-            if ($documentsByFields !== null) {
-                $this->documentsByFields = new ArrayCollection();
-                foreach ($documentsByFields as $documentsByField) {
-                    $cloneDocumentsByField = clone $documentsByField;
-                    $this->documentsByFields->add($cloneDocumentsByField);
-                    $cloneDocumentsByField->setNodeSource($this);
-                }
+            $this->documentsByFields = new ArrayCollection();
+            foreach ($documentsByFields as $documentsByField) {
+                $cloneDocumentsByField = clone $documentsByField;
+                $this->documentsByFields->add($cloneDocumentsByField);
+                $cloneDocumentsByField->setNodeSource($this);
             }
             // Clear url-aliases before cloning.
-            if ($this->urlAliases !== null) {
-                $this->urlAliases->clear();
-            }
+            $this->urlAliases->clear();
             // Clear logs before cloning.
-            if ($this->logs !== null) {
-                $this->logs->clear();
-            }
+            $this->logs->clear();
         }
     }
 }

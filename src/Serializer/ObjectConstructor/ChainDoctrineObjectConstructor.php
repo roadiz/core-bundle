@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor;
@@ -91,8 +92,10 @@ class ChainDoctrineObjectConstructor implements ObjectConstructorInterface
         $identifierList = [];
 
         foreach ($classMetadata->getIdentifierFieldNames() as $name) {
-            if (isset($metadata->propertyMetadata[$name]) &&
-                isset($metadata->propertyMetadata[$name]->serializedName)) {
+            if (
+                isset($metadata->propertyMetadata[$name]) &&
+                isset($metadata->propertyMetadata[$name]->serializedName)
+            ) {
                 $dataName = $metadata->propertyMetadata[$name]->serializedName;
             } else {
                 $dataName = $name;

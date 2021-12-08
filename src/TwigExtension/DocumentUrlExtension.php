@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\TwigExtension;
@@ -67,7 +68,7 @@ class DocumentUrlExtension extends AbstractExtension
             try {
                 $absolute = false;
                 if (isset($criteria['absolute'])) {
-                    $absolute = (boolean) $criteria['absolute'];
+                    $absolute = (bool) $criteria['absolute'];
                 }
 
                 $this->documentUrlGenerator->setOptions($criteria);

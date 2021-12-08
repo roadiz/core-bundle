@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\SearchEngine;
@@ -51,8 +52,10 @@ class SolrSearchResults implements SearchResultsInterface
      */
     public function getResultCount(): int
     {
-        if (null !== $this->response &&
-            isset($this->response['response']['numFound'])) {
+        if (
+            null !== $this->response &&
+            isset($this->response['response']['numFound'])
+        ) {
             return (int) $this->response['response']['numFound'];
         }
         return 0;
@@ -67,8 +70,10 @@ class SolrSearchResults implements SearchResultsInterface
     {
         if (null === $this->resultItems) {
             $this->resultItems = [];
-            if (null !== $this->response &&
-                isset($this->response['response']['docs'])) {
+            if (
+                null !== $this->response &&
+                isset($this->response['response']['docs'])
+            ) {
                 $this->resultItems = array_filter(array_map(
                     function ($item) {
                         $object = $this->getHydratedItem($item);

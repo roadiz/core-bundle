@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -60,9 +61,11 @@ class DocumentDownscaleCommand extends Command
                 '<question>Are you sure to downscale all your image documents to ' . $this->maxPixelSize . 'px?</question>',
                 false
             );
-            if ($io->askQuestion(
-                $confirmation
-            )) {
+            if (
+                $io->askQuestion(
+                    $confirmation
+                )
+            ) {
                 /** @var Document[] $documents */
                 $documents = $entityManager
                     ->getRepository(Document::class)

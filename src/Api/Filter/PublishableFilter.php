@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Filter;
@@ -74,8 +75,10 @@ final class PublishableFilter extends GeneratedEntityFilter
             /*
              * Apply publication filter for NodesSources
              */
-            if ($resourceClass === NodesSources::class ||
-                preg_match($this->getGeneratedEntityNamespacePattern(), $resourceClass) > 0) {
+            if (
+                $resourceClass === NodesSources::class ||
+                preg_match($this->getGeneratedEntityNamespacePattern(), $resourceClass) > 0
+            ) {
                 $alias = QueryBuilderHelper::addJoinOnce(
                     $queryBuilder,
                     $queryNameGenerator,
@@ -103,8 +106,10 @@ final class PublishableFilter extends GeneratedEntityFilter
         /*
          * Apply publication filter for NodesSources
          */
-        if ($resourceClass === NodesSources::class ||
-            preg_match($this->getGeneratedEntityNamespacePattern(), $resourceClass) > 0) {
+        if (
+            $resourceClass === NodesSources::class ||
+            preg_match($this->getGeneratedEntityNamespacePattern(), $resourceClass) > 0
+        ) {
             $alias = QueryBuilderHelper::addJoinOnce(
                 $queryBuilder,
                 $queryNameGenerator,

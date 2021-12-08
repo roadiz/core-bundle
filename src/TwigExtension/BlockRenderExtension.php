@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\TwigExtension;
@@ -47,7 +48,7 @@ class BlockRenderExtension extends AbstractExtension
             if (!empty($themeName)) {
                 $class = $this->getNodeSourceControllerName($nodeSource, $themeName);
                 if (class_exists($class) && method_exists($class, 'blockAction')) {
-                    $controllerReference = new ControllerReference($class. '::blockAction', [
+                    $controllerReference = new ControllerReference($class . '::blockAction', [
                         'source' => $nodeSource,
                         'assignation' => $assignation,
                     ]);

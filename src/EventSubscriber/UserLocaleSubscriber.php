@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
@@ -68,9 +69,11 @@ final class UserLocaleSubscriber implements EventSubscriberInterface
 
         if ($event->getRequest()->hasPreviousSession()) {
             $session = $event->getRequest()->getSession();
-            if (null !== $session &&
+            if (
+                null !== $session &&
                 $user instanceof User &&
-                null !== $user->getLocale()) {
+                null !== $user->getLocale()
+            ) {
                 $session->set('_locale', $user->getLocale());
             }
         }
@@ -84,7 +87,8 @@ final class UserLocaleSubscriber implements EventSubscriberInterface
         $user = $event->getUser();
         $request = $this->requestStack->getMainRequest();
 
-        if (null !== $request &&
+        if (
+            null !== $request &&
             $request->hasPreviousSession() &&
             null !== $request->getSession() &&
             null !== $this->tokenStorage->getToken() &&

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Security\User;
@@ -68,10 +69,12 @@ class UserProvider implements UserProviderInterface
             $manager = $this->managerRegistry->getManagerForClass(User::class);
             /** @var User|null $refreshUser */
             $refreshUser = $manager->find(User::class, (int) $user->getId());
-            if ($refreshUser !== null &&
+            if (
+                $refreshUser !== null &&
                 $refreshUser->isEnabled() &&
                 $refreshUser->isAccountNonExpired() &&
-                $refreshUser->isAccountNonLocked()) {
+                $refreshUser->isAccountNonLocked()
+            ) {
                 // Always refresh User from database: too much related entities to rely only on token.
                 return $refreshUser;
             } else {

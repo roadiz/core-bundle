@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\SearchEngine;
@@ -91,7 +92,7 @@ class SolariumDocumentTranslation extends AbstractSolarium
         }
 
         $assoc['title'] = $this->documentTranslation->getName();
-        $assoc['title'.$suffix] = $this->documentTranslation->getName();
+        $assoc['title' . $suffix] = $this->documentTranslation->getName();
 
         /*
          * Remove ctrl characters
@@ -125,7 +126,7 @@ class SolariumDocumentTranslation extends AbstractSolarium
         // Use tags_txt to be compatible with other data types
         $assoc['tags_txt'] = $folderNames;
         // Compile all tags names into a single localized text field.
-        $assoc['tags_txt_'.$lang] = implode(' ', $folderNames);
+        $assoc['tags_txt_' . $lang] = implode(' ', $folderNames);
 
         /*
          * Collect data in a single field
@@ -133,7 +134,7 @@ class SolariumDocumentTranslation extends AbstractSolarium
          */
         $assoc['collection_txt'] = $collection;
         // Compile all text content into a single localized text field.
-        $assoc['collection_txt_'.$lang] = implode(PHP_EOL, $collection);
+        $assoc['collection_txt_' . $lang] = implode(PHP_EOL, $collection);
 
         return $assoc;
     }

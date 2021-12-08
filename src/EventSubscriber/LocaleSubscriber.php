@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
@@ -56,8 +57,10 @@ final class LocaleSubscriber implements EventSubscriberInterface
             /*
              * Set default locale
              */
-            if ($request->attributes->has('_locale') &&
-                $request->attributes->get('_locale') !== '') {
+            if (
+                $request->attributes->has('_locale') &&
+                $request->attributes->get('_locale') !== ''
+            ) {
                 $locale = $request->attributes->get('_locale');
                 $event->getRequest()->setLocale($locale);
                 \Locale::setDefault($locale);

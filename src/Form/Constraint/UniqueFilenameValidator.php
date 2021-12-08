@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\Constraint;
@@ -40,8 +41,10 @@ class UniqueFilenameValidator extends ConstraintValidator
              * If value is already the filename
              * do nothing.
              */
-            if (null !== $document &&
-                $value == $document->getFilename()) {
+            if (
+                null !== $document &&
+                $value == $document->getFilename()
+            ) {
                 return;
             }
 

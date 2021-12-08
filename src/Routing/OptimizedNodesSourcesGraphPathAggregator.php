@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Routing;
@@ -37,8 +38,10 @@ final class OptimizedNodesSourcesGraphPathAggregator implements NodesSourcesPath
      */
     public function aggregatePath(NodesSources $nodesSources, array $parameters = []): string
     {
-        if (isset($parameters[NodeRouter::NO_CACHE_PARAMETER]) &&
-            $parameters[NodeRouter::NO_CACHE_PARAMETER] === true) {
+        if (
+            isset($parameters[NodeRouter::NO_CACHE_PARAMETER]) &&
+            $parameters[NodeRouter::NO_CACHE_PARAMETER] === true
+        ) {
             $urlTokens = array_reverse($this->getIdentifiers($nodesSources));
             return implode('/', $urlTokens);
         }

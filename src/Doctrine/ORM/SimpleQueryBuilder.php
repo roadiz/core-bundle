@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Doctrine\ORM;
@@ -187,7 +188,7 @@ class SimpleQueryBuilder
             return $this->queryBuilder;
         }
 
-        throw new \InvalidArgumentException('Value is not supported for binding. ('.get_class($value).')');
+        throw new \InvalidArgumentException('Value is not supported for binding. (' . get_class($value) . ')');
     }
 
     /**
@@ -200,9 +201,11 @@ class SimpleQueryBuilder
     {
         if (isset($this->queryBuilder->getDQLPart('join')[$rootAlias])) {
             foreach ($this->queryBuilder->getDQLPart('join')[$rootAlias] as $join) {
-                if (null !== $join &&
+                if (
+                    null !== $join &&
                     $join instanceof Join &&
-                    $join->getAlias() === $joinAlias) {
+                    $join->getAlias() === $joinAlias
+                ) {
                     return true;
                 }
             }
@@ -214,7 +217,7 @@ class SimpleQueryBuilder
     /**
      * @return QueryBuilder
      */
-    public function getQueryBuilder() :QueryBuilder
+    public function getQueryBuilder(): QueryBuilder
     {
         return $this->queryBuilder;
     }

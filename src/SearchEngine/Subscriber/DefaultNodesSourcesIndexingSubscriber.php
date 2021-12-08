@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\SearchEngine\Subscriber;
@@ -99,7 +100,7 @@ final class DefaultNodesSourcesIndexingSubscriber implements EventSubscriberInte
             // Use tags_txt to be compatible with other data types
             $assoc['tags_txt'] = $out;
             // Compile all tags names into a single localized text field.
-            $assoc['tags_txt_'.$lang] = implode(' ', $out);
+            $assoc['tags_txt_' . $lang] = implode(' ', $out);
         }
 
         $criteria = new Criteria();
@@ -143,7 +144,7 @@ final class DefaultNodesSourcesIndexingSubscriber implements EventSubscriberInte
          */
         $assoc['collection_txt'] = $collection;
         // Compile all text content into a single localized text field.
-        $assoc['collection_txt_'.$lang] = implode(PHP_EOL, $collection);
+        $assoc['collection_txt_' . $lang] = implode(PHP_EOL, $collection);
         $event->setAssociations($assoc);
     }
 

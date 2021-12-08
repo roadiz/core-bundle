@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber;
@@ -47,24 +48,29 @@ final class SettingLifeCycleSubscriber implements EventSubscriber
     {
         $setting = $event->getEntity();
         if ($setting instanceof Setting) {
-            if ($event->hasChangedField('encrypted') &&
+            if (
+                $event->hasChangedField('encrypted') &&
                 $event->getNewValue('encrypted') === false &&
-                null !== $setting->getRawValue()) {
+                null !== $setting->getRawValue()
+            ) {
                 /*
                  * Set raw value and do not encode it if setting is not encrypted no more.
                  */
                 $this->logger->info(sprintf('Disabled encryption for %s setting.', $setting->getName()));
                 $setting->setValue($setting->getRawValue());
-            } elseif ($event->hasChangedField('encrypted') &&
+            } elseif (
+                $event->hasChangedField('encrypted') &&
                 $event->getNewValue('encrypted') === true &&
                 null !== $setting->getRawValue() &&
-                null !== $this->getEncoder()) {
+                null !== $this->getEncoder()
+            ) {
                 /*
                  * Encode value for the first time.
                  */
                 $this->logger->info(sprintf('Encode %s value for the first time.', $setting->getName()));
                 $setting->setValue($this->getEncoder()->encode(new HiddenString($setting->getRawValue())));
-            } elseif ($setting->isEncrypted() &&
+            } elseif (
+                $setting->isEncrypted() &&
                 $event->hasChangedField('value') &&
                 null !== $event->getNewValue('value') &&
                 null !== $this->getEncoder()
@@ -85,7 +91,8 @@ final class SettingLifeCycleSubscriber implements EventSubscriber
     public function postLoad(LifecycleEventArgs $event)
     {
         $setting = $event->getEntity();
-        if ($setting instanceof Setting &&
+        if (
+            $setting instanceof Setting &&
             $setting->isEncrypted() &&
             null !== $setting->getRawValue() &&
             null !== $this->getEncoder()

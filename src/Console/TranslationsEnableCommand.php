@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -53,9 +54,11 @@ class TranslationsEnableCommand extends Command
                 '<question>Are you sure to enable ' . $translation->getName() . ' (' . $translation->getLocale() . ') translation?</question>',
                 false
             );
-            if ($io->askQuestion(
-                $confirmation
-            )) {
+            if (
+                $io->askQuestion(
+                    $confirmation
+                )
+            ) {
                 $translation->setAvailable(true);
                 $this->managerRegistry->getManagerForClass(Translation::class)->flush();
                 $io->success('Translation enabled.');

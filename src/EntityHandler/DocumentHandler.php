@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EntityHandler;
@@ -119,8 +120,10 @@ class DocumentHandler extends AbstractHandler
                 /*
                  * Bubble un-privatisation to raw document if available.
                  */
-                if (null !== $this->document->getRawDocument() &&
-                    $this->document->getRawDocument()->isPrivate()) {
+                if (
+                    null !== $this->document->getRawDocument() &&
+                    $this->document->getRawDocument()->isPrivate()
+                ) {
                     $rawHandler = new DocumentHandler($this->objectManager, $this->packages);
                     $rawHandler->setDocument($this->document->getRawDocument());
                     $rawHandler->makePublic();
@@ -172,8 +175,10 @@ class DocumentHandler extends AbstractHandler
         }
 
         $docTranslation = $this->document->getDocumentTranslations()->first();
-        if (null !== $docTranslation &&
-            $docTranslation instanceof DocumentTranslation) {
+        if (
+            null !== $docTranslation &&
+            $docTranslation instanceof DocumentTranslation
+        ) {
             return $repository->findByDocumentAndTranslation($this->document, $docTranslation->getTranslation());
         }
 

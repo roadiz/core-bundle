@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
@@ -262,7 +263,7 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
      */
     public function getOneLineSummary()
     {
-        return $this->getId() . " — " . $this->getLabel() . ' ['.$this->getName().']' .
+        return $this->getId() . " — " . $this->getLabel() . ' [' . $this->getName() . ']' .
         ' - ' . $this->getTypeName() .
         ($this->isIndexed() ? ' - indexed' : '') .
         (!$this->isVisible() ? ' - hidden' : '') . PHP_EOL;

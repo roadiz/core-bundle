@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
@@ -144,7 +145,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      */
     public function setVisible($visible)
     {
-        $this->visible = (boolean) $visible;
+        $this->visible = (bool) $visible;
         return $this;
     }
 

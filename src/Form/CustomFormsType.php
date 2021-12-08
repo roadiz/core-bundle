@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
@@ -66,9 +67,11 @@ class CustomFormsType extends AbstractType
         /*
          * Add Google Recaptcha if setting optional options.
          */
-        if (!empty($options['recaptcha_public_key']) &&
+        if (
+            !empty($options['recaptcha_public_key']) &&
             !empty($options['recaptcha_private_key']) &&
-            !empty($options['request'])) {
+            !empty($options['request'])
+        ) {
             $verifyUrl = !empty($options['recaptcha_verifyurl']) ?
                 $options['recaptcha_verifyurl'] :
                 'https://www.google.com/recaptcha/api/siteverify';

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -94,9 +95,11 @@ final class NodesCleanNamesCommand extends Command
                          * Proceed to rename only if best name is not the current
                          * node-name AND if it is not ALREADY suffixed with a unique ID.
                          */
-                        if ($prefixNameSlug != $node->getNodeName() &&
+                        if (
+                            $prefixNameSlug != $node->getNodeName() &&
                             $this->nodeNamePolicy->isNodeNameValid($prefixNameSlug) &&
-                            !$this->nodeNamePolicy->isNodeNameWithUniqId($prefixNameSlug, $nodeSource->getNode()->getNodeName())) {
+                            !$this->nodeNamePolicy->isNodeNameWithUniqId($prefixNameSlug, $nodeSource->getNode()->getNodeName())
+                        ) {
                             $alreadyUsed = $this->nodeNamePolicy->isNodeNameAlreadyUsed($prefixNameSlug);
                             if (!$alreadyUsed) {
                                 $names[] = [
@@ -105,8 +108,10 @@ final class NodesCleanNamesCommand extends Command
                                 ];
                                 $node->setNodeName($prefixNameSlug);
                             } else {
-                                if ($input->getOption('use-date') &&
-                                    null !== $nodeSource->getPublishedAt()) {
+                                if (
+                                    $input->getOption('use-date') &&
+                                    null !== $nodeSource->getPublishedAt()
+                                ) {
                                     $suffixedNameSlug = $this->nodeNamePolicy->getDatestampedNodeName($nodeSource);
                                 } else {
                                     $suffixedNameSlug = $this->nodeNamePolicy->getSafeNodeName($nodeSource);

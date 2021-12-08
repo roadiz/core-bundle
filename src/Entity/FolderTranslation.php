@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
@@ -60,15 +61,15 @@ class FolderTranslation extends AbstractEntity
      * @ORM\JoinColumn(name="translation_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"folder", "document"})
      * @SymfonySerializer\Groups({"folder", "document"})
-     * @var Translation|null
+     * @var TranslationInterface|null
      */
     protected ?TranslationInterface $translation = null;
 
     /**
      * @param Folder $original
-     * @param Translation $translation
+     * @param TranslationInterface $translation
      */
-    public function __construct(Folder $original, Translation $translation)
+    public function __construct(Folder $original, TranslationInterface $translation)
     {
         $this->setFolder($original);
         $this->setTranslation($translation);
@@ -97,9 +98,9 @@ class FolderTranslation extends AbstractEntity
     /**
      * Gets the value of translation.
      *
-     * @return Translation
+     * @return TranslationInterface
      */
-    public function getTranslation(): Translation
+    public function getTranslation(): TranslationInterface
     {
         return $this->translation;
     }
@@ -107,10 +108,10 @@ class FolderTranslation extends AbstractEntity
     /**
      * Sets the value of translation.
      *
-     * @param Translation $translation the translation
+     * @param TranslationInterface $translation the translation
      * @return self
      */
-    public function setTranslation(Translation $translation): FolderTranslation
+    public function setTranslation(TranslationInterface $translation): FolderTranslation
     {
         $this->translation = $translation;
         return $this;

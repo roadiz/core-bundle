@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
@@ -34,7 +35,7 @@ final class SettingGroupRepository extends EntityRepository
             WHERE s.name = :name')
                         ->setParameter('name', $name);
 
-        return (boolean) $query->getSingleScalarResult();
+        return (bool) $query->getSingleScalarResult();
     }
 
     /**

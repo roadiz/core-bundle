@@ -1,7 +1,10 @@
 <?php
+
 declare(strict_types=1);
 
-namespace RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor;;
+namespace RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor;
+
+;
 
 use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\Exception\ObjectConstructionException;

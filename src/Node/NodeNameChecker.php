@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Node;
@@ -117,8 +118,10 @@ class NodeNameChecker implements NodeNamePolicyInterface
             ->getRepository(Node::class)
             ->setDisplayingNotPublishedNodes(true);
 
-        if (false === (bool) $urlAliasRepo->exists($nodeName) &&
-            false === (bool) $nodeRepo->exists($nodeName)) {
+        if (
+            false === (bool) $urlAliasRepo->exists($nodeName) &&
+            false === (bool) $nodeRepo->exists($nodeName)
+        ) {
             return false;
         }
         return true;

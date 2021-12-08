@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
@@ -64,9 +65,11 @@ class TranslationsDeleteCommand extends Command
                 '<question>Are you sure to delete ' . $translation->getName() . ' (' . $translation->getLocale() . ') translation?</question>',
                 false
             );
-            if ($io->askQuestion(
-                $confirmation
-            )) {
+            if (
+                $io->askQuestion(
+                    $confirmation
+                )
+            ) {
                 $this->managerRegistry->getManagerForClass(Translation::class)->remove($translation);
                 $this->managerRegistry->getManagerForClass(Translation::class)->flush();
                 $io->success('Translation deleted.');

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Mailer;
@@ -281,8 +282,10 @@ class ContactFormManager extends EmailManager
         $privateKey = $this->settingsBag->get('recaptcha_private_key');
         $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify';
 
-        if (!empty($publicKey) &&
-            !empty($privateKey)) {
+        if (
+            !empty($publicKey) &&
+            !empty($privateKey)
+        ) {
             $this->getFormBuilder()->add($name, RecaptchaType::class, [
                 'label' => false,
                 'configs' => [
@@ -437,9 +440,11 @@ class ContactFormManager extends EmailManager
      */
     protected function addUploadedFile(string $name, UploadedFile $uploadedFile): ContactFormManager
     {
-        if (!$uploadedFile->isValid() ||
+        if (
+            !$uploadedFile->isValid() ||
             !in_array($uploadedFile->getMimeType(), $this->allowedMimeTypes) ||
-            $uploadedFile->getSize() > $this->maxFileSize) {
+            $uploadedFile->getSize() > $this->maxFileSize
+        ) {
             throw new BadFormRequestException(
                 $this->translator->trans('file.not.accepted'),
                 Response::HTTP_FORBIDDEN,

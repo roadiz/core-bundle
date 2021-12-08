@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\DataTransformer;
@@ -49,9 +50,11 @@ class ProviderDataTransformer implements DataTransformerInterface
      */
     public function reverseTransform($formToEntities)
     {
-        if (is_array($formToEntities) &&
+        if (
+            is_array($formToEntities) &&
             $this->nodeTypeField->isSingleProvider() &&
-            isset($formToEntities[0])) {
+            isset($formToEntities[0])
+        ) {
             return $formToEntities[0];
         }
 

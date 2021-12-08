@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Doctrine\Event;
@@ -23,7 +24,7 @@ abstract class FilterQueryCriteriaEvent extends Event
     /**
      * @var Query
      */
-    protected Query$query;
+    protected Query $query;
 
     /**
      * @param Query $query

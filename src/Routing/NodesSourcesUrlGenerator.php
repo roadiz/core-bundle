@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Routing;
@@ -69,8 +70,10 @@ final class NodesSourcesUrlGenerator
     {
         if (null !== $this->nodeSource) {
             if ($this->isNodeSourceHome($this->nodeSource)) {
-                if ($this->nodeSource->getTranslation()->isDefaultTranslation() &&
-                    false === $this->forceLocale) {
+                if (
+                    $this->nodeSource->getTranslation()->isDefaultTranslation() &&
+                    false === $this->forceLocale
+                ) {
                     return '';
                 } else {
                     return $this->nodeSource->getTranslation()->getPreferredLocale();
@@ -130,7 +133,8 @@ final class NodesSourcesUrlGenerator
          * Of course we force prefix if admin said so…
          * Or we can force prefix only when we use urlAliases
          */
-        if ((
+        if (
+            (
                 !$this->useUrlAlias($nodesSources) &&
                 !$nodesSources->getTranslation()->isDefaultTranslation()
             ) ||
