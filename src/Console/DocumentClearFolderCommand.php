@@ -64,7 +64,7 @@ class DocumentClearFolderCommand extends Command
         $batchSize = 20;
         $i = 0;
 
-        $count = $this->getDocumentQueryBuilder($em, $folder)
+        $count = (int) $this->getDocumentQueryBuilder($em, $folder)
             ->select('count(d)')
             ->getQuery()
             ->getSingleScalarResult();

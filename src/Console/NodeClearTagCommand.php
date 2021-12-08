@@ -65,7 +65,7 @@ class NodeClearTagCommand extends Command
         $batchSize = 20;
         $i = 0;
 
-        $count = $this->getNodeQueryBuilder($tag)
+        $count = (int) $this->getNodeQueryBuilder($tag)
             ->select('count(n)')
             ->getQuery()
             ->getSingleScalarResult();

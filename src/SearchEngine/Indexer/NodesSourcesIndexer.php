@@ -88,7 +88,7 @@ class NodesSourcesIndexer extends AbstractIndexer
         $countQuery = $this->getAllQueryBuilder()
             ->select('count(ns)')
             ->getQuery();
-        $count = $countQuery->getSingleScalarResult();
+        $count = (int) $countQuery->getSingleScalarResult();
 
         $baseQb = $this->getAllQueryBuilder()->addSelect('n');
         if ($batchCount > 1) {
