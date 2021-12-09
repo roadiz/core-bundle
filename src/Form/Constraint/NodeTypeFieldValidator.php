@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 
-use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\Configuration\CollectionFieldConfiguration;
 use RZ\Roadiz\CoreBundle\Configuration\JoinNodeTypeFieldConfiguration;
 use RZ\Roadiz\CoreBundle\Configuration\ProviderFieldConfiguration;
@@ -68,7 +68,7 @@ class NodeTypeFieldValidator extends ConstraintValidator
                 }
 
                 $reflection = new \ReflectionClass($configuration['classname']);
-                if (!$reflection->isSubclassOf(AbstractEntity::class)) {
+                if (!$reflection->implementsInterface(PersistableInterface::class)) {
                     $this->context->buildViolation('classname_%classname%_must_extend_abstract_entity_class')
                         ->setParameter('%classname%', $configuration['classname'])
                         ->atPath('defaultValues')
