@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\ListManager;
 
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\CoreBundle\Repository\EntityRepository;
 use RZ\Roadiz\CoreBundle\Repository\StatusAwareRepository;
@@ -128,7 +131,19 @@ class Paginator
                     $this->totalCount = $repository->countBy($this->criteria);
                 }
             } else {
-                throw new \RuntimeException('Count-by feature is not available using Doctrine default repository.');
+                if (null !== $this->searchPattern) {
+                    /*
+                     * Use QueryBuilder for non-roadiz entities
+                     */
+                    $qb = $this->getSearchQueryBuilder();
+                    $qb->select($qb->expr()->countDistinct('o'));
+                    try {
+                        return (int)$qb->getQuery()->getSingleScalarResult();
+                    } catch (NoResultException | NonUniqueResultException $e) {
+                        return 0;
+                    }
+                }
+                $this->totalCount = $repository->count($this->criteria);
             }
         }
 
@@ -137,8 +152,6 @@ class Paginator
 
     /**
      * Return page count according to criteria.
-     *
-     * **Warning** : EntityRepository must implements *countBy* method
      *
      * @return int
      */
@@ -191,7 +204,18 @@ class Paginator
             );
         }
 
-        throw new \RuntimeException('Search feature is not available using Doctrine default repository.');
+        /*
+         * Use QueryBuilder for non-roadiz entities
+         */
+        $qb = $this->getSearchQueryBuilder();
+        $qb->setMaxResults($this->getItemsPerPage())
+            ->setFirstResult($this->getItemsPerPage() * ($page - 1));
+
+        foreach ($order as $key => $value) {
+            $qb->addOrderBy('o.' . $key, $value);
+        }
+
+        return $qb->getQuery()->getResult();
     }
 
     /**
@@ -211,6 +235,31 @@ class Paginator
     public function getItemsPerPage(): int
     {
         return $this->itemsPerPage;
+    }
+
+    protected function getSearchQueryBuilder(): QueryBuilder
+    {
+        $searchableFields = $this->getSearchableFields();
+        if (count($searchableFields) === 0) {
+            throw new \RuntimeException('Entity has no searchable field.');
+        }
+        $qb = $this->getRepository()->createQueryBuilder('o');
+        $orX = [];
+        foreach ($this->getSearchableFields() as $field) {
+            $orX[] = $qb->expr()->like('o.' . $field, $qb->expr()->literal('%' . $this->searchPattern . '%'));
+        }
+        $qb->andWhere($qb->expr()->orX(...$orX));
+        return $qb;
+    }
+
+    protected function getSearchableFields(): array
+    {
+        return array_filter(
+            ['name', 'title', 'slug'],
+            function (string $fieldName) {
+                return $this->em->getClassMetadata($this->entityName)->hasField($fieldName);
+            }
+        );
     }
 
     /**

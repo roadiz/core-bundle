@@ -7,6 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Repository;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
@@ -210,8 +211,7 @@ abstract class EntityRepository extends ServiceEntityRepository
      *
      * @param Criteria|mixed|array $criteria or array
      *
-     * @return integer
-     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @return int
      */
     public function countBy($criteria)
     {
@@ -227,7 +227,7 @@ abstract class EntityRepository extends ServiceEntityRepository
 
             try {
                 return (int) $qb->getQuery()->getSingleScalarResult();
-            } catch (NoResultException $e) {
+            } catch (NoResultException | NonUniqueResultException $e) {
                 return 0;
             }
         }
@@ -370,7 +370,11 @@ abstract class EntityRepository extends ServiceEntityRepository
         $this->dispatchQueryBuilderEvent($qb, $this->getEntityName());
         $this->applyFilterByCriteria($criteria, $qb);
 
-        return (int) $qb->getQuery()->getSingleScalarResult();
+        try {
+            return (int) $qb->getQuery()->getSingleScalarResult();
+        } catch (NoResultException | NonUniqueResultException $e) {
+            return 0;
+        }
     }
 
     /**
