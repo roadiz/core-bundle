@@ -62,7 +62,7 @@ class NodeTypeFieldValidator extends ConstraintValidator
                 if (!class_exists($configuration['classname'])) {
                     $this->context->buildViolation('classname_%classname%_does_not_exist')
                         ->setParameter('%classname%', $configuration['classname'])
-                        ->atPath('defaultValues')
+                        ->atPath('classname')
                         ->addViolation();
                     return;
                 }
@@ -71,7 +71,7 @@ class NodeTypeFieldValidator extends ConstraintValidator
                 if (!$reflection->implementsInterface(PersistableInterface::class)) {
                     $this->context->buildViolation('classname_%classname%_must_extend_abstract_entity_class')
                         ->setParameter('%classname%', $configuration['classname'])
-                        ->atPath('defaultValues')
+                        ->atPath('classname')
                         ->addViolation();
                 }
 
@@ -79,7 +79,7 @@ class NodeTypeFieldValidator extends ConstraintValidator
                     $this->context->buildViolation('classname_%classname%_does_not_declare_%method%_method')
                         ->setParameter('%classname%', $configuration['classname'])
                         ->setParameter('%method%', $configuration['displayable'])
-                        ->atPath('defaultValues')
+                        ->atPath('displayable')
                         ->addViolation();
                 }
 
@@ -88,7 +88,17 @@ class NodeTypeFieldValidator extends ConstraintValidator
                         $this->context->buildViolation('classname_%classname%_does_not_declare_%method%_method')
                             ->setParameter('%classname%', $configuration['classname'])
                             ->setParameter('%method%', $configuration['alt_displayable'])
-                            ->atPath('defaultValues')
+                            ->atPath('alt_displayable')
+                            ->addViolation();
+                    }
+                }
+
+                if (!empty($configuration['thumbnail'])) {
+                    if (!$reflection->hasMethod($configuration['thumbnail'])) {
+                        $this->context->buildViolation('classname_%classname%_does_not_declare_%method%_method')
+                            ->setParameter('%classname%', $configuration['classname'])
+                            ->setParameter('%method%', $configuration['thumbnail'])
+                            ->atPath('thumbnail')
                             ->addViolation();
                     }
                 }
