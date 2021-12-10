@@ -21,6 +21,7 @@ use RZ\Roadiz\Utils\StringHandler;
 use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
+use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
 
 /**
  * Documents entity represent a file on server with datetime and naming.
@@ -37,6 +38,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
  *     @ORM\Index(columns={"mime_type"})
  * })
  * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
+ * @ApiFilter(RoadizFilter\RawDocumentFilter::class)
  * @ApiFilter(BaseFilter\OrderFilter::class, properties={
  *     "createdAt",
  *     "updatedAt",
