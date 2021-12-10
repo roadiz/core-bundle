@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimedPositioned;
 use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
@@ -278,11 +279,11 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     }
 
     /**
-     * @param Translation $translation
+     * @param TranslationInterface $translation
      * @return Collection<TagTranslation>
      * @SymfonySerializer\Ignore
      */
-    public function getTranslatedTagsByTranslation(Translation $translation): Collection
+    public function getTranslatedTagsByTranslation(TranslationInterface $translation): Collection
     {
         return $this->translatedTags->filter(function (TagTranslation $tagTranslation) use ($translation) {
             return $tagTranslation->getTranslation()->getLocale() === $translation->getLocale();

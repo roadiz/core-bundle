@@ -7,19 +7,49 @@ namespace RZ\Roadiz\CoreBundle\Api\Dto;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use Symfony\Component\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 abstract class NodesSourcesDto
 {
+    /**
+     * @var string
+     * @Groups({"nodes_sources", "nodes_sources_base"})
+     */
     public string $title = '';
+    /**
+     * @var string
+     * @Groups({"nodes_sources", "nodes_sources_base"})
+     */
     public string $metaTitle = '';
+    /**
+     * @var string
+     * @Groups({"nodes_sources", "nodes_sources_base"})
+     */
     public string $metaDescription = '';
+    /**
+     * @var string
+     * @Groups({"nodes_sources", "nodes_sources_base"})
+     */
     public string $slug = '';
+    /**
+     * @var \DateTime|null
+     * @Groups({"nodes_sources", "nodes_sources_base"})
+     */
     public ?\DateTime $publishedAt = null;
-    public ?Node $node = null;
-    public ?TranslationInterface $translation = null;
+    /**
+     * @var NodeOutput|null
+     * @Groups({"nodes_sources", "nodes_sources_base"})
+     */
+    public ?NodeOutput $node = null;
+    /**
+     * @var TranslationOutput|null
+     * @Groups({"nodes_sources", "nodes_sources_base", "translation_base"})
+     */
+    public ?TranslationOutput $translation = null;
     /**
      * @var string|null
      * @Serializer\MaxDepth(4)
+     * @Groups({"nodes_sources", "nodes_sources_base", "urls"})
      */
     public ?string $url = null;
 }

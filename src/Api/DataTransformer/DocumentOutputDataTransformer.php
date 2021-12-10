@@ -26,7 +26,15 @@ class DocumentOutputDataTransformer implements DataTransformerInterface
         $output->processable = $data->isProcessable();
         $output->type = $data->getShortType();
         $output->alt = $data->getFilename();
-        $output->thumbnail = $data->getThumbnails()->first() ?: null;
+
+        if (false !== $data->getThumbnails()->first()) {
+            $output->thumbnail = $this->transform(
+                $data->getThumbnails()->first(),
+                $to,
+                $context
+            );
+        }
+
         if (isset($context['translation']) && $context['translation'] instanceof TranslationInterface) {
             $translatedData = $data->getDocumentTranslationsByTranslation($context['translation'])->first() ?: null;
             if ($translatedData instanceof DocumentTranslation) {
