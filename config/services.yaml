@@ -50,6 +50,11 @@ services:
         autowire: true
         tags: [ { name: 'api_platform.filter' } ]
 
+    RZ\Roadiz\CoreBundle\Bag\:
+        resource: '../src/Bag/'
+        autowire: true
+        public: true
+
     RZ\Roadiz\CoreBundle\Serializer\TranslationAwareNormalizer:
         tags:
             - { name: 'serializer.normalizer', priority: 64 }
@@ -103,6 +108,7 @@ services:
 
     RZ\Roadiz\Contracts\NodeType\NodeTypeResolverInterface:
         alias: RZ\Roadiz\CoreBundle\Bag\NodeTypes
+        public: true
 
     RZ\Roadiz\EntityGenerator\EntityGeneratorFactory:
         arguments:
@@ -126,9 +132,11 @@ services:
 
     RZ\Roadiz\Core\Models\FileAwareInterface:
         alias: RZ\Roadiz\CoreBundle\Filesystem\RoadizFileDirectories
+        public: true
 
     RZ\Roadiz\CoreBundle\Filesystem\RoadizFileDirectories:
         arguments: ['%kernel.project_dir%']
+        public: true
 
     RZ\Roadiz\Random\PasswordGenerator: ~
 
