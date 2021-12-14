@@ -24,7 +24,11 @@ class ExplorerProviderItemType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $builder->addModelTransformer(new ExplorerProviderItemTransformer($options['explorerProvider']));
+        $builder->addModelTransformer(new ExplorerProviderItemTransformer(
+            $options['explorerProvider'],
+            $options['multiple'],
+            $options['useCollection'],
+        ));
     }
 
     /**
@@ -68,9 +72,11 @@ class ExplorerProviderItemType extends AbstractType
         $resolver->setDefault('max_length', 0);
         $resolver->setDefault('min_length', 0);
         $resolver->setDefault('multiple', true);
+        $resolver->setDefault('useCollection', false);
         $resolver->setAllowedTypes('max_length', ['int']);
         $resolver->setAllowedTypes('min_length', ['int']);
         $resolver->setAllowedTypes('multiple', ['bool']);
+        $resolver->setAllowedTypes('useCollection', ['bool']);
     }
 
     /**

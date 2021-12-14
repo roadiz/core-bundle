@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\DataTransformer;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use RZ\Roadiz\CoreBundle\Explorer\ExplorerItemInterface;
 use RZ\Roadiz\CoreBundle\Explorer\ExplorerProviderInterface;
 use Symfony\Component\Form\DataTransformerInterface;
@@ -12,13 +13,22 @@ use Symfony\Component\Form\Exception\TransformationFailedException;
 class ExplorerProviderItemTransformer implements DataTransformerInterface
 {
     protected ExplorerProviderInterface $explorerProvider;
+    protected bool $multiple;
+    protected bool $useCollection;
 
     /**
      * @param ExplorerProviderInterface $explorerProvider
+     * @param bool $multiple
+     * @param bool $useCollection
      */
-    public function __construct(ExplorerProviderInterface $explorerProvider)
-    {
+    public function __construct(
+        ExplorerProviderInterface $explorerProvider,
+        bool $multiple = true,
+        bool $useCollection = false
+    ) {
         $this->explorerProvider = $explorerProvider;
+        $this->multiple = $multiple;
+        $this->useCollection = $useCollection;
     }
 
     /**
@@ -32,7 +42,7 @@ class ExplorerProviderItemTransformer implements DataTransformerInterface
                 throw new TransformationFailedException('Cannot transform model to ExplorerItem.');
             }
             return [$item];
-        } elseif (!empty($value) && is_array($value)) {
+        } elseif (!empty($value) && is_iterable($value)) {
             $idArray = [];
             foreach ($value as $entity) {
                 if ($this->explorerProvider->supports($entity)) {
@@ -62,6 +72,12 @@ class ExplorerProviderItemTransformer implements DataTransformerInterface
             $originals[] = $item->getOriginal();
         }
 
-        return array_filter($originals);
+        if ($this->multiple) {
+            if ($this->useCollection) {
+                return new ArrayCollection(array_filter($originals));
+            }
+            return array_filter($originals);
+        }
+        return array_filter($originals)[0] ?? null;
     }
 }
