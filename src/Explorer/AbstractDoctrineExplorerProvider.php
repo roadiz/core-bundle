@@ -64,7 +64,7 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
         $listManager->setDisplayingNotPublishedNodes(true);
         $listManager->setItemPerPage($this->options['itemPerPage']);
         $listManager->handle();
-        $listManager->setPage($this->options['page']);
+        $listManager->setPage((int) $this->options['page']);
 
         return $listManager;
     }
