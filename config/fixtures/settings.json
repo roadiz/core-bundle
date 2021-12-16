@@ -4,12 +4,12 @@
         "visible": true,
         "encrypted": false,
         "description": "Force displaying translation locale in every node’ paths. This should be *ON* if you redirect users based on their language on homepage.",
-        "settingGroup": {
+        "setting_group": {
             "name": "Development",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 5,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "use_typed_node_names",
@@ -17,21 +17,21 @@
         "visible": true,
         "encrypted": false,
         "description": "use_typed_node_names.help",
-        "settingGroup": {
+        "setting_group": {
             "name": "Development",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 5,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "force_locale_with_urlaliases",
         "description": "force_locale_with_urlaliases.help",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Development",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 5
     },
@@ -41,12 +41,12 @@
         "encrypted": false,
         "description": "Default maps tiles layout when using *Leaflet*.",
         "visible": true,
-        "settingGroup": {
+        "setting_group": {
             "name": "Development",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "maps_style",
@@ -54,12 +54,12 @@
         "description": "Default maps tiles layout when using *Google Maps*.",
         "encrypted": false,
         "visible": true,
-        "settingGroup": {
+        "setting_group": {
             "name": "Development",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 23,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "maps_default_location",
@@ -67,24 +67,24 @@
         "encrypted": false,
         "description": "Default maps marker location.",
         "visible": true,
-        "settingGroup": {
+        "setting_group": {
             "name": "Development",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 23,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "use_cdn",
         "value": "1",
         "encrypted": false,
         "visible": true,
-        "settingGroup": {
+        "setting_group": {
             "name": "Development",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 5,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "max_versions_showed",
@@ -92,54 +92,20 @@
         "encrypted": false,
         "value": "10",
         "visible": true,
-        "settingGroup": {
+        "setting_group": {
             "name": "Development",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 6
-    },
-    {
-        "name": "use_native_json",
-        "description": "Use MySQL 5.7+ JSON field type.",
-        "value": "1",
-        "visible": true,
-        "encrypted": false,
-        "settingGroup": {
-            "name": "Development",
-            "inMenu": true
-        },
-        "type": 5
-    },
-    {
-        "name": "oauth_client_id",
-        "description": "oauth_client_id.help",
-        "visible": true,
-        "encrypted": true,
-        "settingGroup": {
-            "name": "OpenId",
-            "inMenu": true
-        },
-        "type": 0
-    },
-    {
-        "name": "oauth_client_secret",
-        "description": "oauth_client_secret.help",
-        "visible": true,
-        "encrypted": true,
-        "settingGroup": {
-            "name": "OpenId",
-            "inMenu": true
-        },
-        "type": 2
     },
     {
         "name": "openid_default_roles",
         "description": "openid_default_roles.help",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "OpenId",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0
     },
@@ -148,9 +114,9 @@
         "description": "openid_button_label.help",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "OpenId",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0
     },
@@ -159,364 +125,353 @@
         "visible": true,
         "encrypted": false,
         "description": "Default sender email, used as origin for every system email sent. This email **must be allowed by your SMTP server.**",
-        "settingGroup": {
+        "setting_group": {
             "name": "Emailings",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 8,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "email_sender_name",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Emailings",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "soundcloud_client_id",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "APIs",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "google_client_id",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "APIs",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "google_server_id",
         "visible": true,
         "encrypted": true,
-        "settingGroup": {
+        "setting_group": {
             "name": "APIs",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "twitter_client_id",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "APIs",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "twitter_consumer_key",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "APIs",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "twitter_consumer_secret",
         "visible": true,
         "encrypted": true,
-        "settingGroup": {
+        "setting_group": {
             "name": "APIs",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "twitter_access_token",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "APIs",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "twitter_access_token_secret",
         "visible": true,
         "encrypted": true,
-        "settingGroup": {
+        "setting_group": {
             "name": "APIs",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "facebook_client_id",
         "visible": true,
         "encrypted": true,
-        "settingGroup": {
+        "setting_group": {
             "name": "APIs",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "universal_analytics_id",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "APIs",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "google_tag_manager_id",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "APIs",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "recaptcha_public_key",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "APIs",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "recaptcha_private_key",
         "visible": true,
         "encrypted": true,
-        "settingGroup": {
+        "setting_group": {
             "name": "APIs",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "instagram_user_id",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "APIs",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "instagram_access_token",
         "visible": true,
         "encrypted": true,
-        "settingGroup": {
+        "setting_group": {
             "name": "APIs",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
-    },
-    {
-        "name": "unsplash_client_id",
-        "description": "unsplash_client_id.help",
-        "visible": true,
-        "encrypted": false,
-        "settingGroup": {
-            "name": "APIs",
-            "inMenu": true
-        },
-        "type": 0
+        "default_values": ""
     },
     {
         "name": "seo_description",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Site information",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 2,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "site_name",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Site information",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "maintenance_mode",
         "visible": true,
         "encrypted": false,
         "description": "Switch maintenance mode. Only login page will be available for public requests.",
-        "settingGroup": {
+        "setting_group": {
             "name": "Site information",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 5,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "site_copyright",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Site information",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "main_color",
         "encrypted": false,
         "visible": true,
-        "settingGroup": {
+        "setting_group": {
             "name": "Site information",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 11,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "admin_image",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Site information",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 9,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "login_image",
         "visible": true,
         "encrypted": false,
         "description": "Replace random *Splashbase* login images with your own.",
-        "settingGroup": {
+        "setting_group": {
             "name": "Site information",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 9,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "facebook_url",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Social networks",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "instagram_url",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Social networks",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "pinterest_url",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Social networks",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "twitter_url",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Social networks",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "linkedin_url",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Social networks",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "youtube_url",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Social networks",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "twitter_account",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Social networks",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0,
-        "defaultValues": ""
+        "default_values": ""
     },
     {
         "name": "hide_roadiz_version",
         "description": "hide_roadiz_version.help",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Site information",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 5
     },
@@ -525,9 +480,9 @@
         "description": "custom_preview_scheme.help",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Site information",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0
     },
@@ -536,9 +491,9 @@
         "description": "custom_public_scheme.help",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Site information",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 0
     },
@@ -547,9 +502,9 @@
         "description": "dashboard_iframe.help",
         "visible": true,
         "encrypted": false,
-        "settingGroup": {
+        "setting_group": {
             "name": "Site information",
-            "inMenu": true
+            "in_menu": true
         },
         "type": 2
     }
