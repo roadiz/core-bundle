@@ -26,6 +26,9 @@ class DocumentOutputDataTransformer implements DataTransformerInterface
         $output->processable = $data->isProcessable();
         $output->type = $data->getShortType();
         $output->alt = $data->getFilename();
+        $output->embedId = $data->getEmbedId();
+        $output->embedPlatform = $data->getEmbedPlatform();
+        $output->imageAverageColor = $data->getImageAverageColor();
 
         if (false !== $data->getThumbnails()->first()) {
             $output->thumbnail = $this->transform(

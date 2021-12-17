@@ -33,6 +33,21 @@ final class DocumentOutput
      * @var string|null
      * @Groups({"document", "document_display"})
      */
+    public ?string $embedId = null;
+    /**
+     * @var string|null
+     * @Groups({"document", "document_display"})
+     */
+    public ?string $embedPlatform = null;
+    /**
+     * @var string|null
+     * @Groups({"document", "document_display"})
+     */
+    public ?string $imageAverageColor = null;
+    /**
+     * @var string|null
+     * @Groups({"document", "document_display"})
+     */
     public ?string $copyright = null;
     /**
      * @var bool
