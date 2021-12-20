@@ -26,7 +26,7 @@ services:
             $privateKeyName: '%roadiz_core.private_key_name%'
             $generatedEntitiesDir: '%roadiz_core.generated_entities_dir%'
             $debug: '%kernel.debug%'
-            $defaultControllerClass: 'RZ\Roadiz\CoreBundle\Controller\DefaultNodeSourceController'
+            $defaultControllerClass: '%roadiz_core.default_node_source_controller%'
             $webhookMessageTypes: '%roadiz_core.webhook.message_types%'
 
     RZ\Roadiz\CoreBundle\:

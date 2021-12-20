@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\DependencyInjection;
 
+use RZ\Roadiz\CoreBundle\Controller\DefaultNodeSourceController;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -26,6 +27,9 @@ class Configuration implements ConfigurationInterface
             ->end()
             ->scalarNode('staticDomainName')
                 ->defaultValue(null)
+            ->end()
+            ->scalarNode('defaultNodeSourceController')
+                ->defaultValue(DefaultNodeSourceController::class)
             ->end()
             ->booleanNode('useNativeJsonColumnType')
                 ->defaultValue(true)
