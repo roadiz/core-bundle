@@ -26,7 +26,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * })
  * @ORM\HasLifecycleCallbacks
  */
-class User extends AbstractHuman implements UserInterface, AdvancedUserInterface, \Serializable, EquatableInterface, PasswordAuthenticatedUserInterface
+class User extends AbstractHuman implements UserInterface, AdvancedUserInterface, EquatableInterface, PasswordAuthenticatedUserInterface
 {
     /**
      * Email confirmation link TTL (in seconds) to change
@@ -880,6 +880,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      *
      * @see https://github.com/FriendsOfSymfony/FOSUserBundle/blob/master/Model/User.php
      * @SymfonySerializer\Ignore
+     * @deprecated Use __serialize
      */
     public function serialize()
     {
@@ -905,10 +906,63 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * {@inheritdoc}
      *
      * @see https://github.com/FriendsOfSymfony/FOSUserBundle/blob/master/Model/User.php
+     * @deprecated Use __unserialize
      */
     public function unserialize($serialized)
     {
         $data = unserialize($serialized);
+        if (count($data) === 6) {
+            // Compatibility with Roadiz <=1.4
+            [
+                $this->password,
+                $this->salt,
+                $this->username,
+                $this->enabled,
+                $this->id,
+                $this->email,
+            ] = $data;
+        } else {
+            [
+                $this->password,
+                $this->salt,
+                $this->username,
+                $this->enabled,
+                $this->id,
+                $this->email,
+                $this->roles,
+                $this->groups,
+                $this->expired,
+                $this->expiresAt,
+                $this->locked,
+                $this->credentialsExpired,
+                $this->credentialsExpiresAt,
+            ] = $data;
+        }
+    }
+
+    public function __serialize()
+    {
+        return [
+            $this->password,
+            $this->salt,
+            $this->username,
+            $this->enabled,
+            $this->id,
+            $this->email,
+            // needed for token roles
+            $this->roles,
+            $this->groups,
+            // needed for advancedUserinterface
+            $this->expired,
+            $this->expiresAt,
+            $this->locked,
+            $this->credentialsExpired,
+            $this->credentialsExpiresAt,
+        ];
+    }
+
+    public function __unserialize($data)
+    {
         if (count($data) === 6) {
             // Compatibility with Roadiz <=1.4
             [

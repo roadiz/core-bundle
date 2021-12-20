@@ -226,10 +226,11 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
 
     /**
      * @param NodesSources $source
-     * @param array        $parameters
-     * @param bool         $noCache
+     * @param array $parameters
+     * @param bool $noCache
      *
      * @return NodePathInfo
+     * @throws \Psr\Cache\InvalidArgumentException
      */
     protected function getResourcePath(
         NodesSources $source,

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Routing;
 
-class NodePathInfo implements \Serializable
+class NodePathInfo
 {
     protected ?string $path = null;
     protected array $parameters = [];
@@ -92,7 +92,7 @@ class NodePathInfo implements \Serializable
     }
 
     /**
-     * @inheritDoc
+     * @deprecated Use __serialize
      */
     public function serialize()
     {
@@ -104,12 +104,30 @@ class NodePathInfo implements \Serializable
         ]);
     }
 
+    public function __serialize()
+    {
+        return [
+            'path' => $this->getPath(),
+            'parameters' => $this->getParameters(),
+            'is_complete' => $this->isComplete(),
+            'contains_scheme' => $this->containsScheme()
+        ];
+    }
+
     /**
-     * @inheritDoc
+     * @deprecated Use __unserialize
      */
     public function unserialize($serialized)
     {
         $data = \json_decode($serialized, true);
+        $this->setComplete($data['is_complete']);
+        $this->setParameters($data['parameters']);
+        $this->setPath($data['path']);
+        $this->setContainsScheme($data['contains_scheme']);
+    }
+
+    public function __unserialize($data)
+    {
         $this->setComplete($data['is_complete']);
         $this->setParameters($data['parameters']);
         $this->setPath($data['path']);
