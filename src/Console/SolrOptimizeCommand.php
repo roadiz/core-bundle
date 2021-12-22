@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
+use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry;
-use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\NodesSourcesIndexer;
+use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\IndexerFactoryInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -15,16 +16,16 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class SolrOptimizeCommand extends SolrCommand
 {
-    protected NodesSourcesIndexer $nodesSourcesIndexer;
+    protected IndexerFactoryInterface $indexerFactory;
 
     /**
      * @param ClientRegistry $clientRegistry
-     * @param NodesSourcesIndexer $nodesSourcesIndexer
+     * @param IndexerFactoryInterface $indexerFactory
      */
-    public function __construct(ClientRegistry $clientRegistry, NodesSourcesIndexer $nodesSourcesIndexer)
+    public function __construct(ClientRegistry $clientRegistry, IndexerFactoryInterface $indexerFactory)
     {
         parent::__construct($clientRegistry);
-        $this->nodesSourcesIndexer = $nodesSourcesIndexer;
+        $this->indexerFactory = $indexerFactory;
     }
 
     protected function configure()
@@ -40,8 +41,9 @@ class SolrOptimizeCommand extends SolrCommand
 
         if (null !== $solr) {
             if (true === $this->clientRegistry->isClientReady($solr)) {
-                $this->nodesSourcesIndexer->setIo($this->io);
-                $this->nodesSourcesIndexer->optimizeSolr();
+                $documentIndexer = $this->indexerFactory->getIndexerFor(Document::class);
+                $documentIndexer->setIo($this->io);
+                $documentIndexer->optimizeSolr();
                 $this->io->success('<info>Solr core has been optimized.</info>');
             } else {
                 $this->io->error('Solr search engine server does not respond…');

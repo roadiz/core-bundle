@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
+use RZ\Roadiz\CoreBundle\Entity\Document;
+use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry;
-use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\DocumentIndexer;
-use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\NodesSourcesIndexer;
+use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\IndexerFactoryInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\SolariumDocumentTranslation;
 use RZ\Roadiz\CoreBundle\SearchEngine\SolariumNodeSource;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -22,22 +23,18 @@ use Symfony\Component\Stopwatch\Stopwatch;
 class SolrReindexCommand extends SolrCommand implements ThemeAwareCommandInterface
 {
     protected ?QuestionHelper $questionHelper = null;
-    protected NodesSourcesIndexer $nodesSourcesIndexer;
-    protected DocumentIndexer $documentIndexer;
+    protected IndexerFactoryInterface $indexerFactory;
 
     /**
      * @param ClientRegistry $clientRegistry
-     * @param NodesSourcesIndexer $nodesSourcesIndexer
-     * @param DocumentIndexer $documentIndexer
+     * @param IndexerFactoryInterface $indexerFactory
      */
     public function __construct(
         ClientRegistry $clientRegistry,
-        NodesSourcesIndexer $nodesSourcesIndexer,
-        DocumentIndexer $documentIndexer
+        IndexerFactoryInterface $indexerFactory
     ) {
         parent::__construct($clientRegistry);
-        $this->nodesSourcesIndexer = $nodesSourcesIndexer;
-        $this->documentIndexer = $documentIndexer;
+        $this->indexerFactory = $indexerFactory;
     }
 
     protected function configure()
@@ -65,47 +62,15 @@ class SolrReindexCommand extends SolrCommand implements ThemeAwareCommandInterfa
                 ) {
                     $stopwatch = new Stopwatch();
                     $stopwatch->start('global');
-                    $this->nodesSourcesIndexer->setIo($this->io);
-                    $this->documentIndexer->setIo($this->io);
 
                     if ($input->getOption('documents')) {
-                        // Empty first
-                        $this->documentIndexer->emptySolr(SolariumDocumentTranslation::DOCUMENT_TYPE);
-                        $this->documentIndexer->reindexAll();
-
-                        $stopwatch->stop('global');
-                        $duration = $stopwatch->getEvent('global')->getDuration();
-                        $this->io->success(sprintf('Document database has been re-indexed in %.2d ms.', $duration));
+                        $this->executeForDocuments($stopwatch);
                     } elseif ($input->getOption('nodes')) {
                         $batchCount = (int) $input->getOption('batch-count') ?? 1;
                         $batchNumber = (int) $input->getOption('batch-number') ?? 0;
-                        // Empty first ONLY if one batch or first batch.
-                        if ($batchNumber === 0) {
-                            $this->nodesSourcesIndexer->emptySolr(SolariumNodeSource::DOCUMENT_TYPE);
-                        }
-                        $this->nodesSourcesIndexer->reindexAll($batchCount, $batchNumber);
-
-                        $stopwatch->stop('global');
-                        $duration = $stopwatch->getEvent('global')->getDuration();
-                        if ($batchCount > 1) {
-                            $this->io->success(sprintf(
-                                'Batch %d/%d of node database has been re-indexed in %.2d ms.',
-                                $batchNumber + 1,
-                                $batchCount,
-                                $duration
-                            ));
-                        } else {
-                            $this->io->success(sprintf('Node database has been re-indexed in %.2d ms.', $duration));
-                        }
+                        $this->executeForNodes($stopwatch, $batchCount, $batchNumber);
                     } else {
-                        // Empty first
-                        $this->nodesSourcesIndexer->emptySolr();
-                        $this->documentIndexer->reindexAll();
-                        $this->nodesSourcesIndexer->reindexAll();
-
-                        $stopwatch->stop('global');
-                        $duration = $stopwatch->getEvent('global')->getDuration();
-                        $this->io->success(sprintf('Node and document database has been re-indexed in %.2d ms.', $duration));
+                        $this->executeForAll($stopwatch);
                     }
                 }
             } else {
@@ -117,5 +82,57 @@ class SolrReindexCommand extends SolrCommand implements ThemeAwareCommandInterfa
             $this->displayBasicConfig();
         }
         return 0;
+    }
+
+    protected function executeForAll(Stopwatch $stopwatch): void
+    {
+        // Empty first
+        $documentIndexer = $this->indexerFactory->getIndexerFor(Document::class);
+        $documentIndexer->setIo($this->io);
+        $nodesSourcesIndexer = $this->indexerFactory->getIndexerFor(NodesSources::class);
+        $nodesSourcesIndexer->setIo($this->io);
+        $nodesSourcesIndexer->emptySolr();
+        $documentIndexer->reindexAll();
+        $nodesSourcesIndexer->reindexAll();
+
+        $stopwatch->stop('global');
+        $duration = $stopwatch->getEvent('global')->getDuration();
+        $this->io->success(sprintf('Node and document database has been re-indexed in %.2d ms.', $duration));
+    }
+
+    protected function executeForDocuments(Stopwatch $stopwatch): void
+    {
+        $documentIndexer = $this->indexerFactory->getIndexerFor(Document::class);
+        $documentIndexer->setIo($this->io);
+        $documentIndexer->emptySolr(SolariumDocumentTranslation::DOCUMENT_TYPE);
+        $documentIndexer->reindexAll();
+
+        $stopwatch->stop('global');
+        $duration = $stopwatch->getEvent('global')->getDuration();
+        $this->io->success(sprintf('Document database has been re-indexed in %.2d ms.', $duration));
+    }
+
+    protected function executeForNodes(Stopwatch $stopwatch, int $batchCount, int $batchNumber): void
+    {
+        $nodesSourcesIndexer = $this->indexerFactory->getIndexerFor(NodesSources::class);
+        $nodesSourcesIndexer->setIo($this->io);
+        // Empty first ONLY if one batch or first batch.
+        if ($batchNumber === 0) {
+            $nodesSourcesIndexer->emptySolr(SolariumNodeSource::DOCUMENT_TYPE);
+        }
+        $nodesSourcesIndexer->reindexAll($batchCount, $batchNumber);
+
+        $stopwatch->stop('global');
+        $duration = $stopwatch->getEvent('global')->getDuration();
+        if ($batchCount > 1) {
+            $this->io->success(sprintf(
+                'Batch %d/%d of node database has been re-indexed in %.2d ms.',
+                $batchNumber + 1,
+                $batchCount,
+                $duration
+            ));
+        } else {
+            $this->io->success(sprintf('Node database has been re-indexed in %.2d ms.', $duration));
+        }
     }
 }

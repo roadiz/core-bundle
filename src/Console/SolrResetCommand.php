@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
+use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry;
-use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\NodesSourcesIndexer;
+use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\IndexerFactoryInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
@@ -16,16 +17,16 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class SolrResetCommand extends SolrCommand
 {
-    protected NodesSourcesIndexer $nodesSourcesIndexer;
+    protected IndexerFactoryInterface $indexerFactory;
 
     /**
      * @param ClientRegistry $clientRegistry
-     * @param NodesSourcesIndexer $nodesSourcesIndexer
+     * @param IndexerFactoryInterface $indexerFactory
      */
-    public function __construct(ClientRegistry $clientRegistry, NodesSourcesIndexer $nodesSourcesIndexer)
+    public function __construct(ClientRegistry $clientRegistry, IndexerFactoryInterface $indexerFactory)
     {
         parent::__construct($clientRegistry);
-        $this->nodesSourcesIndexer = $nodesSourcesIndexer;
+        $this->indexerFactory = $indexerFactory;
     }
 
     protected function configure()
@@ -46,8 +47,9 @@ class SolrResetCommand extends SolrCommand
                     false
                 );
                 if ($this->io->askQuestion($confirmation)) {
-                    $this->nodesSourcesIndexer->setIo($this->io);
-                    $this->nodesSourcesIndexer->emptySolr();
+                    $indexer  = $this->indexerFactory->getIndexerFor(NodesSources::class);
+                    $indexer->setIo($this->io);
+                    $indexer->emptySolr();
                     $this->io->success('Solr index resetted.');
                 }
             } else {

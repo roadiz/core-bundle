@@ -12,7 +12,7 @@ use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
 
-class IndexerFactory
+class IndexerFactory implements IndexerFactoryInterface
 {
     protected ContainerInterface $serviceLocator;
 
@@ -27,6 +27,8 @@ class IndexerFactory
     /**
      * @param class-string $classname
      * @return Indexer
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
      */
     public function getIndexerFor(string $classname): Indexer
     {
