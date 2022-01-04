@@ -11,6 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimedPositioned;
 use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
 use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\Core\Models\FolderInterface;
 use RZ\Roadiz\Utils\StringHandler;
@@ -74,8 +75,8 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
     /**
      * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
      * @var bool
-     * @Serializer\Groups({"folder"})
-     * @SymfonySerializer\Groups({"folder"})
+     * @Serializer\Groups({"folder", "document"})
+     * @SymfonySerializer\Groups({"folder", "document"})
      */
     private bool $visible = true;
     /**
@@ -168,10 +169,10 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
     }
 
     /**
-     * @param Translation $translation
+     * @param TranslationInterface $translation
      * @return Collection<FolderTranslation>
      */
-    public function getTranslatedFoldersByTranslation(Translation $translation): Collection
+    public function getTranslatedFoldersByTranslation(TranslationInterface $translation): Collection
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('translation', $translation));

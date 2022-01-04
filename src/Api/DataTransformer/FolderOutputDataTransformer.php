@@ -1,0 +1,45 @@
+<?php
+
+declare(strict_types=1);
+
+namespace RZ\Roadiz\CoreBundle\Api\DataTransformer;
+
+use ApiPlatform\Core\DataTransformer\DataTransformerInterface;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\Core\Models\FolderInterface;
+use RZ\Roadiz\CoreBundle\Api\Dto\FolderOutput;
+use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
+use RZ\Roadiz\CoreBundle\Entity\Folder;
+
+class FolderOutputDataTransformer implements DataTransformerInterface
+{
+    /**
+     * @inheritDoc
+     */
+    public function transform($data, string $to, array $context = [])
+    {
+        if (!$data instanceof Folder) {
+            throw new \InvalidArgumentException('Data to transform must be instance of ' . FolderInterface::class);
+        }
+        $output = new FolderOutput();
+        $output->name = $data->getName();
+        $output->slug = $data->getFolderName();
+        $output->visible = $data->getVisible();
+
+        if (isset($context['translation']) && $context['translation'] instanceof TranslationInterface) {
+            $translatedData = $data->getTranslatedFoldersByTranslation($context['translation'])->first() ?: null;
+            if ($translatedData instanceof DocumentTranslation) {
+                $output->name = $translatedData->getName();
+            }
+        }
+        return $output;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function supportsTransformation($data, string $to, array $context = []): bool
+    {
+        return FolderOutput::class === $to && $data instanceof FolderInterface;
+    }
+}

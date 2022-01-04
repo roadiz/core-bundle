@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Api\Dto;
 
 use RZ\Roadiz\CoreBundle\Entity\Document;
+use RZ\Roadiz\CoreBundle\Entity\Folder;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 final class DocumentOutput
@@ -59,6 +60,11 @@ final class DocumentOutput
      * @Groups({"document", "document_display"})
      */
     public ?Document $thumbnail = null;
+    /**
+     * @var array<Folder>
+     * @Groups({"document", "document_display", "folder"})
+     */
+    public array $folders = [];
     /**
      * @var string|null
      * @Groups({"document", "document_display"})
