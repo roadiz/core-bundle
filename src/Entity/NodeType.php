@@ -21,6 +21,7 @@ use RZ\Roadiz\Utils\StringHandler;
  *
  * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\NodeTypeRepository")
  * @ORM\Table(name="node_types", indexes={
+ *     @ORM\Index(name="node_type_name", columns={"name"}),
  *     @ORM\Index(columns={"visible"}),
  *     @ORM\Index(columns={"publishable"}),
  *     @ORM\Index(columns={"hiding_nodes"}),
