@@ -30,6 +30,7 @@ class TagOutputDataTransformer implements DataTransformerInterface
             if ($translatedData instanceof TagTranslation) {
                 $output->name = $translatedData->getName();
                 $output->description = $translatedData->getDescription();
+                $output->documents = $translatedData->getDocuments();
             }
         }
         return $output;

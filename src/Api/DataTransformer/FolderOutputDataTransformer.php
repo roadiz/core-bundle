@@ -10,6 +10,7 @@ use RZ\Roadiz\Core\Models\FolderInterface;
 use RZ\Roadiz\CoreBundle\Api\Dto\FolderOutput;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
+use RZ\Roadiz\CoreBundle\Entity\FolderTranslation;
 
 class FolderOutputDataTransformer implements DataTransformerInterface
 {
@@ -28,7 +29,7 @@ class FolderOutputDataTransformer implements DataTransformerInterface
 
         if (isset($context['translation']) && $context['translation'] instanceof TranslationInterface) {
             $translatedData = $data->getTranslatedFoldersByTranslation($context['translation'])->first() ?: null;
-            if ($translatedData instanceof DocumentTranslation) {
+            if ($translatedData instanceof FolderTranslation) {
                 $output->name = $translatedData->getName();
             }
         }

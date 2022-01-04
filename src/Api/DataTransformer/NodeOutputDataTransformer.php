@@ -29,6 +29,7 @@ class NodeOutputDataTransformer implements DataTransformerInterface
             throw new \InvalidArgumentException('Data to transform must be instance of ' . Node::class);
         }
         $output = new NodeOutput();
+        $output->nodeName = $data->getNodeName();
         $output->visible = $data->isVisible();
         $output->tags = $data->getTags()->toArray();
         return $output;

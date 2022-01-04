@@ -113,6 +113,13 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @Serializer\Groups({"document"})
      * @SymfonySerializer\Groups({"document"})
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Folder>")
+     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
+     *     "folders.id": "exact",
+     *     "folders.folderName": "exact",
+     * })
+     * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
+     *     "folders.visible"
+     * })
      * @var Collection<Folder>
      */
     protected Collection $folders;

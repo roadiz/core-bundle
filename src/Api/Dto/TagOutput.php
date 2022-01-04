@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Dto;
 
+use RZ\Roadiz\CoreBundle\Entity\Document;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 final class TagOutput
@@ -33,4 +34,9 @@ final class TagOutput
      * @Groups({"tag", "tag_base"})
      */
     public bool $visible = false;
+    /**
+     * @var array<Document>
+     * @Groups({"tag", "tag_base"})
+     */
+    public array $documents = [];
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
@@ -11,6 +12,7 @@ use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueTrait;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueTranslationInterface;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
 
 /**
@@ -29,6 +31,13 @@ class AttributeValue extends AbstractPositioned implements AttributeValueInterfa
      * @var Node|null
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Node", inversedBy="attributeValues")
      * @ORM\JoinColumn(name="node_id", onDelete="CASCADE")
+     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
+     *     "node.id": "exact",
+     *     "node.nodeName": "exact"
+     * })
+     * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
+     *     "node.visible"
+     * })
      * @Serializer\Exclude
      */
     protected ?Node $node = null;
