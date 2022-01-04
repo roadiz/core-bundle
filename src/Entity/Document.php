@@ -435,10 +435,10 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     }
 
     /**
-     * @param Translation $translation
+     * @param DocumentTranslation $translation
      * @return Collection<DocumentTranslation>
      */
-    public function getDocumentTranslationsByTranslation(Translation $translation)
+    public function getDocumentTranslationsByTranslation(DocumentTranslation $translation)
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('translation', $translation));
