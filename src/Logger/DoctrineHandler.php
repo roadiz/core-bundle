@@ -118,7 +118,6 @@ final class DoctrineHandler extends AbstractProcessingHandler
              */
             if (
                 isset($record['context']['source']) &&
-                null !== $record['context']['source'] &&
                 $record['context']['source'] instanceof NodesSources
             ) {
                 $log->setNodeSource($record['context']['source']);
@@ -129,7 +128,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
         } catch (\Exception $e) {
             /*
              * Need to prevent SQL errors over throwing
-             * if PDO has fault
+             * if PDO has faulted
              */
         }
     }

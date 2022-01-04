@@ -88,12 +88,10 @@ abstract class RoadizAuthenticator extends AbstractLoginFormAuthenticator
             $request->request->get('username') ??
             $request->request->get('email');
         $ipAddress = $request->getClientIp();
-        if (null !== $this->logger) {
-            $this->logger->error($exception->getMessage(), [
-                'username' => $username,
-                'ipAddress' => $ipAddress
-            ]);
-        }
+        $this->logger->error($exception->getMessage(), [
+            'username' => $username,
+            'ipAddress' => $ipAddress
+        ]);
         if (
             is_string($username) &&
             $exception instanceof BadCredentialsException
