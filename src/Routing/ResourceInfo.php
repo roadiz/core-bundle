@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Routing;
 
-use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 
 /**
@@ -12,24 +12,24 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
  */
 final class ResourceInfo
 {
-    protected ?AbstractEntity $resource;
+    protected ?PersistableInterface $resource;
     protected ?TranslationInterface $translation;
     protected string $format;
     protected string $locale;
 
     /**
-     * @return AbstractEntity|null
+     * @return PersistableInterface|null
      */
-    public function getResource(): ?AbstractEntity
+    public function getResource(): ?PersistableInterface
     {
         return $this->resource;
     }
 
     /**
-     * @param AbstractEntity|null $resource
+     * @param PersistableInterface|null $resource
      * @return ResourceInfo
      */
-    public function setResource(?AbstractEntity $resource): ResourceInfo
+    public function setResource(?PersistableInterface $resource): ResourceInfo
     {
         $this->resource = $resource;
         return $this;

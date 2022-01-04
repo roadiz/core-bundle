@@ -331,3 +331,6 @@ services:
     state_machine.node:
         public: true
         alias: RZ\Roadiz\CoreBundle\Workflow\NodeWorkflow
+
+    RZ\Roadiz\CoreBundle\Serializer\NodesSourcesPathNormalizer:
+        decorates: 'api_platform.jsonld.normalizer.item'

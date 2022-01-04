@@ -62,7 +62,7 @@ class TranslationAwareNormalizer implements ContextAwareNormalizerInterface, Nor
             ->findDefault();
     }
 
-    public function supportsNormalization($data, $format = null, array $context = [])
+    public function supportsNormalization($data, $format = null, array $context = []): bool
     {
         // Make sure we're not called twice
         if (isset($context[self::ALREADY_CALLED])) {

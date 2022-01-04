@@ -5,28 +5,36 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Api\Controller;
 
 use ApiPlatform\Core\Exception\InvalidArgumentException;
-use RZ\Roadiz\CoreBundle\Entity\NodesSources;
+use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
+use RZ\Roadiz\CoreBundle\Api\DataTransformer\WebResponseDataTransformerInterface;
+use RZ\Roadiz\CoreBundle\Api\Dto\WebResponseInterface;
 use RZ\Roadiz\CoreBundle\Entity\Redirection;
 use RZ\Roadiz\CoreBundle\Routing\PathResolverInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RequestStack;
 
-final class GetNodesSourcesByPathController extends AbstractController
+final class GetWebResponseByPathController extends AbstractController
 {
     private RequestStack $requestStack;
     private PathResolverInterface $pathResolver;
+    private WebResponseDataTransformerInterface $webResponseDataTransformer;
 
     /**
      * @param RequestStack $requestStack
      * @param PathResolverInterface $pathResolver
+     * @param WebResponseDataTransformerInterface $webResponseDataTransformer
      */
-    public function __construct(RequestStack $requestStack, PathResolverInterface $pathResolver)
-    {
+    public function __construct(
+        RequestStack $requestStack,
+        PathResolverInterface $pathResolver,
+        WebResponseDataTransformerInterface $webResponseDataTransformer
+    ) {
         $this->requestStack = $requestStack;
         $this->pathResolver = $pathResolver;
+        $this->webResponseDataTransformer = $webResponseDataTransformer;
     }
 
-    public function __invoke(): ?NodesSources
+    public function __invoke(): ?WebResponseInterface
     {
         if (
             null === $this->requestStack->getMainRequest() ||
@@ -34,15 +42,18 @@ final class GetNodesSourcesByPathController extends AbstractController
         ) {
             throw new InvalidArgumentException('path query parameter is mandatory');
         }
-        return $this->normalizeNodesSourcesPath(
+        $resource = $this->normalizeNodesSourcesPath(
             (string) $this->requestStack->getMainRequest()->query->get('path')
         );
+        $this->requestStack->getMainRequest()->attributes->set('data', $resource);
+        return $this->webResponseDataTransformer->transform($resource, WebResponseInterface::class);
     }
+
     /**
      * @param string $path
-     * @return NodesSources|null Returns nodes-sources or null if no NS found for path to filter all results.
+     * @return PersistableInterface|null
      */
-    protected function normalizeNodesSourcesPath(string $path): ?NodesSources
+    protected function normalizeNodesSourcesPath(string $path): ?PersistableInterface
     {
         $resourceInfo = $this->pathResolver->resolvePath($path, ['html', 'json'], true);
         $resource = $resourceInfo->getResource();
@@ -57,11 +68,8 @@ final class GetNodesSourcesByPathController extends AbstractController
             return $resource->getRedirectNodeSource();
         }
         /*
-         * Or plain node-source
+         * Or plain entity
          */
-        if ($resource instanceof NodesSources) {
-            return $resource;
-        }
-        return null;
+        return $resource;
     }
 }
