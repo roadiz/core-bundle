@@ -6,9 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Api\DataTransformer;
 
 use ApiPlatform\Core\DataTransformer\DataTransformerInterface;
 use RZ\Roadiz\CoreBundle\Api\Dto\NodeOutput;
-use RZ\Roadiz\CoreBundle\Api\Dto\TagOutput;
 use RZ\Roadiz\CoreBundle\Entity\Node;
-use RZ\Roadiz\CoreBundle\Entity\Tag;
 
 class NodeOutputDataTransformer implements DataTransformerInterface
 {
@@ -32,9 +30,7 @@ class NodeOutputDataTransformer implements DataTransformerInterface
         }
         $output = new NodeOutput();
         $output->visible = $data->isVisible();
-        $output->tags = array_map(function (Tag $tag) use ($context) {
-            return $this->tagOutputDataTransformer->transform($tag, TagOutput::class, $context);
-        }, $data->getTags()->toArray());
+        $output->tags = $data->getTags()->toArray();
         return $output;
     }
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Dto;
 
-use RZ\Roadiz\Core\Models\DocumentInterface;
+use RZ\Roadiz\CoreBundle\Entity\Document;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 final class DocumentOutput
@@ -55,10 +55,10 @@ final class DocumentOutput
      */
     public bool $processable = false;
     /**
-     * @var DocumentOutput|null
+     * @var Document|null
      * @Groups({"document", "document_display"})
      */
-    public ?DocumentOutput $thumbnail = null;
+    public ?Document $thumbnail = null;
     /**
      * @var string|null
      * @Groups({"document", "document_display"})

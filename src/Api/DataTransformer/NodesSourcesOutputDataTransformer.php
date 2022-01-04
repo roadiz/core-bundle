@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Api\DataTransformer;
 
 use ApiPlatform\Core\DataTransformer\DataTransformerInterface;
-use RZ\Roadiz\CoreBundle\Api\Dto\NodeOutput;
 use RZ\Roadiz\CoreBundle\Api\Dto\NodesSourcesDto;
-use RZ\Roadiz\CoreBundle\Api\Dto\TranslationOutput;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -36,18 +34,10 @@ abstract class NodesSourcesOutputDataTransformer implements DataTransformerInter
     protected function transformNodesSources(NodesSourcesDto $output, NodesSources $data, array $context = [])
     {
         $output->title = $data->getTitle();
-        $output->node = $this->nodeOutputDataTransformer->transform(
-            $data->getNode(),
-            NodeOutput::class,
-            $context
-        );
+        $output->node = $data->getNode();
         $output->metaTitle = $data->getMetaTitle();
         $output->metaDescription = $data->getMetaDescription();
-        $output->translation = $this->translationOutputDataTransformer->transform(
-            $data->getTranslation(),
-            TranslationOutput::class,
-            $context
-        );
+        $output->translation =  $data->getTranslation();
         $output->slug = $data->getIdentifier();
         if ($data->isPublishable()) {
             $output->publishedAt = $data->getPublishedAt();

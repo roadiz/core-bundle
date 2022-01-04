@@ -37,15 +37,15 @@ abstract class NodesSourcesDto
      */
     public ?\DateTime $publishedAt = null;
     /**
-     * @var NodeOutput|null
+     * @var Node|null
      * @Groups({"nodes_sources", "nodes_sources_base"})
      */
-    public ?NodeOutput $node = null;
+    public ?Node $node = null;
     /**
-     * @var TranslationOutput|null
+     * @var TranslationInterface|null
      * @Groups({"nodes_sources", "nodes_sources_base", "translation_base"})
      */
-    public ?TranslationOutput $translation = null;
+    public ?TranslationInterface $translation = null;
     /**
      * @var string|null
      * @Serializer\MaxDepth(4)

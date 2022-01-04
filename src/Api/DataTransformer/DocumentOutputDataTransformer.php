@@ -31,11 +31,7 @@ class DocumentOutputDataTransformer implements DataTransformerInterface
         $output->imageAverageColor = $data->getImageAverageColor();
 
         if (false !== $data->getThumbnails()->first()) {
-            $output->thumbnail = $this->transform(
-                $data->getThumbnails()->first(),
-                $to,
-                $context
-            );
+            $output->thumbnail = $data->getThumbnails()->first();
         }
 
         if (isset($context['translation']) && $context['translation'] instanceof TranslationInterface) {
