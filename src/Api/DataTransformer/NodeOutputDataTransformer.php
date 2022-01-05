@@ -10,16 +10,6 @@ use RZ\Roadiz\CoreBundle\Entity\Node;
 
 class NodeOutputDataTransformer implements DataTransformerInterface
 {
-    private TagOutputDataTransformer $tagOutputDataTransformer;
-
-    /**
-     * @param TagOutputDataTransformer $tagOutputDataTransformer
-     */
-    public function __construct(TagOutputDataTransformer $tagOutputDataTransformer)
-    {
-        $this->tagOutputDataTransformer = $tagOutputDataTransformer;
-    }
-
     /**
      * @inheritDoc
      */

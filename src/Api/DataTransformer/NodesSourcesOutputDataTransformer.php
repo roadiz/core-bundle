@@ -13,26 +13,21 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 abstract class NodesSourcesOutputDataTransformer implements DataTransformerInterface
 {
     private UrlGeneratorInterface $urlGenerator;
-    private NodeOutputDataTransformer $nodeOutputDataTransformer;
-    private TranslationOutputDataTransformer $translationOutputDataTransformer;
 
     /**
      * @param UrlGeneratorInterface $urlGenerator
-     * @param NodeOutputDataTransformer $nodeOutputDataTransformer
-     * @param TranslationOutputDataTransformer $translationOutputDataTransformer
      */
     public function __construct(
-        UrlGeneratorInterface $urlGenerator,
-        NodeOutputDataTransformer $nodeOutputDataTransformer,
-        TranslationOutputDataTransformer $translationOutputDataTransformer
+        UrlGeneratorInterface $urlGenerator
     ) {
         $this->urlGenerator = $urlGenerator;
-        $this->nodeOutputDataTransformer = $nodeOutputDataTransformer;
-        $this->translationOutputDataTransformer = $translationOutputDataTransformer;
     }
 
-    protected function transformNodesSources(NodesSourcesDto $output, NodesSources $data, array $context = [])
-    {
+    protected function transformNodesSources(
+        NodesSourcesDto $output,
+        NodesSources $data,
+        array $context = []
+    ): NodesSourcesDto {
         $output->title = $data->getTitle();
         $output->node = $data->getNode();
         $output->metaTitle = $data->getMetaTitle();

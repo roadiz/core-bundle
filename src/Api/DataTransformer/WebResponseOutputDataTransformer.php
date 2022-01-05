@@ -61,7 +61,7 @@ final class WebResponseOutputDataTransformer implements WebResponseDataTransform
                 $this->walkerContext,
                 5,
                 $this->cacheItemPool
-            );
+            )->getChildren();
         }
         if ($data instanceof TranslationInterface) {
             $output->head = $this->nodesSourcesHeadFactory->createForTranslation($data);

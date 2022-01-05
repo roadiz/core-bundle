@@ -7,39 +7,25 @@ namespace RZ\Roadiz\CoreBundle\Serializer;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
-use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Serializer\SerializerAwareInterface;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\CacheableSupportsMethodInterface;
+use Symfony\Component\Serializer\Normalizer\ContextAwareNormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
-final class NodesSourcesPathNormalizer implements NormalizerInterface, DenormalizerInterface, SerializerAwareInterface
+final class NodesSourcesPathNormalizer implements ContextAwareNormalizerInterface, CacheableSupportsMethodInterface
 {
-    private $decorated;
+    private ObjectNormalizer $normalizer;
     private UrlGeneratorInterface $urlGenerator;
 
-    public function __construct(NormalizerInterface $decorated, UrlGeneratorInterface $urlGenerator)
+    public function __construct(UrlGeneratorInterface $urlGenerator, ObjectNormalizer $normalizer)
     {
-        if (!$decorated instanceof DenormalizerInterface) {
-            throw new \InvalidArgumentException(sprintf('The decorated normalizer must implement the %s.', DenormalizerInterface::class));
-        }
-
-        $this->decorated = $decorated;
         $this->urlGenerator = $urlGenerator;
-    }
-
-    public function supportsNormalization($data, $format = null): bool
-    {
-        return $this->decorated->supportsNormalization($data, $format);
+        $this->normalizer = $normalizer;
     }
 
     public function normalize($object, $format = null, array $context = [])
     {
-        $data = $this->decorated->normalize($object, $format, $context);
-        if (is_array($data) &&
-            !isset($data['url']) &&
-            $object instanceof NodesSources &&
-            $object->isReachable()
-        ) {
+        $data = $this->normalizer->normalize($object, $format, $context);
+        if ($object->isReachable() && !isset($data['url'])) {
             $data['url'] = $this->urlGenerator->generate(
                 RouteObjectInterface::OBJECT_BASED_ROUTE_NAME,
                 [
@@ -48,24 +34,16 @@ final class NodesSourcesPathNormalizer implements NormalizerInterface, Denormali
                 UrlGeneratorInterface::RELATIVE_PATH
             );
         }
-
         return $data;
     }
 
-    public function supportsDenormalization($data, $type, $format = null): bool
+    public function supportsNormalization($data, $format = null, array $context = []): bool
     {
-        return $this->decorated->supportsDenormalization($data, $type, $format);
+        return $data instanceof NodesSources;
     }
 
-    public function denormalize($data, $class, $format = null, array $context = [])
+    public function hasCacheableSupportsMethod(): bool
     {
-        return $this->decorated->denormalize($data, $class, $format, $context);
-    }
-
-    public function setSerializer(SerializerInterface $serializer)
-    {
-        if ($this->decorated instanceof SerializerAwareInterface) {
-            $this->decorated->setSerializer($serializer);
-        }
+        return __CLASS__ === NodesSourcesPathNormalizer::class;
     }
 }
