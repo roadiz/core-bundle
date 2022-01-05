@@ -334,3 +334,6 @@ services:
 
     RZ\Roadiz\CoreBundle\Serializer\NodesSourcesPathNormalizer:
         decorates: 'api_platform.jsonld.normalizer.item'
+
+    RZ\TreeWalker\WalkerContextInterface:
+        factory: [ '@RZ\Roadiz\CoreBundle\Api\TreeWalker\NodeSourceWalkerContextFactory', 'createWalkerContext' ]

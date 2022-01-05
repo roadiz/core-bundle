@@ -7,7 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Api\Controller;
 use ApiPlatform\Core\Exception\InvalidArgumentException;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\Api\DataTransformer\WebResponseDataTransformerInterface;
-use RZ\Roadiz\CoreBundle\Api\Dto\WebResponseInterface;
+use RZ\Roadiz\CoreBundle\Api\Model\WebResponseInterface;
 use RZ\Roadiz\CoreBundle\Entity\Redirection;
 use RZ\Roadiz\CoreBundle\Routing\PathResolverInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Api\Dto;
 
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
+use RZ\Roadiz\CoreBundle\Api\Breadcrumbs\BreadcrumbsInterface;
+use RZ\Roadiz\CoreBundle\Api\Model\NodesSourcesHeadInterface;
+use RZ\Roadiz\CoreBundle\Api\Model\WebResponseInterface;
 use RZ\TreeWalker\WalkerInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 
@@ -16,15 +19,15 @@ final class WebResponseOutput implements WebResponseInterface
      */
     public ?PersistableInterface $item = null;
     /**
-     * @var null
+     * @var BreadcrumbsInterface|null
      * @Groups({"web_response"})
      */
-    public $breadcrumbs = null;
+    public ?BreadcrumbsInterface $breadcrumbs = null;
     /**
-     * @var null
+     * @var NodesSourcesHeadInterface|null
      * @Groups({"web_response"})
      */
-    public $head = null;
+    public ?NodesSourcesHeadInterface $head = null;
     /**
      * @var WalkerInterface|null
      * @Groups({"web_response"})
