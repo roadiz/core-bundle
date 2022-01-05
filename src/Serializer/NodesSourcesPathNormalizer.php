@@ -25,7 +25,7 @@ final class NodesSourcesPathNormalizer implements ContextAwareNormalizerInterfac
     public function normalize($object, $format = null, array $context = [])
     {
         $data = $this->normalizer->normalize($object, $format, $context);
-        if ($object->isReachable() && !isset($data['url'])) {
+        if ($object->isReachable() && is_array($data) && !isset($data['url'])) {
             $data['url'] = $this->urlGenerator->generate(
                 RouteObjectInterface::OBJECT_BASED_ROUTE_NAME,
                 [
