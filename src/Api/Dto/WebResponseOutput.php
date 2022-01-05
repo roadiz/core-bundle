@@ -30,7 +30,7 @@ final class WebResponseOutput implements WebResponseInterface
     public ?NodesSourcesHeadInterface $head = null;
     /**
      * @var WalkerInterface|null
-     * @Groups({"web_response"})
+     * @Groups({"walker"})
      */
     public ?WalkerInterface $blocks = null;
 }

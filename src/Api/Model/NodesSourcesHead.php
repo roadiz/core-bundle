@@ -225,6 +225,10 @@ final class NodesSourcesHead implements NodesSourcesHeadInterface
         return $this->settingsBag->getDocument('share_image') ?? null;
     }
 
+    /**
+     * @return TranslationInterface
+     * @Serializer\Ignore()
+     */
     public function getTranslation(): TranslationInterface
     {
         if (null !== $this->nodesSource) {
@@ -233,6 +237,10 @@ final class NodesSourcesHead implements NodesSourcesHeadInterface
         return $this->defaultTranslation;
     }
 
+    /**
+     * @return NodesSources|null
+     * @Serializer\Ignore()
+     */
     private function getHomePage(): ?NodesSources
     {
         return $this->nodeSourceApi->getOneBy([

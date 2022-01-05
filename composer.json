@@ -45,6 +45,7 @@
         "roadiz/nodetype-contracts":               "~1.1.0 || dev-main",
         "roadiz/openid":                           "~1.7.0 || dev-develop",
         "roadiz/random":                           "~1.7.0 || dev-main",
+        "rezozero/tree-walker": "~1.0.0",
         "rollerworks/password-strength-bundle": "^2.2",
         "rollerworks/password-strength-validator": "^1.6",
         "scienta/doctrine-json-functions": "^4.2",
