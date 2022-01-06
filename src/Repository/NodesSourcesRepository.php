@@ -19,7 +19,6 @@ use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\NodeSourceSearchHandlerInterface;
-use RZ\Roadiz\CoreBundle\SearchEngine\SearchHandlerInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\SearchResultsInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\SolrSearchResults;
 use Symfony\Component\Security\Core\Security;
@@ -30,7 +29,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  *
  * @extends StatusAwareRepository<\RZ\Roadiz\CoreBundle\Entity\NodesSources>
  */
-final class NodesSourcesRepository extends StatusAwareRepository
+class NodesSourcesRepository extends StatusAwareRepository
 {
     private ?NodeSourceSearchHandlerInterface $nodeSourceSearchHandler;
 
