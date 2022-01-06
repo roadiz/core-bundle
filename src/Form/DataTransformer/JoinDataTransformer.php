@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Form\DataTransformer;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use Symfony\Component\Form\DataTransformerInterface;
 
@@ -43,11 +43,11 @@ class JoinDataTransformer implements DataTransformerInterface
     public function transform($entitiesToForm)
     {
         /*
-         * If model is already an AbstractEntity
+         * If model is already an PersistableInterface
          */
         if (
             !empty($entitiesToForm) &&
-            $entitiesToForm instanceof AbstractEntity
+            $entitiesToForm instanceof PersistableInterface
         ) {
             return $entitiesToForm->getId();
         } elseif (!empty($entitiesToForm) && is_array($entitiesToForm)) {
@@ -56,7 +56,7 @@ class JoinDataTransformer implements DataTransformerInterface
              */
             $idArray = [];
             foreach ($entitiesToForm as $entity) {
-                if ($entity instanceof AbstractEntity) {
+                if ($entity instanceof PersistableInterface) {
                     $idArray[] = $entity->getId();
                 }
             }
@@ -80,7 +80,7 @@ class JoinDataTransformer implements DataTransformerInterface
             /*
              * Need to preserve order in POST data
              */
-            usort($unorderedEntities, function (AbstractEntity $a, AbstractEntity $b) use ($formToEntities) {
+            usort($unorderedEntities, function (PersistableInterface $a, PersistableInterface $b) use ($formToEntities) {
                 return array_search($a->getId(), $formToEntities) -
                     array_search($b->getId(), $formToEntities);
             });

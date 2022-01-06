@@ -36,6 +36,8 @@ class HandlerFactory implements HandlerFactoryInterface
     /**
      * @param AbstractEntity $entity
      * @return AbstractHandler
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
      */
     public function getHandler(AbstractEntity $entity): AbstractHandler
     {
