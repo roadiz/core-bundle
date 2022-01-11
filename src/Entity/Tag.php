@@ -61,7 +61,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @SymfonySerializer\Ignore
      * @ApiFilter(BaseFilter\SearchFilter::class, properties={
      *     "parent.id": "exact",
-     *     "parent.nodeName": "exact"
+     *     "parent.tagName": "exact"
      * })
      */
     protected ?LeafInterface $parent = null;
