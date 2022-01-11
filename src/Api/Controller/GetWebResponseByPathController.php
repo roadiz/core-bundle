@@ -12,6 +12,8 @@ use RZ\Roadiz\CoreBundle\Entity\Redirection;
 use RZ\Roadiz\CoreBundle\Routing\PathResolverInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 
 final class GetWebResponseByPathController extends AbstractController
 {
@@ -36,25 +38,33 @@ final class GetWebResponseByPathController extends AbstractController
 
     public function __invoke(): ?WebResponseInterface
     {
-        if (
-            null === $this->requestStack->getMainRequest() ||
-            empty($this->requestStack->getMainRequest()->query->get('path'))
-        ) {
-            throw new InvalidArgumentException('path query parameter is mandatory');
+        try {
+            if (
+                null === $this->requestStack->getMainRequest() ||
+                empty($this->requestStack->getMainRequest()->query->get('path'))
+            ) {
+                throw new InvalidArgumentException('path query parameter is mandatory');
+            }
+            $resource = $this->normalizeResourcePath(
+                (string) $this->requestStack->getMainRequest()->query->get('path')
+            );
+            $this->requestStack->getMainRequest()->attributes->set('data', $resource);
+            return $this->webResponseDataTransformer->transform($resource, WebResponseInterface::class);
+        } catch (ResourceNotFoundException $exception) {
+            throw new NotFoundHttpException($exception->getMessage(), $exception);
         }
-        $resource = $this->normalizeNodesSourcesPath(
-            (string) $this->requestStack->getMainRequest()->query->get('path')
-        );
-        $this->requestStack->getMainRequest()->attributes->set('data', $resource);
-        return $this->webResponseDataTransformer->transform($resource, WebResponseInterface::class);
     }
 
     /**
      * @param string $path
      * @return PersistableInterface|null
      */
-    protected function normalizeNodesSourcesPath(string $path): ?PersistableInterface
+    protected function normalizeResourcePath(string $path): ?PersistableInterface
     {
+        /*
+         * Serve any PersistableInterface Resource by implementing
+         * your PathResolver and tagging it "roadiz_core.path_resolver"
+         */
         $resourceInfo = $this->pathResolver->resolvePath($path, ['html', 'json'], true);
         $resource = $resourceInfo->getResource();
 
