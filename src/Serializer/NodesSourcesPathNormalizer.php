@@ -31,7 +31,7 @@ final class NodesSourcesPathNormalizer implements ContextAwareNormalizerInterfac
                 [
                     RouteObjectInterface::ROUTE_OBJECT => $object
                 ],
-                UrlGeneratorInterface::RELATIVE_PATH
+                UrlGeneratorInterface::ABSOLUTE_PATH
             );
         }
         return $data;
