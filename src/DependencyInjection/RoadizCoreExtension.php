@@ -198,7 +198,8 @@ class RoadizCoreExtension extends Extension
             'custom_form_proxy_class' => NodesCustomForms::class,
             'translation_class' => Translation::class,
             'namespace' => NodeType::getGeneratedEntitiesNamespace(),
-            'use_native_json' => $config['useNativeJsonColumnType']
+            'use_native_json' => $config['useNativeJsonColumnType'],
+            'use_api_platform_filters' => true,
         ];
         $container->setParameter('roadiz_core.entity_generator_factory.options', $entityGeneratorFactoryOptions);
     }
