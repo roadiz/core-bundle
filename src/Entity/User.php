@@ -123,13 +123,12 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Role")
      * @Serializer\Groups({"user_role"})
      * @SymfonySerializer\Groups({"user_role"})
-     * @Serializer\Accessor(getter="getRolesEntities",setter="setRolesEntities")
      * @ORM\JoinTable(name="users_roles",
      *      joinColumns={@ORM\JoinColumn(name="user_id", referencedColumnName="id", onDelete="CASCADE")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="role_id", referencedColumnName="id", onDelete="CASCADE")}
      * )
      */
-    private Collection $roles;
+    private Collection $roleEntities;
     /**
      * Names of current User roles
      * to be compatible with symfony security scheme
@@ -138,7 +137,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @Serializer\Groups({"user"})
      * @SymfonySerializer\Groups({"user"})
      */
-    private ?array $rolesNames = null;
+    private ?array $roles = null;
     /**
      * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Group", inversedBy="users")
      * @ORM\JoinTable(name="users_groups",
@@ -204,7 +203,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
 
     public function __construct()
     {
-        $this->roles = new ArrayCollection();
+        $this->roleEntities = new ArrayCollection();
         $this->groups = new ArrayCollection();
         $this->sendCreationConfirmationEmail(false);
         $this->initAbstractDateTimed();
@@ -450,13 +449,23 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     }
 
     /**
+     * @param Role $role
+     * @return $this
+     * @deprecated Use addRoleEntity
+     */
+    public function addRole(Role $role): User
+    {
+        return $this->addRoleEntity($role);
+    }
+
+    /**
      * Add a role object to current user.
      *
      * @param Role $role
      *
      * @return $this
      */
-    public function addRole(Role $role): User
+    public function addRoleEntity(Role $role): User
     {
         if (!$this->getRolesEntities()->contains($role)) {
             $this->getRolesEntities()->add($role);
@@ -472,19 +481,27 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      */
     public function getRolesEntities(): ?Collection
     {
-        return $this->roles;
+        return $this->roleEntities;
     }
 
     /**
      * @param ArrayCollection $roles
-     *
      * @return User
      */
     public function setRolesEntities(ArrayCollection $roles): User
     {
-        $this->roles = $roles;
-
+        $this->roleEntities = $roles;
         return $this;
+    }
+
+    /**
+     * @param Role $role
+     * @return $this
+     * @deprecated Use removeRoleEntity
+     */
+    public function removeRole(Role $role): User
+    {
+        return $this->removeRoleEntity($role);
     }
 
     /**
@@ -494,12 +511,11 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      *
      * @return $this
      */
-    public function removeRole(Role $role): User
+    public function removeRoleEntity(Role $role): User
     {
         if ($this->getRolesEntities()->contains($role)) {
             $this->getRolesEntities()->removeElement($role);
         }
-
         return $this;
     }
 
@@ -833,28 +849,30 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      */
     public function getRoles(): array
     {
-        $this->rolesNames = [];
-        if (null !== $this->getRolesEntities()) {
-            foreach ($this->getRolesEntities() as $role) {
-                if (null !== $role) {
-                    $this->rolesNames[] = $role->getName();
+        if (null === $this->roles) {
+            $this->roles = [];
+            if (null !== $this->getRolesEntities()) {
+                foreach ($this->getRolesEntities() as $role) {
+                    if (null !== $role) {
+                        $this->roles[] = $role->getName();
+                    }
                 }
             }
-        }
-        if (null !== $this->getGroups()) {
-            foreach ($this->getGroups() as $group) {
-                if ($group instanceof Group) {
-                    // User roles > Groups roles
-                    $this->rolesNames = array_merge($group->getRoles(), $this->rolesNames);
+            if (null !== $this->getGroups()) {
+                foreach ($this->getGroups() as $group) {
+                    if ($group instanceof Group) {
+                        // User roles > Groups roles
+                        $this->roles = array_merge($group->getRoles(), $this->roles);
+                    }
                 }
             }
+
+            // we need to make sure to have at least one role
+            $this->roles[] = Role::ROLE_DEFAULT;
+            $this->roles = array_unique($this->roles);
         }
 
-        // we need to make sure to have at least one role
-        $this->rolesNames[] = Role::ROLE_DEFAULT;
-        $this->rolesNames = array_unique($this->rolesNames);
-
-        return $this->rolesNames;
+        return $this->roles;
     }
 
     /**
@@ -892,7 +910,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
             $this->id,
             $this->email,
             // needed for token roles
-            $this->roles,
+            $this->roleEntities,
             $this->groups,
             // needed for advancedUserinterface
             $this->expired,
@@ -929,7 +947,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
                 $this->enabled,
                 $this->id,
                 $this->email,
-                $this->roles,
+                $this->roleEntities,
                 $this->groups,
                 $this->expired,
                 $this->expiresAt,
@@ -950,7 +968,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
             $this->id,
             $this->email,
             // needed for token roles
-            $this->roles,
+            $this->roleEntities,
             $this->groups,
             // needed for advancedUserinterface
             $this->expired,
@@ -981,7 +999,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
                 $this->enabled,
                 $this->id,
                 $this->email,
-                $this->roles,
+                $this->roleEntities,
                 $this->groups,
                 $this->expired,
                 $this->expiresAt,

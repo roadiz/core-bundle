@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Role;
 use RZ\Roadiz\CoreBundle\Entity\User;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -123,10 +122,10 @@ final class UsersCreationCommand extends UsersCommand
                     $questionBack
                 )
             ) {
-                $user->addRole($this->getRole(Role::ROLE_BACKEND_USER));
+                $user->addRoleEntity($this->getRole(Role::ROLE_BACKEND_USER));
             }
         } elseif ($input->getOption('back-end') === true) {
-            $user->addRole($this->getRole(Role::ROLE_BACKEND_USER));
+            $user->addRoleEntity($this->getRole(Role::ROLE_BACKEND_USER));
         }
 
         if ($input->isInteractive() && !$input->getOption('super-admin')) {
@@ -139,10 +138,10 @@ final class UsersCreationCommand extends UsersCommand
                     $questionAdmin
                 )
             ) {
-                $user->addRole($this->getRole(Role::ROLE_SUPERADMIN));
+                $user->addRoleEntity($this->getRole(Role::ROLE_SUPERADMIN));
             }
         } elseif ($input->getOption('super-admin') === true) {
-            $user->addRole($this->getRole(Role::ROLE_SUPERADMIN));
+            $user->addRoleEntity($this->getRole(Role::ROLE_SUPERADMIN));
         }
 
         if ($input->getOption('password')) {

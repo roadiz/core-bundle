@@ -162,10 +162,6 @@ services:
     RZ\Crypto\KeyChain\AsymmetricFilesystemKeyChain:
         arguments: ['%kernel.project_dir%/var/secret', true]
 
-    roadiz_core.serialized_name_annotation_strategy:
-        class: JMS\Serializer\Naming\SerializedNameAnnotationStrategy
-        arguments: ['@jms_serializer.identical_property_naming_strategy']
-
     JMS\Serializer\Construction\ObjectConstructorInterface:
         alias: RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\ObjectConstructor
 

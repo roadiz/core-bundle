@@ -118,7 +118,7 @@ class Role implements PersistableInterface
     /**
      * @ORM\ManyToMany(
      *     targetEntity="RZ\Roadiz\CoreBundle\Entity\Group",
-     *     mappedBy="roles",
+     *     mappedBy="roleEntities",
      *     cascade={"persist", "merge"}
      * )
      * @Serializer\Groups({"role"})
@@ -159,7 +159,7 @@ class Role implements PersistableInterface
         $this->groups = $groups;
         /** @var Group $group */
         foreach ($this->groups as $group) {
-            $group->addRole($this);
+            $group->addRoleEntity($this);
         }
 
         return $this;

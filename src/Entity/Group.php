@@ -45,23 +45,22 @@ class Group extends AbstractEntity
      * @Serializer\Groups({"group"})
      * @SymfonySerializer\Groups({"group"})
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Role>")
-     * @Serializer\Accessor(getter="getRolesEntities", setter="setRolesEntities")
      */
-    private Collection $roles;
+    private Collection $roleEntities;
     /**
      * @var array|null
      * @Serializer\Groups({"group", "user"})
      * @SymfonySerializer\Groups({"group", "user"})
      * @Serializer\Type("array<string>")
      */
-    private ?array $rolesNames = null;
+    private ?array $roles = null;
 
     /**
      * Create a new Group.
      */
     public function __construct()
     {
-        $this->roles = new ArrayCollection();
+        $this->roleEntities = new ArrayCollection();
         $this->users = new ArrayCollection();
     }
 
@@ -100,13 +99,13 @@ class Group extends AbstractEntity
      */
     public function getRoles(): array
     {
-        if ($this->rolesNames === null) {
-            $this->rolesNames = array_map(function (Role $role) {
+        if ($this->roles === null) {
+            $this->roles = array_map(function (Role $role) {
                 return $role->getRole();
             }, $this->getRolesEntities()->toArray());
         }
 
-        return $this->rolesNames;
+        return $this->roles;
     }
 
     /**
@@ -116,7 +115,7 @@ class Group extends AbstractEntity
      */
     public function getRolesEntities(): ?Collection
     {
-        return $this->roles;
+        return $this->roleEntities;
     }
 
     /**
@@ -128,9 +127,9 @@ class Group extends AbstractEntity
      */
     public function setRolesEntities(Collection $roles): self
     {
-        $this->roles = $roles;
+        $this->roleEntities = $roles;
         /** @var Role $role */
-        foreach ($this->roles as $role) {
+        foreach ($this->roleEntities as $role) {
             $role->addGroup($this);
         }
         return $this;
@@ -141,10 +140,10 @@ class Group extends AbstractEntity
      *
      * @return $this
      */
-    public function addRole(Role $role): Group
+    public function addRoleEntity(Role $role): Group
     {
-        if (!$this->roles->contains($role)) {
-            $this->roles->add($role);
+        if (!$this->roleEntities->contains($role)) {
+            $this->roleEntities->add($role);
         }
 
         return $this;
@@ -152,15 +151,35 @@ class Group extends AbstractEntity
 
     /**
      * @param Role $role
+     * @return $this
+     * @deprecated Use addRoleEntity
+     */
+    public function addRole(Role $role): Group
+    {
+        return $this->addRoleEntity($role);
+    }
+
+    /**
+     * @param Role $role
      *
      * @return $this
      */
-    public function removeRole(Role $role): Group
+    public function removeRoleEntity(Role $role): Group
     {
-        if ($this->roles->contains($role)) {
-            $this->roles->removeElement($role);
+        if ($this->roleEntities->contains($role)) {
+            $this->roleEntities->removeElement($role);
         }
 
         return $this;
+    }
+
+    /**
+     * @param Role $role
+     * @return $this
+     * @deprecated Use removeRoleEntity
+     */
+    public function removeRole(Role $role): Group
+    {
+        return $this->removeRoleEntity($role);
     }
 }

@@ -48,9 +48,10 @@ class GroupHandler extends AbstractHandler
 
         foreach ($newGroup->getRolesEntities() as $newRole) {
             if (false === in_array($newRole->getName(), $existingRolesNames)) {
+                /** @var Role|null $role */
                 $role = $this->objectManager->getRepository(Role::class)
                                              ->findOneByName($newRole->getName());
-                $this->getGroup()->addRole($role);
+                $this->getGroup()->addRoleEntity($role);
             }
         }
     }

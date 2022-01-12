@@ -80,7 +80,7 @@ final class UsersRolesCommand extends UsersCommand
                     do {
                         $role = $io->askQuestion($question);
                         if ($role != "") {
-                            $user->addRole($this->rolesBag->get($role));
+                            $user->addRoleEntity($this->rolesBag->get($role));
                             $this->managerRegistry->getManagerForClass(User::class)->flush();
                             $io->success('Role: ' . $role . ' added.');
                         }
@@ -95,7 +95,7 @@ final class UsersRolesCommand extends UsersCommand
 
                         $role = $io->askQuestion($question);
                         if (in_array($role, $roles)) {
-                            $user->removeRole($this->rolesBag->get($role));
+                            $user->removeRoleEntity($this->rolesBag->get($role));
                             $this->managerRegistry->getManagerForClass(User::class)->flush();
                             $io->success('Role: ' . $role . ' removed.');
                         }
