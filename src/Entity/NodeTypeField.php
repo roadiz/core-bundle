@@ -124,8 +124,6 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
      * @return string
      * @Serializer\VirtualProperty()
      * @Serializer\Type("string")
-     * @Serializer\SerializedName("nodeTypeName")
-     * @SymfonySerializer\SerializedName("nodeTypeName")
      * @Serializer\Groups({"node_type"})
      * @SymfonySerializer\Groups({"node_type"})
      */

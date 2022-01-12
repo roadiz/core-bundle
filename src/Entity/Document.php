@@ -728,7 +728,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @return bool
      * @Serializer\Groups({"document"})
-     * @Serializer\SerializedName("isThumbnail")
+     * @SymfonySerializer\Groups({"document"})
      * @Serializer\VirtualProperty()
      */
     public function isThumbnail(): bool
@@ -740,8 +740,6 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @return bool
      * @Serializer\Groups({"document"})
      * @SymfonySerializer\Groups({"document"})
-     * @Serializer\SerializedName("hasThumbnail")
-     * @SymfonySerializer\SerializedName("hasThumbnail")
      * @Serializer\VirtualProperty()
      */
     public function hasThumbnails(): bool

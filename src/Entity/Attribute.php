@@ -72,8 +72,6 @@ class Attribute extends AbstractEntity implements AttributeInterface
 
     /**
      * @return Collection<Document>
-     * @Serializer\SerializedName("documents")
-     * @SymfonySerializer\SerializedName("documents")
      * @Serializer\VirtualProperty()
      * @Serializer\Groups({"attribute", "node", "nodes_sources"})
      * @SymfonySerializer\Groups({"attribute", "node", "nodes_sources"})
