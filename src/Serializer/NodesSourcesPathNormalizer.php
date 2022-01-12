@@ -13,7 +13,7 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerAwareInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
-final class NodesSourcesPathNormalizer implements ContextAwareNormalizerInterface, SerializerAwareInterface
+final class NodesSourcesPathNormalizer implements ContextAwareNormalizerInterface, DenormalizerInterface, SerializerAwareInterface
 {
     private UrlGeneratorInterface $urlGenerator;
     /**
@@ -49,6 +49,11 @@ final class NodesSourcesPathNormalizer implements ContextAwareNormalizerInterfac
     public function supportsNormalization($data, $format = null, array $context = []): bool
     {
         return $this->decorated->supportsNormalization($data, $format);
+    }
+
+    public function supportsDenormalization($data, $type, $format = null): bool
+    {
+        return $this->decorated->supportsDenormalization($data, $type, $format);
     }
 
     /**
