@@ -56,10 +56,16 @@ services:
         public: true
 
     RZ\Roadiz\CoreBundle\Serializer\NodesSourcesPathNormalizer:
-        tags: ['serializer.normalizer']
+        # By default .inner is passed as argument
+        decorates: 'api_platform.jsonld.normalizer.item'
+    # Need a different name to avoid duplicate YAML key
+    roadiz_core.serializer.normalizer.nodes_sources_path.json:
+        class: 'RZ\Roadiz\CoreBundle\Serializer\NodesSourcesPathNormalizer'
+        decorates: 'api_platform.serializer.normalizer.item'
 
     RZ\TreeWalker\Serializer\TreeWalkerNormalizer:
-        tags: ['serializer.normalizer']
+        tags:
+            - { name: 'serializer.normalizer', priority: 64 }
 
     RZ\Roadiz\CoreBundle\Serializer\TranslationAwareNormalizer:
         tags:
@@ -165,15 +171,15 @@ services:
             - '@doctrine.orm.default_entity_manager'
             - '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\ObjectConstructor'
             - [
-                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TranslationObjectConstructor',
-                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TagObjectConstructor',
-                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\NodeObjectConstructor',
-                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\NodeTypeObjectConstructor',
-                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\NodeTypeFieldObjectConstructor',
-                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\RoleObjectConstructor',
-                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\GroupObjectConstructor',
-                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\SettingObjectConstructor',
-                '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\SettingGroupObjectConstructor'
+                    '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TranslationObjectConstructor',
+                    '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TagObjectConstructor',
+                    '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\NodeObjectConstructor',
+                    '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\NodeTypeObjectConstructor',
+                    '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\NodeTypeFieldObjectConstructor',
+                    '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\RoleObjectConstructor',
+                    '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\GroupObjectConstructor',
+                    '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\SettingObjectConstructor',
+                    '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\SettingGroupObjectConstructor'
             ]
 
     Solarium\Core\Client\Client:
