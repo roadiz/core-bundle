@@ -16,6 +16,9 @@ use Symfony\Component\Serializer\SerializerInterface;
 final class NodesSourcesPathNormalizer implements ContextAwareNormalizerInterface, SerializerAwareInterface
 {
     private UrlGeneratorInterface $urlGenerator;
+    /**
+     * @var DenormalizerInterface&NormalizerInterface
+     */
     private $decorated;
 
     public function __construct(NormalizerInterface $decorated, UrlGeneratorInterface $urlGenerator)
@@ -48,14 +51,21 @@ final class NodesSourcesPathNormalizer implements ContextAwareNormalizerInterfac
         return $this->decorated->supportsNormalization($data, $format);
     }
 
+    /**
+     * @param mixed $data
+     * @param string $class
+     * @param string|null $format
+     * @param array $context
+     * @return mixed
+     */
     public function denormalize($data, $class, $format = null, array $context = [])
     {
         return $this->decorated->denormalize($data, $class, $format, $context);
     }
 
-    public function setSerializer(SerializerInterface $serializer)
+    public function setSerializer(SerializerInterface $serializer): void
     {
-        if($this->decorated instanceof SerializerAwareInterface) {
+        if ($this->decorated instanceof SerializerAwareInterface) {
             $this->decorated->setSerializer($serializer);
         }
     }
