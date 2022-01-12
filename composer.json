@@ -35,7 +35,7 @@
         "phpoffice/phpspreadsheet": "^1.15",
         "rezozero/crypto": "^0.2.0 || dev-master",
         "rezozero/intervention-request-bundle": "dev-master",
-        "rezozero/tree-walker": "~1.0.2",
+        "rezozero/tree-walker": "dev-master",
         "roadiz/doc-generator": "~1.7.0 || dev-develop",
         "roadiz/documents": "dev-develop",
         "roadiz/dts-generator": "~1.7.0 || dev-main",
