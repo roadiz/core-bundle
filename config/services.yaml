@@ -271,6 +271,18 @@ services:
     RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface:
         alias: RZ\Roadiz\CoreBundle\Routing\DocumentUrlGenerator
 
+    RZ\Roadiz\CoreBundle\Routing\PathResolverInterface:
+        class: RZ\Roadiz\CoreBundle\Routing\ChainResourcePathResolver
+
+    RZ\Roadiz\CoreBundle\Routing\ChainResourcePathResolver:
+        alias: RZ\Roadiz\CoreBundle\Routing\PathResolverInterface
+
+    #
+    # Add your own PathResolvers to serve resources
+    #
+    roadiz_core.path_resolvers.nodes_sources:
+        class: RZ\Roadiz\CoreBundle\Routing\NodesSourcesPathResolver
+        tags: [ 'roadiz_core.path_resolver' ]
     #
     # Twig
     #

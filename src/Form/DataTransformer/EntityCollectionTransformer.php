@@ -7,6 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Form\DataTransformer;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
 
@@ -50,7 +51,7 @@ class EntityCollectionTransformer implements DataTransformerInterface
             return '';
         }
         $ids = [];
-        /** @var AbstractEntity $entity */
+        /** @var PersistableInterface $entity */
         foreach ($entities as $entity) {
             $ids[] = $entity->getId();
         }

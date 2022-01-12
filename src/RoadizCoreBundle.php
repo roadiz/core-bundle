@@ -11,6 +11,7 @@ use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\ImporterCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\JwtRoleStrategyCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\NodesSourcesEntitiesPathCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\NodeWorkflowCompilerPass;
+use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\PathResolverCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\RateLimitersCompilerPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
@@ -34,5 +35,6 @@ class RoadizCoreBundle extends Bundle
         $container->addCompilerPass(new DoctrineMigrationCompilerPass());
         $container->addCompilerPass(new RateLimitersCompilerPass());
         $container->addCompilerPass(new NodesSourcesEntitiesPathCompilerPass());
+        $container->addCompilerPass(new PathResolverCompilerPass());
     }
 }

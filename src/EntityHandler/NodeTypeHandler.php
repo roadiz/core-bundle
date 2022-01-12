@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
-use Doctrine\ORM\EntityManagerInterface;
-use RZ\Roadiz\CoreBundle\Cache\Clearer\OPCacheClearer;
+use RZ\Roadiz\Core\Handlers\AbstractHandler;
 use RZ\Roadiz\CoreBundle\Doctrine\SchemaUpdater;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
@@ -16,7 +14,6 @@ use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\EntityGenerator\EntityGeneratorFactory;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
-use RZ\Roadiz\Core\Handlers\AbstractHandler;
 
 /**
  * Handle operations with node-type entities.
@@ -73,12 +70,15 @@ class NodeTypeHandler extends AbstractHandler
         $this->schemaUpdater = $schemaUpdater;
     }
 
-    /**
-     * @return string
-     */
+
     public function getGeneratedEntitiesFolder(): string
     {
         return $this->generatedEntitiesDir;
+    }
+
+    public function getGeneratedRepositoriesFolder(): string
+    {
+        return $this->getGeneratedEntitiesFolder() . DIRECTORY_SEPARATOR . 'Repository';
     }
 
     /**
@@ -106,25 +106,36 @@ class NodeTypeHandler extends AbstractHandler
     public function generateSourceEntityClass(): bool
     {
         $folder = $this->getGeneratedEntitiesFolder();
+        $repositoryFolder = $this->getGeneratedRepositoriesFolder();
         $file = $this->getSourceClassPath();
+        $repositoryFile = $this->getRepositoryClassPath();
         $fileSystem = new Filesystem();
 
         if (!$fileSystem->exists($folder)) {
             $fileSystem->mkdir($folder, 0775);
         }
+        if (!$fileSystem->exists($repositoryFolder)) {
+            $fileSystem->mkdir($repositoryFolder, 0775);
+        }
 
         if (!$fileSystem->exists($file)) {
-            $classGenerator = $this->entityGeneratorFactory->create($this->nodeType);
+            $classGenerator = $this->entityGeneratorFactory->createWithCustomRepository($this->nodeType);
+            $repositoryGenerator = $this->entityGeneratorFactory->createCustomRepository($this->nodeType);
             $content = $classGenerator->getClassContent();
+            $repositoryContent = $repositoryGenerator->getClassContent();
 
             if (false === @file_put_contents($file, $content)) {
                 throw new IOException("Impossible to write entity class file (" . $file . ").", 1);
+            }
+            if (false === @file_put_contents($repositoryFile, $repositoryContent)) {
+                throw new IOException("Impossible to write entity class file (" . $repositoryFile . ").", 1);
             }
             /*
              * Force Zend OPcache to reset file
              */
             if (function_exists('opcache_invalidate')) {
                 opcache_invalidate($file, true);
+                opcache_invalidate($repositoryFile, true);
             }
             if (function_exists('apcu_clear_cache')) {
                 apcu_clear_cache();
@@ -139,6 +150,12 @@ class NodeTypeHandler extends AbstractHandler
     {
         $folder = $this->getGeneratedEntitiesFolder();
         return $folder . DIRECTORY_SEPARATOR . $this->nodeType->getSourceEntityClassName() . '.php';
+    }
+
+    public function getRepositoryClassPath(): string
+    {
+        $folder = $this->getGeneratedRepositoriesFolder();
+        return $folder . DIRECTORY_SEPARATOR . $this->nodeType->getSourceEntityClassName() . 'Repository.php';
     }
 
     /**

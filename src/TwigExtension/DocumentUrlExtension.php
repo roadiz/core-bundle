@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\TwigExtension;
 
-use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface;
 use Symfony\Component\OptionsResolver\Exception\InvalidArgumentException;
@@ -49,12 +49,12 @@ class DocumentUrlExtension extends AbstractExtension
      *
      * - Document
      *
-     * @param  AbstractEntity|null $mixed
-     * @param  array $criteria
+     * @param PersistableInterface|null $mixed
+     * @param array $criteria
      * @return string
      * @throws RuntimeError
      */
-    public function getUrl(AbstractEntity $mixed = null, array $criteria = [])
+    public function getUrl(PersistableInterface $mixed = null, array $criteria = [])
     {
         if (null === $mixed) {
             if ($this->throwExceptions) {
