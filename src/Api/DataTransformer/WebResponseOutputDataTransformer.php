@@ -8,9 +8,9 @@ use Psr\Cache\CacheItemPoolInterface;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Api\Breadcrumbs\BreadcrumbsFactoryInterface;
-use RZ\Roadiz\CoreBundle\Api\Dto\WebResponseOutput;
 use RZ\Roadiz\CoreBundle\Api\Model\NodesSourcesHeadFactory;
 use RZ\Roadiz\CoreBundle\Api\Model\WebResponseInterface;
+use RZ\Roadiz\CoreBundle\Api\Model\WebResponse;
 use RZ\Roadiz\CoreBundle\Api\TreeWalker\AutoChildrenNodeSourceWalker;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\TreeWalker\WalkerContextInterface;
@@ -51,7 +51,7 @@ final class WebResponseOutputDataTransformer implements WebResponseDataTransform
                 PersistableInterface::class
             );
         }
-        $output = new WebResponseOutput();
+        $output = new WebResponse();
         $output->item = $data;
         if ($data instanceof NodesSources) {
             $output->head = $this->nodesSourcesHeadFactory->createForNodeSource($data);

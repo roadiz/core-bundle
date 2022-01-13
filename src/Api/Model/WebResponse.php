@@ -2,17 +2,15 @@
 
 declare(strict_types=1);
 
-namespace RZ\Roadiz\CoreBundle\Api\Dto;
+namespace RZ\Roadiz\CoreBundle\Api\Model;
 
 use Doctrine\Common\Collections\Collection;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\Api\Breadcrumbs\BreadcrumbsInterface;
-use RZ\Roadiz\CoreBundle\Api\Model\NodesSourcesHeadInterface;
-use RZ\Roadiz\CoreBundle\Api\Model\WebResponseInterface;
 use RZ\TreeWalker\WalkerInterface;
 use Symfony\Component\Serializer\Annotation as Serializer;
 
-final class WebResponseOutput implements WebResponseInterface
+final class WebResponse implements WebResponseInterface
 {
     /**
      * @var PersistableInterface|null
