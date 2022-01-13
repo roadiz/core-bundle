@@ -21,38 +21,38 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
      * @var HandlerFactoryInterface
      * @Serializer\Ignore
      */
-    private HandlerFactoryInterface $handlerFactory;
+    protected HandlerFactoryInterface $handlerFactory;
 
     /**
      * @var array|null
      * @Serializer\Ignore
      */
-    private ?array $seo = null;
+    protected ?array $seo = null;
 
     /**
      * @var NodesSources|null
      * @Serializer\Ignore
      */
-    private ?NodesSources $nodesSource;
+    protected ?NodesSources $nodesSource;
     /**
      * @var Settings
      * @Serializer\Ignore
      */
-    private Settings $settingsBag;
+    protected Settings $settingsBag;
     /**
      * @var UrlGeneratorInterface
      * @Serializer\Ignore
      */
-    private UrlGeneratorInterface $urlGenerator;
+    protected UrlGeneratorInterface $urlGenerator;
     /**
      * @var NodeSourceApi
      * @Serializer\Ignore
      */
-    private NodeSourceApi $nodeSourceApi;
+    protected NodeSourceApi $nodeSourceApi;
     /**
      * @Serializer\Ignore
      */
-    private TranslationInterface $defaultTranslation;
+    protected TranslationInterface $defaultTranslation;
 
     /**
      * @param NodesSources|null $nodesSource
