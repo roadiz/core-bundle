@@ -9,7 +9,6 @@ namespace RZ\Roadiz\CoreBundle\Xlsx;
  */
 interface SerializerInterface
 {
-
     /**
      * Serializes data.
      *

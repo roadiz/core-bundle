@@ -8,5 +8,4 @@ use RZ\Roadiz\CoreBundle\Event\FilterNodeEvent;
 
 final class NodeCreatedEvent extends FilterNodeEvent
 {
-
 }

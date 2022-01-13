@@ -18,7 +18,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class RecaptchaType extends AbstractType
 {
-
     /**
      * (non-PHPdoc)
      * @see \Symfony\Component\Form\AbstractType::buildView()

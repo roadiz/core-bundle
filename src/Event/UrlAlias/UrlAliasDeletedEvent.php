@@ -8,5 +8,4 @@ use RZ\Roadiz\CoreBundle\Event\FilterUrlAliasEvent;
 
 class UrlAliasDeletedEvent extends FilterUrlAliasEvent
 {
-
 }

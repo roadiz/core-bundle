@@ -8,5 +8,4 @@ use RZ\Roadiz\CoreBundle\Doctrine\Event\FilterNodesSourcesQueryBuilderCriteriaEv
 
 class QueryBuilderNodesSourcesApplyEvent extends FilterNodesSourcesQueryBuilderCriteriaEvent
 {
-
 }

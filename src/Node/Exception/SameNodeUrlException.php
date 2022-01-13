@@ -6,5 +6,4 @@ namespace RZ\Roadiz\CoreBundle\Node\Exception;
 
 class SameNodeUrlException extends \RuntimeException
 {
-
 }

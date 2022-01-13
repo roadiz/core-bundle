@@ -8,5 +8,4 @@ use RZ\Roadiz\CoreBundle\Event\FilterTranslationEvent;
 
 final class TranslationCreatedEvent extends FilterTranslationEvent
 {
-
 }

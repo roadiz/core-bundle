@@ -6,5 +6,4 @@ namespace RZ\Roadiz\CoreBundle\SearchEngine\Message;
 
 final class SolrReindexMessage extends AbstractSolrMessage
 {
-
 }

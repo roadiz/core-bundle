@@ -12,7 +12,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class SeparatorType extends AbstractType
 {
-
     /**
      * {@inheritdoc}
      */

@@ -8,5 +8,4 @@ use RZ\Roadiz\CoreBundle\Event\FilterCacheEvent;
 
 final class CachePurgeAssetsRequestEvent extends FilterCacheEvent
 {
-
 }

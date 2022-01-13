@@ -6,5 +6,4 @@ namespace RZ\Roadiz\CoreBundle\Message;
 
 interface AsyncMessage
 {
-
 }

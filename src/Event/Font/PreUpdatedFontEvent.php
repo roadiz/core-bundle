@@ -6,5 +6,4 @@ namespace RZ\Roadiz\CoreBundle\Event\Font;
 
 final class PreUpdatedFontEvent extends FontEvent
 {
-
 }

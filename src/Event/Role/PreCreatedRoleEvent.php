@@ -6,5 +6,4 @@ namespace RZ\Roadiz\CoreBundle\Event\Role;
 
 final class PreCreatedRoleEvent extends RoleEvent
 {
-
 }

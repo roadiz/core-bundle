@@ -8,5 +8,4 @@ use RZ\Roadiz\CoreBundle\Event\FilterTagEvent;
 
 final class TagCreatedEvent extends FilterTagEvent
 {
-
 }

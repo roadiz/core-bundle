@@ -8,5 +8,4 @@ use RZ\Roadiz\CoreBundle\Event\FilterUserEvent;
 
 final class UserDeletedEvent extends FilterUserEvent
 {
-
 }

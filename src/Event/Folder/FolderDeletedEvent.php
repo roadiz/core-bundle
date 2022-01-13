@@ -8,5 +8,4 @@ use RZ\Roadiz\CoreBundle\Event\FilterFolderEvent;
 
 final class FolderDeletedEvent extends FilterFolderEvent
 {
-
 }

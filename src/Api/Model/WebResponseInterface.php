@@ -6,5 +6,4 @@ namespace RZ\Roadiz\CoreBundle\Api\Model;
 
 interface WebResponseInterface
 {
-
 }
