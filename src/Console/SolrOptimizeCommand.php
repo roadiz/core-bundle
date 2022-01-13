@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Console;
 
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry;
+use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\CliAwareIndexer;
 use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\IndexerFactoryInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -42,7 +43,9 @@ class SolrOptimizeCommand extends SolrCommand
         if (null !== $solr) {
             if (true === $this->clientRegistry->isClientReady($solr)) {
                 $documentIndexer = $this->indexerFactory->getIndexerFor(Document::class);
-                $documentIndexer->setIo($this->io);
+                if ($documentIndexer instanceof CliAwareIndexer) {
+                    $documentIndexer->setIo($this->io);
+                }
                 $documentIndexer->optimizeSolr();
                 $this->io->success('<info>Solr core has been optimized.</info>');
             } else {

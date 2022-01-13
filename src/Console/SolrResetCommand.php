@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Console;
 
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry;
+use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\CliAwareIndexer;
 use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\IndexerFactoryInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -48,7 +49,9 @@ class SolrResetCommand extends SolrCommand
                 );
                 if ($this->io->askQuestion($confirmation)) {
                     $indexer  = $this->indexerFactory->getIndexerFor(NodesSources::class);
-                    $indexer->setIo($this->io);
+                    if ($indexer instanceof CliAwareIndexer) {
+                        $indexer->setIo($this->io);
+                    }
                     $indexer->emptySolr();
                     $this->io->success('Solr index resetted.');
                 }

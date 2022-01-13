@@ -9,4 +9,6 @@ interface Indexer
     public function reindexAll(): void;
     public function index($id): void;
     public function delete($id): void;
+    public function emptySolr(?string $documentType = null): void;
+    public function optimizeSolr(): void;
 }

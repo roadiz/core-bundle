@@ -5,16 +5,30 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Api\Model;
 
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
 use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\EntityApi\NodeSourceApi;
+use RZ\Roadiz\CoreBundle\EntityHandler\NodesSourcesHandler;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Annotation as Serializer;
 
 class NodesSourcesHead implements NodesSourcesHeadInterface
 {
+    /**
+     * @var HandlerFactoryInterface
+     * @Serializer\Ignore
+     */
+    private HandlerFactoryInterface $handlerFactory;
+
+    /**
+     * @var array|null
+     * @Serializer\Ignore
+     */
+    private ?array $seo = null;
+
     /**
      * @var NodesSources|null
      * @Serializer\Ignore
@@ -45,6 +59,7 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
      * @param Settings $settingsBag
      * @param UrlGeneratorInterface $urlGenerator
      * @param NodeSourceApi $nodeSourceApi
+     * @param HandlerFactoryInterface $handlerFactory
      * @param TranslationInterface $defaultTranslation
      */
     public function __construct(
@@ -52,6 +67,7 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
         Settings $settingsBag,
         UrlGeneratorInterface $urlGenerator,
         NodeSourceApi $nodeSourceApi,
+        HandlerFactoryInterface $handlerFactory,
         TranslationInterface $defaultTranslation
     ) {
         $this->nodesSource = $nodesSource;
@@ -59,6 +75,7 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
         $this->urlGenerator = $urlGenerator;
         $this->nodeSourceApi = $nodeSourceApi;
         $this->defaultTranslation = $defaultTranslation;
+        $this->handlerFactory = $handlerFactory;
     }
 
     /**
@@ -105,6 +122,49 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
     {
         // site_name
         return $this->settingsBag->get('site_name', null) ?? null;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getDefaultSeo(): array
+    {
+        if (null !== $this->nodesSource) {
+            $nodesSourcesHandler = $this->handlerFactory->getHandler($this->nodesSource);
+            if ($nodesSourcesHandler instanceof NodesSourcesHandler) {
+                return $nodesSourcesHandler->getSEO();
+            }
+        }
+        return [
+            'title' => $this->settingsBag->get('site_name'),
+            'description' => $this->settingsBag->get('seo_description'),
+        ];
+    }
+
+    /**
+     * @return string|null
+     * @Serializer\Groups({"web_response", "nodes_sources_single", "walker"})
+     */
+    public function getMetaTitle(): ?string
+    {
+        if (null === $this->seo) {
+            $this->seo = $this->getDefaultSeo();
+        }
+
+        return $this->seo['title'];
+    }
+
+    /**
+     * @return string|null
+     * @Serializer\Groups({"web_response", "nodes_sources_single", "walker"})
+     */
+    public function getMetaDescription(): ?string
+    {
+        if (null === $this->seo) {
+            $this->seo = $this->getDefaultSeo();
+        }
+
+        return $this->seo['description'];
     }
 
     /**

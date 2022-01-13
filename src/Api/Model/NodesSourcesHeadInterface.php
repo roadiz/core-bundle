@@ -10,6 +10,8 @@ use RZ\Roadiz\Core\Models\DocumentInterface;
 interface NodesSourcesHeadInterface
 {
     public function getSiteName(): ?string;
+    public function getMetaTitle(): ?string;
+    public function getMetaDescription(): ?string;
     public function getPolicyUrl(): ?string;
     public function getHomePageUrl(): ?string;
     public function getShareImage(): ?DocumentInterface;

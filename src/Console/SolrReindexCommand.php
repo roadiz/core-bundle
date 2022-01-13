@@ -7,6 +7,8 @@ namespace RZ\Roadiz\CoreBundle\Console;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry;
+use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\BatchIndexer;
+use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\CliAwareIndexer;
 use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\IndexerFactoryInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\SolariumDocumentTranslation;
 use RZ\Roadiz\CoreBundle\SearchEngine\SolariumNodeSource;
@@ -88,9 +90,13 @@ class SolrReindexCommand extends SolrCommand implements ThemeAwareCommandInterfa
     {
         // Empty first
         $documentIndexer = $this->indexerFactory->getIndexerFor(Document::class);
-        $documentIndexer->setIo($this->io);
+        if ($documentIndexer instanceof CliAwareIndexer) {
+            $documentIndexer->setIo($this->io);
+        }
         $nodesSourcesIndexer = $this->indexerFactory->getIndexerFor(NodesSources::class);
-        $nodesSourcesIndexer->setIo($this->io);
+        if ($nodesSourcesIndexer instanceof CliAwareIndexer) {
+            $nodesSourcesIndexer->setIo($this->io);
+        }
         $nodesSourcesIndexer->emptySolr();
         $documentIndexer->reindexAll();
         $nodesSourcesIndexer->reindexAll();
@@ -103,7 +109,9 @@ class SolrReindexCommand extends SolrCommand implements ThemeAwareCommandInterfa
     protected function executeForDocuments(Stopwatch $stopwatch): void
     {
         $documentIndexer = $this->indexerFactory->getIndexerFor(Document::class);
-        $documentIndexer->setIo($this->io);
+        if ($documentIndexer instanceof CliAwareIndexer) {
+            $documentIndexer->setIo($this->io);
+        }
         $documentIndexer->emptySolr(SolariumDocumentTranslation::DOCUMENT_TYPE);
         $documentIndexer->reindexAll();
 
@@ -115,12 +123,19 @@ class SolrReindexCommand extends SolrCommand implements ThemeAwareCommandInterfa
     protected function executeForNodes(Stopwatch $stopwatch, int $batchCount, int $batchNumber): void
     {
         $nodesSourcesIndexer = $this->indexerFactory->getIndexerFor(NodesSources::class);
-        $nodesSourcesIndexer->setIo($this->io);
+        if ($nodesSourcesIndexer instanceof CliAwareIndexer) {
+            $nodesSourcesIndexer->setIo($this->io);
+        }
         // Empty first ONLY if one batch or first batch.
         if ($batchNumber === 0) {
             $nodesSourcesIndexer->emptySolr(SolariumNodeSource::DOCUMENT_TYPE);
         }
-        $nodesSourcesIndexer->reindexAll($batchCount, $batchNumber);
+
+        if ($nodesSourcesIndexer instanceof BatchIndexer) {
+            $nodesSourcesIndexer->reindexAll($batchCount, $batchNumber);
+        } else {
+            $nodesSourcesIndexer->reindexAll();
+        }
 
         $stopwatch->stop('global');
         $duration = $stopwatch->getEvent('global')->getDuration();

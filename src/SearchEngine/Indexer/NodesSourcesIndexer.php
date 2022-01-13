@@ -10,7 +10,7 @@ use Solarium\Exception\HttpException;
 use Solarium\Plugin\BufferedAdd\BufferedAdd;
 use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 
-class NodesSourcesIndexer extends AbstractIndexer
+class NodesSourcesIndexer extends AbstractIndexer implements BatchIndexer
 {
     public function index($id): void
     {

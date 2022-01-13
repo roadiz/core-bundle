@@ -13,7 +13,7 @@ use RZ\Roadiz\CoreBundle\SearchEngine\SolariumFactoryInterface;
 use Solarium\Client;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-abstract class AbstractIndexer implements Indexer
+abstract class AbstractIndexer implements CliAwareIndexer
 {
     private ClientRegistry $clientRegistry;
     protected SolariumFactoryInterface $solariumFactory;
