@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\SearchEngine;
 
 use Psr\Log\LoggerInterface;
+use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\Markdown\MarkdownInterface;
-use Solarium\Client;
 use Solarium\QueryType\Update\Query\Query;
 
 /**
@@ -27,18 +26,18 @@ class SolariumDocumentTranslation extends AbstractSolarium
     protected ?DocumentTranslation $documentTranslation = null;
 
     /**
-     * @param DocumentTranslation    $documentTranslation
+     * @param DocumentTranslation $documentTranslation
      * @param ClientRegistry $clientRegistry
-     * @param LoggerInterface   $logger
+     * @param LoggerInterface $searchEngineLogger
      * @param MarkdownInterface $markdown
      */
     public function __construct(
         DocumentTranslation $documentTranslation,
         ClientRegistry $clientRegistry,
-        LoggerInterface $logger,
+        LoggerInterface $searchEngineLogger,
         MarkdownInterface $markdown
     ) {
-        parent::__construct($clientRegistry, $logger, $markdown);
+        parent::__construct($clientRegistry, $searchEngineLogger, $markdown);
 
         $this->documentTranslation = $documentTranslation;
         $this->rzDocument = $documentTranslation->getDocument();

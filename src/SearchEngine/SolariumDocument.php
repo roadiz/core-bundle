@@ -7,7 +7,6 @@ namespace RZ\Roadiz\CoreBundle\SearchEngine;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Markdown\MarkdownInterface;
-use Solarium\Client;
 use Solarium\QueryType\Update\Query\Query;
 
 /**
@@ -20,20 +19,20 @@ class SolariumDocument extends AbstractSolarium
     protected array $documentTranslationItems;
 
     /**
-     * @param Document                 $rzDocument
+     * @param Document $rzDocument
      * @param SolariumFactoryInterface $solariumFactory
      * @param ClientRegistry $clientRegistry
-     * @param LoggerInterface     $logger
-     * @param MarkdownInterface   $markdown
+     * @param LoggerInterface $searchEngineLogger
+     * @param MarkdownInterface $markdown
      */
     public function __construct(
         Document $rzDocument,
         SolariumFactoryInterface $solariumFactory,
         ClientRegistry $clientRegistry,
-        LoggerInterface $logger,
+        LoggerInterface $searchEngineLogger,
         MarkdownInterface $markdown
     ) {
-        parent::__construct($clientRegistry, $logger, $markdown);
+        parent::__construct($clientRegistry, $searchEngineLogger, $markdown);
         $this->documentTranslationItems = [];
 
         foreach ($rzDocument->getDocumentTranslations() as $documentTranslation) {

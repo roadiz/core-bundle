@@ -8,7 +8,6 @@ use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Event\NodesSources\NodesSourcesIndexingEvent;
 use RZ\Roadiz\Markdown\MarkdownInterface;
-use Solarium\Client;
 use Solarium\QueryType\Update\Query\Query;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -24,20 +23,20 @@ class SolariumNodeSource extends AbstractSolarium
     protected EventDispatcherInterface $dispatcher;
 
     /**
-     * @param NodesSources             $nodeSource
+     * @param NodesSources $nodeSource
      * @param ClientRegistry $clientRegistry
      * @param EventDispatcherInterface $dispatcher
-     * @param LoggerInterface     $logger
-     * @param MarkdownInterface   $markdown
+     * @param LoggerInterface $searchEngineLogger
+     * @param MarkdownInterface $markdown
      */
     public function __construct(
         NodesSources $nodeSource,
         ClientRegistry $clientRegistry,
         EventDispatcherInterface $dispatcher,
-        LoggerInterface $logger = null,
-        MarkdownInterface $markdown = null
+        LoggerInterface $searchEngineLogger,
+        MarkdownInterface $markdown
     ) {
-        parent::__construct($clientRegistry, $logger, $markdown);
+        parent::__construct($clientRegistry, $searchEngineLogger, $markdown);
         $this->nodeSource = $nodeSource;
         $this->dispatcher = $dispatcher;
     }

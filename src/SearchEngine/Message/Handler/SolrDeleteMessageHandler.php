@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\SearchEngine\Message\Handler;
 
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\IndexerFactoryInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\Message\SolrReindexMessage;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
@@ -17,11 +16,11 @@ final class SolrDeleteMessageHandler implements MessageHandlerInterface
 
     /**
      * @param IndexerFactoryInterface $indexerFactory
-     * @param LoggerInterface|null $logger
+     * @param LoggerInterface $searchEngineLogger
      */
-    public function __construct(IndexerFactoryInterface $indexerFactory, ?LoggerInterface $logger = null)
+    public function __construct(IndexerFactoryInterface $indexerFactory, LoggerInterface $searchEngineLogger)
     {
-        $this->logger = $logger ?? new NullLogger();
+        $this->logger = $searchEngineLogger;
         $this->indexerFactory = $indexerFactory;
     }
 

@@ -63,15 +63,15 @@ abstract class AbstractSolarium
 
     /**
      * @param ClientRegistry $clientRegistry
-     * @param LoggerInterface   $logger
+     * @param LoggerInterface $searchEngineLogger
      * @param MarkdownInterface $markdown
      */
     public function __construct(
         ClientRegistry $clientRegistry,
-        LoggerInterface $logger,
+        LoggerInterface $searchEngineLogger,
         MarkdownInterface $markdown
     ) {
-        $this->logger = $logger;
+        $this->logger = $searchEngineLogger;
         $this->markdown = $markdown;
         $this->clientRegistry = $clientRegistry;
     }

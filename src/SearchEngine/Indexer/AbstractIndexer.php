@@ -6,7 +6,6 @@ namespace RZ\Roadiz\CoreBundle\SearchEngine\Indexer;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use RZ\Roadiz\CoreBundle\Exception\SolrServerNotAvailableException;
 use RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry;
 use RZ\Roadiz\CoreBundle\SearchEngine\SolariumFactoryInterface;
@@ -25,17 +24,17 @@ abstract class AbstractIndexer implements CliAwareIndexer
      * @param ClientRegistry $clientRegistry
      * @param ManagerRegistry $managerRegistry
      * @param SolariumFactoryInterface $solariumFactory
-     * @param LoggerInterface|null $logger
+     * @param LoggerInterface $searchEngineLogger
      */
     public function __construct(
         ClientRegistry $clientRegistry,
         ManagerRegistry $managerRegistry,
         SolariumFactoryInterface $solariumFactory,
-        ?LoggerInterface $logger = null
+        LoggerInterface $searchEngineLogger
     ) {
         $this->solariumFactory = $solariumFactory;
         $this->clientRegistry = $clientRegistry;
-        $this->logger = $logger ?? new NullLogger();
+        $this->logger = $searchEngineLogger;
         $this->managerRegistry = $managerRegistry;
     }
 

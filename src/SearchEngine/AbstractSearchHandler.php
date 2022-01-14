@@ -6,7 +6,6 @@ namespace RZ\Roadiz\CoreBundle\SearchEngine;
 
 use Doctrine\Persistence\ObjectManager;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Exception\SolrServerNotAvailableException;
 use Solarium\Client;
@@ -23,16 +22,16 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
     /**
      * @param ClientRegistry $clientRegistry
      * @param ObjectManager $em
-     * @param LoggerInterface|null $logger
+     * @param LoggerInterface $searchEngineLogger
      */
     public function __construct(
         ClientRegistry $clientRegistry,
         ObjectManager $em,
-        ?LoggerInterface $logger = null
+        LoggerInterface $searchEngineLogger
     ) {
         $this->clientRegistry = $clientRegistry;
         $this->em = $em;
-        $this->logger = $logger ?? new NullLogger();
+        $this->logger = $searchEngineLogger;
     }
 
     public function getSolr(): Client
