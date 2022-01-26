@@ -19,8 +19,15 @@ FontFaceCSS:
 # Custom forms
 #
 api_custom_forms_item_definition:
+    methods: [GET]
     path: /api/custom_forms/{id}/definition
     controller: RZ\Roadiz\CoreBundle\Controller\CustomFormController::definitionAction
+    requirements:
+        id: "[0-9]+"
+api_custom_forms_item_post:
+    methods: [POST]
+    path: /api/custom_forms/{id}/post
+    controller: RZ\Roadiz\CoreBundle\Controller\CustomFormController::postAction
     requirements:
         id: "[0-9]+"
 

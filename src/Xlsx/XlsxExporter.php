@@ -114,7 +114,7 @@ class XlsxExporter
                  * Set value into cell
                  */
                 $activeSheet->getStyle($columnAlpha . $activeRow)->getAlignment()->setWrapText(true);
-                $activeSheet->setCellValueByColumnAndRow($k + 1, $activeRow, $this->translator->trans($value));
+                $activeSheet->setCellValueByColumnAndRow($k + 1, $activeRow, $this->translator->trans((string) $value));
             }
 
             $activeRow++;

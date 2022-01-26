@@ -15,6 +15,7 @@ use RZ\Roadiz\CoreBundle\Exception\EntityAlreadyExistsException;
 use RZ\Roadiz\CoreBundle\Mailer\EmailManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,6 +25,8 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Contracts\Translation\LocaleAwareInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -35,6 +38,7 @@ final class CustomFormController extends AbstractController
     private TranslatorInterface $translator;
     private CustomFormHelperFactory $customFormHelperFactory;
     private LiformInterface $liform;
+    private SerializerInterface $serializer;
 
     public function __construct(
         EmailManager $emailManager,
@@ -42,7 +46,8 @@ final class CustomFormController extends AbstractController
         LoggerInterface $logger,
         TranslatorInterface $translator,
         CustomFormHelperFactory $customFormHelperFactory,
-        LiformInterface $liform
+        LiformInterface $liform,
+        SerializerInterface $serializer
     ) {
         $this->emailManager = $emailManager;
         $this->settingsBag = $settingsBag;
@@ -50,6 +55,7 @@ final class CustomFormController extends AbstractController
         $this->translator = $translator;
         $this->customFormHelperFactory = $customFormHelperFactory;
         $this->liform = $liform;
+        $this->serializer = $serializer;
     }
 
     protected function getTranslation(string $_locale = 'fr'): TranslationInterface
@@ -96,6 +102,101 @@ final class CustomFormController extends AbstractController
             [],
             true
         );
+    }
+
+    /**
+     * Return all Form errors as an array.
+     *
+     * @param FormInterface $form
+     * @return array
+     */
+    protected function getErrorsAsArray(FormInterface $form): array
+    {
+        $errors = [];
+        /** @var FormError $error */
+        foreach ($form->getErrors() as $error) {
+            if (null !== $error->getOrigin()) {
+                $errorFieldName = $error->getOrigin()->getName();
+                if (count($error->getMessageParameters()) > 0) {
+                    if (null !== $error->getMessagePluralization()) {
+                        $errors[$errorFieldName] = $this->translator->trans($error->getMessagePluralization(), $error->getMessageParameters());
+                    } else {
+                        $errors[$errorFieldName] = $this->translator->trans($error->getMessageTemplate(), $error->getMessageParameters());
+                    }
+                } else {
+                    $errors[$errorFieldName] = $error->getMessage();
+                }
+                $cause = $error->getCause();
+                if (null !== $cause) {
+                    if ($cause instanceof ConstraintViolation) {
+                        $cause = $cause->getCause();
+                    }
+                    if (is_object($cause)) {
+                        if ($cause instanceof \Exception) {
+                            $errors[$errorFieldName . '_cause_message'] = $cause->getMessage();
+                        }
+                        $errors[$errorFieldName . '_cause'] = get_class($cause);
+                    }
+                }
+            }
+        }
+
+        foreach ($form->all() as $key => $child) {
+            $err = $this->getErrorsAsArray($child);
+            if ($err) {
+                $errors[$key] = $err;
+            }
+        }
+        return $errors;
+    }
+
+    /**
+     * @param Request $request
+     * @param int $id
+     * @param string $_locale
+     * @return Response
+     * @throws Exception
+     */
+    public function postAction(Request $request, int $id, string $_locale = 'fr'): Response
+    {
+        /** @var CustomForm|null $customForm */
+        $customForm = $this->getDoctrine()->getRepository(CustomForm::class)->find($id);
+        if (null === $customForm) {
+            throw new NotFoundHttpException();
+        }
+
+        $translation = $this->getTranslation($_locale);
+        $request->setLocale($translation->getPreferredLocale());
+        if ($this->translator instanceof LocaleAwareInterface) {
+            $this->translator->setLocale($translation->getPreferredLocale());
+        }
+
+        $mixed = $this->prepareAndHandleCustomFormAssignation(
+            $request,
+            $customForm,
+            new JsonResponse([], Response::HTTP_ACCEPTED)
+        );
+
+        if ($mixed instanceof Response) {
+            $mixed->prepare($request);
+            return $mixed;
+        }
+
+        if (is_array($mixed) && $mixed['formObject'] instanceof FormInterface) {
+            if ($mixed['formObject']->isSubmitted()) {
+                return new JsonResponse(
+                    $this->serializer->serialize(
+                        $this->getErrorsAsArray($mixed['formObject']),
+                        'json'
+                    ),
+                    Response::HTTP_BAD_REQUEST,
+                    [],
+                    true
+                );
+            }
+        }
+
+        throw new BadRequestHttpException('Form has not been submitted');
     }
 
     /**
@@ -288,6 +389,7 @@ final class CustomFormController extends AbstractController
         }
 
         $assignation['form'] = $form->createView();
+        $assignation['formObject'] = $form;
         return $assignation;
     }
 }

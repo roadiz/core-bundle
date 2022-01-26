@@ -301,6 +301,7 @@ class CustomFormsType extends AbstractType
             'recaptcha_verifyurl' => null,
             'request' => null,
             'forceExpanded' => false,
+            'csrf_protection' => false,
         ]);
 
         $resolver->setRequired('customForm');
