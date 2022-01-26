@@ -71,6 +71,9 @@ services:
         class: 'RZ\TreeWalker\Serializer\TreeWalkerNormalizer'
         decorates: 'api_platform.serializer.normalizer.item'
 
+    Limenius\Liform\LiformInterface:
+        alias: liform
+
     RZ\Roadiz\CoreBundle\Serializer\TranslationAwareNormalizer:
         tags:
             - { name: 'serializer.normalizer', priority: 64 }

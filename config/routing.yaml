@@ -15,6 +15,15 @@ FontFaceCSS:
 # InterventionRequest is hard coded before run app
 #
 
+#
+# Custom forms
+#
+api_custom_forms_item_definition:
+    path: /api/custom_forms/{id}/definition
+    controller: RZ\Roadiz\CoreBundle\Controller\CustomFormController::definitionAction
+    requirements:
+        id: "[0-9]+"
+
 customFormSendAction:
     path:     /custom-form/{customFormId}
     controller: RZ\Roadiz\CoreBundle\Controller\CustomFormController::addAction

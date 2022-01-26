@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Controller;
 
 use Exception;
+use Limenius\Liform\LiformInterface;
 use Psr\Log\LoggerInterface;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\CustomForm\CustomFormHelperFactory;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
@@ -13,12 +15,16 @@ use RZ\Roadiz\CoreBundle\Exception\EntityAlreadyExistsException;
 use RZ\Roadiz\CoreBundle\Mailer\EmailManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use Symfony\Contracts\Translation\LocaleAwareInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class CustomFormController extends AbstractController
@@ -28,19 +34,68 @@ final class CustomFormController extends AbstractController
     private LoggerInterface $logger;
     private TranslatorInterface $translator;
     private CustomFormHelperFactory $customFormHelperFactory;
+    private LiformInterface $liform;
 
     public function __construct(
         EmailManager $emailManager,
         Settings $settingsBag,
         LoggerInterface $logger,
         TranslatorInterface $translator,
-        CustomFormHelperFactory $customFormHelperFactory
+        CustomFormHelperFactory $customFormHelperFactory,
+        LiformInterface $liform
     ) {
         $this->emailManager = $emailManager;
         $this->settingsBag = $settingsBag;
         $this->logger = $logger;
         $this->translator = $translator;
         $this->customFormHelperFactory = $customFormHelperFactory;
+        $this->liform = $liform;
+    }
+
+    protected function getTranslation(string $_locale = 'fr'): TranslationInterface
+    {
+        if (empty($_locale)) {
+            throw new BadRequestHttpException('Locale must not be empty.');
+        }
+        $translation = $this->getDoctrine()
+            ->getRepository(TranslationInterface::class)
+            ->findOneBy([
+            'locale' => $_locale
+        ]);
+        if (null === $translation) {
+            throw new NotFoundHttpException('Translation does not exist.');
+        }
+        return $translation;
+    }
+
+    /**
+     * @param Request $request
+     * @param int $id
+     * @param string $_locale
+     * @return JsonResponse
+     */
+    public function definitionAction(Request $request, int $id, string $_locale = 'fr'): JsonResponse
+    {
+        /** @var CustomForm|null $customForm */
+        $customForm = $this->getDoctrine()->getRepository(CustomForm::class)->find($id);
+        if (null === $customForm) {
+            throw new NotFoundHttpException();
+        }
+
+        $helper = $this->customFormHelperFactory->createHelper($customForm);
+        $translation = $this->getTranslation($_locale);
+        $request->setLocale($translation->getPreferredLocale());
+        if ($this->translator instanceof LocaleAwareInterface) {
+            $this->translator->setLocale($translation->getPreferredLocale());
+        }
+        $schema = json_encode($this->liform->transform($helper->getForm($request)));
+
+        return new JsonResponse(
+            $schema,
+            Response::HTTP_OK,
+            [],
+            true
+        );
     }
 
     /**

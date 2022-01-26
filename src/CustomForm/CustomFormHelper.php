@@ -19,6 +19,7 @@ use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 /**
  * @package RZ\Roadiz\Utils\CustomForm
@@ -64,7 +65,8 @@ class CustomFormHelper
         bool $forceExpanded = false
     ): FormInterface {
         $defaults = $request->query->all();
-        return $this->formFactory->create(CustomFormsType::class, $defaults, [
+        $name = (new AsciiSlugger())->slug($this->customForm->getName())->snake()->toString();
+        return $this->formFactory->createNamed($name, CustomFormsType::class, $defaults, [
             'recaptcha_public_key' => $this->settingsBag->get('recaptcha_public_key'),
             'recaptcha_private_key' => $this->settingsBag->get('recaptcha_private_key'),
             'request' => $request,
