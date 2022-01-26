@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -28,49 +29,49 @@ class CustomForm extends AbstractDateTimed
      * @Serializer\Groups({"custom_form", "nodes_sources"})
      * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
      */
-    protected $color = '#000000';
+    protected ?string $color = '#000000';
     /**
      * @ORM\Column(type="string", unique=true)
      * @var string
      * @Serializer\Groups({"custom_form", "nodes_sources"})
      * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
      */
-    private $name = 'Untitled';
+    private string $name = 'Untitled';
     /**
      * @ORM\Column(name="display_name", type="string")
      * @var string
      * @Serializer\Groups({"custom_form", "nodes_sources"})
      * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
      */
-    private $displayName = 'Untitled';
+    private string $displayName = 'Untitled';
     /**
      * @ORM\Column(type="text", nullable=true)
      * @var string|null
-     * @Serializer\Groups({"nodes_sources"})
-     * @SymfonySerializer\Groups({"nodes_sources"})
+     * @Serializer\Groups({"custom_form", "nodes_sources"})
+     * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
      */
-    private $description = null;
+    private ?string $description = null;
     /**
      * @ORM\Column(type="text", nullable=true)
      * @var string|null
      * @Serializer\Groups({"custom_form"})
      * @SymfonySerializer\Groups({"custom_form"})
      */
-    private $email = null;
+    private ?string $email = null;
     /**
      * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
      * @var bool
-     * @Serializer\Groups({"custom_form"})
-     * @SymfonySerializer\Groups({"custom_form"})
+     * @Serializer\Groups({"custom_form", "nodes_sources"})
+     * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
      */
-    private $open = true;
+    private bool $open = true;
     /**
      * @ORM\Column(name="close_date", type="datetime", nullable=true)
-     * @var \DateTime|null
-     * @Serializer\Groups({"custom_form"})
-     * @SymfonySerializer\Groups({"custom_form"})
+     * @var DateTime|null
+     * @Serializer\Groups({"custom_form", "nodes_sources"})
+     * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
      */
-    private $closeDate = null;
+    private ?DateTime $closeDate = null;
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomFormField", mappedBy="customForm", cascade={"ALL"})
      * @ORM\OrderBy({"position" = "ASC"})
@@ -78,7 +79,7 @@ class CustomForm extends AbstractDateTimed
      * @Serializer\Groups({"custom_form"})
      * @SymfonySerializer\Groups({"custom_form"})
      */
-    private $fields;
+    private Collection $fields;
     /**
      * @ORM\OneToMany(
      *    targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomFormAnswer",
@@ -89,14 +90,14 @@ class CustomForm extends AbstractDateTimed
      * @Serializer\Exclude
      * @SymfonySerializer\Ignore
      */
-    private $customFormAnswers;
+    private Collection $customFormAnswers;
     /**
      * @ORM\OneToMany(targetEntity="NodesCustomForms", mappedBy="customForm", fetch="EXTRA_LAZY")
      * @var Collection<NodesCustomForms>
      * @Serializer\Exclude
      * @SymfonySerializer\Ignore
      */
-    private $nodes;
+    private Collection $nodes;
 
     /**
      * Create a new CustomForm.
@@ -167,7 +168,7 @@ class CustomForm extends AbstractDateTimed
     }
 
     /**
-     * @param boolean $open
+     * @param bool $open
      *
      * @return $this
      */
@@ -178,7 +179,7 @@ class CustomForm extends AbstractDateTimed
     }
 
     /**
-     * @return \DateTime
+     * @return \DateTime|null
      */
     public function getCloseDate(): ?\DateTime
     {
@@ -186,11 +187,11 @@ class CustomForm extends AbstractDateTimed
     }
 
     /**
-     * @param \DateTime $closeDate
+     * @param \DateTime|null $closeDate
      *
      * @return $this
      */
-    public function setCloseDate(\DateTime $closeDate = null): CustomForm
+    public function setCloseDate(?\DateTime $closeDate): CustomForm
     {
         $this->closeDate = $closeDate;
         return $this;
@@ -200,20 +201,15 @@ class CustomForm extends AbstractDateTimed
      * Combine open flag and closeDate to determine
      * if current form is still available.
      *
-     * @return boolean
+     * @return bool
+     * @Serializer\Groups({"custom_form", "nodes_sources"})
+     * @Serializer\VirtualProperty
+     * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
      */
     public function isFormStillOpen(): bool
     {
-        $nowDate = new \DateTime();
-
-        if (
-            $this->closeDate >= $nowDate &&
-            $this->open === true
-        ) {
-            return true;
-        } else {
-            return false;
-        }
+        return (null === $this->getCloseDate() || $this->getCloseDate() >= (new \DateTime('now'))) &&
+            $this->open === true;
     }
 
     /**
@@ -285,7 +281,7 @@ class CustomForm extends AbstractDateTimed
      * @param CustomFormField $field
      * @return CustomForm
      */
-    public function addField(CustomFormField $field)
+    public function addField(CustomFormField $field): CustomForm
     {
         if (!$this->getFields()->contains($field)) {
             $this->getFields()->add($field);
@@ -346,7 +342,7 @@ class CustomForm extends AbstractDateTimed
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function isOpen(): bool
     {
@@ -383,15 +379,12 @@ class CustomForm extends AbstractDateTimed
             $this->displayName .= $suffix;
             $this->customFormAnswers = new ArrayCollection();
             $fields = $this->getFields();
-
-            if ($fields !== null) {
-                $this->fields = new ArrayCollection();
-                /** @var CustomFormField $field */
-                foreach ($fields as $field) {
-                    $cloneField = clone $field;
-                    $this->fields->add($cloneField);
-                    $cloneField->setCustomForm($this);
-                }
+            $this->fields = new ArrayCollection();
+            /** @var CustomFormField $field */
+            foreach ($fields as $field) {
+                $cloneField = clone $field;
+                $this->fields->add($cloneField);
+                $cloneField->setCustomForm($this);
             }
             $this->nodes = new ArrayCollection();
             $this->setCreatedAt(new \DateTime());

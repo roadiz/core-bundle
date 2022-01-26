@@ -4,22 +4,15 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Controller;
 
-use DateTime;
-use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
-use RZ\Roadiz\CoreBundle\CustomForm\CustomFormHelper;
-use RZ\Roadiz\CoreBundle\Document\PrivateDocumentFactory;
+use RZ\Roadiz\CoreBundle\CustomForm\CustomFormHelperFactory;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
-use RZ\Roadiz\CoreBundle\Entity\CustomFormAnswer;
-use RZ\Roadiz\CoreBundle\Entity\CustomFormFieldAttribute;
 use RZ\Roadiz\CoreBundle\Exception\EntityAlreadyExistsException;
-use RZ\Roadiz\CoreBundle\Form\CustomFormsType;
 use RZ\Roadiz\CoreBundle\Mailer\EmailManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
-use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -31,33 +24,32 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class CustomFormController extends AbstractController
 {
     private EmailManager $emailManager;
-    private PrivateDocumentFactory $privateDocumentFactory;
     private Settings $settingsBag;
     private LoggerInterface $logger;
     private TranslatorInterface $translator;
+    private CustomFormHelperFactory $customFormHelperFactory;
 
     public function __construct(
         EmailManager $emailManager,
-        PrivateDocumentFactory $privateDocumentFactory,
         Settings $settingsBag,
         LoggerInterface $logger,
-        TranslatorInterface $translator
+        TranslatorInterface $translator,
+        CustomFormHelperFactory $customFormHelperFactory
     ) {
         $this->emailManager = $emailManager;
-        $this->privateDocumentFactory = $privateDocumentFactory;
         $this->settingsBag = $settingsBag;
         $this->logger = $logger;
         $this->translator = $translator;
+        $this->customFormHelperFactory = $customFormHelperFactory;
     }
 
     /**
      * @param Request $request
      * @param int $customFormId
-     *
      * @return Response
      * @throws \Twig\Error\RuntimeError
      */
-    public function addAction(Request $request, int $customFormId)
+    public function addAction(Request $request, int $customFormId): Response
     {
         /** @var CustomForm $customForm */
         $customForm = $this->getDoctrine()->getRepository(CustomForm::class)->find($customFormId);
@@ -87,18 +79,17 @@ final class CustomFormController extends AbstractController
 
     /**
      * @param Request $request
-     * @param int     $customFormId
-     *
+     * @param int $customFormId
      * @return Response
      */
-    public function sentAction(Request $request, int $customFormId)
+    public function sentAction(Request $request, int $customFormId): Response
     {
         $assignation = [];
+        /** @var CustomForm|null $customForm */
         $customForm = $this->getDoctrine()->getRepository(CustomForm::class)->find($customFormId);
 
         if (null !== $customForm) {
             $assignation['customForm'] = $customForm;
-
             return $this->render('@RoadizCore/customForm/customFormSent.html.twig', $assignation);
         }
 
@@ -138,86 +129,6 @@ final class CustomFormController extends AbstractController
     }
 
     /**
-     * Add a custom form answer into database.
-     *
-     * @param array         $data Data array from POST form
-     * @param CustomForm    $customForm
-     * @param EntityManagerInterface $em
-     *
-     * @return array $fieldsData
-     * @deprecated Use \RZ\Roadiz\Utils\CustomForm\CustomFormHelper to transform Form to CustomFormAnswer.
-     */
-    public function addCustomFormAnswer(array $data, CustomForm $customForm, EntityManagerInterface $em)
-    {
-        $now = new DateTime('NOW');
-        $answer = new CustomFormAnswer();
-        $answer->setIp($data["ip"]);
-        $answer->setSubmittedAt($now);
-        $answer->setCustomForm($customForm);
-
-        $fieldsData = [
-            ["name" => "ip.address", "value" => $data["ip"]],
-            ["name" => "submittedAt", "value" => $now],
-        ];
-
-        $em->persist($answer);
-
-        foreach ($customForm->getFields() as $field) {
-            $fieldAttr = new CustomFormFieldAttribute();
-            $fieldAttr->setCustomFormAnswer($answer);
-            $fieldAttr->setCustomFormField($field);
-
-            if (isset($data[$field->getName()])) {
-                $fieldValue = $data[$field->getName()];
-                if ($fieldValue instanceof DateTime) {
-                    $strDate = $fieldValue->format('Y-m-d H:i:s');
-
-                    $fieldAttr->setValue($strDate);
-                    $fieldsData[] = ["name" => $field->getLabel(), "value" => $strDate];
-                } elseif (is_array($fieldValue)) {
-                    $values = $fieldValue;
-                    $values = array_map('trim', $values);
-                    $values = array_map('strip_tags', $values);
-
-                    $displayValues = implode(CustomFormHelper::ARRAY_SEPARATOR, $values);
-                    $fieldAttr->setValue($displayValues);
-                    $fieldsData[] = ["name" => $field->getLabel(), "value" => $displayValues];
-                } else {
-                    $fieldAttr->setValue(strip_tags($fieldValue));
-                    $fieldsData[] = ["name" => $field->getLabel(), "value" => $fieldValue];
-                }
-            }
-            $em->persist($fieldAttr);
-        }
-
-        $em->flush();
-
-        return $fieldsData;
-    }
-
-    /**
-     * @param Request    $request
-     * @param CustomForm $customForm
-     * @param boolean    $forceExpanded
-     *
-     * @return FormInterface
-     */
-    public function buildForm(
-        Request $request,
-        CustomForm $customForm,
-        bool $forceExpanded = false
-    ) {
-        $defaults = $request->query->all();
-        return $this->createForm(CustomFormsType::class, $defaults, [
-            'recaptcha_public_key' => $this->settingsBag->get('recaptcha_public_key'),
-            'recaptcha_private_key' => $this->settingsBag->get('recaptcha_private_key'),
-            'request' => $request,
-            'customForm' => $customForm,
-            'forceExpanded' => $forceExpanded,
-        ]);
-    }
-
-    /**
      * Prepare and handle a CustomForm Form then send a confirm email.
      *
      * * This method will return an assignation **array** if form is not validated.
@@ -228,31 +139,26 @@ final class CustomFormController extends AbstractController
      *
      * @param Request          $request
      * @param CustomForm       $customFormsEntity
-     * @param RedirectResponse $redirection
+     * @param Response $response
      * @param boolean          $forceExpanded
      * @param string|null      $emailSender
      *
-     * @return array|RedirectResponse
+     * @return array|Response
      * @throws Exception
      */
     public function prepareAndHandleCustomFormAssignation(
         Request $request,
         CustomForm $customFormsEntity,
-        RedirectResponse $redirection,
+        Response $response,
         bool $forceExpanded = false,
         ?string $emailSender = null
     ) {
         $assignation = [];
         $assignation['customForm'] = $customFormsEntity;
         $assignation['fields'] = $customFormsEntity->getFields();
-        $helper = new CustomFormHelper(
-            $this->getDoctrine()->getManager(),
-            $customFormsEntity,
-            $this->privateDocumentFactory
-        );
-        $form = $this->buildForm(
+        $helper = $this->customFormHelperFactory->createHelper($customFormsEntity);
+        $form = $helper->getForm(
             $request,
-            $customFormsEntity,
             $forceExpanded
         );
         $form->handleRequest($request);
@@ -271,7 +177,10 @@ final class CustomFormController extends AbstractController
                     ["name" => "ip.address", "value" => $answer->getIp()],
                     ["name" => "submittedAt", "value" => $answer->getSubmittedAt()->format('Y-m-d H:i:s')],
                 ];
-                $assignation["emailFields"] = array_merge($assignation["emailFields"], $answer->toArray(false));
+                $assignation["emailFields"] = array_merge(
+                    $assignation["emailFields"],
+                    $answer->toArray(false)
+                );
 
                 $msg = $this->translator->trans(
                     'customForm.%name%.send',
@@ -317,14 +226,13 @@ final class CustomFormController extends AbstractController
                     $receiver
                 );
 
-                return $redirection;
+                return $response;
             } catch (EntityAlreadyExistsException $e) {
                 $form->addError(new FormError($e->getMessage()));
             }
         }
 
         $assignation['form'] = $form->createView();
-
         return $assignation;
     }
 }

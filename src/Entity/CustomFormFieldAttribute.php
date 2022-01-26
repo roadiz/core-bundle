@@ -26,14 +26,14 @@ class CustomFormFieldAttribute extends AbstractEntity
      * @ORM\JoinColumn(name="custom_form_answer_id", referencedColumnName="id", onDelete="CASCADE")
      * @var CustomFormAnswer|null
      */
-    protected $customFormAnswer;
+    protected ?CustomFormAnswer $customFormAnswer = null;
 
     /**
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomFormField", inversedBy="customFormFieldAttributes")
      * @ORM\JoinColumn(name="custom_form_field_id", referencedColumnName="id", onDelete="CASCADE")
      * @var CustomFormField|null
      */
-    protected $customFormField;
+    protected ?CustomFormField $customFormField = null;
 
     /**
      * @var Collection<Document>
@@ -42,17 +42,14 @@ class CustomFormFieldAttribute extends AbstractEntity
      *     @ORM\JoinColumn(name="customformfieldattribute_id", onDelete="CASCADE")
      * })
      */
-    protected $documents;
+    protected Collection $documents;
 
     /**
      * @ORM\Column(type="text", nullable=true)
      * @var string|null
      */
-    protected $value = null;
+    protected ?string $value = null;
 
-    /**
-     * CustomFormFieldAttribute constructor.
-     */
     public function __construct()
     {
         $this->documents = new ArrayCollection();
@@ -72,23 +69,21 @@ class CustomFormFieldAttribute extends AbstractEntity
     }
 
     /**
-     * @param string $value
-     *
+     * @param string|null $value
      * @return $this
      */
-    public function setValue(?string $value)
+    public function setValue(?string $value): CustomFormFieldAttribute
     {
         $this->value = $value;
-
         return $this;
     }
 
     /**
      * Gets the value of customFormAnswer.
      *
-     * @return CustomFormAnswer
+     * @return CustomFormAnswer|null
      */
-    public function getCustomFormAnswer()
+    public function getCustomFormAnswer(): ?CustomFormAnswer
     {
         return $this->customFormAnswer;
     }
@@ -100,7 +95,7 @@ class CustomFormFieldAttribute extends AbstractEntity
      *
      * @return self
      */
-    public function setCustomFormAnswer(CustomFormAnswer $customFormAnswer)
+    public function setCustomFormAnswer(CustomFormAnswer $customFormAnswer): CustomFormFieldAttribute
     {
         $this->customFormAnswer = $customFormAnswer;
 
@@ -108,11 +103,9 @@ class CustomFormFieldAttribute extends AbstractEntity
     }
 
     /**
-     * Gets the value of customFormField.
-     *
-     * @return CustomFormField
+     * @return CustomFormField|null
      */
-    public function getCustomFormField()
+    public function getCustomFormField(): ?CustomFormField
     {
         return $this->customFormField;
     }
@@ -121,10 +114,9 @@ class CustomFormFieldAttribute extends AbstractEntity
      * Sets the value of customFormField.
      *
      * @param CustomFormField $customFormField the custom form field
-     *
      * @return self
      */
-    public function setCustomFormField(CustomFormField $customFormField)
+    public function setCustomFormField(CustomFormField $customFormField): CustomFormFieldAttribute
     {
         $this->customFormField = $customFormField;
 
@@ -154,8 +146,8 @@ class CustomFormFieldAttribute extends AbstractEntity
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
-        return $this->getValue();
+        return $this->getValue() ?? '';
     }
 }

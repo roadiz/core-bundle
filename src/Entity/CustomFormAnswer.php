@@ -7,6 +7,8 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 
 /**
@@ -20,27 +22,33 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 class CustomFormAnswer extends AbstractEntity
 {
     /**
-     * @ORM\Column(type="string", name="ip")
-     * @var string
+     * @ORM\Column(type="string", name="ip", nullable=false)
+     * @Serializer\Groups({"custom_form_answer"})
+     * @SymfonySerializer\Groups({"custom_form_answer"})
      */
     private string $ip = '';
     /**
-     * @ORM\Column(type="datetime", name="submitted_at")
-     * @var \DateTime
+     * @ORM\Column(type="datetime", name="submitted_at", nullable=false)
+     * @Serializer\Groups({"custom_form_answer"})
+     * @SymfonySerializer\Groups({"custom_form_answer"})
      */
-    private $submittedAt;
+    private \DateTime $submittedAt;
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomFormFieldAttribute",
      *            mappedBy="customFormAnswer",
      *            cascade={"ALL"})
+     * @Serializer\Groups({"custom_form_answer"})
+     * @SymfonySerializer\Groups({"custom_form_answer"})
      * @var Collection<CustomFormFieldAttribute>
      */
-    private $answerFields;
+    private Collection $answerFields;
     /**
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomForm",
      *           inversedBy="customFormAnswers")
      * @ORM\JoinColumn(name="custom_form_id", referencedColumnName="id", onDelete="CASCADE")
      * @var CustomForm|null
+     * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      **/
     private ?CustomForm $customForm = null;
 
@@ -167,9 +175,8 @@ class CustomFormAnswer extends AbstractEntity
     /**
      * @param bool $namesAsKeys Use fields name as key. Default: true
      * @return array
-     * @deprecated Use CustomFormAnswerSerializer instead
      */
-    public function toArray($namesAsKeys = true): array
+    public function toArray(bool $namesAsKeys = true): array
     {
         $answers = [];
         /** @var CustomFormFieldAttribute $answer */

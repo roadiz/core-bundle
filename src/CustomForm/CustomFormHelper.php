@@ -5,18 +5,20 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\CustomForm;
 
 use Doctrine\Persistence\ObjectManager;
-use RZ\Roadiz\CoreBundle\Form\CustomFormsType;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
+use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Entity\CustomFormAnswer;
 use RZ\Roadiz\CoreBundle\Entity\CustomFormField;
 use RZ\Roadiz\CoreBundle\Entity\CustomFormFieldAttribute;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
+use RZ\Roadiz\CoreBundle\Form\CustomFormsType;
 use RZ\Roadiz\Utils\Document\AbstractDocumentFactory;
 use RZ\Roadiz\Utils\StringHandler;
-use Symfony\Component\Form\FormFactory;
+use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @package RZ\Roadiz\Utils\CustomForm
@@ -28,17 +30,47 @@ class CustomFormHelper
     protected AbstractDocumentFactory $documentFactory;
     protected ObjectManager $em;
     protected CustomForm $customForm;
+    protected FormFactoryInterface $formFactory;
+    protected Settings $settingsBag;
 
     /**
      * @param ObjectManager $em
-     * @param CustomForm      $customForm
+     * @param CustomForm $customForm
      * @param AbstractDocumentFactory $documentFactory
+     * @param FormFactoryInterface $formFactory
+     * @param Settings $settingsBag
      */
-    public function __construct(ObjectManager $em, CustomForm $customForm, AbstractDocumentFactory $documentFactory)
-    {
+    public function __construct(
+        ObjectManager $em,
+        CustomForm $customForm,
+        AbstractDocumentFactory $documentFactory,
+        FormFactoryInterface $formFactory,
+        Settings $settingsBag
+    ) {
         $this->em = $em;
         $this->customForm = $customForm;
         $this->documentFactory = $documentFactory;
+        $this->formFactory = $formFactory;
+        $this->settingsBag = $settingsBag;
+    }
+
+    /**
+     * @param Request    $request
+     * @param boolean    $forceExpanded
+     * @return FormInterface
+     */
+    public function getForm(
+        Request $request,
+        bool $forceExpanded = false
+    ): FormInterface {
+        $defaults = $request->query->all();
+        return $this->formFactory->create(CustomFormsType::class, $defaults, [
+            'recaptcha_public_key' => $this->settingsBag->get('recaptcha_public_key'),
+            'recaptcha_private_key' => $this->settingsBag->get('recaptcha_private_key'),
+            'request' => $request,
+            'customForm' => $this->customForm,
+            'forceExpanded' => $forceExpanded,
+        ]);
     }
 
     /**
@@ -48,13 +80,13 @@ class CustomFormHelper
      * @param FormInterface         $form
      * @param CustomFormAnswer|null $answer
      * @param string                $ipAddress
-     *
      * @return CustomFormAnswer
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
      */
-    public function parseAnswerFormData(FormInterface $form, CustomFormAnswer $answer = null, string $ipAddress = "")
-    {
+    public function parseAnswerFormData(
+        FormInterface $form,
+        CustomFormAnswer $answer = null,
+        string $ipAddress = ""
+    ): CustomFormAnswer {
         if ($form->isSubmitted() && $form->isValid()) {
             /*
              * Create answer if null.
@@ -124,9 +156,8 @@ class CustomFormHelper
     }
 
     /**
-     * @param UploadedFile             $file
+     * @param UploadedFile $file
      * @param CustomFormFieldAttribute $fieldAttr
-     *
      * @return CustomFormFieldAttribute
      */
     protected function handleUploadedFile(
@@ -155,7 +186,6 @@ class CustomFormHelper
     }
 
     /**
-     * @param FormFactory           $formFactory
      * @param CustomFormAnswer|null $answer
      * @param bool                  $forceExpanded
      * @param array                 $options Options passed to final form
@@ -164,7 +194,6 @@ class CustomFormHelper
      * @throws \Exception
      */
     public function getFormFromAnswer(
-        FormFactory $formFactory,
         CustomFormAnswer $answer = null,
         bool $forceExpanded = false,
         array $options = []
@@ -196,7 +225,7 @@ class CustomFormHelper
             }
         }
 
-        return $formFactory->create(CustomFormsType::class, $data, array_merge($options, [
+        return $this->formFactory->create(CustomFormsType::class, $data, array_merge($options, [
             'customForm' => $this->customForm,
             'forceExpanded' => $forceExpanded,
         ]));
@@ -227,11 +256,9 @@ class CustomFormHelper
      */
     private function getAttribute(CustomFormAnswer $answer, CustomFormField $field): ?CustomFormFieldAttribute
     {
-        /** @var CustomFormFieldAttribute|null $attribute */
-        $attribute = $this->em->getRepository(CustomFormFieldAttribute::class)->findOneBy([
+        return $this->em->getRepository(CustomFormFieldAttribute::class)->findOneBy([
             'customFormAnswer' => $answer,
             'customFormField' => $field,
         ]);
-        return $attribute;
     }
 }

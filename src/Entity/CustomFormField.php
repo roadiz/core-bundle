@@ -7,6 +7,8 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 
 /**
@@ -51,22 +53,25 @@ class CustomFormField extends AbstractField
     /**
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomForm", inversedBy="fields")
      * @ORM\JoinColumn(name="custom_form_id", referencedColumnName="id", onDelete="CASCADE")
+     * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
-    private $customForm = null;
+    private ?CustomForm $customForm = null;
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomFormFieldAttribute", mappedBy="customFormField")
      * @var Collection<CustomFormFieldAttribute>
+     * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
-    private $customFormFieldAttributes;
+    private Collection $customFormFieldAttributes;
     /**
      * @ORM\Column(name="field_required", type="boolean", nullable=false, options={"default" = false})
      * @var bool
+     * @Serializer\Groups({"custom_form"})
+     * @SymfonySerializer\Groups({"custom_form"})
      */
-    private $required = false;
+    private bool $required = false;
 
-    /**
-     * CustomFormField constructor.
-     */
     public function __construct()
     {
         parent::__construct();
@@ -118,7 +123,7 @@ class CustomFormField extends AbstractField
     }
 
     /**
-     * @return boolean $isRequired
+     * @return bool $isRequired
      */
     public function isRequired(): bool
     {
@@ -126,7 +131,7 @@ class CustomFormField extends AbstractField
     }
 
     /**
-     * @param boolean $required
+     * @param bool $required
      *
      * @return $this
      */
