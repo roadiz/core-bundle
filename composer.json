@@ -47,7 +47,7 @@
         "roadiz/nodetype-contracts": "~1.1.0 || dev-main",
         "roadiz/openid": "~1.7.0 || dev-develop",
         "roadiz/random": "~1.7.0 || dev-main",
-        "limenius/liform-bundle": "^0.17.0",
+        "limenius/liform-bundle": "dev-master",
         "rollerworks/password-strength-bundle": "^2.2",
         "rollerworks/password-strength-validator": "^1.6",
         "scienta/doctrine-json-functions": "^4.2",
@@ -119,5 +119,11 @@
             "cache:clear": "symfony-cmd",
             "assets:install %PUBLIC_DIR%": "symfony-cmd"
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "github",
+            "url":  "https://github.com/rezozero/LiformBundle.git"
+        }
+    ]
 }
