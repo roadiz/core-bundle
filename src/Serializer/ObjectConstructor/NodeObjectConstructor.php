@@ -24,20 +24,20 @@ class NodeObjectConstructor extends AbstractTypedObjectConstructor
      */
     protected function findObject($data, DeserializationContext $context): ?object
     {
-        if (null === $data['nodeName'] || $data['nodeName'] === '') {
+        if (empty($data['nodeName']) && empty($data['node_name'])) {
             throw new ObjectConstructionException('Node name can not be empty');
         }
         /** @var NodeRepository $nodeRepository */
         $nodeRepository = $this->entityManager
             ->getRepository(Node::class)
             ->setDisplayingAllNodesStatuses(true);
-        return $nodeRepository->findOneByNodeName($data['nodeName']);
+        return $nodeRepository->findOneByNodeName($data['nodeName'] ?? $data['node_name']);
     }
 
     protected function fillIdentifier(object $object, array $data): void
     {
         if ($object instanceof Node) {
-            $object->setNodeName($data['nodeName']);
+            $object->setNodeName($data['nodeName'] ?? $data['node_name']);
         }
     }
 }

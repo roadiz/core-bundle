@@ -26,12 +26,12 @@ class TagObjectConstructor extends AbstractTypedObjectConstructor
      */
     protected function findObject($data, DeserializationContext $context): ?object
     {
-        if (null === $data['tagName'] || $data['tagName'] === '') {
+        if (empty($data['tagName']) && empty($data['tag_name'])) {
             throw new ObjectConstructionException('Tag name can not be empty');
         }
         $tag = $this->entityManager
             ->getRepository(Tag::class)
-            ->findOneByTagName($data['tagName']);
+            ->findOneByTagName($data['tagName'] ?? $data['tag_name']);
 
         if (
             null !== $tag &&

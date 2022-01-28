@@ -27,13 +27,13 @@ class NodeTypeFieldObjectConstructor extends AbstractTypedObjectConstructor
         if (empty($data['name'])) {
             throw new ObjectConstructionException('NodeTypeField name can not be empty');
         }
-        if (empty($data['nodeTypeName'])) {
+        if (empty($data['nodeTypeName']) && empty($data['node_type_name'])) {
             throw new ObjectConstructionException('nodeTypeName is missing to check duplication.');
         }
 
         $nodeType = $this->entityManager
             ->getRepository(NodeType::class)
-            ->findOneByName($data['nodeTypeName']);
+            ->findOneByName($data['nodeTypeName'] ?? $data['node_type_name']);
 
         if (null === $nodeType) {
             /*
