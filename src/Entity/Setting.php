@@ -32,7 +32,7 @@ class Setting extends AbstractEntity
      * @Serializer\Exclude()
      * @SymfonySerializer\Ignore()
      */
-    public static $typeToHuman = [
+    public static array $typeToHuman = [
         AbstractField::STRING_T => 'string.type',
         AbstractField::DATETIME_T => 'date-time.type',
         AbstractField::TEXT_T => 'text.type',

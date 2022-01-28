@@ -35,7 +35,7 @@ class CustomFormField extends AbstractField
      *
      * @var array
      */
-    public static $typeToHuman = [
+    public static array $typeToHuman = [
         AbstractField::STRING_T => 'string.type',
         AbstractField::DATETIME_T => 'date-time.type',
         AbstractField::DATE_T => 'date.type',
