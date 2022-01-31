@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Node;
 
-use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
 use RZ\Roadiz\CoreBundle\Repository\NodeRepository;
@@ -31,22 +31,12 @@ final class NodeFactory
         $this->managerRegistry = $managerRegistry;
     }
 
-    /**
-     * @param string           $title
-     * @param NodeType|null    $type
-     * @param Translation|null $translation
-     * @param Node|null        $node
-     * @param Node|null        $parent
-     *
-     * @return Node
-     * @throws ORMException
-     */
     public function create(
         string $title,
-        NodeType $type = null,
-        Translation $translation = null,
-        Node $node = null,
-        Node $parent = null
+        ?NodeTypeInterface $type = null,
+        ?TranslationInterface $translation = null,
+        ?Node $node = null,
+        ?Node $parent = null
     ): Node {
         /** @var NodeRepository $repository */
         $repository = $this->managerRegistry->getRepository(Node::class)
@@ -98,24 +88,13 @@ final class NodeFactory
         return $node;
     }
 
-    /**
-     * @param string           $urlAlias
-     * @param string           $title
-     * @param NodeType|null    $type
-     * @param Translation|null $translation
-     * @param Node|null        $node
-     * @param Node|null        $parent
-     *
-     * @return Node
-     * @throws ORMException
-     */
     public function createWithUrlAlias(
         string $urlAlias,
         string $title,
-        NodeType $type = null,
-        Translation $translation = null,
-        Node $node = null,
-        Node $parent = null
+        ?NodeTypeInterface $type = null,
+        ?TranslationInterface $translation = null,
+        ?Node $node = null,
+        ?Node $parent = null
     ): Node {
         $node = $this->create($title, $type, $translation, $node, $parent);
         /** @var UrlAliasRepository $repository */
