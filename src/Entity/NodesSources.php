@@ -403,6 +403,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @Serializer\Exclude(if="!object.isPublishable()")
      * @ApiFilter(BaseFilter\DateFilter::class)
      * @ApiFilter(BaseFilter\OrderFilter::class)
+     * @ApiFilter(RoadizFilter\ArchiveFilter::class)
      */
     protected ?\DateTime $publishedAt = null;
 

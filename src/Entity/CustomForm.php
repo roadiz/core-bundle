@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -12,6 +13,7 @@ use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
 use RZ\Roadiz\Utils\StringHandler;
+use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
 
 /**
  * CustomForms describe each node structure family,
@@ -70,6 +72,7 @@ class CustomForm extends AbstractDateTimed
      * @var DateTime|null
      * @Serializer\Groups({"custom_form", "nodes_sources"})
      * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
+     * @ApiFilter(RoadizFilter\ArchiveFilter::class)
      */
     private ?DateTime $closeDate = null;
     /**
