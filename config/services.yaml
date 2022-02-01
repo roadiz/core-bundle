@@ -292,6 +292,9 @@ services:
     roadiz_core.path_resolvers.nodes_sources:
         class: RZ\Roadiz\CoreBundle\Routing\NodesSourcesPathResolver
         tags: [ 'roadiz_core.path_resolver' ]
+    roadiz_core.path_resolvers.redirections:
+        class: RZ\Roadiz\CoreBundle\Routing\RedirectionPathResolver
+        tags: [ 'roadiz_core.path_resolver' ]
     #
     # Twig
     #
