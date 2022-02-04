@@ -255,6 +255,11 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
         }
     }
 
+    public function getUserIdentifier(): string
+    {
+        return $this->username;
+    }
+
     /**
      * @return string $username
      */
