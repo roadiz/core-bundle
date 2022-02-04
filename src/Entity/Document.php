@@ -34,8 +34,15 @@ use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
  *     @ORM\Index(columns={"raw"}),
  *     @ORM\Index(columns={"raw", "created_at"}, name="document_raw_created_at"),
  *     @ORM\Index(columns={"private"}),
+ *     @ORM\Index(columns={"filename"}, name="document_filename"),
+ *     @ORM\Index(columns={"embedId"}, name="document_embed_id"),
+ *     @ORM\Index(columns={"embedId", "embedPlatform"}, name="document_embed_platform_id"),
  *     @ORM\Index(columns={"embedPlatform"}, name="document_embed_platform"),
  *     @ORM\Index(columns={"raw", "private"}),
+ *     @ORM\Index(columns={"duration"}, name="document_duration"),
+ *     @ORM\Index(columns={"filesize"}, name="document_filesize"),
+ *     @ORM\Index(columns={"imageWidth"}, name="document_image_width"),
+ *     @ORM\Index(columns={"imageHeight"}, name="document_image_height"),
  *     @ORM\Index(columns={"mime_type"})
  * })
  * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
@@ -132,7 +139,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      */
     protected Collection $documentTranslations;
     /**
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", name="filename", nullable=true)
      * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
      * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("string")
@@ -206,7 +213,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     private ?string $imageAverageColor = null;
     /**
      * @var int|null The filesize in bytes.
-     * @ORM\Column(type="integer", nullable=true, unique=false)
+     * @ORM\Column(type="integer", name="filesize", nullable=true, unique=false)
      * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("int")

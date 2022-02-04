@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
 
-use RZ\Roadiz\CoreBundle\Model\AttributeInterface;
-use RZ\Roadiz\CoreBundle\Form\ColorType;
-use RZ\Roadiz\CoreBundle\Form\Constraint\UniqueEntity;
 use RZ\Roadiz\CoreBundle\Entity\Attribute;
+use RZ\Roadiz\CoreBundle\Form\Constraint\UniqueEntity;
+use RZ\Roadiz\CoreBundle\Model\AttributeInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;

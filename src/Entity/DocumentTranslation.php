@@ -103,6 +103,33 @@ class DocumentTranslation extends AbstractEntity implements Loggable
     }
 
     /**
+     * @ORM\Column(type="text", length=2000, nullable=true)
+     * @var string|null
+     * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
+     * @Gedmo\Versioned
+     */
+    protected ?string $externalUrl = null;
+
+    /**
+     * @return string|null
+     */
+    public function getExternalUrl(): ?string
+    {
+        return $this->externalUrl;
+    }
+
+    /**
+     * @param string|null $externalUrl
+     * @return DocumentTranslation
+     */
+    public function setExternalUrl(?string $externalUrl): DocumentTranslation
+    {
+        $this->externalUrl = $externalUrl;
+        return $this;
+    }
+
+    /**
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Translation", inversedBy="documentTranslations", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="translation_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
