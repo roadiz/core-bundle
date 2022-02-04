@@ -12,10 +12,10 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
  */
 final class ResourceInfo
 {
-    protected ?PersistableInterface $resource;
-    protected ?TranslationInterface $translation;
-    protected string $format;
-    protected string $locale;
+    protected ?PersistableInterface $resource = null;
+    protected ?TranslationInterface $translation = null;
+    protected ?string $format = null;
+    protected ?string $locale = null;
 
     /**
      * @return PersistableInterface|null
@@ -54,36 +54,36 @@ final class ResourceInfo
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getFormat(): string
+    public function getFormat(): ?string
     {
         return $this->format;
     }
 
     /**
-     * @param string $format
+     * @param string|null $format
      * @return ResourceInfo
      */
-    public function setFormat(string $format): ResourceInfo
+    public function setFormat(?string $format): ResourceInfo
     {
         $this->format = $format;
         return $this;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getLocale(): string
+    public function getLocale(): ?string
     {
         return $this->locale;
     }
 
     /**
-     * @param string $locale
+     * @param string|null $locale
      * @return ResourceInfo
      */
-    public function setLocale(string $locale): ResourceInfo
+    public function setLocale(?string $locale): ResourceInfo
     {
         $this->locale = $locale;
         return $this;

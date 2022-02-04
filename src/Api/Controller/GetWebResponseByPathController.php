@@ -15,6 +15,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use Symfony\Component\String\UnicodeString;
 
 final class GetWebResponseByPathController extends AbstractController
 {
@@ -74,13 +75,21 @@ final class GetWebResponseByPathController extends AbstractController
         $resource = $resourceInfo->getResource();
 
         /*
-         * Normalize redirected node-sources
+         * Normalize redirection
          */
-        if (
-            $resource instanceof Redirection &&
-            null !== $resource->getRedirectNodeSource()
-        ) {
-            $resource = $resource->getRedirectNodeSource();
+        if ($resource instanceof Redirection) {
+            if (null !== $resource->getRedirectNodeSource()) {
+                $resource = $resource->getRedirectNodeSource();
+            } elseif (
+                null !== $resource->getRedirectUri() &&
+                (new UnicodeString($resource->getRedirectUri()))->startsWith('/')
+            ) {
+                /*
+                 * Recursive call to normalize path coming from Redirection if redirected path
+                 * is internal (starting with /)
+                 */
+                return $this->normalizeResourcePath($resource->getRedirectUri());
+            }
         }
 
         $this->addResourceToCacheTags($resource);
