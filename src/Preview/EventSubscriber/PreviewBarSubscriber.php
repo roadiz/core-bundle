@@ -37,7 +37,7 @@ class PreviewBarSubscriber implements EventSubscriberInterface
      *
      * @return bool
      */
-    protected function supports(ResponseEvent $event)
+    protected function supports(ResponseEvent $event): bool
     {
         $response = $event->getResponse();
         if (

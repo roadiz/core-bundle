@@ -31,7 +31,7 @@ class AttributesExtension extends AbstractExtension
         $this->entityManager = $entityManager;
     }
 
-    public function getFunctions()
+    public function getFunctions(): array
     {
         return [
             new TwigFunction('get_attributes', [$this, 'getAttributeValues']),
@@ -40,7 +40,7 @@ class AttributesExtension extends AbstractExtension
         ];
     }
 
-    public function getFilters()
+    public function getFilters(): array
     {
         return [
             new TwigFilter('attributes', [$this, 'getNodeSourceAttributeValues']),
@@ -50,7 +50,7 @@ class AttributesExtension extends AbstractExtension
         ];
     }
 
-    public function getTests()
+    public function getTests(): array
     {
         return [
             new TwigTest('datetime', [$this, 'isDateTime']),

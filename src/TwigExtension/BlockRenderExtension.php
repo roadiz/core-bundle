@@ -27,7 +27,7 @@ class BlockRenderExtension extends AbstractExtension
         $this->handler = $handler;
     }
 
-    public function getFilters()
+    public function getFilters(): array
     {
         return [
             new TwigFilter('render_block', [$this, 'blockRender'], ['is_safe' => ['html']]),

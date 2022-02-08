@@ -27,7 +27,7 @@ class NodeTypeFilter implements EventSubscriberInterface
         ];
     }
 
-    protected function supports(QueryBuilderBuildEvent $event)
+    protected function supports(QueryBuilderBuildEvent $event): bool
     {
         return $event->supports() && false !== strpos($event->getProperty(), 'nodeType.');
     }

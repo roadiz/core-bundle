@@ -41,10 +41,7 @@ class UniqueNodeGenerator
      * @param Node|null $parent
      * @param Tag|null $tag
      * @param bool $pushToTop
-     *
      * @return NodesSources
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
      */
     public function generate(
         NodeType $nodeType,
@@ -52,7 +49,7 @@ class UniqueNodeGenerator
         Node $parent = null,
         Tag $tag = null,
         bool $pushToTop = false
-    ) {
+    ): NodesSources {
         $name = $nodeType->getDisplayName() . " " . uniqid();
         $node = new Node($nodeType);
         $node->setTtl($node->getNodeType()->getDefaultTtl());

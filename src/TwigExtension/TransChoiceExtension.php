@@ -25,7 +25,7 @@ final class TransChoiceExtension extends AbstractExtension
         $this->translator = $translator;
     }
 
-    public function getFilters()
+    public function getFilters(): array
     {
         return [
             new TwigFilter('transchoice', [$this, 'transchoice']),

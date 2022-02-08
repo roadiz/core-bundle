@@ -26,7 +26,7 @@ final class TranslationMenuExtension extends AbstractExtension
         $this->translationViewer = $translationViewer;
     }
 
-    public function getFilters()
+    public function getFilters(): array
     {
         return [
             new TwigFilter('menu', [$this, 'getMenuAssignation']),

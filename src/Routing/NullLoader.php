@@ -30,7 +30,7 @@ final class NullLoader implements LoaderInterface
      *
      * @return bool True if this class supports the given resource, false otherwise
      */
-    public function supports($resource, $type = null)
+    public function supports($resource, $type = null): bool
     {
         return true;
     }

@@ -35,7 +35,7 @@ class DocumentUrlExtension extends AbstractExtension
     /**
      * @return array
      */
-    public function getFilters()
+    public function getFilters(): array
     {
         return [
             new TwigFilter('url', [$this, 'getUrl']),

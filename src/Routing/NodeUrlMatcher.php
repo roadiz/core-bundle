@@ -65,7 +65,7 @@ final class NodeUrlMatcher extends DynamicUrlMatcher implements NodeUrlMatcherIn
     /**
      * {@inheritdoc}
      */
-    public function match(string $pathinfo)
+    public function match(string $pathinfo): array
     {
         $decodedUrl = rawurldecode($pathinfo);
         /*

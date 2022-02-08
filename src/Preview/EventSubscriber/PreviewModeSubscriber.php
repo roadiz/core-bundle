@@ -53,7 +53,7 @@ class PreviewModeSubscriber implements EventSubscriberInterface
     /**
      * @return bool
      */
-    protected function supports()
+    protected function supports(): bool
     {
         return $this->previewResolver->isPreview();
     }

@@ -11,7 +11,7 @@ use function Symfony\Component\String\u;
 
 class CentralTruncateExtension extends AbstractExtension
 {
-    public function getFilters()
+    public function getFilters(): array
     {
         return [
             new TwigFilter(

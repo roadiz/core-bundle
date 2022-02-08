@@ -16,7 +16,7 @@ class RoleArrayVoter extends RoleVoter
     /**
      * {@inheritdoc}
      */
-    public function vote(TokenInterface $token, $subject, array $attributes)
+    public function vote(TokenInterface $token, $subject, array $attributes): int
     {
         if (isset($attributes[0]) && !\is_array($attributes[0])) {
             return parent::vote($token, $subject, $attributes);

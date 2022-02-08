@@ -34,7 +34,7 @@ class GroupVoter extends RoleVoter
     /**
      * @inheritDoc
      */
-    public function vote(TokenInterface $token, $subject, array $attributes)
+    public function vote(TokenInterface $token, $subject, array $attributes): int
     {
         $result = VoterInterface::ACCESS_ABSTAIN;
         $roles = $this->extractRoles($token);

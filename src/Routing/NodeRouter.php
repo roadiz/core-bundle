@@ -15,6 +15,7 @@ use Symfony\Cmf\Component\Routing\VersatileGeneratorInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Routing\Exception\InvalidParameterException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Matcher\UrlMatcherInterface;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouteCollection;
@@ -83,7 +84,7 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
     /**
      * No generator for a node router.
      */
-    public function getGenerator()
+    public function getGenerator(): UrlGeneratorInterface
     {
         throw new \BadMethodCallException(get_class($this) . ' does not support path generation.');
     }

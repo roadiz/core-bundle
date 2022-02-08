@@ -10,6 +10,7 @@ use Symfony\Component\Security\Core\Authentication\Provider\DaoAuthenticationPro
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
 use Symfony\Component\Security\Core\User\UserCheckerInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 /**
@@ -42,7 +43,7 @@ class AttemptAwareDaoAuthenticationProvider extends DaoAuthenticationProvider im
     /**
      * {@inheritdoc}
      */
-    protected function retrieveUser($username, UsernamePasswordToken $token)
+    protected function retrieveUser($username, UsernamePasswordToken $token): UserInterface
     {
         $this->getLoginAttemptManager()->checkLoginAttempts($username);
         return parent::retrieveUser($username, $token);

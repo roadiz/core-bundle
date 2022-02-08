@@ -7,6 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Routing;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 use Symfony\Cmf\Component\Routing\VersatileGeneratorInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\Router;
@@ -48,7 +49,7 @@ class RedirectionRouter extends Router implements VersatileGeneratorInterface
     /**
      * {@inheritdoc}
      */
-    public function getRouteCollection()
+    public function getRouteCollection(): RouteCollection
     {
         return new RouteCollection();
     }
@@ -64,7 +65,7 @@ class RedirectionRouter extends Router implements VersatileGeneratorInterface
     /**
      * No generator for a node router.
      */
-    public function getGenerator()
+    public function getGenerator(): UrlGeneratorInterface
     {
         throw new \BadMethodCallException(get_class($this) . ' does not support path generation.');
     }
@@ -74,7 +75,7 @@ class RedirectionRouter extends Router implements VersatileGeneratorInterface
         return false;
     }
 
-    public function getRouteDebugMessage($name, array $parameters = [])
+    public function getRouteDebugMessage($name, array $parameters = []): string
     {
         return 'RedirectionRouter does not support path generation.';
     }
