@@ -317,7 +317,7 @@ class CustomFormsType extends AbstractType
     /**
      * @return string
      */
-    public function getBlockPrefix()
+    public function getBlockPrefix(): string
     {
         return 'custom_form_public';
     }

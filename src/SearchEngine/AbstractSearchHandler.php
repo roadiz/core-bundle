@@ -213,7 +213,7 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      * @return int
      * @deprecated Use SolrSearchResults DTO
      */
-    public function count($q, $args = [], $rows = 0, $searchTags = false, $proximity = 10000000)
+    public function count($q, $args = [], $rows = 0, $searchTags = false, $proximity = 10000000): int
     {
         $args = $this->argFqProcess($args);
         $args["fq"][] = "document_type_s:" . $this->getDocumentType();

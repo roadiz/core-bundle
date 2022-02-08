@@ -78,7 +78,7 @@ class AttributeTranslationType extends AbstractType
     /**
      * @inheritDoc
      */
-    public function getBlockPrefix()
+    public function getBlockPrefix(): string
     {
         return 'attribute_translation';
     }

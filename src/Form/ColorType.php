@@ -31,12 +31,12 @@ class ColorType extends AbstractType
         ]);
     }
 
-    public function getBlockPrefix()
+    public function getBlockPrefix(): string
     {
         return 'rz_color';
     }
 
-    public function getParent()
+    public function getParent(): ?string
     {
         return TextType::class;
     }

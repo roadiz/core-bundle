@@ -12,7 +12,7 @@ class JoinNodeTypeFieldConfiguration implements ConfigurationInterface
     /**
      * @return TreeBuilder
      */
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
         $builder = new TreeBuilder('join');
         $root = $builder->getRootNode();

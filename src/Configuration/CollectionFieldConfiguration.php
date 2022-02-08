@@ -12,7 +12,7 @@ class CollectionFieldConfiguration implements ConfigurationInterface
     /**
      * @return TreeBuilder
      */
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
         $builder = new TreeBuilder('collection');
         $root = $builder->getRootNode();

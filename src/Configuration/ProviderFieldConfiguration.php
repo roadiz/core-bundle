@@ -12,7 +12,7 @@ class ProviderFieldConfiguration implements ConfigurationInterface
     /**
      * @return TreeBuilder
      */
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
         $builder = new TreeBuilder('provider');
         $root = $builder->getRootNode();

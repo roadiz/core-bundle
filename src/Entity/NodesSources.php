@@ -63,7 +63,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @inheritDoc
      * @Serializer\Exclude
      */
-    public function injectObjectManager(ObjectManager $objectManager, ClassMetadata $classMetadata)
+    public function injectObjectManager(ObjectManager $objectManager, ClassMetadata $classMetadata): void
     {
         $this->objectManager = $objectManager;
     }

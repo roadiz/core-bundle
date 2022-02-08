@@ -55,7 +55,7 @@ class ExplorerProviderItemType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function getBlockPrefix()
+    public function getBlockPrefix(): string
     {
         return 'explorer_provider';
     }
@@ -82,7 +82,7 @@ class ExplorerProviderItemType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function getParent()
+    public function getParent(): ?string
     {
         return HiddenType::class;
     }
