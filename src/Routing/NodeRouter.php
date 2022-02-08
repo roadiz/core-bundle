@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Routing;
 
+use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
@@ -11,7 +12,6 @@ use RZ\Roadiz\CoreBundle\Entity\Theme;
 use RZ\Roadiz\CoreBundle\Event\NodesSources\NodesSourcesPathGeneratingEvent;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Cmf\Component\Routing\VersatileGeneratorInterface;
-use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Routing\Exception\InvalidParameterException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
@@ -27,7 +27,7 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
      */
     public const NO_CACHE_PARAMETER = '_no_cache';
     private ?Theme $theme = null;
-    private AdapterInterface $nodeSourceUrlCacheAdapter;
+    private CacheItemPoolInterface $nodeSourceUrlCacheAdapter;
     private Settings $settingsBag;
     private EventDispatcherInterface $eventDispatcher;
 
@@ -35,7 +35,7 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
      * @param NodeUrlMatcherInterface $matcher
      * @param Settings $settingsBag
      * @param EventDispatcherInterface $eventDispatcher
-     * @param AdapterInterface $nodeSourceUrlCacheAdapter
+     * @param CacheItemPoolInterface $nodeSourceUrlCacheAdapter
      * @param array $options
      * @param RequestContext $context
      * @param LoggerInterface $logger
@@ -44,7 +44,7 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
         NodeUrlMatcherInterface $matcher,
         Settings $settingsBag,
         EventDispatcherInterface $eventDispatcher,
-        AdapterInterface $nodeSourceUrlCacheAdapter,
+        CacheItemPoolInterface $nodeSourceUrlCacheAdapter,
         RequestContext $context,
         LoggerInterface $logger,
         array $options = []

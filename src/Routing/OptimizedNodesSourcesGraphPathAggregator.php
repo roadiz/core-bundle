@@ -6,20 +6,20 @@ namespace RZ\Roadiz\CoreBundle\Routing;
 
 use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
+use Psr\Cache\CacheItemPoolInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use Symfony\Component\Cache\Adapter\AdapterInterface;
 
 final class OptimizedNodesSourcesGraphPathAggregator implements NodesSourcesPathAggregator
 {
     private ManagerRegistry $managerRegistry;
-    private AdapterInterface $cacheAdapter;
+    private CacheItemPoolInterface $cacheAdapter;
 
     /**
      * @param ManagerRegistry $managerRegistry
-     * @param AdapterInterface $cacheAdapter
+     * @param CacheItemPoolInterface $cacheAdapter
      */
-    public function __construct(ManagerRegistry $managerRegistry, AdapterInterface $cacheAdapter)
+    public function __construct(ManagerRegistry $managerRegistry, CacheItemPoolInterface $cacheAdapter)
     {
         $this->managerRegistry = $managerRegistry;
         $this->cacheAdapter = $cacheAdapter;
@@ -32,8 +32,7 @@ final class OptimizedNodesSourcesGraphPathAggregator implements NodesSourcesPath
 
     /**
      * @param NodesSources $nodesSources
-     * @param array        $parameters
-     *
+     * @param array $parameters
      * @return string
      */
     public function aggregatePath(NodesSources $nodesSources, array $parameters = []): string

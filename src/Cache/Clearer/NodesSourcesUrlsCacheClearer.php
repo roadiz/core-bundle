@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Cache\Clearer;
 
-use Symfony\Component\Cache\Adapter\AdapterInterface;
+use Psr\Cache\CacheItemPoolInterface;
 
 final class NodesSourcesUrlsCacheClearer extends FileClearer
 {
-    private AdapterInterface $cacheProvider;
+    private CacheItemPoolInterface $cacheProvider;
 
-    public function __construct(AdapterInterface $cacheProvider)
+    public function __construct(CacheItemPoolInterface $cacheProvider)
     {
         parent::__construct('');
         $this->cacheProvider = $cacheProvider;

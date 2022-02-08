@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Node;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
+use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use RZ\Roadiz\CoreBundle\Entity\Node;
@@ -17,7 +18,6 @@ use RZ\Roadiz\CoreBundle\Repository\EntityRepository;
 use RZ\Roadiz\CoreBundle\Routing\NodeRouter;
 use RZ\Roadiz\CoreBundle\Node\Exception\SameNodeUrlException;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
-use Symfony\Component\Cache\Adapter\AdapterInterface;
 use Symfony\Component\Cache\ResettableInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -30,7 +30,7 @@ class NodeMover
     protected UrlGeneratorInterface $urlGenerator;
     protected HandlerFactoryInterface $handlerFactory;
     protected EventDispatcherInterface $dispatcher;
-    protected AdapterInterface $cacheAdapter;
+    protected CacheItemPoolInterface $cacheAdapter;
     protected LoggerInterface $logger;
 
     /**
@@ -38,7 +38,7 @@ class NodeMover
      * @param UrlGeneratorInterface $urlGenerator
      * @param HandlerFactoryInterface $handlerFactory
      * @param EventDispatcherInterface $dispatcher
-     * @param AdapterInterface $cacheAdapter
+     * @param CacheItemPoolInterface $cacheAdapter
      * @param LoggerInterface|null $logger
      */
     public function __construct(
@@ -46,7 +46,7 @@ class NodeMover
         UrlGeneratorInterface $urlGenerator,
         HandlerFactoryInterface $handlerFactory,
         EventDispatcherInterface $dispatcher,
-        AdapterInterface $cacheAdapter,
+        CacheItemPoolInterface $cacheAdapter,
         ?LoggerInterface $logger = null
     ) {
         $this->urlGenerator = $urlGenerator;
