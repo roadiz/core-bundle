@@ -21,6 +21,7 @@ class NodeOutputDataTransformer implements DataTransformerInterface
         $output = new NodeOutput();
         $output->nodeName = $data->getNodeName();
         $output->visible = $data->isVisible();
+        $output->position = $data->getPosition();
         $output->tags = $data->getTags()->toArray();
         return $output;
     }
