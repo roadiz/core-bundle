@@ -27,7 +27,6 @@
                 <source>for.questions.email</source>
                 <target/>
             </trans-unit>
-
             <!-- Contact forms -->
             <trans-unit id="contact.form">
                 <source>contact.form</source>
