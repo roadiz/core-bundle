@@ -13,7 +13,7 @@ class TranslationOutputDataTransformer implements DataTransformerInterface
     /**
      * @inheritDoc
      */
-    public function transform($data, string $to, array $context = [])
+    public function transform($data, string $to, array $context = []): object
     {
         $output = new TranslationOutput();
         $output->locale = $data->getPreferredLocale();

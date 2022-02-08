@@ -58,7 +58,7 @@ class NodesCreationCommand extends Command
             );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $nodeName = $input->getArgument('node-name');
         $typeName = $input->getArgument('node-type');
@@ -103,8 +103,9 @@ class NodesCreationCommand extends Command
     }
 
     /**
-     * @param NodeType        $type
-     * @param Translation     $translation
+     * @param string $nodeName
+     * @param NodeType $type
+     * @param Translation $translation
      */
     private function executeNodeCreation(
         string $nodeName,

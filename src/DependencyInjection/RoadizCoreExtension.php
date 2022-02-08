@@ -39,7 +39,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class RoadizCoreExtension extends Extension
 {
-    public function getAlias()
+    public function getAlias(): string
     {
         return 'roadiz_core';
     }

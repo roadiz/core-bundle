@@ -33,7 +33,7 @@ class SolrCommand extends Command
             ->setDescription('Check Solr search engine server');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $client = $this->clientRegistry->getClient();
         $this->io = new SymfonyStyle($input, $output);

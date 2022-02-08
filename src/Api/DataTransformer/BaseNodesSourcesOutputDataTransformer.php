@@ -12,7 +12,7 @@ class BaseNodesSourcesOutputDataTransformer extends NodesSourcesOutputDataTransf
     /**
      * @inheritDoc
      */
-    public function transform($data, string $to, array $context = [])
+    public function transform($data, string $to, array $context = []): object
     {
         if (!$data instanceof NodesSources) {
             throw new \InvalidArgumentException('Data to transform must be instance of ' . NodesSources::class);

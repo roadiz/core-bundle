@@ -53,7 +53,7 @@ EOT
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         if ($input->hasOption('before') && $input->getOption('before') != '') {
             $this->purgeByDate($input, $output);

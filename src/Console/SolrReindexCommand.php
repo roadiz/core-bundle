@@ -49,7 +49,7 @@ class SolrReindexCommand extends SolrCommand implements ThemeAwareCommandInterfa
             ->addOption('batch-number', null, InputOption::VALUE_REQUIRED, 'Run a selected batch (only for nodes), <comment>first batch is 0</comment>.');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $solr = $this->clientRegistry->getClient();
         $this->io = new SymfonyStyle($input, $output);

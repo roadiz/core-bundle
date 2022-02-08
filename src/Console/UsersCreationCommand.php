@@ -36,7 +36,7 @@ final class UsersCreationCommand extends UsersCommand
             );
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $name = $input->getArgument('username');
 

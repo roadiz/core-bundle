@@ -38,7 +38,7 @@ class DocumentFilesizeCommand extends Command
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $em = $this->managerRegistry->getManagerForClass(Document::class);
         $this->io = new SymfonyStyle($input, $output);

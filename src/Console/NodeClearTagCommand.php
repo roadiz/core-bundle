@@ -47,7 +47,7 @@ class NodeClearTagCommand extends Command
             ->setParameter(':tagId', $tag);
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $em = $this->managerRegistry->getManagerForClass(Node::class);
         $this->io = new SymfonyStyle($input, $output);

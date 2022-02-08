@@ -51,7 +51,7 @@ class DocumentDownscaleCommand extends Command
             ->setDescription('Downscale every document according to max pixel size defined in configuration.');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $entityManager = $this->managerRegistry->getManagerForClass(Document::class);
