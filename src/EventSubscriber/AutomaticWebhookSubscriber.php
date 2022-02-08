@@ -44,7 +44,7 @@ final class AutomaticWebhookSubscriber implements EventSubscriberInterface
         $this->managerRegistry = $managerRegistry;
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             'workflow.node.completed' => ['onAutomaticWebhook'],

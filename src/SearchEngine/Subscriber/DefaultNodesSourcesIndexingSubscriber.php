@@ -18,7 +18,7 @@ final class DefaultNodesSourcesIndexingSubscriber implements EventSubscriberInte
     /**
      * @inheritDoc
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             NodesSourcesIndexingEvent::class => ['onIndexing', 1000],

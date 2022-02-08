@@ -33,7 +33,7 @@ final class NodesSourcesReachableFilter implements EventSubscriberInterface
         $this->nodeTypesBag = $nodeTypesBag;
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             QueryBuilderNodesSourcesBuildEvent::class => [['onNodesSourcesQueryBuilderBuild', 41]],

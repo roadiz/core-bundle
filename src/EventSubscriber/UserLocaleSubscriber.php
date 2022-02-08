@@ -33,7 +33,7 @@ final class UserLocaleSubscriber implements EventSubscriberInterface
     /**
      * @return array
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         // must be registered after the default Locale listener
         return [

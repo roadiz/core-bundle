@@ -22,7 +22,7 @@ class TranslationSubscriber implements EventSubscriberInterface
         $this->cacheProvider = $cacheProvider;
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             TranslationCreatedEvent::class => 'purgeCache',

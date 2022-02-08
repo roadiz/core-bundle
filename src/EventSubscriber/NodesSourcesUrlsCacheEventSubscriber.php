@@ -33,7 +33,7 @@ final class NodesSourcesUrlsCacheEventSubscriber implements EventSubscriberInter
     /**
      * @inheritDoc
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             NodesSourcesCreatedEvent::class => 'onPurgeRequest',

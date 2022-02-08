@@ -29,7 +29,7 @@ final class LocaleSubscriber implements EventSubscriberInterface
     /**
      * @return array
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         /*
          * Locale subscriber has HIGH priority over Firewall and Routing
