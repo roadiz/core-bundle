@@ -21,7 +21,10 @@ final class ClientRegistry
 
     public function getClient(): ?Client
     {
-        return $this->container->get('roadiz_core.solr.client');
+        return $this->container->get(
+            'roadiz_core.solr.client',
+            ContainerInterface::NULL_ON_INVALID_REFERENCE
+        );
     }
 
     public function isClientReady(?Client $client): bool

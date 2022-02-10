@@ -17,6 +17,7 @@ use RZ\Roadiz\CoreBundle\Entity\Log;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
+use RZ\Roadiz\CoreBundle\Exception\SolrServerNotAvailableException;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\NodeSourceSearchHandlerInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\SearchResultsInterface;
@@ -439,22 +440,26 @@ class NodesSourcesRepository extends StatusAwareRepository
      * @param int $limit Result number to fetch (default: all)
      * @return array
      */
-    public function findBySearchQuery($query, $limit = 25)
+    public function findBySearchQuery(string $query, int $limit = 25): array
     {
         if (null !== $this->nodeSourceSearchHandler) {
-            $this->nodeSourceSearchHandler->boostByUpdateDate();
-            $arguments = [];
-            if ($this->isDisplayingNotPublishedNodes()) {
-                $arguments['status'] = ['<=', Node::PUBLISHED];
-            }
-            if ($this->isDisplayingAllNodesStatuses()) {
-                $arguments['status'] = ['<=', Node::DELETED];
-            }
+            try {
+                $this->nodeSourceSearchHandler->boostByUpdateDate();
+                $arguments = [];
+                if ($this->isDisplayingNotPublishedNodes()) {
+                    $arguments['status'] = ['<=', Node::PUBLISHED];
+                }
+                if ($this->isDisplayingAllNodesStatuses()) {
+                    $arguments['status'] = ['<=', Node::DELETED];
+                }
 
-            if ($limit > 0) {
-                return $this->nodeSourceSearchHandler->search($query, $arguments, $limit)->getResultItems();
+                if ($limit > 0) {
+                    return $this->nodeSourceSearchHandler->search($query, $arguments, $limit)->getResultItems();
+                }
+                return $this->nodeSourceSearchHandler->search($query, $arguments, 999999)->getResultItems();
+            } catch (SolrServerNotAvailableException $exception) {
+                return [];
             }
-            return $this->nodeSourceSearchHandler->search($query, $arguments, 999999)->getResultItems();
         }
         return [];
     }
@@ -471,14 +476,18 @@ class NodesSourcesRepository extends StatusAwareRepository
     public function findBySearchQueryAndTranslation($query, TranslationInterface $translation, $limit = 25)
     {
         if (null !== $this->nodeSourceSearchHandler) {
-            $params = [
-                'translation' => $translation,
-            ];
+            try {
+                $params = [
+                    'translation' => $translation,
+                ];
 
-            if ($limit > 0) {
-                return $this->nodeSourceSearchHandler->search($query, $params, $limit);
-            } else {
-                return $this->nodeSourceSearchHandler->search($query, $params, 999999);
+                if ($limit > 0) {
+                    return $this->nodeSourceSearchHandler->search($query, $params, $limit);
+                } else {
+                    return $this->nodeSourceSearchHandler->search($query, $params, 999999);
+                }
+            } catch (SolrServerNotAvailableException $exception) {
+                return new SolrSearchResults([], $this->_em);
             }
         }
         return new SolrSearchResults([], $this->_em);

@@ -230,21 +230,23 @@ class RoadizCoreExtension extends Extension
                 $solrEndpoints[] = 'roadiz_core.solr.endpoints.' . $name;
             }
         }
-        $container->setDefinition(
-            'roadiz_core.solr.client',
-            (new Definition())
-                ->setClass(Client::class)
-                ->setLazy(true)
-                ->setPublic(true)
-                ->setShared(true)
-                ->setArguments([
-                    new Reference('roadiz_core.solr.adapter'),
-                    new Reference(EventDispatcherInterface::class)
-                ])
-                ->addMethodCall('setEndpoints', [array_map(function (string $endpointId) {
-                    return new Reference($endpointId);
-                }, $solrEndpoints)])
-        );
+        if (count($solrEndpoints) > 0) {
+            $container->setDefinition(
+                'roadiz_core.solr.client',
+                (new Definition())
+                    ->setClass(Client::class)
+                    ->setLazy(true)
+                    ->setPublic(true)
+                    ->setShared(true)
+                    ->setArguments([
+                        new Reference('roadiz_core.solr.adapter'),
+                        new Reference(EventDispatcherInterface::class)
+                    ])
+                    ->addMethodCall('setEndpoints', [array_map(function (string $endpointId) {
+                        return new Reference($endpointId);
+                    }, $solrEndpoints)])
+            );
+        }
         $container->setParameter('roadiz_core.solr.clients', $solrEndpoints);
     }
 
