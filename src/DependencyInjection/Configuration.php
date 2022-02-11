@@ -140,6 +140,7 @@ EOD
 Scopes requested during OpenId authentication process.
 EOD
                     )
+                    ->end()
                 ->end()
                 ->arrayNode('granted_roles')
                     ->prototype('scalar')
@@ -148,6 +149,7 @@ EOD
 Roles granted to user logged in with OpenId authentication process.
 EOD
                     )
+                    ->end()
                 ->end()
             ->end();
 
