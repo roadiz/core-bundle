@@ -343,7 +343,6 @@ services:
     RZ\Roadiz\OpenId\OpenIdJwtConfigurationFactory:
         arguments:
             - '@?RZ\Roadiz\OpenId\Discovery'
-            - '@security.csrf.token_manager'
             - '%roadiz_core.open_id.hosted_domain%'
             - '%roadiz_core.open_id.oauth_client_id%'
             - '%roadiz_core.open_id.verify_user_info%'
