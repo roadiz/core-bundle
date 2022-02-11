@@ -37,8 +37,7 @@ final class OpenIdAuthenticator extends AbstractAuthenticator
     use TargetPathTrait;
 
     private HttpUtils $httpUtils;
-    private Discovery $discovery;
-    private CsrfTokenManagerInterface $csrfTokenManager;
+    private ?Discovery $discovery;
     private Client $client;
     private JwtRoleStrategy $roleStrategy;
     private OpenIdJwtConfigurationFactory $jwtConfigurationFactory;
@@ -55,8 +54,7 @@ final class OpenIdAuthenticator extends AbstractAuthenticator
 
     /**
      * @param HttpUtils $httpUtils
-     * @param Discovery $discovery
-     * @param CsrfTokenManagerInterface $csrfTokenManager
+     * @param Discovery|null $discovery
      * @param JwtRoleStrategy $roleStrategy
      * @param OpenIdJwtConfigurationFactory $jwtConfigurationFactory
      * @param UrlGeneratorInterface $urlGenerator
@@ -71,8 +69,7 @@ final class OpenIdAuthenticator extends AbstractAuthenticator
      */
     public function __construct(
         HttpUtils $httpUtils,
-        Discovery $discovery,
-        CsrfTokenManagerInterface $csrfTokenManager,
+        ?Discovery $discovery,
         JwtRoleStrategy $roleStrategy,
         OpenIdJwtConfigurationFactory $jwtConfigurationFactory,
         UrlGeneratorInterface $urlGenerator,
@@ -87,7 +84,6 @@ final class OpenIdAuthenticator extends AbstractAuthenticator
     ) {
         $this->httpUtils = $httpUtils;
         $this->discovery = $discovery;
-        $this->csrfTokenManager = $csrfTokenManager;
         $this->client = new Client([
             // You can set any number of default request options.
             'timeout'  => 2.0,
@@ -110,7 +106,8 @@ final class OpenIdAuthenticator extends AbstractAuthenticator
      */
     public function supports(Request $request): ?bool
     {
-        return $this->httpUtils->checkRequestPath($request, $this->returnPath) &&
+        return null !== $this->discovery &&
+            $this->httpUtils->checkRequestPath($request, $this->returnPath) &&
             $request->query->has('state') &&
             $request->query->has('scope') &&
             ($request->query->has('code') || $request->query->has('error'));
@@ -127,6 +124,11 @@ final class OpenIdAuthenticator extends AbstractAuthenticator
         ) {
             throw new AuthenticationException((string) $request->query->get('error_description'));
         }
+
+        if (null === $this->discovery) {
+            throw new AuthenticationException('OpenId discovery service is unavailable, check your configuration.');
+        }
+
         /*
          * Verify CSRF token passed to OAuth2 Service provider,
          * State is an url_encoded string containing the "token" and other
@@ -136,16 +138,6 @@ final class OpenIdAuthenticator extends AbstractAuthenticator
             throw new AuthenticationException('State is not valid');
         }
         $state = Query::parse((string) $request->query->get('state'));
-        $stateToken = $this->csrfTokenManager->getToken(OAuth2AuthenticationListener::OAUTH_STATE_TOKEN);
-
-//        if (
-//            !isset($state['token']) ||
-//            $stateToken->getValue() !== $state['token'] ||
-//            !$this->csrfTokenManager->isTokenValid($stateToken)
-//        ) {
-//            dump($stateToken->getValue(), $state['token'], $this->csrfTokenManager->isTokenValid($stateToken));
-//            throw new AuthenticationException('State token is not valid');
-//        }
 
         /*
          * Fetch _target_path parameter from OAuth2 state
