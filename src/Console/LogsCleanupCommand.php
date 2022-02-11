@@ -43,7 +43,7 @@ class LogsCleanupCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $now = new \DateTime('now');
-        $since = '-6 months';
+        $since = '-3 months';
         if (\is_string($input->getOption('since'))) {
             $since = '-' . $input->getOption('since');
         }
