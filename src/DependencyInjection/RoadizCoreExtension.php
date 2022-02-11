@@ -124,7 +124,7 @@ class RoadizCoreExtension extends Extension
                     ->setPublic(true)
                     ->setArguments([
                         $config['open_id']['discovery_url'],
-                        new Reference('doctrine.orm.cache.provider.cache.doctrine.orm.default.metadata')
+                        new Reference(\Psr\Cache\CacheItemPoolInterface::class)
                     ])
             );
         }
