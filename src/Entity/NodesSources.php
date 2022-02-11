@@ -171,7 +171,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
     }
 
     /**
-     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\UrlAlias", mappedBy="nodeSource", cascade={"remove"})
+     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\UrlAlias", mappedBy="nodeSource", cascade={"all"})
      * @var Collection<UrlAlias>
      * @Serializer\Groups({"nodes_sources"})
      * @SymfonySerializer\Groups({"nodes_sources"})
@@ -347,6 +347,14 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
     protected Collection $logs;
 
     /**
+     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Redirection", mappedBy="redirectNodeSource")
+     * @var Collection<Redirection>
+     * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
+     */
+    protected Collection $redirections;
+
+    /**
      * Logs related to this node-source.
      *
      * @return Collection<Log>
@@ -364,6 +372,24 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
     {
         $this->logs = $logs;
 
+        return $this;
+    }
+
+    /**
+     * @return Collection<Redirection>
+     */
+    public function getRedirections(): Collection
+    {
+        return $this->redirections;
+    }
+
+    /**
+     * @param Collection<Redirection> $redirections
+     * @return NodesSources
+     */
+    public function setRedirections(Collection $redirections): NodesSources
+    {
+        $this->redirections = $redirections;
         return $this;
     }
 
@@ -525,6 +551,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
         $this->urlAliases = new ArrayCollection();
         $this->documentsByFields = new ArrayCollection();
         $this->logs = new ArrayCollection();
+        $this->redirections = new ArrayCollection();
     }
 
     /**

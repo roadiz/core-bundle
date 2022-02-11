@@ -10,11 +10,14 @@ use Doctrine\Persistence\ObjectManager;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Entity\Log;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
+use RZ\Roadiz\CoreBundle\Entity\Redirection;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
 
@@ -89,7 +92,7 @@ final class NodeTranstyper
         }
         $this->logger->debug('Get matching fields');
 
-        $sourceClass = NodeType::getGeneratedEntitiesNamespace() . "\\" . $destinationNodeType->getSourceEntityClassName();
+        $sourceClass = $destinationNodeType->getSourceEntityFullQualifiedClassName();
 
         /*
          * Testing if new nodeSource class is available
@@ -104,11 +107,37 @@ final class NodeTranstyper
          * Perform actual trans-typing
          */
         $existingSources = $node->getNodeSources()->toArray();
+        $existingLogs = [];
+        /** @var NodesSources $existingSource */
+        foreach ($existingSources as $existingSource) {
+            $existingLogs[$existingSource->getTranslation()->getLocale()] = array_map(function (Log $log) {
+                $this->managerRegistry->getManager()->detach($log);
+                return $log;
+            }, $existingSource->getLogs()->toArray());
+        }
+        $existingRedirections = [];
+        /** @var NodesSources $existingSource */
+        foreach ($existingSources as $existingSource) {
+            $existingRedirections[$existingSource->getTranslation()->getLocale()] = array_map(function (Redirection $redirection) {
+                $this->managerRegistry->getManager()->detach($redirection);
+                return $redirection;
+            }, $existingSource->getRedirections()->toArray());
+        }
+
         $this->removeOldSources($node, $existingSources);
 
         /** @var NodesSources $existingSource */
         foreach ($existingSources as $existingSource) {
-            $this->doTranstypeSingleSource($node, $existingSource, $sourceClass, $fieldAssociations);
+            $this->managerRegistry->getManager()->detach($existingSource);
+            $this->doTranstypeSingleSource(
+                $node,
+                $existingSource,
+                $existingSource->getTranslation(),
+                $sourceClass,
+                $fieldAssociations,
+                $existingLogs,
+                $existingRedirections
+            );
             $this->logger->debug('Transtyped: ' . $existingSource->getTranslation()->getLocale());
         }
 
@@ -136,21 +165,26 @@ final class NodeTranstyper
     /**
      * Warning, this method DO NOT flush entityManager at the end.
      *
-     * @param Node         $node
+     * @param Node $node
      * @param NodesSources $existingSource
-     * @param string       $sourceClass
-     * @param array        $fieldAssociations
-     *
+     * @param TranslationInterface $translation
+     * @param string $sourceClass
+     * @param array $fieldAssociations
+     * @param array $existingLogs
+     * @param array $existingRedirections
      * @return NodesSources
      */
     protected function doTranstypeSingleSource(
         Node $node,
         NodesSources $existingSource,
+        TranslationInterface $translation,
         string $sourceClass,
-        array &$fieldAssociations
+        array &$fieldAssociations,
+        array &$existingLogs,
+        array &$existingRedirections
     ): NodesSources {
         /** @var NodesSources $source */
-        $source = new $sourceClass($node, $existingSource->getTranslation());
+        $source = new $sourceClass($node, $translation);
         $this->getManager()->persist($source);
         $source->setTitle($existingSource->getTitle());
 
@@ -181,15 +215,42 @@ final class NodeTranstyper
         }
         $this->logger->debug('Fill existing data');
 
+
+        /** @var Log $log */
+        foreach ($existingLogs[$translation->getLocale()] as $log) {
+            $newLog = clone $log;
+            $newLog->setAdditionalData($log->getAdditionalData());
+            $newLog->setChannel($log->getChannel());
+            $newLog->setClientIp($log->getClientIp());
+            $newLog->setUser($log->getUser());
+            $newLog->setUsername($log->getUsername());
+            $this->getManager()->persist($newLog);
+            $newLog->setNodeSource($source);
+        }
+        $this->logger->debug('Recreate logs');
+
         /*
          * Recreate url-aliases too.
          */
         /** @var UrlAlias $urlAlias */
         foreach ($existingSource->getUrlAliases() as $urlAlias) {
             $newUrlAlias = new UrlAlias($source);
+            $this->getManager()->persist($newUrlAlias);
             $newUrlAlias->setAlias($urlAlias->getAlias());
             $source->addUrlAlias($newUrlAlias);
-            $this->getManager()->persist($newUrlAlias);
+        }
+        $this->logger->debug('Recreate aliases');
+
+        /*
+         * Recreate redirections too.
+         */
+        /** @var Redirection $existingRedirection */
+        foreach ($existingRedirections[$translation->getLocale()] as $existingRedirection) {
+            $newRedirection = new Redirection();
+            $this->getManager()->persist($newRedirection);
+            $newRedirection->setRedirectNodeSource($source);
+            $newRedirection->setQuery($existingRedirection->getQuery());
+            $newRedirection->setType($existingRedirection->getType());
         }
         $this->logger->debug('Recreate aliases');
 
@@ -204,7 +265,7 @@ final class NodeTranstyper
      */
     protected function mockTranstype(NodeType $nodeType): void
     {
-        $sourceClass = NodeType::getGeneratedEntitiesNamespace() . "\\" . $nodeType->getSourceEntityClassName();
+        $sourceClass = $nodeType->getSourceEntityFullQualifiedClassName();
         if (!class_exists($sourceClass)) {
             throw new \InvalidArgumentException($sourceClass . ' node-source class does not exist.');
         }
