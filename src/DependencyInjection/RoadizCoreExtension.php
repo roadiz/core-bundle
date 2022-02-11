@@ -114,6 +114,7 @@ class RoadizCoreExtension extends Extension
         $container->setParameter('roadiz_core.open_id.oauth_client_secret', $config['open_id']['oauth_client_secret']);
         $container->setParameter('roadiz_core.open_id.openid_username_claim', $config['open_id']['openid_username_claim']);
         $container->setParameter('roadiz_core.open_id.scopes', $config['open_id']['scopes'] ?? []);
+        $container->setParameter('roadiz_core.open_id.granted_roles', $config['open_id']['granted_roles'] ?? []);
 
         if (!empty($config['open_id']['discovery_url'])) {
             $container->setDefinition(

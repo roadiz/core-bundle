@@ -141,6 +141,14 @@ Scopes requested during OpenId authentication process.
 EOD
                     )
                 ->end()
+                ->arrayNode('granted_roles')
+                    ->prototype('scalar')
+                    ->defaultValue(['ROLE_USER'])
+                    ->info(<<<EOD
+Roles granted to user logged in with OpenId authentication process.
+EOD
+                    )
+                ->end()
             ->end();
 
         return $node;
