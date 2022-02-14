@@ -354,6 +354,10 @@ services:
     RZ\Roadiz\OpenId\Authentication\Provider\ChainJwtRoleStrategy: ~
     RZ\Roadiz\OpenId\Authentication\Provider\OpenIdAccountProvider: ~
 
+    RZ\Roadiz\CoreBundle\Node\NodeNamePolicyFactory: ~
+    RZ\Roadiz\CoreBundle\Node\NodeNamePolicyInterface:
+        factory: ['@RZ\Roadiz\CoreBundle\Node\NodeNamePolicyFactory', 'create']
+
     #
     # Workflows
     #
