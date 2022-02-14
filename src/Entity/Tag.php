@@ -147,10 +147,12 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      *     "nodes.id": "exact",
      *     "nodes.nodeName": "exact",
      *     "nodes.parent": "exact",
+     *     "nodes.parent.nodeName": "exact",
      *     "nodes.tags": "exact",
      *     "nodes.tags.tagName": "exact",
      *     "nodes.nodeType": "exact",
-     *     "nodes.nodeType.name": "exact"
+     *     "nodes.nodeType.name": "exact",
+     *     "nodes.parent.nodeType.name": "exact"
      * })
      */
     private Collection $nodes;
