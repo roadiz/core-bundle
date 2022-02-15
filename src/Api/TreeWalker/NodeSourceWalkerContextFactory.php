@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Api\TreeWalker;
 
 use Doctrine\Persistence\ManagerRegistry;
+use Psr\Cache\CacheItemPoolInterface;
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\EntityApi\NodeSourceApi;
 use RZ\TreeWalker\WalkerContextInterface;
@@ -18,26 +19,22 @@ final class NodeSourceWalkerContextFactory implements WalkerContextFactoryInterf
     private NodeSourceApi $nodeSourceApi;
     private RequestStack $requestStack;
     private ManagerRegistry $managerRegistry;
+    private CacheItemPoolInterface $cacheAdapter;
 
-    /**
-     * @param Stopwatch $stopwatch
-     * @param NodeTypes $nodeTypesBag
-     * @param NodeSourceApi $nodeSourceApi
-     * @param RequestStack $requestStack
-     * @param ManagerRegistry $managerRegistry
-     */
     public function __construct(
         Stopwatch $stopwatch,
         NodeTypes $nodeTypesBag,
         NodeSourceApi $nodeSourceApi,
         RequestStack $requestStack,
-        ManagerRegistry $managerRegistry
+        ManagerRegistry $managerRegistry,
+        CacheItemPoolInterface $cacheAdapter
     ) {
         $this->stopwatch = $stopwatch;
         $this->nodeTypesBag = $nodeTypesBag;
         $this->nodeSourceApi = $nodeSourceApi;
         $this->requestStack = $requestStack;
         $this->managerRegistry = $managerRegistry;
+        $this->cacheAdapter = $cacheAdapter;
     }
 
     public function createWalkerContext(): WalkerContextInterface
@@ -47,7 +44,8 @@ final class NodeSourceWalkerContextFactory implements WalkerContextFactoryInterf
             $this->nodeTypesBag,
             $this->nodeSourceApi,
             $this->requestStack,
-            $this->managerRegistry
+            $this->managerRegistry,
+            $this->cacheAdapter
         );
     }
 }
