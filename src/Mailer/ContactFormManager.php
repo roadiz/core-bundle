@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Mailer;
 
-use RZ\Roadiz\CoreBundle\Form\Constraint\Recaptcha;
-use RZ\Roadiz\CoreBundle\Form\HoneypotType;
-use RZ\Roadiz\CoreBundle\Form\RecaptchaType;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Exception\BadFormRequestException;
+use RZ\Roadiz\CoreBundle\Form\Constraint\Recaptcha;
+use RZ\Roadiz\CoreBundle\Form\Error\FormErrorSerializerInterface;
+use RZ\Roadiz\CoreBundle\Form\HoneypotType;
+use RZ\Roadiz\CoreBundle\Form\RecaptchaType;
 use RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
@@ -58,6 +59,7 @@ class ContactFormManager extends EmailManager
     ];
     protected int $maxFileSize = 5242880; // 5MB
     protected FormFactoryInterface $formFactory;
+    protected FormErrorSerializerInterface $formErrorSerializer;
 
     /**
      * DO NOT DIRECTLY USE THIS CONSTRUCTOR
@@ -70,7 +72,7 @@ class ContactFormManager extends EmailManager
      * @param MailerInterface $mailer
      * @param Settings $settingsBag
      * @param DocumentUrlGeneratorInterface $documentUrlGenerator
-     *
+     * @param FormErrorSerializerInterface $formErrorSerializer
      */
     public function __construct(
         RequestStack $requestStack,
@@ -79,11 +81,13 @@ class ContactFormManager extends EmailManager
         Environment $templating,
         MailerInterface $mailer,
         Settings $settingsBag,
-        DocumentUrlGeneratorInterface $documentUrlGenerator
+        DocumentUrlGeneratorInterface $documentUrlGenerator,
+        FormErrorSerializerInterface $formErrorSerializer
     ) {
         parent::__construct($requestStack, $translator, $templating, $mailer, $settingsBag, $documentUrlGenerator);
 
         $this->formFactory = $formFactory;
+        $this->formErrorSerializer = $formErrorSerializer;
         $this->options = [
             'attr' => [
                 'id' => 'contactForm',
@@ -330,12 +334,7 @@ class ContactFormManager extends EmailManager
                     $this->handleFormData($this->form);
                     $this->send();
                     if ($returnJson) {
-                        $responseArray = [
-                            'statusCode' => Response::HTTP_OK,
-                            'status' => 'success',
-                            'message' => $this->translator->trans($this->successMessage),
-                        ];
-                        return new JsonResponse($responseArray);
+                        return new JsonResponse([], Response::HTTP_ACCEPTED);
                     } else {
                         if ($request->hasPreviousSession()) {
                             /** @var Session $session */
@@ -362,14 +361,7 @@ class ContactFormManager extends EmailManager
                  * If form has errors during AJAX
                  * request we sent them.
                  */
-                $errorPerForm = [];
-                foreach ($this->form as $child) {
-                    if (!$child->isValid()) {
-                        foreach ($child->getErrors() as $error) {
-                            $errorPerForm[$child->getName()][] = $this->translator->trans($error->getMessage());
-                        }
-                    }
-                }
+                $errorPerForm = $this->formErrorSerializer->getErrorsAsArray($this->form);
                 $responseArray = [
                     'statusCode' => Response::HTTP_BAD_REQUEST,
                     'status' => 'danger',

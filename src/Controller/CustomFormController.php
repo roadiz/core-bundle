@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Controller;
 
+use Doctrine\Persistence\ManagerRegistry;
 use Exception;
 use Limenius\Liform\LiformInterface;
 use Psr\Log\LoggerInterface;
@@ -12,6 +13,7 @@ use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\CustomForm\CustomFormHelperFactory;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Exception\EntityAlreadyExistsException;
+use RZ\Roadiz\CoreBundle\Form\Error\FormErrorSerializerInterface;
 use RZ\Roadiz\CoreBundle\Mailer\EmailManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
@@ -23,10 +25,11 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Mime\Address;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Contracts\Translation\LocaleAwareInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -39,6 +42,9 @@ final class CustomFormController extends AbstractController
     private CustomFormHelperFactory $customFormHelperFactory;
     private LiformInterface $liform;
     private SerializerInterface $serializer;
+    private FormErrorSerializerInterface $formErrorSerializer;
+    private ManagerRegistry $registry;
+    private RateLimiterFactory $customFormLimiter;
 
     public function __construct(
         EmailManager $emailManager,
@@ -47,7 +53,10 @@ final class CustomFormController extends AbstractController
         TranslatorInterface $translator,
         CustomFormHelperFactory $customFormHelperFactory,
         LiformInterface $liform,
-        SerializerInterface $serializer
+        SerializerInterface $serializer,
+        FormErrorSerializerInterface $formErrorSerializer,
+        ManagerRegistry $registry,
+        RateLimiterFactory $customFormLimiter
     ) {
         $this->emailManager = $emailManager;
         $this->settingsBag = $settingsBag;
@@ -56,6 +65,9 @@ final class CustomFormController extends AbstractController
         $this->customFormHelperFactory = $customFormHelperFactory;
         $this->liform = $liform;
         $this->serializer = $serializer;
+        $this->formErrorSerializer = $formErrorSerializer;
+        $this->registry = $registry;
+        $this->customFormLimiter = $customFormLimiter;
     }
 
     protected function getTranslation(string $_locale = 'fr'): TranslationInterface
@@ -63,7 +75,7 @@ final class CustomFormController extends AbstractController
         if (empty($_locale)) {
             throw new BadRequestHttpException('Locale must not be empty.');
         }
-        $translation = $this->getDoctrine()
+        $translation = $this->registry
             ->getRepository(TranslationInterface::class)
             ->findOneBy([
             'locale' => $_locale
@@ -83,7 +95,7 @@ final class CustomFormController extends AbstractController
     public function definitionAction(Request $request, int $id, string $_locale = 'fr'): JsonResponse
     {
         /** @var CustomForm|null $customForm */
-        $customForm = $this->getDoctrine()->getRepository(CustomForm::class)->find($id);
+        $customForm = $this->registry->getRepository(CustomForm::class)->find($id);
         if (null === $customForm) {
             throw new NotFoundHttpException();
         }
@@ -105,52 +117,6 @@ final class CustomFormController extends AbstractController
     }
 
     /**
-     * Return all Form errors as an array.
-     *
-     * @param FormInterface $form
-     * @return array
-     */
-    protected function getErrorsAsArray(FormInterface $form): array
-    {
-        $errors = [];
-        /** @var FormError $error */
-        foreach ($form->getErrors() as $error) {
-            if (null !== $error->getOrigin()) {
-                $errorFieldName = $error->getOrigin()->getName();
-                if (count($error->getMessageParameters()) > 0) {
-                    if (null !== $error->getMessagePluralization()) {
-                        $errors[$errorFieldName] = $this->translator->trans($error->getMessagePluralization(), $error->getMessageParameters());
-                    } else {
-                        $errors[$errorFieldName] = $this->translator->trans($error->getMessageTemplate(), $error->getMessageParameters());
-                    }
-                } else {
-                    $errors[$errorFieldName] = $error->getMessage();
-                }
-                $cause = $error->getCause();
-                if (null !== $cause) {
-                    if ($cause instanceof ConstraintViolation) {
-                        $cause = $cause->getCause();
-                    }
-                    if (is_object($cause)) {
-                        if ($cause instanceof \Exception) {
-                            $errors[$errorFieldName . '_cause_message'] = $cause->getMessage();
-                        }
-                        $errors[$errorFieldName . '_cause'] = get_class($cause);
-                    }
-                }
-            }
-        }
-
-        foreach ($form->all() as $key => $child) {
-            $err = $this->getErrorsAsArray($child);
-            if ($err) {
-                $errors[$key] = $err;
-            }
-        }
-        return $errors;
-    }
-
-    /**
      * @param Request $request
      * @param int $id
      * @param string $_locale
@@ -159,8 +125,21 @@ final class CustomFormController extends AbstractController
      */
     public function postAction(Request $request, int $id, string $_locale = 'fr'): Response
     {
+        // create a limiter based on a unique identifier of the client
+        $limiter = $this->customFormLimiter->create($request->getClientIp());
+        // only claims 1 token if it's free at this moment
+        $limit = $limiter->consume();
+        $headers = [
+            'X-RateLimit-Remaining' => $limit->getRemainingTokens(),
+            'X-RateLimit-Retry-After' => $limit->getRetryAfter()->getTimestamp(),
+            'X-RateLimit-Limit' => $limit->getLimit(),
+        ];
+        if (false === $limit->isAccepted()) {
+            throw new TooManyRequestsHttpException($limit->getRetryAfter()->getTimestamp());
+        }
+
         /** @var CustomForm|null $customForm */
-        $customForm = $this->getDoctrine()->getRepository(CustomForm::class)->find($id);
+        $customForm = $this->registry->getRepository(CustomForm::class)->find($id);
         if (null === $customForm) {
             throw new NotFoundHttpException();
         }
@@ -174,7 +153,7 @@ final class CustomFormController extends AbstractController
         $mixed = $this->prepareAndHandleCustomFormAssignation(
             $request,
             $customForm,
-            new JsonResponse([], Response::HTTP_ACCEPTED)
+            new JsonResponse([], Response::HTTP_ACCEPTED, $headers)
         );
 
         if ($mixed instanceof Response) {
@@ -186,11 +165,11 @@ final class CustomFormController extends AbstractController
             if ($mixed['formObject']->isSubmitted()) {
                 return new JsonResponse(
                     $this->serializer->serialize(
-                        $this->getErrorsAsArray($mixed['formObject']),
+                        $this->formErrorSerializer->getErrorsAsArray($mixed['formObject']),
                         'json'
                     ),
                     Response::HTTP_BAD_REQUEST,
-                    [],
+                    $headers,
                     true
                 );
             }
@@ -208,7 +187,7 @@ final class CustomFormController extends AbstractController
     public function addAction(Request $request, int $customFormId): Response
     {
         /** @var CustomForm $customForm */
-        $customForm = $this->getDoctrine()->getRepository(CustomForm::class)->find($customFormId);
+        $customForm = $this->registry->getRepository(CustomForm::class)->find($customFormId);
 
         if (null !== $customForm && $customForm->isFormStillOpen()) {
             $mixed = $this->prepareAndHandleCustomFormAssignation(
@@ -242,7 +221,7 @@ final class CustomFormController extends AbstractController
     {
         $assignation = [];
         /** @var CustomForm|null $customForm */
-        $customForm = $this->getDoctrine()->getRepository(CustomForm::class)->find($customFormId);
+        $customForm = $this->registry->getRepository(CustomForm::class)->find($customFormId);
 
         if (null !== $customForm) {
             $assignation['customForm'] = $customForm;
