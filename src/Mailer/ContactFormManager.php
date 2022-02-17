@@ -181,18 +181,18 @@ class ContactFormManager extends EmailManager
     public function withDefaultFields(bool $useHoneypot = true)
     {
         $this->getFormBuilder()->add('email', EmailType::class, [
-                'label' => 'your.email',
-                'constraints' => [
-                    new NotNull(),
-                    new NotBlank(),
-                    new Email([
-                        'message' => 'email.not.valid',
-                        'mode' => $this->isEmailStrictMode() ?
-                            Email::VALIDATION_MODE_STRICT :
-                            Email::VALIDATION_MODE_LOOSE
-                    ]),
-                ],
-            ])
+            'label' => 'your.email',
+            'constraints' => [
+                new NotNull(),
+                new NotBlank(),
+                new Email([
+                    'message' => 'email.not.valid',
+                    'mode' => $this->isEmailStrictMode() ?
+                        Email::VALIDATION_MODE_STRICT :
+                        Email::VALIDATION_MODE_LOOSE
+                ]),
+            ],
+        ])
             ->add('name', TextType::class, [
                 'label' => 'your.name',
                 'constraints' => [
@@ -451,6 +451,22 @@ class ContactFormManager extends EmailManager
     }
 
     /**
+     * @param array $formData
+     * @return string|null
+     */
+    protected function findEmailData(array $formData): ?string
+    {
+        foreach ($formData as $key => $value) {
+            if (is_string($key) && $key === 'email' && is_string($value)) {
+                return $value;
+            } elseif (is_array($value) && count($value) > 0) {
+                return $this->findEmailData($value);
+            }
+        }
+        return null;
+    }
+
+    /**
      * @param FormInterface $form
      *
      * @throws \Exception
@@ -463,8 +479,9 @@ class ContactFormManager extends EmailManager
         /*
          * Sender email
          */
-        if (!empty($formData['email'])) {
-            $this->setSender($formData['email']);
+        $emailData = $this->findEmailData($formData);
+        if (!empty($emailData)) {
+            $this->setSender($emailData);
         }
 
         /**
