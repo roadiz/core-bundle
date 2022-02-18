@@ -38,4 +38,9 @@ final class CustomFormOutput
      * @Groups({"custom_form", "document_display"})
      */
     public ?string $definitionUrl = null;
+    /**
+     * @var string|null
+     * @Groups({"custom_form", "document_display"})
+     */
+    public ?string $postUrl = null;
 }

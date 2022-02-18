@@ -39,6 +39,9 @@ class CustomFormOutputDataTransformer implements DataTransformerInterface
         $output->definitionUrl = $this->urlGenerator->generate('api_custom_forms_item_definition', [
             'id' => $data->getId()
         ]);
+        $output->postUrl = $this->urlGenerator->generate('api_custom_forms_item_post', [
+            'id' => $data->getId()
+        ]);
 
         return $output;
     }
