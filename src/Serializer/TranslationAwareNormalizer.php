@@ -34,12 +34,14 @@ class TranslationAwareNormalizer implements ContextAwareNormalizerInterface, Nor
 
     public function normalize($object, $format = null, array $context = [])
     {
-        if ($object instanceof NodesSources) {
-            $context['translation'] = $object->getTranslation();
-        } else {
-            $translation = $this->getTranslationFromRequest();
-            if (null !== $translation) {
-                $context['translation'] = $translation;
+        if (!isset($context['translation']) || !($context['translation'] instanceof TranslationInterface)) {
+            if ($object instanceof NodesSources) {
+                $context['translation'] = $object->getTranslation();
+            } else {
+                $translation = $this->getTranslationFromRequest();
+                if (null !== $translation) {
+                    $context['translation'] = $translation;
+                }
             }
         }
 

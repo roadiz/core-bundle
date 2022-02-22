@@ -78,6 +78,12 @@ services:
         tags:
             - { name: 'serializer.normalizer', priority: 64 }
 
+    RZ\Roadiz\CoreBundle\Serializer\TranslationAwareContextBuilder:
+        decorates: 'api_platform.serializer.context_builder'
+        arguments: [ '@RZ\Roadiz\CoreBundle\Serializer\TranslationAwareContextBuilder.inner' ]
+        autowire: true
+        autoconfigure: false
+
     RZ\Roadiz\Document\EventSubscriber\:
         resource: '%kernel.project_dir%/vendor/roadiz/documents/src/Roadiz/Document/EventSubscriber/'
         autowire: true
