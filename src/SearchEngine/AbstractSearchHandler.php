@@ -15,7 +15,7 @@ use Solarium\QueryType\Select\Query\Query;
 abstract class AbstractSearchHandler implements SearchHandlerInterface
 {
     private ClientRegistry $clientRegistry;
-    protected ?ObjectManager $em = null;
+    protected ObjectManager $em;
     protected LoggerInterface $logger;
     protected int $highlightingFragmentSize = 150;
 
