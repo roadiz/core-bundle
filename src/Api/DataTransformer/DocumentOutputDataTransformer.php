@@ -45,6 +45,7 @@ class DocumentOutputDataTransformer implements DataTransformerInterface
                 $output->description = $translatedData->getDescription();
                 $output->copyright = $translatedData->getCopyright();
                 $output->alt = !empty($translatedData->getName()) ? $translatedData->getName() : $data->getFilename();
+                $output->externalUrl = $translatedData->getExternalUrl();
             }
         }
         return $output;

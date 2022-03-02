@@ -66,6 +66,11 @@ final class DocumentOutput
      */
     public ?string $copyright = null;
     /**
+     * @var string|null
+     * @Groups({"document", "document_display"})
+     */
+    public ?string $externalUrl = null;
+    /**
      * @var bool
      * @Groups({"document", "document_display"})
      */
