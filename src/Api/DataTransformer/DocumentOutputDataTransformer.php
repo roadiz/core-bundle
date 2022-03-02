@@ -25,6 +25,9 @@ class DocumentOutputDataTransformer implements DataTransformerInterface
         $output->relativePath = $data->getRelativePath();
         $output->processable = $data->isProcessable();
         $output->type = $data->getShortType();
+        $output->imageWidth = $data->getImageWidth();
+        $output->imageHeight = $data->getImageHeight();
+        $output->mimeType = $data->getMimeType();
         $output->alt = $data->getFilename();
         $output->embedId = $data->getEmbedId();
         $output->embedPlatform = $data->getEmbedPlatform();

@@ -21,6 +21,11 @@ final class DocumentOutput
      */
     public string $type = '';
     /**
+     * @var string
+     * @Groups({"document", "document_display"})
+     */
+    public string $mimeType = '';
+    /**
      * @var string|null
      * @Groups({"document", "document_display"})
      */
@@ -45,6 +50,16 @@ final class DocumentOutput
      * @Groups({"document", "document_display"})
      */
     public ?string $imageAverageColor = null;
+    /**
+     * @var int|null
+     * @Groups({"document", "document_display"})
+     */
+    public ?int $imageWidth = null;
+    /**
+     * @var int|null
+     * @Groups({"document", "document_display"})
+     */
+    public ?int $imageHeight = null;
     /**
      * @var string|null
      * @Groups({"document", "document_display"})
