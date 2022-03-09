@@ -32,6 +32,7 @@ class DocumentOutputDataTransformer implements DataTransformerInterface
         $output->embedId = $data->getEmbedId();
         $output->embedPlatform = $data->getEmbedPlatform();
         $output->imageAverageColor = $data->getImageAverageColor();
+        $output->mediaDuration = $data->getMediaDuration();
         $output->folders = $data->getFolders()->toArray();
 
         if (false !== $data->getThumbnails()->first()) {

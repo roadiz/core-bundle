@@ -61,6 +61,11 @@ final class DocumentOutput
      */
     public ?int $imageHeight = null;
     /**
+     * @var int|null
+     * @Groups({"document", "document_display"})
+     */
+    public ?int $mediaDuration = null;
+    /**
      * @var string|null
      * @Groups({"document", "document_display"})
      */
