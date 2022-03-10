@@ -6,7 +6,7 @@ namespace RZ\Roadiz\CoreBundle\SearchEngine\Message\Handler;
 
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\IndexerFactoryInterface;
-use RZ\Roadiz\CoreBundle\SearchEngine\Message\SolrReindexMessage;
+use RZ\Roadiz\CoreBundle\SearchEngine\Message\SolrDeleteMessage;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
 final class SolrDeleteMessageHandler implements MessageHandlerInterface
@@ -24,7 +24,7 @@ final class SolrDeleteMessageHandler implements MessageHandlerInterface
         $this->indexerFactory = $indexerFactory;
     }
 
-    public function __invoke(SolrReindexMessage $message)
+    public function __invoke(SolrDeleteMessage $message)
     {
         try {
             if (!empty($message->getIdentifier())) {
