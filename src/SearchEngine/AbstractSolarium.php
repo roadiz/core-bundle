@@ -287,13 +287,16 @@ abstract class AbstractSolarium
     abstract protected function getFieldsAssoc();
 
     /**
-     * @param string $content
-     * @param bool   $stripMarkdown
+     * @param string|null $content
+     * @param bool $stripMarkdown
      *
-     * @return string
+     * @return string|null
      */
     public function cleanTextContent($content, $stripMarkdown = true)
     {
+        if (!is_string($content)) {
+            return null;
+        }
         /*
          * Strip markdown syntax
          */
