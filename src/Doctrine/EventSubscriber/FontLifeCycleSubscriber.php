@@ -26,12 +26,12 @@ final class FontLifeCycleSubscriber implements EventSubscriber
 
     /**
      * @param Packages $assetPackages
-     * @param LoggerInterface|null $logger
+     * @param LoggerInterface $logger
      */
-    public function __construct(Packages $assetPackages, ?LoggerInterface $logger = null)
+    public function __construct(Packages $assetPackages, LoggerInterface $logger)
     {
         $this->assetPackages = $assetPackages;
-        $this->logger = $logger ?? new NullLogger();
+        $this->logger = $logger;
     }
 
     /**

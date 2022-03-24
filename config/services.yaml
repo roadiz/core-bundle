@@ -101,13 +101,23 @@ services:
 
     RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber\:
         resource: '../src/Doctrine/EventSubscriber'
-        tags: ['doctrine.event_subscriber']
+        tags:
+            - { name: monolog.logger, channel: doctrine }
+            - { name: doctrine.event_subscriber }
 
     RZ\Roadiz\Core\Events\DocumentLifeCycleSubscriber:
-        tags: ['doctrine.event_subscriber']
+        tags:
+            - { name: monolog.logger, channel: doctrine }
+            - { name: doctrine.event_subscriber }
 
     RZ\Roadiz\Core\Events\LeafEntityLifeCycleSubscriber:
-        tags: ['doctrine.event_subscriber']
+        tags:
+            - { name: monolog.logger, channel: doctrine }
+            - { name: doctrine.event_subscriber }
+
+    RZ\Roadiz\CoreBundle\Doctrine\SchemaUpdater:
+        tags:
+            - { name: monolog.logger, channel: doctrine }
 
     RZ\Roadiz\CoreBundle\Controller\:
         resource: '../src/Controller'

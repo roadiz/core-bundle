@@ -52,7 +52,6 @@ class UserLifeCycleSubscriber implements EventSubscriber
         $this->logger = $logger;
     }
 
-
     /**
      * {@inheritdoc}
      */
