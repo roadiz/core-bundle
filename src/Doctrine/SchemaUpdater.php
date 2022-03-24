@@ -41,7 +41,6 @@ final class SchemaUpdater
                 'cache.app',
                 'cache.annotations',
                 'cache.doctrine.orm.default.metadata',
-                'cache.doctrine.orm.default.result',
             ],
             '--no-interaction' => true,
         ]);
