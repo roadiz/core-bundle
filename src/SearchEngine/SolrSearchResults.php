@@ -172,7 +172,7 @@ class SolrSearchResults implements SearchResultsInterface
      * @return void Any returned value is ignored.
      * @since 5.0
      */
-    public function next()
+    public function next(): void
     {
         ++$this->position;
     }
@@ -197,7 +197,7 @@ class SolrSearchResults implements SearchResultsInterface
      * Returns true on success or false on failure.
      * @since 5.0
      */
-    public function valid()
+    public function valid(): bool
     {
         return isset($this->getResultItems()[$this->position]);
     }
@@ -209,7 +209,7 @@ class SolrSearchResults implements SearchResultsInterface
      * @return void Any returned value is ignored.
      * @since 5.0
      */
-    public function rewind()
+    public function rewind(): void
     {
         $this->position = 0;
     }

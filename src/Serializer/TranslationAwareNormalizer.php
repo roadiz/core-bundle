@@ -32,6 +32,13 @@ class TranslationAwareNormalizer implements ContextAwareNormalizerInterface, Nor
         $this->managerRegistry = $managerRegistry;
     }
 
+    /**
+     * @param $object
+     * @param $format
+     * @param array $context
+     * @return array|\ArrayObject|bool|float|int|string|null
+     * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
+     */
     public function normalize($object, $format = null, array $context = [])
     {
         if (!isset($context['translation']) || !($context['translation'] instanceof TranslationInterface)) {

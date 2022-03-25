@@ -138,6 +138,15 @@ services:
     RZ\Roadiz\Utils\Asset\Packages: ~
     RZ\Roadiz\Utils\Document\DownscaleImageManager: ~
 
+    RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry:
+        arguments: ['@service_container']
+
+    RZ\Roadiz\CoreBundle\SearchEngine\Indexer\IndexerFactory:
+        arguments: ['@service_container']
+
+    RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory:
+        arguments: ['@service_container']
+
     RZ\Roadiz\Core\Handlers\HandlerFactoryInterface:
         alias: RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory
 

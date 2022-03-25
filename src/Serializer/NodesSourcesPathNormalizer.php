@@ -31,6 +31,13 @@ final class NodesSourcesPathNormalizer implements ContextAwareNormalizerInterfac
         $this->urlGenerator = $urlGenerator;
     }
 
+    /**
+     * @param $object
+     * @param $format
+     * @param array $context
+     * @return array|\ArrayObject|bool|float|int|mixed|string|null
+     * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
+     */
     public function normalize($object, $format = null, array $context = [])
     {
         $data = $this->decorated->normalize($object, $format, $context);
