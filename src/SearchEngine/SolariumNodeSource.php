@@ -67,7 +67,7 @@ class SolariumNodeSource extends AbstractSolarium
      * @param Query $update
      * @return boolean
      */
-    public function clean(Query $update)
+    public function clean(Query $update): bool
     {
         $update->addDeleteQuery(
             static::IDENTIFIER_KEY . ':"' . $this->nodeSource->getId() . '"' .
