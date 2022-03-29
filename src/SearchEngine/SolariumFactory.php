@@ -57,6 +57,7 @@ class SolariumFactory implements SolariumFactoryInterface
         return new SolariumDocumentTranslation(
             $documentTranslation,
             $this->clientRegistry,
+            $this->dispatcher,
             $this->logger,
             $this->markdown
         );

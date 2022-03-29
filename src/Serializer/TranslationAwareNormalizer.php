@@ -33,8 +33,8 @@ class TranslationAwareNormalizer implements ContextAwareNormalizerInterface, Nor
     }
 
     /**
-     * @param $object
-     * @param $format
+     * @param mixed $object
+     * @param string|null $format
      * @param array $context
      * @return array|\ArrayObject|bool|float|int|string|null
      * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
