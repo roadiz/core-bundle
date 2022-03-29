@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\SearchEngine;
 
 use Doctrine\Persistence\ObjectManager;
+use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use JMS\Serializer\Annotation as JMS;
@@ -81,6 +82,13 @@ class SolrSearchResults implements SearchResultsInterface
                             $key = 'object';
                             if ($object instanceof NodesSources) {
                                 $key = 'nodeSource';
+                            }
+                            if ($object instanceof DocumentInterface) {
+                                $key = 'document';
+                            }
+                            if ($object instanceof DocumentTranslation) {
+                                $key = 'document';
+                                $object = $object->getDocument();
                             }
                             return [
                                 $key => $object,

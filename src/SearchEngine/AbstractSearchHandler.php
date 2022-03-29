@@ -79,14 +79,15 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      * @param array $args
      * @return mixed
      */
-    abstract protected function argFqProcess(&$args);
+    abstract protected function argFqProcess(array &$args);
 
     /**
      * @return string
      */
-    abstract protected function getDocumentType();
+    abstract protected function getDocumentType(): string;
 
     /**
+     * @param array $args
      * @return array
      */
     protected function getHighlightingOptions(array &$args = []): array
@@ -151,7 +152,14 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      *
      * @return array|null
      */
-    abstract protected function nativeSearch($q, $args = [], $rows = 20, $searchTags = false, $proximity = 10000000, $page = 1);
+    abstract protected function nativeSearch(
+        $q,
+        $args = [],
+        $rows = 20,
+        $searchTags = false,
+        $proximity = 10000000,
+        $page = 1
+    ): ?array;
 
     /**
      * ## Search on Solr.
@@ -203,46 +211,6 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         $response = $this->nativeSearch($q, $args, $rows, $searchTags, $proximity, $page);
         return new SolrSearchResults(null !== $response ? $response : [], $this->em);
     }
-
-    /**
-     * @param string $q
-     * @param array $args
-     * @param int $rows Useless var but keep it for retro-compatibility
-     * @param bool $searchTags
-     * @param int $proximity Proximity matching: Lucene supports finding words are a within a specific distance away. Default 10000000
-     * @return int
-     * @deprecated Use SolrSearchResults DTO
-     */
-    public function count($q, $args = [], $rows = 0, $searchTags = false, $proximity = 10000000): int
-    {
-        $args = $this->argFqProcess($args);
-        $args["fq"][] = "document_type_s:" . $this->getDocumentType();
-        $tmp = [];
-        $args = array_merge($tmp, $args);
-        $response = $this->nativeSearch($q, $args, $rows, $searchTags, $proximity);
-        return null !== $response ? $this->parseResultCount($response) : 0;
-    }
-
-    /**
-     * @param array $response
-     * @return int
-     * @deprecated Use SolrSearchResults DTO
-     */
-    protected function parseResultCount($response)
-    {
-        if (null !== $response && isset($response['response']['numFound'])) {
-            return (int) $response['response']['numFound'];
-        }
-
-        return 0;
-    }
-
-    /**
-     * @param array|null $response
-     * @return array
-     * @deprecated Use SolrSearchResults DTO
-     */
-    abstract protected function parseSolrResponse($response);
 
     /**
      * @param string $input
