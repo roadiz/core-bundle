@@ -242,7 +242,7 @@ class CustomFormsType extends AbstractType
                     'image/gif',
                 ];
                 if (!empty($field->getDefaultValues())) {
-                    $mimeTypes = explode(',', $field->getDefaultValues() ?? '');
+                    $mimeTypes = explode(',', $field->getDefaultValues());
                     $mimeTypes = array_map('trim', $mimeTypes);
                 }
                 $option['constraints'][] = new All([
@@ -259,8 +259,8 @@ class CustomFormsType extends AbstractType
                 if ($field->getPlaceholder() !== '') {
                     $option['placeholder'] = $field->getPlaceholder();
                 }
-                if ($field->getDefaultValues() !== '') {
-                    $countries = explode(',', $field->getDefaultValues() ?? '');
+                if (!empty($field->getDefaultValues())) {
+                    $countries = explode(',', $field->getDefaultValues());
                     $countries = array_map('trim', $countries);
                     $option['preferred_choices'] = $countries;
                 }

@@ -8,7 +8,6 @@ use InlineStyle\InlineStyle;
 use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface;
-use Solarium\QueryType\Update\Query\Command\Add;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Mailer\MailerInterface;
@@ -306,7 +305,7 @@ class EmailManager
     /**
      * Sets the value of sender.
      *
-     * @param string|array<string, string> $sender
+     * @param string|array<string|int, string>|array<string|int, Address> $sender
      * @return EmailManager
      * @throws \Exception
      */

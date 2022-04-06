@@ -43,7 +43,10 @@ class NodesDetailsCommand extends Command
         $translation = $this->managerRegistry->getRepository(Translation::class)
                                            ->findOneBy(['locale' => $input->getArgument('locale')]);
 
-        /** @var NodesSources|null $source */
+        /**
+         * @var NodesSources|null $source
+         * @phpstan-ignore-next-line
+         */
         $source = $this->managerRegistry->getRepository(NodesSources::class)
                                     ->setDisplayingNotPublishedNodes(true)
                                     ->findOneBy([

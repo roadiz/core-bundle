@@ -7,7 +7,6 @@ namespace RZ\Roadiz\CoreBundle\TwigExtension;
 use Lexik\Bundle\JWTAuthenticationBundle\Exception\JWTFailureException;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Psr\Log\LoggerInterface;
-use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use RZ\Roadiz\CoreBundle\Preview\User\PreviewUserProviderInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -16,7 +15,6 @@ use Twig\TwigFunction;
 
 final class JwtExtension extends AbstractExtension
 {
-    private PreviewResolverInterface $previewResolver;
     private PreviewUserProviderInterface $previewUserProvider;
     private JWTTokenManagerInterface $tokenManager;
     private LoggerInterface $logger;
@@ -25,12 +23,10 @@ final class JwtExtension extends AbstractExtension
     public function __construct(
         JWTTokenManagerInterface $tokenManager,
         LoggerInterface $logger,
-        PreviewResolverInterface $previewResolver,
         PreviewUserProviderInterface $previewUserProvider
     ) {
         $this->tokenManager = $tokenManager;
         $this->logger = $logger;
-        $this->previewResolver = $previewResolver;
         $this->previewUserProvider = $previewUserProvider;
     }
 

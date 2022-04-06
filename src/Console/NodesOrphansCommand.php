@@ -74,7 +74,7 @@ class NodesOrphansCommand extends Command
             foreach ($orphans as $node) {
                 $tableContent[] = [
                     $node->getId(),
-                    $node->getNodeName() ?? '',
+                    $node->getNodeName(),
                     null !== $node->getNodeType() ? $node->getNodeType()->getName() : '',
                     (!$node->isVisible() ? 'X' : ''),
                     ($node->isPublished() ? 'X' : ''),

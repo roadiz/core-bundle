@@ -7,6 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Serializer;
 use ApiPlatform\Core\Serializer\SerializerContextBuilderInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Repository\TranslationRepository;
 use Symfony\Component\HttpFoundation\Request;
 
 final class TranslationAwareContextBuilder implements SerializerContextBuilderInterface
@@ -30,9 +31,10 @@ final class TranslationAwareContextBuilder implements SerializerContextBuilderIn
 
         if (!isset($context['translation']) || !($context['translation'] instanceof TranslationInterface)) {
             if (!empty($request->query->get('_locale'))) {
-                $translation = $this->managerRegistry
-                    ->getRepository(TranslationInterface::class)
-                    ->findOneAvailableByLocaleOrOverrideLocale($request->query->get('_locale'));
+                /** @var TranslationRepository $repository */
+                $repository = $this->managerRegistry
+                    ->getRepository(TranslationInterface::class);
+                $translation = $repository->findOneAvailableByLocaleOrOverrideLocale($request->query->get('_locale'));
 
                 if ($translation instanceof TranslationInterface) {
                     $context['translation'] = $translation;

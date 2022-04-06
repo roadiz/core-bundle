@@ -56,7 +56,7 @@ abstract class StatusAwareRepository extends EntityRepository
 
     /**
      * @param bool $displayNotPublishedNodes
-     * @return StatusAwareRepository
+     * @return static
      */
     public function setDisplayingNotPublishedNodes(bool $displayNotPublishedNodes)
     {
@@ -78,7 +78,7 @@ abstract class StatusAwareRepository extends EntityRepository
      *
      * @param bool $displayAllNodesStatuses
      *
-     * @return StatusAwareRepository
+     * @return static
      */
     public function setDisplayingAllNodesStatuses(bool $displayAllNodesStatuses)
     {

@@ -189,7 +189,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
     }
 
     /**
-     * @param string $folderName
+     * @param string|null $folderName
      * @return Folder
      */
     public function setFolderName($folderName)

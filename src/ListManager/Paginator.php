@@ -48,7 +48,7 @@ class Paginator
         $this->displayNotPublishedNodes = false;
         $this->displayAllNodesStatuses = false;
 
-        if ("" == $this->entityName) {
+        if (empty($this->entityName)) {
             throw new \RuntimeException("Entity name could not be empty", 1);
         }
         if ($this->itemsPerPage < 1) {

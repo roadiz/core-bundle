@@ -40,7 +40,7 @@ class UniqueTagNameValidator extends ConstraintValidator
     }
 
     /**
-     * @param string $value
+     * @param string|null $value
      * @param Constraint $constraint
      */
     protected function testSingleValue($value, Constraint $constraint)

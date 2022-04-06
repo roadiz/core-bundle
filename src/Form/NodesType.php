@@ -46,9 +46,9 @@ class NodesType extends AbstractType
             $repository = $this->managerRegistry
                 ->getRepository(Node::class)
                 ->setDisplayingAllNodesStatuses(true);
-            if (is_array($mixedIds) && count($mixedIds) === 0) {
+            if (\is_array($mixedIds) && count($mixedIds) === 0) {
                 return [];
-            } elseif (is_array($mixedIds) && count($mixedIds) > 0) {
+            } elseif (\is_array($mixedIds)) {
                 if ($options['multiple'] === false) {
                     return $repository->findOneBy(['id' => $mixedIds]);
                 }

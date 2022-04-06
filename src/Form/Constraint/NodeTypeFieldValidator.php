@@ -122,7 +122,7 @@ class NodeTypeFieldValidator extends ConstraintValidator
             if (null === $value->getDefaultValues()) {
                 $this->context->buildViolation('default_values_should_not_be_empty_for_this_type')->atPath('defaultValues')->addViolation();
             } else {
-                $defaultValuesParsed = Yaml::parse($value->getDefaultValues() ?? '');
+                $defaultValuesParsed = Yaml::parse($value->getDefaultValues());
                 if (null === $defaultValuesParsed) {
                     $this->context->buildViolation('default_values_should_not_be_empty_for_this_type')->atPath('defaultValues')->addViolation();
                 } elseif (!is_array($defaultValuesParsed)) {

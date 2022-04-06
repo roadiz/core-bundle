@@ -68,8 +68,8 @@ class SolrReindexCommand extends SolrCommand implements ThemeAwareCommandInterfa
                     if ($input->getOption('documents')) {
                         $this->executeForDocuments($stopwatch);
                     } elseif ($input->getOption('nodes')) {
-                        $batchCount = (int) $input->getOption('batch-count') ?? 1;
-                        $batchNumber = (int) $input->getOption('batch-number') ?? 0;
+                        $batchCount = (int) ($input->getOption('batch-count') ?? 1);
+                        $batchNumber = (int) ($input->getOption('batch-number') ?? 0);
                         $this->executeForNodes($stopwatch, $batchCount, $batchNumber);
                     } else {
                         $this->executeForAll($stopwatch);

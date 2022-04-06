@@ -61,6 +61,7 @@ final class NodesCleanNamesCommand extends Command
             ->findDefault();
 
         if (null !== $translation) {
+            /** @phpstan-ignore-next-line  */
             $nodes = $entityManager
                 ->getRepository(Node::class)
                 ->setDisplayingNotPublishedNodes(true)

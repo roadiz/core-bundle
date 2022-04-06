@@ -266,12 +266,11 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
 
     /**
      * @param string $filename
-     *
      * @return $this
      */
     public function setFilename(string $filename)
     {
-        $this->filename = StringHandler::cleanForFilename($filename ?? '');
+        $this->filename = StringHandler::cleanForFilename($filename);
 
         return $this;
     }

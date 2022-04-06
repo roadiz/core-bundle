@@ -458,6 +458,9 @@ class NodesSourcesHandler extends AbstractHandler
      */
     public function getTags()
     {
+        /**
+         * @phpstan-ignore-next-line
+         */
         return $this->objectManager->getRepository(Tag::class)->findBy([
             "nodes" => $this->nodeSource->getNode(),
             "translation" => $this->nodeSource->getTranslation(),
