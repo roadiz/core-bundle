@@ -55,6 +55,11 @@ final class GetWebResponseByPathController extends AbstractController
                 (string) $this->requestStack->getMainRequest()->query->get('path')
             );
             $this->requestStack->getMainRequest()->attributes->set('data', $resource);
+            /*
+             * Force API Platform to look for real resource configuration and serialization
+             * context. You must define "itemOperations.getByPath" for your API resource configuration.
+             */
+            $this->requestStack->getMainRequest()->attributes->set('_api_resource_class', get_class($resource));
             return $this->webResponseDataTransformer->transform($resource, WebResponseInterface::class);
         } catch (ResourceNotFoundException $exception) {
             throw new NotFoundHttpException($exception->getMessage(), $exception);
