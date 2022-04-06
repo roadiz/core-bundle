@@ -87,20 +87,6 @@ abstract class StatusAwareRepository extends EntityRepository
     }
 
     /**
-     * @return bool
-     * @deprecated Do not depend on granted ROLE, preview logic can vary
-     */
-    protected function isBackendUserWithPreview()
-    {
-        try {
-            return $this->previewResolver->isPreview() &&
-                $this->security->isGranted($this->previewResolver->getRequiredRole());
-        } catch (AuthenticationCredentialsNotFoundException $e) {
-            return false;
-        }
-    }
-
-    /**
      * @param QueryBuilder $qb
      * @param string $prefix
      * @return QueryBuilder

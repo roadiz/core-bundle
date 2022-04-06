@@ -56,7 +56,7 @@ class NodeMover
         $this->managerRegistry = $managerRegistry;
         $this->cacheAdapter = $cacheAdapter;
     }
-
+    
     private function getManager(): ObjectManager
     {
         $manager = $this->managerRegistry->getManagerForClass(Redirection::class);

@@ -47,7 +47,7 @@ final class SettingRepository extends EntityRepository
      * @return bool
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    public function exists($name)
+    public function exists($name): bool
     {
         $builder = $this->createQueryBuilder('s');
         $builder->select($builder->expr()->count('s.value'))
@@ -65,7 +65,7 @@ final class SettingRepository extends EntityRepository
      *
      * @return array
      */
-    public function findAllNames()
+    public function findAllNames(): array
     {
         $builder = $this->createQueryBuilder('s');
         $builder->select('s.name');

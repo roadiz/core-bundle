@@ -6,7 +6,6 @@ namespace RZ\Roadiz\CoreBundle\Security\Authentication\Manager;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use RZ\Roadiz\CoreBundle\Entity\LoginAttempt;
 use RZ\Roadiz\CoreBundle\Exception\TooManyLoginAttemptsException;
 use RZ\Roadiz\CoreBundle\Repository\LoginAttemptRepository;
@@ -25,15 +24,15 @@ class LoginAttemptManager
     /**
      * @param RequestStack $requestStack
      * @param ManagerRegistry $managerRegistry
-     * @param LoggerInterface|null $logger
+     * @param LoggerInterface $logger
      */
     public function __construct(
         RequestStack $requestStack,
         ManagerRegistry $managerRegistry,
-        ?LoggerInterface $logger = null
+        LoggerInterface $logger
     ) {
         $this->requestStack = $requestStack;
-        $this->logger = $logger ?? new NullLogger();
+        $this->logger = $logger;
         $this->managerRegistry = $managerRegistry;
     }
 
@@ -74,7 +73,7 @@ class LoginAttemptManager
      * @return $this
      * @throws \Exception
      */
-    public function onFailedLoginAttempt(string $username)
+    public function onFailedLoginAttempt(string $username): LoginAttemptManager
     {
         $manager = $this->managerRegistry->getManagerForClass(LoginAttempt::class);
         if (null === $manager) {

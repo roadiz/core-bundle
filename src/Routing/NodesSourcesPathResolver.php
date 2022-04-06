@@ -188,8 +188,9 @@ final class NodesSourcesPathResolver implements PathResolverInterface
                 }
             }
         }
-        /*
+        /**
          * Resolve home page
+         * @phpstan-ignore-next-line
          */
         return $this->managerRegistry
             ->getRepository(NodesSources::class)

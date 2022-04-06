@@ -18,7 +18,7 @@ class TagObjectConstructor extends AbstractTypedObjectConstructor
      */
     public function supports(string $className, array $data): bool
     {
-        return $className === Tag::class && array_key_exists('tagName', $data);
+        return $className === Tag::class && \array_key_exists('tagName', $data);
     }
 
     /**

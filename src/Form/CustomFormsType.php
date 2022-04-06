@@ -95,7 +95,7 @@ class CustomFormsType extends AbstractType
      * @param array $options
      * @return array
      */
-    protected function getFieldsByGroups(array $options)
+    protected function getFieldsByGroups(array $options): array
     {
         $fieldsArray = [];
         $fields = $options['customForm']->getFields();

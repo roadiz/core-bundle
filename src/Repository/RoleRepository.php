@@ -24,10 +24,9 @@ final class RoleRepository extends EntityRepository
 
     /**
      * @param string $roleName
-     *
      * @return int
      */
-    public function countByName($roleName)
+    public function countByName($roleName): int
     {
         $roleName = Role::cleanName($roleName);
 
