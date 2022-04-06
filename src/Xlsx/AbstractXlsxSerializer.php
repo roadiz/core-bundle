@@ -11,7 +11,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 abstract class AbstractXlsxSerializer implements SerializerInterface
 {
-    private TranslatorInterface $translator;
+    protected TranslatorInterface $translator;
 
     /**
      * @param TranslatorInterface $translator
