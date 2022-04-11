@@ -45,8 +45,6 @@ final class SchemaUpdater
                 'cache.annotations',
                 'cache.property_info',
                 'cache.messenger.restart_workers_signal',
-                'cache.doctrine.orm.default.result',
-                'cache.doctrine.orm.default.metadata',
             ],
             '--no-interaction' => true,
         ]);
