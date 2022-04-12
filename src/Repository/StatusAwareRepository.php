@@ -8,7 +8,6 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
-use Symfony\Component\Security\Core\Exception\AuthenticationCredentialsNotFoundException;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
@@ -91,7 +90,7 @@ abstract class StatusAwareRepository extends EntityRepository
      * @param string $prefix
      * @return QueryBuilder
      */
-    protected function alterQueryBuilderWithAuthorizationChecker(
+    public function alterQueryBuilderWithAuthorizationChecker(
         QueryBuilder $qb,
         string $prefix = EntityRepository::NODE_ALIAS
     ) {

@@ -28,7 +28,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 /**
  * EntityRepository that implements search engine query with Solr.
  *
- * @extends StatusAwareRepository<\RZ\Roadiz\CoreBundle\Entity\NodesSources>
+ * @extends StatusAwareRepository<NodesSources>
  */
 class NodesSourcesRepository extends StatusAwareRepository
 {
@@ -193,7 +193,7 @@ class NodesSourcesRepository extends StatusAwareRepository
      * @param string $prefix
      * @return QueryBuilder
      */
-    protected function alterQueryBuilderWithAuthorizationChecker(
+    public function alterQueryBuilderWithAuthorizationChecker(
         QueryBuilder $qb,
         string $prefix = EntityRepository::NODESSOURCES_ALIAS
     ) {
