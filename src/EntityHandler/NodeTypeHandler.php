@@ -88,10 +88,17 @@ class NodeTypeHandler extends AbstractHandler
     public function removeSourceEntityClass(): bool
     {
         $file = $this->getSourceClassPath();
+        $repositoryFile = $this->getRepositoryClassPath();
         $fileSystem = new Filesystem();
 
         if ($fileSystem->exists($file) && is_file($file)) {
             $fileSystem->remove($file);
+            /*
+             * Delete repository class file too.
+             */
+            if ($fileSystem->exists($repositoryFile) && is_file($repositoryFile)) {
+                $fileSystem->remove($repositoryFile);
+            }
             return true;
         }
 
