@@ -14,6 +14,8 @@ use RZ\Roadiz\CoreBundle\Api\Model\WebResponse;
 use RZ\Roadiz\CoreBundle\Api\TreeWalker\AutoChildrenNodeSourceWalker;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\TreeWalker\WalkerContextInterface;
+use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 final class WebResponseOutputDataTransformer implements WebResponseDataTransformerInterface
 {
@@ -21,23 +23,27 @@ final class WebResponseOutputDataTransformer implements WebResponseDataTransform
     private BreadcrumbsFactoryInterface $breadcrumbsFactory;
     private WalkerContextInterface $walkerContext;
     private CacheItemPoolInterface $cacheItemPool;
+    private UrlGeneratorInterface $urlGenerator;
 
     /**
      * @param NodesSourcesHeadFactory $nodesSourcesHeadFactory
      * @param BreadcrumbsFactoryInterface $breadcrumbsFactory
      * @param WalkerContextInterface $walkerContext
      * @param CacheItemPoolInterface $cacheItemPool
+     * @param UrlGeneratorInterface $urlGenerator
      */
     public function __construct(
         NodesSourcesHeadFactory $nodesSourcesHeadFactory,
         BreadcrumbsFactoryInterface $breadcrumbsFactory,
         WalkerContextInterface $walkerContext,
-        CacheItemPoolInterface $cacheItemPool
+        CacheItemPoolInterface $cacheItemPool,
+        UrlGeneratorInterface $urlGenerator
     ) {
         $this->nodesSourcesHeadFactory = $nodesSourcesHeadFactory;
         $this->breadcrumbsFactory = $breadcrumbsFactory;
         $this->walkerContext = $walkerContext;
         $this->cacheItemPool = $cacheItemPool;
+        $this->urlGenerator = $urlGenerator;
     }
 
     /**
@@ -54,6 +60,9 @@ final class WebResponseOutputDataTransformer implements WebResponseDataTransform
         $output = new WebResponse();
         $output->item = $data;
         if ($data instanceof NodesSources) {
+            $output->path = $this->urlGenerator->generate(RouteObjectInterface::OBJECT_BASED_ROUTE_NAME, [
+                RouteObjectInterface::ROUTE_OBJECT => $data
+            ], UrlGeneratorInterface::ABSOLUTE_PATH);
             $output->head = $this->nodesSourcesHeadFactory->createForNodeSource($data);
             $output->breadcrumbs = $this->breadcrumbsFactory->create($data);
             $output->blocks = AutoChildrenNodeSourceWalker::build(
