@@ -135,13 +135,21 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
     /**
      * @return boolean
      */
-    public function getVisible()
+    public function isVisible(): bool
     {
         return $this->visible;
     }
 
     /**
-     * @param boolean $visible
+     * @return boolean
+     */
+    public function getVisible(): bool
+    {
+        return $this->isVisible();
+    }
+
+    /**
+     * @param bool $visible
      * @return Folder
      */
     public function setVisible($visible)
