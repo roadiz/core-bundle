@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\SearchEngine\Indexer;
 
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use Solarium\Exception\HttpException;
 use Solarium\Plugin\BufferedAdd\BufferedAdd;
@@ -98,23 +99,27 @@ class NodesSourcesIndexer extends AbstractIndexer implements BatchIndexer
                 $limit = $count - $offset;
                 $baseQb->setMaxResults($limit)->setFirstResult($offset);
                 if (null !== $this->io) {
-                    $this->io->note('Batch mode enabled (last): Limit to ' . $limit . ', offset from ' . $offset);
+                    $this->io->note(sprintf('Batch mode enabled (last): from %d to %d', $offset, ($offset + $limit) - 1));
                 }
             } else {
                 $baseQb->setMaxResults($limit)->setFirstResult($offset);
                 if (null !== $this->io) {
-                    $this->io->note('Batch mode enabled: Limit to ' . $limit . ', offset from ' . $offset);
+                    $this->io->note(sprintf('Batch mode enabled: from %d to %d', $offset, ($offset + $limit) - 1));
                 }
             }
             $count = $limit;
         }
-        $q = $baseQb->getQuery();
+
+        /*
+         * Must use Paginator to avoid missing items due to SQL pagination issues with offset and limit
+         */
+        $paginator = new Paginator($baseQb->getQuery(), true);
 
         if (null !== $this->io) {
             $this->io->progressStart($count);
         }
 
-        foreach ($q->toIterable() as $row) {
+        foreach ($paginator as $row) {
             $solarium = $this->solariumFactory->createWithNodesSources($row);
             $solarium->createEmptyDocument($update);
             $solarium->index();
