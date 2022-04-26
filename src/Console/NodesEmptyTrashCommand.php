@@ -63,11 +63,10 @@ class NodesEmptyTrashCommand extends Command
                 $q = $qb->select('n')
                     ->andWhere($countQb->expr()->eq('n.status', Node::DELETED))
                     ->getQuery();
-                $iterableResult = $q->iterate();
 
-                while (($row = $iterableResult->next()) !== false) {
+                foreach ($q->toIterable() as $row) {
                     /** @var NodeHandler $nodeHandler */
-                    $nodeHandler = $this->handlerFactory->getHandler($row[0]);
+                    $nodeHandler = $this->handlerFactory->getHandler($row);
                     $nodeHandler->removeWithChildrenAndAssociations();
                     $io->progressAdvance();
                     ++$i;
