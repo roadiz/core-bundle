@@ -92,7 +92,7 @@ class NodesSourcesIndexer extends AbstractIndexer implements BatchIndexer
 
         $baseQb = $this->getAllQueryBuilder()->addSelect('n');
         if ($batchCount > 1) {
-            $limit = (int) round($count / $batchCount);
+            $limit = (int) ceil($count / $batchCount);
             $offset = (int) $batchNumber * $limit;
             if ($batchNumber === $batchCount - 1) {
                 $limit = $count - $offset;

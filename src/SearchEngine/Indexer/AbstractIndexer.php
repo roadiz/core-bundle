@@ -84,7 +84,7 @@ abstract class AbstractIndexer implements CliAwareIndexer
     public function optimizeSolr(): void
     {
         $optimizeUpdate = $this->getSolr()->createUpdate();
-        $optimizeUpdate->addOptimize(true, true, 5);
+        $optimizeUpdate->addOptimize(true, true);
         $this->getSolr()->update($optimizeUpdate);
 
         $this->commitSolr();
