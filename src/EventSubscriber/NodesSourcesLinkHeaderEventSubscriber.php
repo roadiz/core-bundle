@@ -60,6 +60,7 @@ class NodesSourcesLinkHeaderEventSubscriber implements EventSubscriberInterface
                             ])
                         ))
                             ->withAttribute('hreflang', $singleSource->getTranslation()->getLocale())
+                            ->withAttribute('title', $singleSource->getTranslation()->getName())
                             ->withAttribute('type', 'text/html')
                     ));
                 }
