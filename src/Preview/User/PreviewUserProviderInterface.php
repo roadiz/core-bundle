@@ -10,9 +10,8 @@ use Symfony\Component\Security\Core\User\UserInterface;
 interface PreviewUserProviderInterface
 {
     /**
-     * @param UserInterface $user
      * @return UserInterface
      * @throws AccessDeniedException If original user is not allowed to preview
      */
-    public function createFromFullUser(UserInterface $user): UserInterface;
+    public function createFromSecurity(): UserInterface;
 }
