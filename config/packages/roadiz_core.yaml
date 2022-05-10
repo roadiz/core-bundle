@@ -2,6 +2,7 @@ roadiz_core:
     appNamespace: '%env(string:APP_NAMESPACE)%'
     staticDomainName: ~
     useNativeJsonColumnType: true
+    useAcceptLanguageHeader: '%env(bool:APP_USE_ACCEPT_LANGUAGE_HEADER)%'
     security:
         private_key_name: default
     themes: []

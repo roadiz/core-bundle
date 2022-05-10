@@ -34,6 +34,15 @@ class Configuration implements ConfigurationInterface
             ->booleanNode('useNativeJsonColumnType')
                 ->defaultValue(true)
             ->end()
+            ->booleanNode('useAcceptLanguageHeader')
+                ->defaultValue(false)
+                ->info(<<<EOT
+When no information to find locale is found and "force_locale" setting is ON,
+we must find translation based on Accept-Language header.
+Be careful if you are using a reverse-proxy cache, YOU MUST vary on Accept-Language header and normalize it.
+@see https://varnish-cache.org/docs/6.3/users-guide/increasing-your-hitrate.html#http-vary
+EOT)
+            ->end()
             ->arrayNode('security')
                 ->addDefaultsIfNotSet()
                 ->children()

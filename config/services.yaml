@@ -1,6 +1,7 @@
 ---
 parameters:
     env(APP_NAMESPACE): "roadiz"
+    env(APP_USE_ACCEPT_LANGUAGE_HEADER): 'false'
     env(APP_UNSPLASH_CLIENT_ID): ~
     env(OPEN_ID_CLIENT_ID): ~
     env(OPEN_ID_CLIENT_SECRET): ~
@@ -28,6 +29,7 @@ services:
             $debug: '%kernel.debug%'
             $defaultControllerClass: '%roadiz_core.default_node_source_controller%'
             $webhookMessageTypes: '%roadiz_core.webhook.message_types%'
+            $useAcceptLanguageHeader: '%roadiz_core.use_accept_language_header%'
 
     RZ\Roadiz\CoreBundle\:
         resource: '../src/'
