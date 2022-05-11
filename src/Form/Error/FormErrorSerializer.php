@@ -31,7 +31,7 @@ final class FormErrorSerializer implements FormErrorSerializerInterface
                 if (count($error->getMessageParameters()) > 0) {
                     $errors[$errorFieldName] = $this->translator->trans($error->getMessageTemplate(), $error->getMessageParameters());
                 } else {
-                    $errors[$errorFieldName] = $error->getMessage();
+                    $errors[$errorFieldName] = $this->translator->trans($error->getMessage());
                 }
                 $cause = $error->getCause();
                 if (null !== $cause) {
