@@ -318,10 +318,10 @@ services:
     #
     roadiz_core.path_resolvers.nodes_sources:
         class: RZ\Roadiz\CoreBundle\Routing\NodesSourcesPathResolver
-        tags: [ 'roadiz_core.path_resolver' ]
+        tags: [ { name: 'roadiz_core.path_resolver', priority: 0 }  ]
     roadiz_core.path_resolvers.redirections:
         class: RZ\Roadiz\CoreBundle\Routing\RedirectionPathResolver
-        tags: [ 'roadiz_core.path_resolver' ]
+        tags: [ { name: 'roadiz_core.path_resolver', priority: 10 }  ]
     #
     # Twig
     #
