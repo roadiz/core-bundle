@@ -75,6 +75,24 @@ services:
 
     Limenius\Liform\LiformInterface:
         alias: liform
+        
+    roadiz_core.liform.datetime_type.transformer:
+        class: Limenius\Liform\Transformer\StringTransformer
+        parent: Limenius\Liform\Transformer\AbstractTransformer
+        tags:
+            - { name: liform.transformer, form_type: datetime, widget: datetime }
+
+    roadiz_core.liform.date_type.transformer:
+        class: Limenius\Liform\Transformer\StringTransformer
+        parent: Limenius\Liform\Transformer\AbstractTransformer
+        tags:
+            - { name: liform.transformer, form_type: date, widget: date }
+
+    roadiz_core.liform.file_type.transformer:
+        class: Limenius\Liform\Transformer\StringTransformer
+        parent: Limenius\Liform\Transformer\AbstractTransformer
+        tags:
+            - { name: liform.transformer, form_type: file, widget: file }
 
     RZ\Roadiz\CoreBundle\Serializer\TranslationAwareNormalizer:
         tags:
