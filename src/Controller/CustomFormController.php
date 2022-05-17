@@ -78,8 +78,8 @@ final class CustomFormController extends AbstractController
         $translation = $this->registry
             ->getRepository(TranslationInterface::class)
             ->findOneBy([
-            'locale' => $_locale
-        ]);
+                'locale' => $_locale
+            ]);
         if (null === $translation) {
             throw new NotFoundHttpException('Translation does not exist.');
         }
@@ -163,11 +163,12 @@ final class CustomFormController extends AbstractController
 
         if (is_array($mixed) && $mixed['formObject'] instanceof FormInterface) {
             if ($mixed['formObject']->isSubmitted()) {
+                $errorPayload = [
+                    'status' => Response::HTTP_BAD_REQUEST,
+                    'errorsPerForm' => $this->formErrorSerializer->getErrorsAsArray($mixed['formObject'])
+                ];
                 return new JsonResponse(
-                    $this->serializer->serialize(
-                        $this->formErrorSerializer->getErrorsAsArray($mixed['formObject']),
-                        'json'
-                    ),
+                    $this->serializer->serialize($errorPayload, 'json'),
                     Response::HTTP_BAD_REQUEST,
                     $headers,
                     true
