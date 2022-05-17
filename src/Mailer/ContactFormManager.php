@@ -363,8 +363,7 @@ class ContactFormManager extends EmailManager
                  */
                 $errorPerForm = $this->formErrorSerializer->getErrorsAsArray($this->form);
                 $responseArray = [
-                    'statusCode' => Response::HTTP_BAD_REQUEST,
-                    'status' => 'danger',
+                    'status' => Response::HTTP_BAD_REQUEST,
                     'message' => $this->translator->trans($this->failMessage),
                     'errors' => (string) $this->form->getErrors(),
                     'errorsPerForm' => $errorPerForm,

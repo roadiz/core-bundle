@@ -184,7 +184,7 @@ class ExceptionViewer
                 'message' => $e->getMessage(),
                 'exception' => $class,
                 'humanMessage' => $humanMessage,
-                'status' => 'danger',
+                'status' => $this->getHttpStatusCode($e),
             ];
             if ($debug) {
                 $data['error_trace'] =  $e->getTrace();
