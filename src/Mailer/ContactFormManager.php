@@ -296,7 +296,7 @@ class ContactFormManager extends EmailManager
                     'publicKey' => $publicKey,
                 ],
                 'constraints' => [
-                    new Recaptcha($this->getRequest(), [
+                    new Recaptcha([
                         'fieldName' => $validatorFieldName,
                         'privateKey' => $privateKey,
                         'verifyUrl' => $verifyUrl,

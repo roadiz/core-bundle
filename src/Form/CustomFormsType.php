@@ -23,7 +23,6 @@ use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\All;
 use Symfony\Component\Validator\Constraints\Email;
@@ -69,8 +68,7 @@ class CustomFormsType extends AbstractType
          */
         if (
             !empty($options['recaptcha_public_key']) &&
-            !empty($options['recaptcha_private_key']) &&
-            !empty($options['request'])
+            !empty($options['recaptcha_private_key'])
         ) {
             $verifyUrl = !empty($options['recaptcha_verifyurl']) ?
                 $options['recaptcha_verifyurl'] :
@@ -82,7 +80,7 @@ class CustomFormsType extends AbstractType
                     'publicKey' => $options['recaptcha_public_key'],
                 ],
                 'constraints' => [
-                    new Recaptcha($options['request'], [
+                    new Recaptcha([
                         'privateKey' => $options['recaptcha_private_key'],
                         'verifyUrl' => $verifyUrl,
                         'fieldName' => $options['recaptcha_name']
@@ -301,7 +299,6 @@ class CustomFormsType extends AbstractType
             'recaptcha_private_key' => null,
             'recaptcha_verifyurl' => null,
             'recaptcha_name' => 'g-recaptcha-response',
-            'request' => null,
             'forceExpanded' => false,
             'csrf_protection' => false,
         ]);
@@ -310,7 +307,6 @@ class CustomFormsType extends AbstractType
 
         $resolver->setAllowedTypes('customForm', [CustomForm::class]);
         $resolver->setAllowedTypes('forceExpanded', ['boolean']);
-        $resolver->setAllowedTypes('request', [Request::class, 'null']);
         $resolver->setAllowedTypes('recaptcha_public_key', ['string', 'null', 'boolean']);
         $resolver->setAllowedTypes('recaptcha_private_key', ['string', 'null', 'boolean']);
         $resolver->setAllowedTypes('recaptcha_verifyurl', ['string', 'null', 'boolean']);

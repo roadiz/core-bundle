@@ -11,8 +11,8 @@ class Recaptcha extends Constraint
     public string $emptyMessage = 'you_must_show_youre_not_robot';
     public string $invalidMessage = 'recaptcha_is_invalid.try_again';
     public string $fieldName = 'g-recaptcha-response';
-    public ?string $privateKey = null;
-    public ?string $verifyUrl = null;
+    public string $privateKey = '';
+    public string $verifyUrl = '';
 
     /**
      * @return string[]
