@@ -9,7 +9,7 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
-use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Routing\RequestContextAwareInterface;
 
 /**
  * Event dispatched to set up theme configuration at kernel request.
@@ -17,13 +17,12 @@ use Symfony\Component\HttpKernel\KernelEvents;
 final class LocaleSubscriber implements EventSubscriberInterface
 {
     private ManagerRegistry $managerRegistry;
+    private RequestContextAwareInterface $router;
 
-    /**
-     * @param ManagerRegistry $managerRegistry
-     */
-    public function __construct(ManagerRegistry $managerRegistry)
+    public function __construct(ManagerRegistry $managerRegistry, RequestContextAwareInterface $router)
     {
         $this->managerRegistry = $managerRegistry;
+        $this->router = $router;
     }
 
     /**
@@ -31,11 +30,9 @@ final class LocaleSubscriber implements EventSubscriberInterface
      */
     public static function getSubscribedEvents(): array
     {
-        /*
-         * Locale subscriber has HIGH priority over Firewall and Routing
-         */
         return [
-            KernelEvents::REQUEST => ['onKernelRequest', 70],
+            // must be registered just before Symfony\Component\HttpKernel\EventListener\LocaleListener
+            RequestEvent::class => [['onKernelRequest', 17]],
         ];
     }
 
@@ -64,10 +61,12 @@ final class LocaleSubscriber implements EventSubscriberInterface
                 $locale = $request->attributes->get('_locale');
                 $event->getRequest()->setLocale($locale);
                 \Locale::setDefault($locale);
+                $this->router->getContext()->setParameter('_locale', $locale);
             } elseif (null !== $translation = $this->getDefaultTranslation()) {
                 $shortLocale = $translation->getLocale();
                 $event->getRequest()->setLocale($shortLocale);
                 \Locale::setDefault($shortLocale);
+                $this->router->getContext()->setParameter('_locale', $shortLocale);
             }
         }
     }
