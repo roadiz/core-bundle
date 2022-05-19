@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 
 use GuzzleHttp\Client;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
@@ -13,6 +14,16 @@ use Symfony\Component\Validator\ConstraintValidator;
  */
 class RecaptchaValidator extends ConstraintValidator
 {
+    protected RequestStack $requestStack;
+
+    /**
+     * @param RequestStack $requestStack
+     */
+    public function __construct(RequestStack $requestStack)
+    {
+        $this->requestStack = $requestStack;
+    }
+
     /**
      *
      * @see \Symfony\Component\Validator\ConstraintValidator::validate()
@@ -23,7 +34,14 @@ class RecaptchaValidator extends ConstraintValidator
     {
         if ($constraint instanceof Recaptcha) {
             $propertyPath = $this->context->getPropertyPath();
-            $responseField = $constraint->request->request->get($constraint->fieldName);
+
+            if (null === $this->requestStack->getCurrentRequest()) {
+                $this->context->buildViolation('Request is not defined')
+                    ->atPath($propertyPath)
+                    ->addViolation();
+            }
+
+            $responseField = $this->requestStack->getCurrentRequest()->get($constraint->fieldName);
 
             if (empty($responseField)) {
                 $this->context->buildViolation($constraint->emptyMessage)
@@ -58,7 +76,7 @@ class RecaptchaValidator extends ConstraintValidator
      *
      * @return bool|string|array
      */
-    protected function check(Recaptcha $constraint, $responseField)
+    protected function check(Recaptcha $constraint, string $responseField)
     {
         $data = [
             'secret' => $constraint->privateKey,

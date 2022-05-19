@@ -76,7 +76,7 @@ class CustomFormsType extends AbstractType
                 $options['recaptcha_verifyurl'] :
                 'https://www.google.com/recaptcha/api/siteverify';
 
-            $builder->add('recaptcha', RecaptchaType::class, [
+            $builder->add($options['recaptcha_name'], RecaptchaType::class, [
                 'label' => false,
                 'configs' => [
                     'publicKey' => $options['recaptcha_public_key'],
@@ -85,6 +85,7 @@ class CustomFormsType extends AbstractType
                     new Recaptcha($options['request'], [
                         'privateKey' => $options['recaptcha_private_key'],
                         'verifyUrl' => $verifyUrl,
+                        'fieldName' => $options['recaptcha_name']
                     ]),
                 ],
             ]);
@@ -299,6 +300,7 @@ class CustomFormsType extends AbstractType
             'recaptcha_public_key' => null,
             'recaptcha_private_key' => null,
             'recaptcha_verifyurl' => null,
+            'recaptcha_name' => 'g-recaptcha-response',
             'request' => null,
             'forceExpanded' => false,
             'csrf_protection' => false,
@@ -312,6 +314,7 @@ class CustomFormsType extends AbstractType
         $resolver->setAllowedTypes('recaptcha_public_key', ['string', 'null', 'boolean']);
         $resolver->setAllowedTypes('recaptcha_private_key', ['string', 'null', 'boolean']);
         $resolver->setAllowedTypes('recaptcha_verifyurl', ['string', 'null', 'boolean']);
+        $resolver->setAllowedTypes('recaptcha_name', ['string']);
     }
 
     /**
