@@ -11,9 +11,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\Routing\RequestContextAwareInterface;
 
-/**
- * Event dispatched to set up theme configuration at kernel request.
- */
 final class LocaleSubscriber implements EventSubscriberInterface
 {
     private ManagerRegistry $managerRegistry;
@@ -31,8 +28,8 @@ final class LocaleSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            // must be registered just before Symfony\Component\HttpKernel\EventListener\LocaleListener
-            RequestEvent::class => [['onKernelRequest', 17]],
+            // must be registered just after Symfony\Component\HttpKernel\EventListener\LocaleListener
+            RequestEvent::class => [['onKernelRequest', 16]],
         ];
     }
 
@@ -41,33 +38,22 @@ final class LocaleSubscriber implements EventSubscriberInterface
         return $this->managerRegistry->getRepository(Translation::class)->findDefault();
     }
 
-    /**
-     * After a controller has been matched. We need to inject current
-     * Kernel instance and main DI container.
-     *
-     * @param RequestEvent $event
-     */
     public function onKernelRequest(RequestEvent $event)
     {
-        if ($event->isMainRequest()) {
-            $request = $event->getRequest();
-            /*
-             * Set default locale
-             */
-            if (
-                $request->attributes->has('_locale') &&
-                $request->attributes->get('_locale') !== ''
-            ) {
-                $locale = $request->attributes->get('_locale');
-                $event->getRequest()->setLocale($locale);
-                \Locale::setDefault($locale);
-                $this->router->getContext()->setParameter('_locale', $locale);
-            } elseif (null !== $translation = $this->getDefaultTranslation()) {
-                $shortLocale = $translation->getLocale();
-                $event->getRequest()->setLocale($shortLocale);
-                \Locale::setDefault($shortLocale);
-                $this->router->getContext()->setParameter('_locale', $shortLocale);
-            }
+        $request = $event->getRequest();
+        $locale = $request->query->get('_locale') ?? $request->attributes->get('_locale');
+        /*
+         * Set default locale
+         */
+        if (null !== $locale && $locale !== '') {
+            $event->getRequest()->setLocale($locale);
+            \Locale::setDefault($locale);
+            $this->router->getContext()->setParameter('_locale', $locale);
+        } elseif (null !== $translation = $this->getDefaultTranslation()) {
+            $shortLocale = $translation->getLocale();
+            $event->getRequest()->setLocale($shortLocale);
+            \Locale::setDefault($shortLocale);
+            $this->router->getContext()->setParameter('_locale', $shortLocale);
         }
     }
 }
