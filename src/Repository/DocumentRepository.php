@@ -562,14 +562,14 @@ final class DocumentRepository extends EntityRepository
         /*
          * Get unused documents
          */
-        $qb->select('d')
+        $qb->select('d.id')
             ->leftJoin('d.nodesSourcesByFields', 'ns')
             ->leftJoin('d.tagTranslations', 'ttd')
             ->leftJoin('d.attributeDocuments', 'ad')
             ->andHaving('COUNT(ns.id) = 0')
             ->andHaving('COUNT(ttd.id) = 0')
             ->andHaving('COUNT(ad.id) = 0')
-            ->groupBy('d')
+            ->groupBy('d.id')
             ->andWhere($qb->expr()->eq('d.raw', ':raw'))
             ->andWhere($qb->expr()->isNull('d.original'))
             ->setParameter('raw', false);
@@ -578,6 +578,20 @@ final class DocumentRepository extends EntityRepository
             $qb->andWhere($qb->expr()->notIn(
                 'd.id',
                 $idArray
+            ));
+        }
+
+        $documentIds = [];
+
+        foreach ($qb->getQuery()->getScalarResult() as $value) {
+            $documentIds[] = (int) $value['id'];
+        }
+
+        $qb = $this->createQueryBuilder('d');
+        if (count($documentIds) > 0) {
+            $qb->andWhere($qb->expr()->in(
+                'd.id',
+                $documentIds
             ));
         }
 
