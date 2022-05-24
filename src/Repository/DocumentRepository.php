@@ -539,7 +539,7 @@ final class DocumentRepository extends EntityRepository
      */
     public function getAllUnusedQueryBuilder(): QueryBuilder
     {
-        $qb = $this->createQueryBuilder('d');
+        $qb1 = $this->createQueryBuilder('d1');
         $qb2 = $this->_em->createQueryBuilder();
 
         /*
@@ -562,38 +562,30 @@ final class DocumentRepository extends EntityRepository
         /*
          * Get unused documents
          */
-        $qb->select('d.id')
-            ->leftJoin('d.nodesSourcesByFields', 'ns')
-            ->leftJoin('d.tagTranslations', 'ttd')
-            ->leftJoin('d.attributeDocuments', 'ad')
+        $qb1->select('d1.id')
+            ->leftJoin('d1.nodesSourcesByFields', 'ns')
+            ->leftJoin('d1.tagTranslations', 'ttd')
+            ->leftJoin('d1.attributeDocuments', 'ad')
             ->andHaving('COUNT(ns.id) = 0')
             ->andHaving('COUNT(ttd.id) = 0')
             ->andHaving('COUNT(ad.id) = 0')
-            ->groupBy('d.id')
-            ->andWhere($qb->expr()->eq('d.raw', ':raw'))
-            ->andWhere($qb->expr()->isNull('d.original'))
-            ->setParameter('raw', false);
+            ->groupBy('d1.id')
+            ->andWhere($qb1->expr()->eq('d1.raw', ':raw'))
+            ->andWhere($qb1->expr()->isNull('d1.original'));
 
         if (count($idArray) > 0) {
-            $qb->andWhere($qb->expr()->notIn(
-                'd.id',
+            $qb1->andWhere($qb1->expr()->notIn(
+                'd1.id',
                 $idArray
             ));
         }
 
-        $documentIds = [];
-
-        foreach ($qb->getQuery()->getScalarResult() as $value) {
-            $documentIds[] = (int) $value['id'];
-        }
-
         $qb = $this->createQueryBuilder('d');
-        if (count($documentIds) > 0) {
-            $qb->andWhere($qb->expr()->in(
-                'd.id',
-                $documentIds
-            ));
-        }
+        $qb->andWhere($qb->expr()->in(
+            'd.id',
+            $qb1->getQuery()->getDQL()
+        ))
+            ->setParameter('raw', false);
 
         return $qb;
     }
