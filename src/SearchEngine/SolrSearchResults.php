@@ -168,6 +168,7 @@ class SolrSearchResults implements SearchResultsInterface
      * @return mixed Can return any type.
      * @since 5.0
      */
+    #[\ReturnTypeWillChange]
     public function current()
     {
         return $this->getResultItems()[$this->position];
@@ -192,6 +193,7 @@ class SolrSearchResults implements SearchResultsInterface
      * @return string|float|int|bool|null scalar on success, or null on failure.
      * @since 5.0
      */
+    #[\ReturnTypeWillChange]
     public function key()
     {
         return $this->position;
