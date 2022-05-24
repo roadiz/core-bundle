@@ -106,7 +106,7 @@ final class CustomFormController extends AbstractController
         if ($this->translator instanceof LocaleAwareInterface) {
             $this->translator->setLocale($translation->getPreferredLocale());
         }
-        $schema = json_encode($this->liform->transform($helper->getForm($request)));
+        $schema = json_encode($this->liform->transform($helper->getForm($request, false, false)));
 
         return new JsonResponse(
             $schema,
@@ -153,7 +153,10 @@ final class CustomFormController extends AbstractController
         $mixed = $this->prepareAndHandleCustomFormAssignation(
             $request,
             $customForm,
-            new JsonResponse([], Response::HTTP_ACCEPTED, $headers)
+            new JsonResponse(null, Response::HTTP_ACCEPTED, $headers),
+            false,
+            null,
+            false
         );
 
         if ($mixed instanceof Response) {
@@ -273,12 +276,12 @@ final class CustomFormController extends AbstractController
      *     * form
      * * If form is validated, **RedirectResponse** will be returned.
      *
-     * @param Request          $request
-     * @param CustomForm       $customFormsEntity
+     * @param Request $request
+     * @param CustomForm $customFormsEntity
      * @param Response $response
-     * @param boolean          $forceExpanded
-     * @param string|null      $emailSender
-     *
+     * @param boolean $forceExpanded
+     * @param string|null $emailSender
+     * @param bool $prefix
      * @return array|Response
      * @throws Exception
      */
@@ -287,7 +290,8 @@ final class CustomFormController extends AbstractController
         CustomForm $customFormsEntity,
         Response $response,
         bool $forceExpanded = false,
-        ?string $emailSender = null
+        ?string $emailSender = null,
+        bool $prefix = true
     ) {
         $assignation = [];
         $assignation['customForm'] = $customFormsEntity;
@@ -295,7 +299,8 @@ final class CustomFormController extends AbstractController
         $helper = $this->customFormHelperFactory->createHelper($customFormsEntity);
         $form = $helper->getForm(
             $request,
-            $forceExpanded
+            $forceExpanded,
+            $prefix
         );
         $form->handleRequest($request);
 

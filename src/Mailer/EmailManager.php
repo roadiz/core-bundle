@@ -494,10 +494,10 @@ class EmailManager
     public function getOrigin(): ?Address
     {
         $defaultSender = 'origin@roadiz.io';
-        $defaultSenderName = null;
+        $defaultSenderName = '';
         if (null !== $this->settingsBag && $this->settingsBag->get('email_sender')) {
             $defaultSender = $this->settingsBag->get('email_sender');
-            $defaultSenderName = $this->settingsBag->get('site_name', null);
+            $defaultSenderName = $this->settingsBag->get('site_name', '') ?? '';
         }
         return $this->origin ?? new Address($defaultSender, $defaultSenderName);
     }

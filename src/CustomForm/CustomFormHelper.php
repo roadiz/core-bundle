@@ -55,16 +55,22 @@ class CustomFormHelper
     }
 
     /**
-     * @param Request    $request
-     * @param boolean    $forceExpanded
+     * @param Request $request
+     * @param boolean $forceExpanded
+     * @param bool $prefix
      * @return FormInterface
      */
     public function getForm(
         Request $request,
-        bool $forceExpanded = false
+        bool $forceExpanded = false,
+        bool $prefix = true
     ): FormInterface {
         $defaults = $request->query->all();
-        $name = (new AsciiSlugger())->slug($this->customForm->getName())->snake()->toString();
+        if ($prefix) {
+            $name = (new AsciiSlugger())->slug($this->customForm->getName())->snake()->toString();
+        } else {
+            $name = '';
+        }
         return $this->formFactory->createNamed($name, CustomFormsType::class, $defaults, [
             'recaptcha_public_key' => $this->settingsBag->get('recaptcha_public_key'),
             'recaptcha_private_key' => $this->settingsBag->get('recaptcha_private_key'),
