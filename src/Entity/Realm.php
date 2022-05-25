@@ -12,6 +12,7 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 /**
  * @ORM\Entity
@@ -102,7 +103,7 @@ class Realm extends AbstractEntity implements RealmInterface
      */
     public function getName(): string
     {
-        return $this->name;
+        return $this->name ?? '';
     }
 
     /**
@@ -112,6 +113,9 @@ class Realm extends AbstractEntity implements RealmInterface
     public function setName(string $name): Realm
     {
         $this->name = $name;
+        if (null === $this->serializationGroup) {
+            $this->serializationGroup = (new AsciiSlugger())->slug($this->name, '_')->lower()->toString();
+        }
         return $this;
     }
 
@@ -158,7 +162,9 @@ class Realm extends AbstractEntity implements RealmInterface
      */
     public function setSerializationGroup(?string $serializationGroup): Realm
     {
-        $this->serializationGroup = $serializationGroup;
+        $this->serializationGroup = null !== $serializationGroup ?
+            (new AsciiSlugger())->slug($serializationGroup, '_')->lower()->toString() :
+            (new AsciiSlugger())->slug($this->getName(), '_')->lower()->toString();
         return $this;
     }
 

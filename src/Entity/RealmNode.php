@@ -6,32 +6,34 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\RealmNodeRepository")
  * @ORM\Table(name="realms_nodes", indexes={
  *     @ORM\Index(name="realms_nodes_inheritance_type", columns={"inheritance_type"}),
  *     @ORM\Index(name="realms_nodes_realm", columns={"realm_id"}),
- *     @ORM\Index(name="realms_nodes_node", columns={"node_id"}),
- * })
+ *     @ORM\Index(name="realms_nodes_node", columns={"node_id"})
+ * }, uniqueConstraints={
+ *     @ORM\UniqueConstraint(name="realms_nodes_unique", columns={"node_id", "realm_id"}),
+ *  })
  */
-class RealmNode
+class RealmNode extends AbstractEntity
 {
     /**
-     * @var Node|null
-     * @ORM\Id()
+     * @var Node
      * @ORM\ManyToOne(targetEntity="Node")
-     * @ORM\JoinColumn(name="node_id", referencedColumnName="id", unique=true, onDelete="CASCADE")
+     * @ORM\JoinColumn(name="node_id", referencedColumnName="id", unique=false, nullable=false, onDelete="CASCADE")
      * @Serializer\Exclude()
      * @SymfonySerializer\Ignore()
      */
-    private ?Node $node = null;
+    private Node $node;
     /**
      * @var Realm|null
      * @ORM\ManyToOne(targetEntity="Realm", inversedBy="realmNodes")
-     * @ORM\JoinColumn(name="realm_id", referencedColumnName="id", onDelete="SET NULL")
+     * @ORM\JoinColumn(name="realm_id", referencedColumnName="id", unique=false, nullable=true, onDelete="CASCADE")
      * @Serializer\Exclude()
      * @SymfonySerializer\Ignore()
      */
@@ -44,18 +46,18 @@ class RealmNode
     private string $inheritanceType = RealmInterface::INHERITANCE_AUTO;
 
     /**
-     * @return Node|null
+     * @return Node
      */
-    public function getNode(): ?Node
+    public function getNode(): Node
     {
         return $this->node;
     }
 
     /**
-     * @param Node|null $node
+     * @param Node $node
      * @return RealmNode
      */
-    public function setNode(?Node $node): RealmNode
+    public function setNode(Node $node): RealmNode
     {
         $this->node = $node;
         return $this;

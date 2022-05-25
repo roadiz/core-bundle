@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20220524170905 extends AbstractMigration
+final class Version20220525131842 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -22,7 +22,7 @@ final class Version20220524170905 extends AbstractMigration
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql('CREATE TABLE realms (id INT AUTO_INCREMENT NOT NULL, role_id INT DEFAULT NULL, type VARCHAR(30) NOT NULL, name VARCHAR(255) NOT NULL, plain_password VARCHAR(255) DEFAULT NULL, serialization_group VARCHAR(200) DEFAULT NULL, UNIQUE INDEX UNIQ_7DF2621A5E237E06 (name), INDEX IDX_7DF2621AD60322AC (role_id), INDEX realms_type (type), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         $this->addSql('CREATE TABLE realms_users (realm_id INT NOT NULL, user_id INT NOT NULL, INDEX IDX_AF42698A9DFF5F89 (realm_id), INDEX IDX_AF42698AA76ED395 (user_id), PRIMARY KEY(realm_id, user_id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
-        $this->addSql('CREATE TABLE realms_nodes (node_id INT NOT NULL, realm_id INT DEFAULT NULL, inheritance_type VARCHAR(10) NOT NULL, INDEX realms_nodes_inheritance_type (inheritance_type), INDEX realms_nodes_realm (realm_id), INDEX realms_nodes_node (node_id), PRIMARY KEY(node_id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('CREATE TABLE realms_nodes (id INT AUTO_INCREMENT NOT NULL, node_id INT NOT NULL, realm_id INT DEFAULT NULL, inheritance_type VARCHAR(10) NOT NULL, INDEX realms_nodes_inheritance_type (inheritance_type), INDEX realms_nodes_realm (realm_id), INDEX realms_nodes_node (node_id), UNIQUE INDEX realms_nodes_unique (node_id, realm_id), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
         $this->addSql('ALTER TABLE realms ADD CONSTRAINT FK_7DF2621AD60322AC FOREIGN KEY (role_id) REFERENCES roles (id) ON DELETE SET NULL');
         $this->addSql('ALTER TABLE realms_users ADD CONSTRAINT FK_AF42698A9DFF5F89 FOREIGN KEY (realm_id) REFERENCES realms (id) ON DELETE CASCADE');
         $this->addSql('ALTER TABLE realms_users ADD CONSTRAINT FK_AF42698AA76ED395 FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE');
