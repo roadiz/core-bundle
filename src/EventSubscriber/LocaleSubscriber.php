@@ -42,18 +42,29 @@ final class LocaleSubscriber implements EventSubscriberInterface
     {
         $request = $event->getRequest();
         $locale = $request->query->get('_locale') ?? $request->attributes->get('_locale');
+
+        if ($request->hasPreviousSession()) {
+            $locale = $request->getSession()->get('_locale', null);
+            if (null !== $locale) {
+                $this->setLocale($event, $locale);
+            }
+        }
+
         /*
          * Set default locale
          */
         if (null !== $locale && $locale !== '') {
-            $event->getRequest()->setLocale($locale);
-            \Locale::setDefault($locale);
-            $this->router->getContext()->setParameter('_locale', $locale);
+            $this->setLocale($event, $locale);
         } elseif (null !== $translation = $this->getDefaultTranslation()) {
             $shortLocale = $translation->getLocale();
-            $event->getRequest()->setLocale($shortLocale);
-            \Locale::setDefault($shortLocale);
-            $this->router->getContext()->setParameter('_locale', $shortLocale);
+            $this->setLocale($event, $shortLocale);
         }
+    }
+
+    private function setLocale(RequestEvent $event, string $locale): void
+    {
+        $event->getRequest()->setLocale($locale);
+        \Locale::setDefault($locale);
+        $this->router->getContext()->setParameter('_locale', $locale);
     }
 }
