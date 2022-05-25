@@ -152,7 +152,7 @@ class CustomForm extends AbstractDateTimed
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getEmail(): ?string
     {
@@ -160,11 +160,11 @@ class CustomForm extends AbstractDateTimed
     }
 
     /**
-     * @param string $email
+     * @param string|null $email
      *
      * @return $this
      */
-    public function setEmail(string $email): CustomForm
+    public function setEmail(?string $email): CustomForm
     {
         $this->email = $email;
         return $this;
