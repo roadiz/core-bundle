@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Message;
 
-use RZ\Roadiz\CoreBundle\Entity\RealmNode;
-
 final class ApplyRealmNodeInheritanceMessage implements AsyncMessage
 {
     private int $nodeId;
