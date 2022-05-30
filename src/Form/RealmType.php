@@ -14,6 +14,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\NotNull;
+use Symfony\Component\Validator\Constraints\Regex;
 
 class RealmType extends AbstractType
 {
@@ -27,6 +28,7 @@ class RealmType extends AbstractType
             'constraints' => [
                 new NotNull(),
                 new NotBlank(),
+                new Regex('#^[\w\s]+$#u'),
             ]
         ])->add('type', ChoiceType::class, [
             'label' => 'realm.type',
@@ -36,6 +38,15 @@ class RealmType extends AbstractType
                 'realm.' . RealmInterface::TYPE_PLAIN_PASSWORD => RealmInterface::TYPE_PLAIN_PASSWORD,
                 'realm.' . RealmInterface::TYPE_ROLE => RealmInterface::TYPE_ROLE,
                 'realm.' . RealmInterface::TYPE_USER => RealmInterface::TYPE_USER,
+            ]
+        ])->add('behaviour', ChoiceType::class, [
+            'label' => 'realm.behaviour',
+            'help' => 'realm.behaviour.help',
+            'required' => true,
+            'choices' => [
+                'realm.behaviour_' . RealmInterface::BEHAVIOUR_NONE => RealmInterface::BEHAVIOUR_NONE,
+                'realm.behaviour_' . RealmInterface::BEHAVIOUR_DENY => RealmInterface::BEHAVIOUR_DENY,
+                'realm.behaviour_' . RealmInterface::BEHAVIOUR_HIDE_BLOCKS => RealmInterface::BEHAVIOUR_HIDE_BLOCKS,
             ]
         ])->add('plainPassword', TextType::class, [
             'label' => 'realm.plainPassword',
@@ -48,7 +59,7 @@ class RealmType extends AbstractType
             'empty_data' => null,
             'by_reference' => true,
             'required' => false,
-        ])->add('role', RolesType::class, [
+        ])->add('roleEntity', RoleEntityType::class, [
             'label' => 'realm.role',
             'help' => 'realm.role.help',
             'required' => false,
@@ -64,7 +75,8 @@ class RealmType extends AbstractType
     {
         $resolver->setDefault('data_class', Realm::class);
         $resolver->setDefault('constraints', [
-            new UniqueEntity(['name'])
+            new UniqueEntity(['name']),
+            new UniqueEntity(['serializationGroup'])
         ]);
     }
 }

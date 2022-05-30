@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 
+use RZ\Roadiz\CoreBundle\Event\FilterNodeEvent;
+use RZ\Roadiz\CoreBundle\Event\Node\NodeCreatedEvent;
 use RZ\Roadiz\CoreBundle\Event\Node\NodeUpdatedEvent;
 use RZ\Roadiz\CoreBundle\Event\Realm\AbstractRealmNodeEvent;
 use RZ\Roadiz\CoreBundle\Event\Realm\NodeJoinedRealmEvent;
@@ -36,10 +38,11 @@ final class RealmNodeInheritanceSubscriber implements EventSubscriberInterface
             NodeJoinedRealmEvent::class => 'onNodeJoinedRealm',
             NodeLeftRealmEvent::class => 'onNodeLeftRealm',
             NodeUpdatedEvent::class => 'onNodeUpdated',
+            NodeCreatedEvent::class => 'onNodeUpdated',
         ];
     }
 
-    public function onNodeUpdated(NodeUpdatedEvent $event): void
+    public function onNodeUpdated(FilterNodeEvent $event): void
     {
         /*
          * Do not store objects in async operations to avoid issues with Doctrine Object manager

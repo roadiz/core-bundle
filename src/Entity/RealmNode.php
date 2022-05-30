@@ -15,7 +15,8 @@ use RZ\Roadiz\CoreBundle\Model\RealmInterface;
  * @ORM\Table(name="realms_nodes", indexes={
  *     @ORM\Index(name="realms_nodes_inheritance_type", columns={"inheritance_type"}),
  *     @ORM\Index(name="realms_nodes_realm", columns={"realm_id"}),
- *     @ORM\Index(name="realms_nodes_node", columns={"node_id"})
+ *     @ORM\Index(name="realms_nodes_node", columns={"node_id"}),
+ *     @ORM\Index(name="realms_nodes_node_inheritance_type", columns={"node_id", "inheritance_type"})
  * }, uniqueConstraints={
  *     @ORM\UniqueConstraint(name="realms_nodes_unique", columns={"node_id", "realm_id"}),
  *  })

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -13,11 +14,19 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\String\Slugger\AsciiSlugger;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\RealmRepository")
  * @ORM\Table(name="realms", indexes={
  *     @ORM\Index(columns={"type"}, name="realms_type"),
+ *     @ORM\Index(columns={"behaviour"}, name="realms_behaviour"),
+ * })
+ * @ApiFilter(ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
+ * @ApiFilter(BaseFilter\SearchFilter::class, properties={
+ *     "type": "exact",
+ *     "behaviour": "exact",
+ *     "name": "exact"
  * })
  */
 class Realm extends AbstractEntity implements RealmInterface
@@ -31,9 +40,16 @@ class Realm extends AbstractEntity implements RealmInterface
     private string $type = RealmInterface::TYPE_PLAIN_PASSWORD;
     /**
      * @var string
+     * @ORM\Column(name="behaviour", type="string", length=30, nullable=false, options={"default"="none"})
+     * @Serializer\Groups({"get", "realm", "web_response"})
+     * @SymfonySerializer\Groups({"get", "realm", "web_response"})
+     */
+    private string $behaviour = RealmInterface::BEHAVIOUR_NONE;
+    /**
+     * @var string
      * @ORM\Column(name="name", unique=true)
-     * @Serializer\Groups({"get", "realm"})
-     * @SymfonySerializer\Groups({"get", "realm"})
+     * @Serializer\Groups({"get", "realm", "web_response"})
+     * @SymfonySerializer\Groups({"get", "realm", "web_response"})
      */
     private string $name = '';
     /**
@@ -187,7 +203,7 @@ class Realm extends AbstractEntity implements RealmInterface
     }
 
     /**
-     * @return ArrayCollection|Collection
+     * @return Collection<UserInterface>|ArrayCollection<UserInterface>
      */
     public function getUsers(): Collection
     {
@@ -195,7 +211,7 @@ class Realm extends AbstractEntity implements RealmInterface
     }
 
     /**
-     * @param ArrayCollection|Collection $users
+     * @param Collection<UserInterface>|ArrayCollection<UserInterface> $users
      * @return Realm
      */
     public function setUsers(Collection $users)
@@ -220,5 +236,43 @@ class Realm extends AbstractEntity implements RealmInterface
     {
         $this->plainPassword = $plainPassword;
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBehaviour(): string
+    {
+        return $this->behaviour;
+    }
+
+    /**
+     * @param string $behaviour
+     * @return Realm
+     */
+    public function setBehaviour(string $behaviour): Realm
+    {
+        $this->behaviour = $behaviour;
+        return $this;
+    }
+
+    /**
+     * @return string
+     * @Serializer\Groups({"get", "realm", "web_response"})
+     * @SymfonySerializer\Groups({"get", "realm", "web_response"})
+     */
+    public function getAuthenticationScheme(): string
+    {
+        switch ($this->getType()) {
+            case RealmInterface::TYPE_PLAIN_PASSWORD:
+                return 'PasswordQuery';
+            default:
+                return 'Bearer';
+        }
+    }
+
+    public function getChallenge(): string
+    {
+        return $this->getAuthenticationScheme() . ' realm="' . addslashes($this->getName()) . '"';
     }
 }

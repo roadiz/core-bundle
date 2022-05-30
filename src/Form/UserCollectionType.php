@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\User;
 use Symfony\Bridge\Doctrine\Form\DataTransformer\CollectionToArrayTransformer;
@@ -34,7 +32,6 @@ final class UserCollectionType extends AbstractType
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
-            'users' => new ArrayCollection(),
             'multiple' => true,
             'choice_label' => function (?User $choice) {
                 return $choice ? $choice->getIdentifier() : '';
@@ -43,7 +40,6 @@ final class UserCollectionType extends AbstractType
                 return $choice ? $choice->getId() : '';
             },
         ]);
-        $resolver->setAllowedTypes('users', [Collection::class]);
 
         $resolver->setNormalizer('choices', function () {
             return $this->managerRegistry->getRepository(User::class)->findAll();

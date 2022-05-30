@@ -8,10 +8,11 @@ use ApiPlatform\Core\Annotation\ApiProperty;
 use Doctrine\Common\Collections\Collection;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\Api\Breadcrumbs\BreadcrumbsInterface;
+use RZ\Roadiz\CoreBundle\Model\RealmInterface;
 use RZ\TreeWalker\WalkerInterface;
 use Symfony\Component\Serializer\Annotation as Serializer;
 
-final class WebResponse implements WebResponseInterface
+final class WebResponse implements WebResponseInterface, BlocksAwareWebResponseInterface, RealmsAwareWebResponseInterface
 {
     /**
      * @return string|null
@@ -37,5 +38,69 @@ final class WebResponse implements WebResponseInterface
      * @var Collection<WalkerInterface>|null
      * @Serializer\Groups({"web_response"})
      */
-    public ?Collection $blocks = null;
+    private ?Collection $blocks = null;
+    /**
+     * @var array<RealmInterface>|null
+     * @Serializer\Groups({"web_response"})
+     */
+    private ?array $realms = null;
+    /**
+     * @var bool
+     * @Serializer\Groups({"web_response"})
+     */
+    private bool $hidingBlocks = false;
+
+    /**
+     * @return Collection|null
+     */
+    public function getBlocks(): ?Collection
+    {
+        return $this->blocks;
+    }
+
+    /**
+     * @param Collection|null $blocks
+     * @return WebResponse
+     */
+    public function setBlocks(?Collection $blocks): WebResponse
+    {
+        $this->blocks = $blocks;
+        return $this;
+    }
+
+    /**
+     * @return RealmInterface[]|null
+     */
+    public function getRealms(): ?array
+    {
+        return $this->realms;
+    }
+
+    /**
+     * @param RealmInterface[]|null $realms
+     * @return WebResponse
+     */
+    public function setRealms(?array $realms): WebResponse
+    {
+        $this->realms = $realms;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHidingBlocks(): bool
+    {
+        return $this->hidingBlocks;
+    }
+
+    /**
+     * @param bool $hidingBlocks
+     * @return WebResponse
+     */
+    public function setHidingBlocks(bool $hidingBlocks): WebResponse
+    {
+        $this->hidingBlocks = $hidingBlocks;
+        return $this;
+    }
 }

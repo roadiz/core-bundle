@@ -57,6 +57,10 @@ services:
         autowire: true
         public: true
 
+    RZ\Roadiz\CoreBundle\Serializer\RealmSerializationGroupNormalizer:
+        tags:
+            - { name: 'serializer.normalizer', priority: 64 }
+
     RZ\Roadiz\CoreBundle\Serializer\NodesSourcesPathNormalizer:
         # By default, .inner is passed as argument
         decorates: 'api_platform.jsonld.normalizer.item'
