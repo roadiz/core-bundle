@@ -6,5 +6,4 @@ namespace RZ\Roadiz\CoreBundle\Event\Realm;
 
 final class NodeJoinedRealmEvent extends AbstractRealmNodeEvent
 {
-
 }

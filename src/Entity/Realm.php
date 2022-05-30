@@ -17,6 +17,11 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 
 /**
+ * A Realm is an entity to describe authentication inside an area for API WebResponse.
+ *
+ * It supports plain_password (in query string), role-based and user-based authentication.
+ * All behaviours except for serializationGroups are only applied when using API WebResponse.
+ *
  * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\RealmRepository")
  * @ORM\Table(name="realms", indexes={
  *     @ORM\Index(columns={"type"}, name="realms_type"),
