@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\DataTransformer;
 
-use Doctrine\Persistence\ManagerRegistry;
 use Psr\Cache\CacheItemPoolInterface;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
@@ -14,10 +13,10 @@ use RZ\Roadiz\CoreBundle\Api\Model\WebResponse;
 use RZ\Roadiz\CoreBundle\Api\Model\WebResponseInterface;
 use RZ\Roadiz\CoreBundle\Api\TreeWalker\AutoChildrenNodeSourceWalker;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
+use RZ\Roadiz\CoreBundle\Realm\RealmResolverInterface;
 use RZ\TreeWalker\WalkerContextInterface;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Security\Core\Security;
 
 final class WebResponseOutputDataTransformer implements WebResponseDataTransformerInterface
 {
@@ -29,8 +28,7 @@ final class WebResponseOutputDataTransformer implements WebResponseDataTransform
     private WalkerContextInterface $walkerContext;
     private CacheItemPoolInterface $cacheItemPool;
     private UrlGeneratorInterface $urlGenerator;
-    private ManagerRegistry $managerRegistry;
-    private Security $security;
+    private RealmResolverInterface $realmResolver;
 
     public function __construct(
         NodesSourcesHeadFactory $nodesSourcesHeadFactory,
@@ -38,16 +36,14 @@ final class WebResponseOutputDataTransformer implements WebResponseDataTransform
         WalkerContextInterface $walkerContext,
         CacheItemPoolInterface $cacheItemPool,
         UrlGeneratorInterface $urlGenerator,
-        ManagerRegistry $managerRegistry,
-        Security $security
+        RealmResolverInterface $realmResolver
     ) {
         $this->nodesSourcesHeadFactory = $nodesSourcesHeadFactory;
         $this->breadcrumbsFactory = $breadcrumbsFactory;
         $this->walkerContext = $walkerContext;
         $this->cacheItemPool = $cacheItemPool;
         $this->urlGenerator = $urlGenerator;
-        $this->managerRegistry = $managerRegistry;
-        $this->security = $security;
+        $this->realmResolver = $realmResolver;
     }
 
     protected function getWalkerContext(): WalkerContextInterface
@@ -70,15 +66,11 @@ final class WebResponseOutputDataTransformer implements WebResponseDataTransform
         return AutoChildrenNodeSourceWalker::class;
     }
 
-    protected function getManagerRegistry(): ManagerRegistry
+    protected function getRealmResolver(): RealmResolverInterface
     {
-        return $this->managerRegistry;
+        return $this->realmResolver;
     }
 
-    protected function getSecurity(): Security
-    {
-        return $this->security;
-    }
 
     /**
      * @inheritDoc

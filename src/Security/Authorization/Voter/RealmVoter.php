@@ -31,14 +31,9 @@ final class RealmVoter extends Voter
         return $attribute === self::READ;
     }
 
-    public function supportsType(string $subjectType): bool
-    {
-        return $subjectType === Realm::class;
-    }
-
     protected function supports(string $attribute, $subject)
     {
-        return $this->supportsAttribute($attribute) && $subject instanceof Realm;
+        return $this->supportsAttribute($attribute) && $subject instanceof RealmInterface;
     }
 
     /**
@@ -62,7 +57,7 @@ final class RealmVoter extends Voter
 
     /**
      * @param string $attribute
-     * @param Realm $subject
+     * @param RealmInterface $subject
      * @param TokenInterface $token
      * @return bool
      */
@@ -76,7 +71,7 @@ final class RealmVoter extends Voter
 
     /**
      * @param string $attribute
-     * @param Realm $subject
+     * @param RealmInterface $subject
      * @param TokenInterface $token
      * @return bool
      */
@@ -92,7 +87,7 @@ final class RealmVoter extends Voter
 
     /**
      * @param string $attribute
-     * @param Realm $subject
+     * @param RealmInterface $subject
      * @param TokenInterface $token
      * @return bool
      */

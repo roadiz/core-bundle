@@ -44,6 +44,7 @@ interface RealmInterface
     public function getChallenge(): string;
     public function getBehaviour(): string;
     public function getName(): string;
+    public function getPlainPassword(): ?string;
     public function getRole(): ?string;
     public function getUsers(): Collection;
     public function getSerializationGroup(): ?string;
