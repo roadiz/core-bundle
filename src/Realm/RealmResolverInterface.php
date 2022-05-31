@@ -10,7 +10,11 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 interface RealmResolverInterface
 {
-    public function getRealms(Node $node): array;
+    /**
+     * @param Node|null $node
+     * @return RealmInterface[]
+     */
+    public function getRealms(?Node $node): array;
     public function isGranted(RealmInterface $realm): bool;
 
     /**

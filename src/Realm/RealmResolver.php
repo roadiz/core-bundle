@@ -23,8 +23,11 @@ final class RealmResolver implements RealmResolverInterface
         $this->security = $security;
     }
 
-    public function getRealms(Node $node): array
+    public function getRealms(?Node $node): array
     {
+        if (null === $node) {
+            return [];
+        }
         return $this->managerRegistry->getRepository(Realm::class)->findByNode($node);
     }
 
