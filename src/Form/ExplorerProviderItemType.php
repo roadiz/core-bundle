@@ -81,11 +81,8 @@ class ExplorerProviderItemType extends AbstractType
         $resolver->setAllowedTypes('explorerProvider', [ExplorerProviderInterface::class]);
         $resolver->setAllowedTypes('max_length', ['int']);
         $resolver->setAllowedTypes('min_length', ['int']);
-        $resolver->setAllowedTypes('multiple', ['bool']);
         $resolver->setAllowedTypes('asMultiple', ['bool']);
         $resolver->setAllowedTypes('useCollection', ['bool']);
-
-        $resolver->setDeprecated('multiple');
     }
 
     /**
