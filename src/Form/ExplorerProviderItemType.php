@@ -26,7 +26,7 @@ class ExplorerProviderItemType extends AbstractType
     {
         $builder->addModelTransformer(new ExplorerProviderItemTransformer(
             $options['explorerProvider'],
-            $options['multiple'],
+            $options['asMultiple'],
             $options['useCollection'],
         ));
     }
@@ -48,6 +48,9 @@ class ExplorerProviderItemType extends AbstractType
         if ($options['min_length'] > 0) {
             $view->vars['attr']['data-min-length'] = $options['min_length'];
         }
+        if ($options['asMultiple'] === false) {
+            $view->vars['attr']['data-max-length'] = 1;
+        }
 
         $view->vars['provider_class'] = get_class($options['explorerProvider']);
     }
@@ -68,15 +71,21 @@ class ExplorerProviderItemType extends AbstractType
         parent::configureOptions($resolver);
 
         $resolver->setRequired('explorerProvider');
-        $resolver->setAllowedTypes('explorerProvider', [ExplorerProviderInterface::class]);
+
         $resolver->setDefault('max_length', 0);
         $resolver->setDefault('min_length', 0);
         $resolver->setDefault('multiple', true);
+        $resolver->setDefault('asMultiple', true);
         $resolver->setDefault('useCollection', false);
+
+        $resolver->setAllowedTypes('explorerProvider', [ExplorerProviderInterface::class]);
         $resolver->setAllowedTypes('max_length', ['int']);
         $resolver->setAllowedTypes('min_length', ['int']);
         $resolver->setAllowedTypes('multiple', ['bool']);
+        $resolver->setAllowedTypes('asMultiple', ['bool']);
         $resolver->setAllowedTypes('useCollection', ['bool']);
+
+        $resolver->setDeprecated('multiple');
     }
 
     /**
