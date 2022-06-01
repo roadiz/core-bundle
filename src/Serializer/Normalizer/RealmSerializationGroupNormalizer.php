@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace RZ\Roadiz\CoreBundle\Serializer;
+namespace RZ\Roadiz\CoreBundle\Serializer\Normalizer;
 
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;

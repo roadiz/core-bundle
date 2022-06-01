@@ -51,7 +51,7 @@ final class WebResponse implements WebResponseInterface, BlocksAwareWebResponseI
     private bool $hidingBlocks = false;
 
     /**
-     * @return Collection|null
+     * @return Collection<WalkerInterface>|null
      */
     public function getBlocks(): ?Collection
     {
@@ -59,7 +59,7 @@ final class WebResponse implements WebResponseInterface, BlocksAwareWebResponseI
     }
 
     /**
-     * @param Collection|null $blocks
+     * @param Collection<WalkerInterface>|null $blocks
      * @return WebResponse
      */
     public function setBlocks(?Collection $blocks): WebResponse

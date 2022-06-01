@@ -2,10 +2,8 @@
 
 declare(strict_types=1);
 
-namespace RZ\Roadiz\CoreBundle\Serializer;
+namespace RZ\Roadiz\CoreBundle\Serializer\Normalizer;
 
-use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\ContextAwareNormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
@@ -13,13 +11,13 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerAwareInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
-final class NodesSourcesPathNormalizer implements ContextAwareNormalizerInterface, DenormalizerInterface, SerializerAwareInterface
+abstract class AbstractPathNormalizer implements ContextAwareNormalizerInterface, DenormalizerInterface, SerializerAwareInterface
 {
-    private UrlGeneratorInterface $urlGenerator;
+    protected UrlGeneratorInterface $urlGenerator;
     /**
      * @var DenormalizerInterface&NormalizerInterface
      */
-    private $decorated;
+    protected $decorated;
 
     public function __construct(NormalizerInterface $decorated, UrlGeneratorInterface $urlGenerator)
     {
@@ -29,28 +27,6 @@ final class NodesSourcesPathNormalizer implements ContextAwareNormalizerInterfac
 
         $this->decorated = $decorated;
         $this->urlGenerator = $urlGenerator;
-    }
-
-    /**
-     * @param mixed $object
-     * @param string|null $format
-     * @param array $context
-     * @return array|\ArrayObject|bool|float|int|mixed|string|null
-     * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
-     */
-    public function normalize($object, $format = null, array $context = [])
-    {
-        $data = $this->decorated->normalize($object, $format, $context);
-        if ($object instanceof NodesSources && $object->isReachable() && is_array($data) && !isset($data['url'])) {
-            $data['url'] = $this->urlGenerator->generate(
-                RouteObjectInterface::OBJECT_BASED_ROUTE_NAME,
-                [
-                    RouteObjectInterface::ROUTE_OBJECT => $object
-                ],
-                UrlGeneratorInterface::ABSOLUTE_PATH
-            );
-        }
-        return $data;
     }
 
     public function supportsNormalization($data, $format = null, array $context = []): bool
@@ -69,6 +45,7 @@ final class NodesSourcesPathNormalizer implements ContextAwareNormalizerInterfac
      * @param string|null $format
      * @param array $context
      * @return mixed
+     * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
      */
     public function denormalize($data, $class, $format = null, array $context = [])
     {

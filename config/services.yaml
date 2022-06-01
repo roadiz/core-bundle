@@ -57,24 +57,16 @@ services:
         autowire: true
         public: true
 
-    RZ\Roadiz\CoreBundle\Serializer\RealmSerializationGroupNormalizer:
+    RZ\Roadiz\CoreBundle\Serializer\Normalizer\RealmSerializationGroupNormalizer:
         tags:
             - { name: 'serializer.normalizer', priority: 64 }
 
-    RZ\Roadiz\CoreBundle\Serializer\NodesSourcesPathNormalizer:
+    RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer:
         # By default, .inner is passed as argument
         decorates: 'api_platform.jsonld.normalizer.item'
     # Need a different name to avoid duplicate YAML key
     roadiz_core.serializer.normalizer.nodes_sources_path.json:
-        class: 'RZ\Roadiz\CoreBundle\Serializer\NodesSourcesPathNormalizer'
-        decorates: 'api_platform.serializer.normalizer.item'
-
-    RZ\TreeWalker\Serializer\TreeWalkerNormalizer:
-        # By default, .inner is passed as argument
-        decorates: 'api_platform.jsonld.normalizer.item'
-    # Need a different name to avoid duplicate YAML key
-    roadiz_core.serializer.normalizer.tree_walker.json:
-        class: 'RZ\TreeWalker\Serializer\TreeWalkerNormalizer'
+        class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer'
         decorates: 'api_platform.serializer.normalizer.item'
 
     Limenius\Liform\LiformInterface:
@@ -98,7 +90,7 @@ services:
         tags:
             - { name: liform.transformer, form_type: file, widget: file }
 
-    RZ\Roadiz\CoreBundle\Serializer\TranslationAwareNormalizer:
+    RZ\Roadiz\CoreBundle\Serializer\Normalizer\TranslationAwareNormalizer:
         tags:
             - { name: 'serializer.normalizer', priority: 64 }
 
