@@ -105,8 +105,8 @@ class UniqueNodeGenerator
 
         if ($request->get('tagId') > 0) {
             $tag = $this->managerRegistry
-                        ->getRepository(Tag::class)
-                        ->find((int) $request->get('tagId'));
+                ->getRepository(Tag::class)
+                ->find((int) $request->get('tagId'));
         } else {
             $tag = null;
         }
@@ -132,10 +132,17 @@ class UniqueNodeGenerator
                         ->getRepository(Translation::class)
                         ->find((int) $request->get('translationId'));
                 } else {
-                    /** @var Translation $translation */
-                    $translation = $this->managerRegistry
-                                        ->getRepository(Translation::class)
-                                        ->findDefault();
+                    /*
+                     * If parent has only on translation, use parent translation instead of default one.
+                     */
+                    if (null !== $parent && $parent->getNodeSources()->count() === 1) {
+                        $translation = $parent->getNodeSources()->first()->getTranslation();
+                    } else {
+                        /** @var Translation $translation */
+                        $translation = $this->managerRegistry
+                            ->getRepository(Translation::class)
+                            ->findDefault();
+                    }
                 }
 
                 return $this->generate(
