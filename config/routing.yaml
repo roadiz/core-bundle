@@ -39,6 +39,11 @@ customFormSentAction:
     requirements:
         customFormId: "[0-9]+"
 
+healthCheckAction:
+    methods: [GET]
+    path:     /health-check
+    controller: RZ\Roadiz\CoreBundle\Controller\HealthCheckController
+
 roadiz_core_themes:
     resource: .
     type: themes

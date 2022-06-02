@@ -1,8 +1,10 @@
 ---
 parameters:
     env(APP_NAMESPACE): "roadiz"
+    env(APP_VERSION): "0.1.0"
     env(APP_USE_ACCEPT_LANGUAGE_HEADER): 'false'
     env(APP_UNSPLASH_CLIENT_ID): ~
+    env(APP_HEALTH_CHECK_TOKEN): ~
     env(OPEN_ID_CLIENT_ID): ~
     env(OPEN_ID_CLIENT_SECRET): ~
     env(OPEN_ID_HOSTED_DOMAIN): ~
@@ -17,6 +19,7 @@ services:
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         bind:
             $cmsVersion: '2.0.0'
+            $appVersion: '%roadiz_core.app_version%'
             $cmsVersionPrefix: 'alpha'
             $staticDomain: '%roadiz_core.static_domain_name%'
             $inheritanceType: '%roadiz_core.inheritance_type%'
@@ -30,6 +33,7 @@ services:
             $defaultControllerClass: '%roadiz_core.default_node_source_controller%'
             $webhookMessageTypes: '%roadiz_core.webhook.message_types%'
             $useAcceptLanguageHeader: '%roadiz_core.use_accept_language_header%'
+            $healthCheckToken: '%roadiz_core.health_check_token%'
 
     RZ\Roadiz\CoreBundle\:
         resource: '../src/'

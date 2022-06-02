@@ -65,6 +65,8 @@ class RoadizCoreExtension extends Extension
         $config = $this->processConfiguration($configuration, $configs);
 
         $container->setParameter('roadiz_core.app_namespace', $config['appNamespace']);
+        $container->setParameter('roadiz_core.app_version', $config['appVersion']);
+        $container->setParameter('roadiz_core.health_check_token', $config['healthCheckToken']);
         $container->setParameter('roadiz_core.inheritance_type', $config['inheritance']['type']);
         $container->setParameter('roadiz_core.static_domain_name', $config['staticDomainName'] ?? '');
         $container->setParameter('roadiz_core.private_key_name', $config['security']['private_key_name']);
