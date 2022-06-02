@@ -201,6 +201,14 @@ class CustomFormsType extends AbstractType
         }
 
         switch ($field->getType()) {
+            case AbstractField::DATETIME_T:
+                $option["widget"] = 'single_text';
+                $option["format"] = DateTimeType::HTML5_FORMAT;
+                break;
+            case AbstractField::DATE_T:
+                $option["widget"] = 'single_text';
+                $option["format"] = DateType::HTML5_FORMAT;
+                break;
             case AbstractField::ENUM_T:
                 if ($field->getPlaceholder() !== '') {
                     $option['placeholder'] = $field->getPlaceholder();
