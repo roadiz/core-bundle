@@ -28,6 +28,7 @@ final class DocumentArchiver
     /**
      * @param array $documents
      * @param string $name
+     * @param bool $keepFolders
      * @return string Zip file path
      */
     public function archive(array $documents, string $name, bool $keepFolders = true): string

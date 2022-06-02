@@ -14,6 +14,7 @@ use RZ\Roadiz\Core\Models\AbstractDocument;
 use RZ\Roadiz\Core\Models\AdvancedDocumentInterface;
 use RZ\Roadiz\Core\Models\DisplayableInterface;
 use RZ\Roadiz\Core\Models\DocumentInterface;
+use RZ\Roadiz\Core\Models\FileHashInterface;
 use RZ\Roadiz\Core\Models\FolderInterface;
 use RZ\Roadiz\Core\Models\HasThumbnailInterface;
 use RZ\Roadiz\Core\Models\SizeableInterface;
@@ -35,6 +36,9 @@ use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
  *     @ORM\Index(columns={"raw", "created_at"}, name="document_raw_created_at"),
  *     @ORM\Index(columns={"private"}),
  *     @ORM\Index(columns={"filename"}, name="document_filename"),
+ *     @ORM\Index(columns={"file_hash"}, name="document_file_hash"),
+ *     @ORM\Index(columns={"file_hash_algorithm"}, name="document_hash_algorithm"),
+ *     @ORM\Index(columns={"file_hash", "file_hash_algorithm"}, name="document_file_hash_algorithm"),
  *     @ORM\Index(columns={"embedId"}, name="document_embed_id"),
  *     @ORM\Index(columns={"embedId", "embedPlatform"}, name="document_embed_platform_id"),
  *     @ORM\Index(columns={"embedPlatform"}, name="document_embed_platform"),
@@ -53,7 +57,7 @@ use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
  *     "filesize"
  * })
  */
-class Document extends AbstractDocument implements AdvancedDocumentInterface, HasThumbnailInterface, SizeableInterface, TimeableInterface, DisplayableInterface
+class Document extends AbstractDocument implements AdvancedDocumentInterface, HasThumbnailInterface, SizeableInterface, TimeableInterface, DisplayableInterface, FileHashInterface
 {
     /**
      * @ORM\OneToOne(targetEntity="Document", inversedBy="downscaledDocument", cascade={"all"}, fetch="EXTRA_LAZY")
@@ -78,6 +82,20 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @Serializer\Type("string")
      */
     protected ?string $embedId = null;
+    /**
+     * @ORM\Column(type="string", length=64, name="file_hash", unique=false, nullable=true)
+     * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
+     * @Serializer\Type("string")
+     */
+    protected ?string $fileHash = null;
+    /**
+     * @ORM\Column(type="string", length=15, name="file_hash_algorithm", unique=false, nullable=true)
+     * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
+     * @Serializer\Type("string")
+     */
+    protected ?string $fileHashAlgorithm = null;
     /**
      * @ORM\Column(type="string", name="embedPlatform", unique=false, nullable=true)
      * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
@@ -760,6 +778,42 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     public function needsThumbnail(): bool
     {
         return !$this->isProcessable();
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getFileHash(): ?string
+    {
+        return $this->fileHash;
+    }
+
+    /**
+     * @param string|null $hash
+     * @return Document
+     */
+    public function setFileHash(?string $hash): Document
+    {
+        $this->fileHash = $hash;
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getFileHashAlgorithm(): ?string
+    {
+        return $this->fileHashAlgorithm;
+    }
+
+    /**
+     * @param string|null $algorithm
+     * @return Document
+     */
+    public function setFileHashAlgorithm(?string $algorithm): Document
+    {
+        $this->fileHashAlgorithm = $algorithm;
+        return $this;
     }
 
     /**
