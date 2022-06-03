@@ -589,4 +589,44 @@ final class DocumentRepository extends EntityRepository
 
         return $qb;
     }
+
+    /**
+     * @return Document[]
+     */
+    public function findAllWithoutFileHash(): array
+    {
+        $qb = $this->createQueryBuilder('d');
+        return $qb->andWhere($qb->expr()->isNull('d.fileHash'))
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function getDuplicatesQueryBuilder(): QueryBuilder
+    {
+        $qb = $this->createQueryBuilder('d2');
+        $qb->select('d2.fileHash')
+            ->addGroupBy('d2.fileHash')
+            ->addGroupBy('d2.fileHashAlgorithm')
+            ->andWhere($qb->expr()->eq('d2.raw', ':raw'))
+            ->andHaving($qb->expr()->gt($qb->expr()->count('d2.fileHash'), 1))
+            ->andHaving($qb->expr()->gt($qb->expr()->count('d2.fileHashAlgorithm'), 1));
+
+
+        $qb2 = $this->createQueryBuilder('d');
+        $qb2->andWhere($qb2->expr()->in('d.fileHash', $qb->getDQL()))
+            ->setParameter(':raw', false)
+            ->addOrderBy('d.fileHashAlgorithm', 'ASC')
+            ->addOrderBy('d.fileHash', 'ASC')
+        ;
+
+        return $qb2;
+    }
+
+    /**
+     * @return Document[]
+     */
+    public function findDuplicates(): array
+    {
+        return $this->getDuplicatesQueryBuilder()->getQuery()->getResult();
+    }
 }
