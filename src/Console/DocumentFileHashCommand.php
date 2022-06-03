@@ -46,11 +46,11 @@ class DocumentFileHashCommand extends Command
 
         $batchSize = 20;
         $i = 0;
-        $algorithm = $input->getOption('algorithm') ?? 'sha256';
-        if (!\in_array($algorithm, \hash_algos())) {
+        $defaultAlgorithm = $input->getOption('algorithm') ?? 'sha256';
+        if (!\in_array($defaultAlgorithm, \hash_algos())) {
             throw new \RuntimeException(sprintf(
                 '“%s” algorithm is not available. Choose one from \hash_algos() method (%s)',
-                $algorithm,
+                $defaultAlgorithm,
                 implode(', ', \hash_algos())
             ));
         }
@@ -60,7 +60,7 @@ class DocumentFileHashCommand extends Command
         $count = count($documents);
 
         if ($count <= 0) {
-            $this->io->warning('All document files have hash.');
+            $this->io->success('All document files have hash.');
             return 0;
         }
 
@@ -68,9 +68,12 @@ class DocumentFileHashCommand extends Command
         /** @var Document $document */
         foreach ($documents as $document) {
             $documentPath = $this->packages->getDocumentFilePath($document);
-            if (false !== $fileHash = \hash_file($algorithm, $documentPath)) {
-                $document->setFileHash($fileHash);
-                $document->setFileHashAlgorithm($algorithm);
+            $algorithm = $document->getFileHashAlgorithm() ?? $defaultAlgorithm;
+            if (\file_exists($documentPath)) {
+                if (false !== $fileHash = \hash_file($algorithm, $documentPath)) {
+                    $document->setFileHash($fileHash);
+                    $document->setFileHashAlgorithm($algorithm);
+                }
             }
 
             if (($i % $batchSize) === 0) {
