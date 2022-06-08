@@ -25,7 +25,7 @@ final class ApplyRealmNodeInheritanceMessageHandler implements MessageHandlerInt
         $this->handlerFactory = $handlerFactory;
     }
 
-    public function __invoke(ApplyRealmNodeInheritanceMessage $message)
+    public function __invoke(ApplyRealmNodeInheritanceMessage $message): void
     {
         if ($message->getRealmId() === null) {
             return;

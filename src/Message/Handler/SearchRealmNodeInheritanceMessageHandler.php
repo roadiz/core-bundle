@@ -37,7 +37,7 @@ final class SearchRealmNodeInheritanceMessageHandler implements MessageHandlerIn
         $this->logger = $logger;
     }
 
-    public function __invoke(SearchRealmNodeInheritanceMessage $message)
+    public function __invoke(SearchRealmNodeInheritanceMessage $message): void
     {
         /** @var Node|null $node */
         $node = $this->managerRegistry->getRepository(Node::class)->find($message->getNodeId());

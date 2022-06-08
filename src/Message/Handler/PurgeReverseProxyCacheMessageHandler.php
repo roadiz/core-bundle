@@ -48,7 +48,7 @@ final class PurgeReverseProxyCacheMessageHandler implements MessageHandlerInterf
         $this->bus = $bus;
     }
 
-    public function __invoke(PurgeReverseProxyCacheMessage $message)
+    public function __invoke(PurgeReverseProxyCacheMessage $message): void
     {
         $nodeSource = $this->managerRegistry
             ->getRepository(NodesSources::class)
