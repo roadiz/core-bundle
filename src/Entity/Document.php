@@ -294,7 +294,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getMimeType(): ?string
     {
@@ -302,7 +302,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     }
 
     /**
-     * @param string $mimeType
+     * @param string|null $mimeType
      *
      * @return $this
      */
