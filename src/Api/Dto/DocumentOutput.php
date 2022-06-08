@@ -11,20 +11,20 @@ use Symfony\Component\Serializer\Annotation\Groups;
 final class DocumentOutput
 {
     /**
-     * @var string
+     * @var string|null
      * @Groups({"document", "document_display"})
      */
-    public string $relativePath = '';
+    public ?string $relativePath = null;
     /**
      * @var string
      * @Groups({"document", "document_display"})
      */
     public string $type = '';
     /**
-     * @var string
+     * @var string|null
      * @Groups({"document", "document_display"})
      */
-    public string $mimeType = '';
+    public ?string $mimeType = null;
     /**
      * @var string|null
      * @Groups({"document", "document_display"})
