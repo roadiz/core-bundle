@@ -306,7 +306,7 @@ class CustomFormsType extends AbstractType
             'recaptcha_public_key' => null,
             'recaptcha_private_key' => null,
             'recaptcha_verifyurl' => null,
-            'recaptcha_name' => 'g-recaptcha-response',
+            'recaptcha_name' => Recaptcha::FORM_NAME,
             'forceExpanded' => false,
             'csrf_protection' => false,
         ]);

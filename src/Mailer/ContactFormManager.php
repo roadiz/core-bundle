@@ -30,6 +30,7 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
+use Symfony\Component\String\UnicodeString;
 use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\NotNull;
@@ -280,7 +281,7 @@ class ContactFormManager extends EmailManager
      */
     public function withGoogleRecaptcha(
         string $name = 'recaptcha',
-        string $validatorFieldName = 'g-recaptcha-response'
+        string $validatorFieldName = Recaptcha::FORM_NAME
     ) {
         $publicKey = $this->settingsBag->get('recaptcha_public_key');
         $privateKey = $this->settingsBag->get('recaptcha_private_key');
@@ -456,7 +457,11 @@ class ContactFormManager extends EmailManager
     protected function findEmailData(array $formData): ?string
     {
         foreach ($formData as $key => $value) {
-            if (is_string($key) && $key === 'email' && is_string($value)) {
+            if (
+                (new UnicodeString($key))->containsAny('email') &&
+                is_string($value) &&
+                filter_var($value, FILTER_VALIDATE_EMAIL)
+            ) {
                 return $value;
             } elseif (is_array($value) && count($value) > 0) {
                 return $this->findEmailData($value);
@@ -473,7 +478,7 @@ class ContactFormManager extends EmailManager
     protected function handleFormData(FormInterface $form)
     {
         $formData = $form->getData();
-        $fields = $this->flattenFormData($formData, []);
+        $fields = $this->flattenFormData($form, []);
 
         /*
          * Sender email
@@ -518,36 +523,52 @@ class ContactFormManager extends EmailManager
         ];
     }
 
-    protected function isFieldPrivate($key): bool
+    protected function isFieldPrivate(FormInterface $form): bool
     {
-        return is_string($key) && substr($key, 0, 1) === '_';
+        $key = $form->getName();
+        $privateFieldNames = [
+            Recaptcha::FORM_NAME,
+            'recaptcha'
+        ];
+        return
+            is_string($key) &&
+            (substr($key, 0, 1) === '_' || \in_array($key, $privateFieldNames))
+        ;
     }
 
     /**
-     * @param array $formData
+     * @param FormInterface $form
      * @param array $fields
      * @return array
      */
-    protected function flattenFormData(array $formData, array $fields): array
+    protected function flattenFormData(FormInterface $form, array $fields): array
     {
-        foreach ($formData as $key => $value) {
-            if ($this->isFieldPrivate($key) || $value instanceof UploadedFile) {
+        /** @var FormInterface $formItem */
+        foreach ($form as $formItem) {
+            $key = $formItem->getName();
+            $value = $formItem->getData();
+            $displayName = $formItem->getConfig()->getOption("label") ??
+                (is_numeric($key) ? null : strip_tags(trim((string) $key)));
+
+            if ($this->isFieldPrivate($formItem) || $value instanceof UploadedFile) {
                 continue;
-            } elseif (is_array($value) && count($value) > 0) {
-                $fields[] = [
-                    'name' => strip_tags((string) $key),
-                    'value' => null,
-                ];
-                $fields = $this->flattenFormData($value, $fields);
+            } elseif ($formItem->count() > 0) {
+                if (!empty($displayName)) {
+                    $fields[] = [
+                        'name' => $displayName,
+                        'value' => null,
+                    ];
+                }
+                $fields = $this->flattenFormData($formItem, $fields);
             } elseif (!empty($value)) {
                 if ($value instanceof \DateTimeInterface) {
                     $displayValue = $value->format('Y-m-d H:i:s');
                 } else {
                     $displayValue = strip_tags(trim((string) $value));
                 }
-                $name = is_numeric($key) ? null : strip_tags(trim((string) $key));
+
                 $fields[] = [
-                    'name' => $name,
+                    'name' => $displayName,
                     'value' => $displayValue,
                 ];
             }
