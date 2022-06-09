@@ -42,7 +42,7 @@ final class NodesSourcesExtension extends AbstractExtension
         $this->nodeSourceApi = $nodeSourceApi;
     }
 
-    public function getFilters()
+    public function getFilters(): array
     {
         return [
             new TwigFilter('children', [$this, 'getChildren']),
@@ -56,7 +56,7 @@ final class NodesSourcesExtension extends AbstractExtension
         ];
     }
 
-    public function getTests()
+    public function getTests(): array
     {
         $tests = [];
 

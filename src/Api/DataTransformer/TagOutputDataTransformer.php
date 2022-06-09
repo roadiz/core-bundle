@@ -15,7 +15,7 @@ class TagOutputDataTransformer implements DataTransformerInterface
     /**
      * @inheritDoc
      */
-    public function transform($data, string $to, array $context = [])
+    public function transform($data, string $to, array $context = []): object
     {
         if (!$data instanceof Tag) {
             throw new \InvalidArgumentException('Data to transform must be instance of ' . Tag::class);
@@ -24,6 +24,9 @@ class TagOutputDataTransformer implements DataTransformerInterface
         $output->slug = $data->getTagName();
         $output->color = $data->getColor();
         $output->visible = $data->isVisible();
+        if ($data->getParent() instanceof Tag) {
+            $output->parent = $data->getParent();
+        }
 
         if (isset($context['translation']) && $context['translation'] instanceof TranslationInterface) {
             $translatedData = $data->getTranslatedTagsByTranslation($context['translation'])->first() ?: null;

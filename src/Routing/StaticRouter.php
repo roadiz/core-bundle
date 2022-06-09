@@ -39,9 +39,9 @@ class StaticRouter extends Router
     }
 
     /**
-     * @return null|DeferredRouteCollection|RouteCollection
+     * @return RouteCollection
      */
-    public function getRouteCollection()
+    public function getRouteCollection(): RouteCollection
     {
         if (null === $this->collection) {
             $this->routeCollection->parseResources();

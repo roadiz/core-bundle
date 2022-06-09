@@ -16,7 +16,7 @@ class DocumentOutputDataTransformer implements DataTransformerInterface
     /**
      * @inheritDoc
      */
-    public function transform($data, string $to, array $context = [])
+    public function transform($data, string $to, array $context = []): object
     {
         if (!$data instanceof Document) {
             throw new \InvalidArgumentException('Data to transform must be instance of ' . DocumentInterface::class);
@@ -25,10 +25,14 @@ class DocumentOutputDataTransformer implements DataTransformerInterface
         $output->relativePath = $data->getRelativePath();
         $output->processable = $data->isProcessable();
         $output->type = $data->getShortType();
+        $output->imageWidth = $data->getImageWidth();
+        $output->imageHeight = $data->getImageHeight();
+        $output->mimeType = $data->getMimeType();
         $output->alt = $data->getFilename();
         $output->embedId = $data->getEmbedId();
         $output->embedPlatform = $data->getEmbedPlatform();
         $output->imageAverageColor = $data->getImageAverageColor();
+        $output->mediaDuration = $data->getMediaDuration();
         $output->folders = $data->getFolders()->toArray();
 
         if (false !== $data->getThumbnails()->first()) {
@@ -42,6 +46,7 @@ class DocumentOutputDataTransformer implements DataTransformerInterface
                 $output->description = $translatedData->getDescription();
                 $output->copyright = $translatedData->getCopyright();
                 $output->alt = !empty($translatedData->getName()) ? $translatedData->getName() : $data->getFilename();
+                $output->externalUrl = $translatedData->getExternalUrl();
             }
         }
         return $output;

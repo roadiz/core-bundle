@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Mailer;
 
-use RZ\Roadiz\CoreBundle\Form\Constraint\Recaptcha;
-use RZ\Roadiz\CoreBundle\Form\HoneypotType;
-use RZ\Roadiz\CoreBundle\Form\RecaptchaType;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Exception\BadFormRequestException;
+use RZ\Roadiz\CoreBundle\Form\Constraint\Recaptcha;
+use RZ\Roadiz\CoreBundle\Form\Error\FormErrorSerializerInterface;
+use RZ\Roadiz\CoreBundle\Form\HoneypotType;
+use RZ\Roadiz\CoreBundle\Form\RecaptchaType;
 use RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
@@ -29,6 +30,7 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
+use Symfony\Component\String\UnicodeString;
 use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\NotNull;
@@ -58,6 +60,7 @@ class ContactFormManager extends EmailManager
     ];
     protected int $maxFileSize = 5242880; // 5MB
     protected FormFactoryInterface $formFactory;
+    protected FormErrorSerializerInterface $formErrorSerializer;
 
     /**
      * DO NOT DIRECTLY USE THIS CONSTRUCTOR
@@ -70,7 +73,7 @@ class ContactFormManager extends EmailManager
      * @param MailerInterface $mailer
      * @param Settings $settingsBag
      * @param DocumentUrlGeneratorInterface $documentUrlGenerator
-     *
+     * @param FormErrorSerializerInterface $formErrorSerializer
      */
     public function __construct(
         RequestStack $requestStack,
@@ -79,11 +82,13 @@ class ContactFormManager extends EmailManager
         Environment $templating,
         MailerInterface $mailer,
         Settings $settingsBag,
-        DocumentUrlGeneratorInterface $documentUrlGenerator
+        DocumentUrlGeneratorInterface $documentUrlGenerator,
+        FormErrorSerializerInterface $formErrorSerializer
     ) {
         parent::__construct($requestStack, $translator, $templating, $mailer, $settingsBag, $documentUrlGenerator);
 
         $this->formFactory = $formFactory;
+        $this->formErrorSerializer = $formErrorSerializer;
         $this->options = [
             'attr' => [
                 'id' => 'contactForm',
@@ -177,18 +182,18 @@ class ContactFormManager extends EmailManager
     public function withDefaultFields(bool $useHoneypot = true)
     {
         $this->getFormBuilder()->add('email', EmailType::class, [
-                'label' => 'your.email',
-                'constraints' => [
-                    new NotNull(),
-                    new NotBlank(),
-                    new Email([
-                        'message' => 'email.not.valid',
-                        'mode' => $this->isEmailStrictMode() ?
-                            Email::VALIDATION_MODE_STRICT :
-                            Email::VALIDATION_MODE_LOOSE
-                    ]),
-                ],
-            ])
+            'label' => 'your.email',
+            'constraints' => [
+                new NotNull(),
+                new NotBlank(),
+                new Email([
+                    'message' => 'email.not.valid',
+                    'mode' => $this->isEmailStrictMode() ?
+                        Email::VALIDATION_MODE_STRICT :
+                        Email::VALIDATION_MODE_LOOSE
+                ]),
+            ],
+        ])
             ->add('name', TextType::class, [
                 'label' => 'your.name',
                 'constraints' => [
@@ -276,7 +281,7 @@ class ContactFormManager extends EmailManager
      */
     public function withGoogleRecaptcha(
         string $name = 'recaptcha',
-        string $validatorFieldName = 'g-recaptcha-response'
+        string $validatorFieldName = Recaptcha::FORM_NAME
     ) {
         $publicKey = $this->settingsBag->get('recaptcha_public_key');
         $privateKey = $this->settingsBag->get('recaptcha_private_key');
@@ -292,7 +297,7 @@ class ContactFormManager extends EmailManager
                     'publicKey' => $publicKey,
                 ],
                 'constraints' => [
-                    new Recaptcha($this->getRequest(), [
+                    new Recaptcha([
                         'fieldName' => $validatorFieldName,
                         'privateKey' => $privateKey,
                         'verifyUrl' => $verifyUrl,
@@ -324,18 +329,13 @@ class ContactFormManager extends EmailManager
             ($request->attributes->has('_format') && $request->attributes->get('_format') === 'json');
 
         if ($this->form->isSubmitted()) {
-            if ($this->form->isSubmitted() && $this->form->isValid()) {
+            if ($this->form->isValid()) {
                 try {
                     $this->handleFiles();
                     $this->handleFormData($this->form);
                     $this->send();
                     if ($returnJson) {
-                        $responseArray = [
-                            'statusCode' => Response::HTTP_OK,
-                            'status' => 'success',
-                            'message' => $this->translator->trans($this->successMessage),
-                        ];
-                        return new JsonResponse($responseArray);
+                        return new JsonResponse([], Response::HTTP_ACCEPTED);
                     } else {
                         if ($request->hasPreviousSession()) {
                             /** @var Session $session */
@@ -362,17 +362,9 @@ class ContactFormManager extends EmailManager
                  * If form has errors during AJAX
                  * request we sent them.
                  */
-                $errorPerForm = [];
-                foreach ($this->form as $child) {
-                    if (!$child->isValid()) {
-                        foreach ($child->getErrors() as $error) {
-                            $errorPerForm[$child->getName()][] = $this->translator->trans($error->getMessage());
-                        }
-                    }
-                }
+                $errorPerForm = $this->formErrorSerializer->getErrorsAsArray($this->form);
                 $responseArray = [
-                    'statusCode' => Response::HTTP_BAD_REQUEST,
-                    'status' => 'danger',
+                    'status' => Response::HTTP_BAD_REQUEST,
                     'message' => $this->translator->trans($this->failMessage),
                     'errors' => (string) $this->form->getErrors(),
                     'errorsPerForm' => $errorPerForm,
@@ -459,6 +451,26 @@ class ContactFormManager extends EmailManager
     }
 
     /**
+     * @param array $formData
+     * @return string|null
+     */
+    protected function findEmailData(array $formData): ?string
+    {
+        foreach ($formData as $key => $value) {
+            if (
+                (new UnicodeString($key))->containsAny('email') &&
+                is_string($value) &&
+                filter_var($value, FILTER_VALIDATE_EMAIL)
+            ) {
+                return $value;
+            } elseif (is_array($value) && count($value) > 0) {
+                return $this->findEmailData($value);
+            }
+        }
+        return null;
+    }
+
+    /**
      * @param FormInterface $form
      *
      * @throws \Exception
@@ -466,13 +478,14 @@ class ContactFormManager extends EmailManager
     protected function handleFormData(FormInterface $form)
     {
         $formData = $form->getData();
-        $fields = $this->flattenFormData($formData, []);
+        $fields = $this->flattenFormData($form, []);
 
         /*
          * Sender email
          */
-        if (!empty($formData['email'])) {
-            $this->setSender($formData['email']);
+        $emailData = $this->findEmailData($formData);
+        if (!empty($emailData)) {
+            $this->setSender($emailData);
         }
 
         /**
@@ -510,36 +523,52 @@ class ContactFormManager extends EmailManager
         ];
     }
 
-    protected function isFieldPrivate($key): bool
+    protected function isFieldPrivate(FormInterface $form): bool
     {
-        return is_string($key) && substr($key, 0, 1) === '_';
+        $key = $form->getName();
+        $privateFieldNames = [
+            Recaptcha::FORM_NAME,
+            'recaptcha'
+        ];
+        return
+            is_string($key) &&
+            (substr($key, 0, 1) === '_' || \in_array($key, $privateFieldNames))
+        ;
     }
 
     /**
-     * @param array $formData
+     * @param FormInterface $form
      * @param array $fields
      * @return array
      */
-    protected function flattenFormData(array $formData, array $fields): array
+    protected function flattenFormData(FormInterface $form, array $fields): array
     {
-        foreach ($formData as $key => $value) {
-            if ($this->isFieldPrivate($key) || $value instanceof UploadedFile) {
+        /** @var FormInterface $formItem */
+        foreach ($form as $formItem) {
+            $key = $formItem->getName();
+            $value = $formItem->getData();
+            $displayName = $formItem->getConfig()->getOption("label") ??
+                (is_numeric($key) ? null : strip_tags(trim((string) $key)));
+
+            if ($this->isFieldPrivate($formItem) || $value instanceof UploadedFile) {
                 continue;
-            } elseif (is_array($value) && count($value) > 0) {
-                $fields[] = [
-                    'name' => strip_tags((string) $key),
-                    'value' => null,
-                ];
-                $fields = $this->flattenFormData($value, $fields);
+            } elseif ($formItem->count() > 0) {
+                if (!empty($displayName)) {
+                    $fields[] = [
+                        'name' => $displayName,
+                        'value' => null,
+                    ];
+                }
+                $fields = $this->flattenFormData($formItem, $fields);
             } elseif (!empty($value)) {
                 if ($value instanceof \DateTimeInterface) {
                     $displayValue = $value->format('Y-m-d H:i:s');
                 } else {
                     $displayValue = strip_tags(trim((string) $value));
                 }
-                $name = is_numeric($key) ? null : strip_tags(trim((string) $key));
+
                 $fields[] = [
-                    'name' => $name,
+                    'name' => $displayName,
                     'value' => $displayValue,
                 ];
             }

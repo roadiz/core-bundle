@@ -11,11 +11,8 @@ use Symfony\Contracts\EventDispatcher\Event;
 final class NodesSourcesIndexingEvent extends Event
 {
     protected NodesSources $nodeSource;
-
     protected array $associations;
-
-    protected ?AbstractSolarium $solariumDocument;
-
+    protected AbstractSolarium $solariumDocument;
     protected bool $subResource;
 
     /**
@@ -64,9 +61,9 @@ final class NodesSourcesIndexingEvent extends Event
     }
 
     /**
-     * @return AbstractSolarium|null
+     * @return AbstractSolarium
      */
-    public function getSolariumDocument(): ?AbstractSolarium
+    public function getSolariumDocument(): AbstractSolarium
     {
         return $this->solariumDocument;
     }

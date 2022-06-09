@@ -41,10 +41,7 @@ class UniqueNodeGenerator
      * @param Node|null $parent
      * @param Tag|null $tag
      * @param bool $pushToTop
-     *
      * @return NodesSources
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
      */
     public function generate(
         NodeType $nodeType,
@@ -52,7 +49,7 @@ class UniqueNodeGenerator
         Node $parent = null,
         Tag $tag = null,
         bool $pushToTop = false
-    ) {
+    ): NodesSources {
         $name = $nodeType->getDisplayName() . " " . uniqid();
         $node = new Node($nodeType);
         $node->setTtl($node->getNodeType()->getDefaultTtl());
@@ -108,8 +105,8 @@ class UniqueNodeGenerator
 
         if ($request->get('tagId') > 0) {
             $tag = $this->managerRegistry
-                        ->getRepository(Tag::class)
-                        ->find((int) $request->get('tagId'));
+                ->getRepository(Tag::class)
+                ->find((int) $request->get('tagId'));
         } else {
             $tag = null;
         }
@@ -135,10 +132,17 @@ class UniqueNodeGenerator
                         ->getRepository(Translation::class)
                         ->find((int) $request->get('translationId'));
                 } else {
-                    /** @var Translation $translation */
-                    $translation = $this->managerRegistry
-                                        ->getRepository(Translation::class)
-                                        ->findDefault();
+                    /*
+                     * If parent has only on translation, use parent translation instead of default one.
+                     */
+                    if (null !== $parent && $parent->getNodeSources()->count() === 1) {
+                        $translation = $parent->getNodeSources()->first()->getTranslation();
+                    } else {
+                        /** @var Translation $translation */
+                        $translation = $this->managerRegistry
+                            ->getRepository(Translation::class)
+                            ->findDefault();
+                    }
                 }
 
                 return $this->generate(

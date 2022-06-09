@@ -709,33 +709,12 @@ final class NodeRepository extends StatusAwareRepository
     }
 
     /**
-     * @param UrlAlias $urlAlias
-     *
-     * @return null|Node
-     * @throws NonUniqueResultException
-     */
-    public function findOneWithUrlAlias(UrlAlias $urlAlias): ?Node
-    {
-        $qb = $this->createQueryBuilder(static::NODE_ALIAS);
-        $qb->select('n, ns')
-            ->innerJoin('n.nodeSources', static::NODESSOURCES_ALIAS)
-            ->andWhere($qb->expr()->eq('ns.urlAliases', ':urlAlias'))
-            ->setParameter('urlAlias', $urlAlias)
-            ->setMaxResults(1)
-            ->setCacheable(true);
-
-        $this->alterQueryBuilderWithAuthorizationChecker($qb);
-
-        return $qb->getQuery()->getOneOrNullResult();
-    }
-
-    /**
      * @param string $urlAliasAlias
      *
      * @return null|Node
      * @throws NonUniqueResultException
      */
-    public function findOneWithAliasAndAvailableTranslation($urlAliasAlias)
+    public function findOneWithAliasAndAvailableTranslation(string $urlAliasAlias)
     {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select('n, ns, t, uas')

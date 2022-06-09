@@ -7,7 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Security\User;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\User;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
-use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
+use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
@@ -26,18 +26,7 @@ class UserProvider implements UserProviderInterface
         $this->managerRegistry = $managerRegistry;
     }
 
-    /**
-     * Loads the user for the given username.
-     *
-     * This method must throw UsernameNotFoundException if the user is not
-     * found.
-     *
-     * @param string $username The username
-     *
-     * @return User
-     * @throws UsernameNotFoundException if the user is not found
-     */
-    public function loadUserByUsername($username)
+    public function loadUserByUsername(string $username): UserInterface
     {
         /** @var User|null $user */
         $user = $this->managerRegistry
@@ -47,8 +36,13 @@ class UserProvider implements UserProviderInterface
         if ($user !== null) {
             return $user;
         } else {
-            throw new UsernameNotFoundException();
+            throw new UserNotFoundException();
         }
+    }
+
+    public function loadUserByIdentifier(string $identifier): UserInterface
+    {
+        return $this->loadUserByUsername($identifier);
     }
 
     /**
@@ -63,7 +57,7 @@ class UserProvider implements UserProviderInterface
      * @return User
      * @throws UnsupportedUserException
      */
-    public function refreshUser(UserInterface $user)
+    public function refreshUser(UserInterface $user): UserInterface
     {
         if ($user instanceof User) {
             $manager = $this->managerRegistry->getManagerForClass(User::class);
@@ -78,19 +72,19 @@ class UserProvider implements UserProviderInterface
                 // Always refresh User from database: too much related entities to rely only on token.
                 return $refreshUser;
             } else {
-                throw new UsernameNotFoundException('Token user does not exist anymore, authenticate again…');
+                throw new UserNotFoundException('Token user does not exist anymore, authenticate again…');
             }
         }
         throw new UnsupportedUserException();
     }
+
     /**
      * Whether this provider supports the given user class
      *
      * @param class-string $class
-     *
      * @return bool
      */
-    public function supportsClass($class)
+    public function supportsClass($class): bool
     {
         return $class === User::class;
     }

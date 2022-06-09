@@ -126,6 +126,7 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
 
     /**
      * @return array
+     * @Serializer\Ignore
      */
     protected function getDefaultSeo(): array
     {

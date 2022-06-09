@@ -23,7 +23,6 @@ use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\All;
 use Symfony\Component\Validator\Constraints\Email;
@@ -69,22 +68,22 @@ class CustomFormsType extends AbstractType
          */
         if (
             !empty($options['recaptcha_public_key']) &&
-            !empty($options['recaptcha_private_key']) &&
-            !empty($options['request'])
+            !empty($options['recaptcha_private_key'])
         ) {
             $verifyUrl = !empty($options['recaptcha_verifyurl']) ?
                 $options['recaptcha_verifyurl'] :
                 'https://www.google.com/recaptcha/api/siteverify';
 
-            $builder->add('recaptcha', RecaptchaType::class, [
+            $builder->add($options['recaptcha_name'], RecaptchaType::class, [
                 'label' => false,
                 'configs' => [
                     'publicKey' => $options['recaptcha_public_key'],
                 ],
                 'constraints' => [
-                    new Recaptcha($options['request'], [
+                    new Recaptcha([
                         'privateKey' => $options['recaptcha_private_key'],
                         'verifyUrl' => $verifyUrl,
+                        'fieldName' => $options['recaptcha_name']
                     ]),
                 ],
             ]);
@@ -95,7 +94,7 @@ class CustomFormsType extends AbstractType
      * @param array $options
      * @return array
      */
-    protected function getFieldsByGroups(array $options)
+    protected function getFieldsByGroups(array $options): array
     {
         $fieldsArray = [];
         $fields = $options['customForm']->getFields();
@@ -202,6 +201,14 @@ class CustomFormsType extends AbstractType
         }
 
         switch ($field->getType()) {
+            case AbstractField::DATETIME_T:
+                $option["widget"] = 'single_text';
+                $option["format"] = DateTimeType::HTML5_FORMAT;
+                break;
+            case AbstractField::DATE_T:
+                $option["widget"] = 'single_text';
+                $option["format"] = DateType::HTML5_FORMAT;
+                break;
             case AbstractField::ENUM_T:
                 if ($field->getPlaceholder() !== '') {
                     $option['placeholder'] = $field->getPlaceholder();
@@ -242,7 +249,7 @@ class CustomFormsType extends AbstractType
                     'image/gif',
                 ];
                 if (!empty($field->getDefaultValues())) {
-                    $mimeTypes = explode(',', $field->getDefaultValues() ?? '');
+                    $mimeTypes = explode(',', $field->getDefaultValues());
                     $mimeTypes = array_map('trim', $mimeTypes);
                 }
                 $option['constraints'][] = new All([
@@ -259,8 +266,8 @@ class CustomFormsType extends AbstractType
                 if ($field->getPlaceholder() !== '') {
                     $option['placeholder'] = $field->getPlaceholder();
                 }
-                if ($field->getDefaultValues() !== '') {
-                    $countries = explode(',', $field->getDefaultValues() ?? '');
+                if (!empty($field->getDefaultValues())) {
+                    $countries = explode(',', $field->getDefaultValues());
                     $countries = array_map('trim', $countries);
                     $option['preferred_choices'] = $countries;
                 }
@@ -299,7 +306,7 @@ class CustomFormsType extends AbstractType
             'recaptcha_public_key' => null,
             'recaptcha_private_key' => null,
             'recaptcha_verifyurl' => null,
-            'request' => null,
+            'recaptcha_name' => Recaptcha::FORM_NAME,
             'forceExpanded' => false,
             'csrf_protection' => false,
         ]);
@@ -308,16 +315,16 @@ class CustomFormsType extends AbstractType
 
         $resolver->setAllowedTypes('customForm', [CustomForm::class]);
         $resolver->setAllowedTypes('forceExpanded', ['boolean']);
-        $resolver->setAllowedTypes('request', [Request::class, 'null']);
         $resolver->setAllowedTypes('recaptcha_public_key', ['string', 'null', 'boolean']);
         $resolver->setAllowedTypes('recaptcha_private_key', ['string', 'null', 'boolean']);
         $resolver->setAllowedTypes('recaptcha_verifyurl', ['string', 'null', 'boolean']);
+        $resolver->setAllowedTypes('recaptcha_name', ['string']);
     }
 
     /**
      * @return string
      */
-    public function getBlockPrefix()
+    public function getBlockPrefix(): string
     {
         return 'custom_form_public';
     }

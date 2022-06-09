@@ -11,7 +11,7 @@ class TooManyLoginAttemptsException extends AuthenticationException
     /**
      * {@inheritdoc}
      */
-    public function getMessageKey()
+    public function getMessageKey(): string
     {
         return 'Too many login attemps, wait before trying again.';
     }

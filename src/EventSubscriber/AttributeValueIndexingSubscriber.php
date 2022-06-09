@@ -15,7 +15,7 @@ class AttributeValueIndexingSubscriber implements EventSubscriberInterface
     /**
      * {@inheritdoc}
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             NodesSourcesIndexingEvent::class => 'onNodeSourceIndexing',
@@ -70,11 +70,9 @@ class AttributeValueIndexingSubscriber implements EventSubscriberInterface
                                 $fieldName .= '_t';
                             }
                             /*
-                             * Strip markdown syntax
+                             * Strip Markdown syntax
                              */
-                            $content = $event->getSolariumDocument() ?
-                                $event->getSolariumDocument()->cleanTextContent($data) :
-                                $data;
+                            $content = $event->getSolariumDocument()->cleanTextContent($data);
                             $associations[$fieldName] = $content;
                             $associations['collection_txt'][] = $content;
                             if (null !== $lang) {

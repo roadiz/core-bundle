@@ -54,9 +54,9 @@ class FilesExportCommand extends Command
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
-     * @return int|null|void
+     * @return int
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $fs = new Filesystem();
 
@@ -64,7 +64,7 @@ class FilesExportCommand extends Command
         $privateFileFolder = $this->fileAware->getPrivateFilesPath();
         $fontFileFolder = $this->fileAware->getFontsFilesPath();
 
-        $archiveName = $this->getArchiveFileName((new AsciiSlugger())->slug($this->appNamespace, '_'));
+        $archiveName = $this->getArchiveFileName((new AsciiSlugger())->slug($this->appNamespace, '_')->toString());
         $archivePath = $this->exportDir . DIRECTORY_SEPARATOR . $archiveName;
 
         if (!$fs->exists($this->exportDir)) {

@@ -14,7 +14,7 @@ use Twig\TwigTest;
 
 final class TranslationExtension extends AbstractExtension
 {
-    public function getFilters()
+    public function getFilters(): array
     {
         return [
             new TwigFilter('country_iso', [$this, 'getCountryName']),
@@ -22,7 +22,7 @@ final class TranslationExtension extends AbstractExtension
         ];
     }
 
-    public function getTests()
+    public function getTests(): array
     {
         return [
             new TwigTest('rtl', [$this, 'isLocaleRtl'])

@@ -26,6 +26,7 @@
         "api-platform/core": "^2.6",
         "doctrine/annotations": "^1.0",
         "doctrine/doctrine-bundle": "^2.3",
+        "lexik/jwt-authentication-bundle": "^2.13",
         "doctrine/doctrine-migrations-bundle": "^3.1",
         "doctrine/orm": "^2.8",
         "gedmo/doctrine-extensions": "^2.4 || ^3.0.0",
@@ -99,7 +100,7 @@
         "symfony/phpunit-bridge": "5.4.*",
         "symfony/stopwatch": "5.4.*",
         "php-coveralls/php-coveralls": "^2.4",
-        "phpstan/phpstan": "^0.12.57",
+        "phpstan/phpstan": "^1.5.3",
         "squizlabs/php_codesniffer": "^3.5"
     },
     "config": {
@@ -127,7 +128,7 @@
         },
         {
             "type": "github",
-            "url":  "git@github.com:phpwutz/Liform.git"
+            "url":  "git@github.com:rezozero/Liform.git"
         }
     ]
 }

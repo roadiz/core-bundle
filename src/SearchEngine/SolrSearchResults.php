@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\SearchEngine;
 
 use Doctrine\Persistence\ObjectManager;
+use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use JMS\Serializer\Annotation as JMS;
@@ -81,6 +82,13 @@ class SolrSearchResults implements SearchResultsInterface
                             $key = 'object';
                             if ($object instanceof NodesSources) {
                                 $key = 'nodeSource';
+                            }
+                            if ($object instanceof DocumentInterface) {
+                                $key = 'document';
+                            }
+                            if ($object instanceof DocumentTranslation) {
+                                $key = 'document';
+                                $object = $object->getDocument();
                             }
                             return [
                                 $key => $object,
@@ -160,6 +168,7 @@ class SolrSearchResults implements SearchResultsInterface
      * @return mixed Can return any type.
      * @since 5.0
      */
+    #[\ReturnTypeWillChange]
     public function current()
     {
         return $this->getResultItems()[$this->position];
@@ -172,7 +181,7 @@ class SolrSearchResults implements SearchResultsInterface
      * @return void Any returned value is ignored.
      * @since 5.0
      */
-    public function next()
+    public function next(): void
     {
         ++$this->position;
     }
@@ -184,6 +193,7 @@ class SolrSearchResults implements SearchResultsInterface
      * @return string|float|int|bool|null scalar on success, or null on failure.
      * @since 5.0
      */
+    #[\ReturnTypeWillChange]
     public function key()
     {
         return $this->position;
@@ -197,7 +207,7 @@ class SolrSearchResults implements SearchResultsInterface
      * Returns true on success or false on failure.
      * @since 5.0
      */
-    public function valid()
+    public function valid(): bool
     {
         return isset($this->getResultItems()[$this->position]);
     }
@@ -209,7 +219,7 @@ class SolrSearchResults implements SearchResultsInterface
      * @return void Any returned value is ignored.
      * @since 5.0
      */
-    public function rewind()
+    public function rewind(): void
     {
         $this->position = 0;
     }

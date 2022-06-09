@@ -35,7 +35,7 @@ final class NodesSourcesInheritanceSubscriber implements EventSubscriber
     /**
      * @inheritDoc
      */
-    public function getSubscribedEvents()
+    public function getSubscribedEvents(): array
     {
         return [
             Events::loadClassMetadata,

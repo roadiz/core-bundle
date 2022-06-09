@@ -36,7 +36,7 @@ class SolrResetCommand extends SolrCommand
             ->setDescription('Reset Solr search engine index');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $solr = $this->clientRegistry->getClient();
         $this->io = new SymfonyStyle($input, $output);

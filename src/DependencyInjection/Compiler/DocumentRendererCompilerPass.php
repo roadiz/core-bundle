@@ -6,11 +6,13 @@ namespace RZ\Roadiz\CoreBundle\DependencyInjection\Compiler;
 
 use RZ\Roadiz\Document\Renderer\ChainRenderer;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\Compiler\PriorityTaggedServiceTrait;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Reference;
 
 class DocumentRendererCompilerPass implements CompilerPassInterface
 {
+    use PriorityTaggedServiceTrait;
+
     /**
      * @inheritDoc
      */
@@ -18,13 +20,14 @@ class DocumentRendererCompilerPass implements CompilerPassInterface
     {
         if ($container->has(ChainRenderer::class)) {
             $definition = $container->findDefinition(ChainRenderer::class);
-            $taggedServices = $container->findTaggedServiceIds(
-                'roadiz_core.document_renderer'
+            $references = $this->findAndSortTaggedServices(
+                'roadiz_core.document_renderer',
+                $container
             );
-            foreach ($taggedServices as $id => $tags) {
+            foreach ($references as $reference) {
                 $definition->addMethodCall(
                     'addRenderer',
-                    [new Reference($id)]
+                    [$reference]
                 );
             }
         }

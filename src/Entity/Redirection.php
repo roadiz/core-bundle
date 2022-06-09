@@ -30,7 +30,7 @@ class Redirection extends AbstractDateTimed
     private ?string $redirectUri = null;
 
     /**
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\NodesSources")
+     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\NodesSources", cascade="persist", inversedBy="redirections")
      * @ORM\JoinColumn(name="ns_id", referencedColumnName="id", onDelete="CASCADE")
      * @var NodesSources|null
      */

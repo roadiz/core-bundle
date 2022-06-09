@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Routing;
 
-use Doctrine\Common\Cache\CacheProvider;
+use Psr\Cache\CacheItemPoolInterface;
 use RZ\Roadiz\Utils\Asset\Packages;
 use RZ\Roadiz\Utils\UrlGenerators\AbstractDocumentUrlGenerator;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -17,16 +17,16 @@ final class DocumentUrlGenerator extends AbstractDocumentUrlGenerator
     private UrlGeneratorInterface $urlGenerator;
 
     /**
-     * @param Packages              $packages
+     * @param Packages $packages
      * @param UrlGeneratorInterface $urlGenerator
-     * @param CacheProvider|null    $optionsCacheProvider
+     * @param CacheItemPoolInterface $optionsCacheAdapter
      */
     public function __construct(
         Packages $packages,
         UrlGeneratorInterface $urlGenerator,
-        ?CacheProvider $optionsCacheProvider = null
+        CacheItemPoolInterface $optionsCacheAdapter
     ) {
-        parent::__construct($packages, null, [], $optionsCacheProvider);
+        parent::__construct($packages, $optionsCacheAdapter);
         $this->urlGenerator = $urlGenerator;
     }
 

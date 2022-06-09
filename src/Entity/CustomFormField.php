@@ -29,11 +29,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 class CustomFormField extends AbstractField
 {
     /**
-     * Associates custom form field type to a readable string.
-     *
-     * These string will be used as translation key.
-     *
-     * @var array
+     * @inheritdoc
      */
     public static array $typeToHuman = [
         AbstractField::STRING_T => 'string.type',

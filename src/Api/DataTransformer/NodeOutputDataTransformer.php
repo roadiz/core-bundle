@@ -13,7 +13,7 @@ class NodeOutputDataTransformer implements DataTransformerInterface
     /**
      * @inheritDoc
      */
-    public function transform($data, string $to, array $context = [])
+    public function transform($data, string $to, array $context = []): object
     {
         if (!$data instanceof Node) {
             throw new \InvalidArgumentException('Data to transform must be instance of ' . Node::class);
@@ -21,6 +21,7 @@ class NodeOutputDataTransformer implements DataTransformerInterface
         $output = new NodeOutput();
         $output->nodeName = $data->getNodeName();
         $output->visible = $data->isVisible();
+        $output->position = $data->getPosition();
         $output->tags = $data->getTags()->toArray();
         return $output;
     }

@@ -17,46 +17,45 @@ use RZ\Roadiz\CoreBundle\Event\User\UserEnabledEvent;
 use RZ\Roadiz\CoreBundle\Event\User\UserPasswordChangedEvent;
 use RZ\Roadiz\CoreBundle\Event\User\UserUpdatedEvent;
 use RZ\Roadiz\CoreBundle\Security\User\UserViewer;
-use RZ\Roadiz\Utils\MediaFinders\FacebookPictureFinder;
 use RZ\Roadiz\Random\TokenGenerator;
+use RZ\Roadiz\Utils\MediaFinders\FacebookPictureFinder;
+use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Security\Core\Encoder\EncoderFactoryInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class UserLifeCycleSubscriber implements EventSubscriber
 {
     private UserViewer $userViewer;
     private EventDispatcherInterface $dispatcher;
-    private EncoderFactoryInterface $encoderFactory;
+    private PasswordHasherFactoryInterface $passwordHasherFactory;
     private UrlGeneratorInterface $urlGenerator;
     private LoggerInterface $logger;
 
     /**
      * @param UserViewer $userViewer
      * @param EventDispatcherInterface $dispatcher
-     * @param EncoderFactoryInterface $encoderFactory
+     * @param PasswordHasherFactoryInterface $passwordHasherFactory
      * @param UrlGeneratorInterface $urlGenerator
      * @param LoggerInterface $logger
      */
     public function __construct(
         UserViewer $userViewer,
         EventDispatcherInterface $dispatcher,
-        EncoderFactoryInterface $encoderFactory,
+        PasswordHasherFactoryInterface $passwordHasherFactory,
         UrlGeneratorInterface $urlGenerator,
         LoggerInterface $logger
     ) {
         $this->userViewer = $userViewer;
         $this->dispatcher = $dispatcher;
-        $this->encoderFactory = $encoderFactory;
         $this->urlGenerator = $urlGenerator;
         $this->logger = $logger;
+        $this->passwordHasherFactory = $passwordHasherFactory;
     }
-
 
     /**
      * {@inheritdoc}
      */
-    public function getSubscribedEvents()
+    public function getSubscribedEvents(): array
     {
         return [
             Events::preUpdate,
@@ -69,8 +68,10 @@ class UserLifeCycleSubscriber implements EventSubscriber
 
     /**
      * @param PreUpdateEventArgs $event
+     * @return void
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function preUpdate(PreUpdateEventArgs $event)
+    public function preUpdate(PreUpdateEventArgs $event): void
     {
         $user = $event->getEntity();
         if ($user instanceof User) {
@@ -126,11 +127,8 @@ class UserLifeCycleSubscriber implements EventSubscriber
     protected function setPassword(User $user, ?string $plainPassword)
     {
         if (null !== $plainPassword) {
-            $encoder = $this->encoderFactory->getEncoder($user);
-            $encodedPassword = $encoder->encodePassword(
-                $plainPassword,
-                $user->getSalt()
-            );
+            $hasher = $this->passwordHasherFactory->getPasswordHasher($user);
+            $encodedPassword = $hasher->hash($plainPassword);
             $user->setPassword($encodedPassword);
         }
     }

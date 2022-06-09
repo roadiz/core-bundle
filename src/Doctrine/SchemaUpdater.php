@@ -39,9 +39,12 @@ final class SchemaUpdater
             'command' => 'cache:pool:clear',
             'pools' => [
                 'cache.app',
+                'cache.system',
+                'cache.validator',
+                'cache.serializer',
                 'cache.annotations',
-                'cache.doctrine.orm.default.metadata',
-                'cache.doctrine.orm.default.result',
+                'cache.property_info',
+                'cache.messenger.restart_workers_signal',
             ],
             '--no-interaction' => true,
         ]);

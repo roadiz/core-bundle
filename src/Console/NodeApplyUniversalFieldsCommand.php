@@ -38,7 +38,7 @@ class NodeApplyUniversalFieldsCommand extends Command
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $translation = $this->managerRegistry->getRepository(Translation::class)->findDefault();
         $io = new SymfonyStyle($input, $output);

@@ -9,33 +9,27 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
-use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Routing\RequestContextAwareInterface;
 
-/**
- * Event dispatched to set up theme configuration at kernel request.
- */
 final class LocaleSubscriber implements EventSubscriberInterface
 {
     private ManagerRegistry $managerRegistry;
+    private RequestContextAwareInterface $router;
 
-    /**
-     * @param ManagerRegistry $managerRegistry
-     */
-    public function __construct(ManagerRegistry $managerRegistry)
+    public function __construct(ManagerRegistry $managerRegistry, RequestContextAwareInterface $router)
     {
         $this->managerRegistry = $managerRegistry;
+        $this->router = $router;
     }
 
     /**
      * @return array
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
-        /*
-         * Locale subscriber has HIGH priority over Firewall and Routing
-         */
         return [
-            KernelEvents::REQUEST => ['onKernelRequest', 70],
+            // must be registered just after Symfony\Component\HttpKernel\EventListener\LocaleListener
+            RequestEvent::class => [['onKernelRequest', 16]],
         ];
     }
 
@@ -44,31 +38,33 @@ final class LocaleSubscriber implements EventSubscriberInterface
         return $this->managerRegistry->getRepository(Translation::class)->findDefault();
     }
 
-    /**
-     * After a controller has been matched. We need to inject current
-     * Kernel instance and main DI container.
-     *
-     * @param RequestEvent $event
-     */
     public function onKernelRequest(RequestEvent $event)
     {
-        if ($event->isMainRequest()) {
-            $request = $event->getRequest();
-            /*
-             * Set default locale
-             */
-            if (
-                $request->attributes->has('_locale') &&
-                $request->attributes->get('_locale') !== ''
-            ) {
-                $locale = $request->attributes->get('_locale');
-                $event->getRequest()->setLocale($locale);
-                \Locale::setDefault($locale);
-            } elseif (null !== $translation = $this->getDefaultTranslation()) {
-                $shortLocale = $translation->getLocale();
-                $event->getRequest()->setLocale($shortLocale);
-                \Locale::setDefault($shortLocale);
+        $request = $event->getRequest();
+        $locale = $request->query->get('_locale') ?? $request->attributes->get('_locale');
+
+        if ($request->hasPreviousSession()) {
+            $locale = $request->getSession()->get('_locale', null);
+            if (null !== $locale) {
+                $this->setLocale($event, $locale);
             }
         }
+
+        /*
+         * Set default locale
+         */
+        if (null !== $locale && $locale !== '') {
+            $this->setLocale($event, $locale);
+        } elseif (null !== $translation = $this->getDefaultTranslation()) {
+            $shortLocale = $translation->getLocale();
+            $this->setLocale($event, $shortLocale);
+        }
+    }
+
+    private function setLocale(RequestEvent $event, string $locale): void
+    {
+        $event->getRequest()->setLocale($locale);
+        \Locale::setDefault($locale);
+        $this->router->getContext()->setParameter('_locale', $locale);
     }
 }

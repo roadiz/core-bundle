@@ -63,7 +63,7 @@ abstract class AbstractTypedObjectConstructor implements TypedObjectConstructorI
         if (
             null !== $object &&
             $context->hasAttribute(static::EXCEPTION_ON_EXISTING) &&
-            true === $context->hasAttribute(static::EXCEPTION_ON_EXISTING)
+            true === $context->getAttribute(static::EXCEPTION_ON_EXISTING)
         ) {
             throw new EntityAlreadyExistsException('Object already exists in database.');
         }
@@ -72,7 +72,7 @@ abstract class AbstractTypedObjectConstructor implements TypedObjectConstructorI
             $object = $this->fallbackConstructor->construct($visitor, $metadata, $data, $type, $context);
             if (
                 $context->hasAttribute(static::PERSIST_NEW_OBJECTS) &&
-                true === $context->hasAttribute(static::PERSIST_NEW_OBJECTS)
+                true === $context->getAttribute(static::PERSIST_NEW_OBJECTS)
             ) {
                 $this->entityManager->persist($object);
             }
@@ -86,7 +86,7 @@ abstract class AbstractTypedObjectConstructor implements TypedObjectConstructorI
 
                 if (
                     $context->hasAttribute(static::FLUSH_NEW_OBJECTS) &&
-                    true === $context->hasAttribute(static::FLUSH_NEW_OBJECTS)
+                    true === $context->getAttribute(static::FLUSH_NEW_OBJECTS)
                 ) {
                     $this->entityManager->flush();
                 }

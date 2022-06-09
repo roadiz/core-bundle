@@ -13,27 +13,26 @@ use ParagonIE\Halite\Alerts\InvalidMessage;
 use ParagonIE\HiddenString\HiddenString;
 use Psr\Log\LoggerInterface;
 use RZ\Crypto\Encoder\UniqueKeyEncoderInterface;
+use RZ\Roadiz\CoreBundle\Crypto\UniqueKeyEncoderFactory;
 use RZ\Roadiz\CoreBundle\Entity\Setting;
 
 final class SettingLifeCycleSubscriber implements EventSubscriber
 {
+    private UniqueKeyEncoderFactory $uniqueKeyEncoderFactory;
+    private string $privateKeyName;
     private LoggerInterface $logger;
-    private ?UniqueKeyEncoderInterface $uniqueKeyEncoder;
 
-    /**
-     * @param LoggerInterface $logger
-     * @param UniqueKeyEncoderInterface|null $uniqueKeyEncoder
-     */
-    public function __construct(LoggerInterface $logger, ?UniqueKeyEncoderInterface $uniqueKeyEncoder)
+    public function __construct(LoggerInterface $logger, UniqueKeyEncoderFactory $uniqueKeyEncoderFactory, string $privateKeyName)
     {
+        $this->uniqueKeyEncoderFactory = $uniqueKeyEncoderFactory;
+        $this->privateKeyName = $privateKeyName;
         $this->logger = $logger;
-        $this->uniqueKeyEncoder = $uniqueKeyEncoder;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getSubscribedEvents()
+    public function getSubscribedEvents(): array
     {
         return [
             Events::preUpdate,
@@ -54,31 +53,26 @@ final class SettingLifeCycleSubscriber implements EventSubscriber
                 null !== $setting->getRawValue()
             ) {
                 /*
-                 * Set raw value and do not encode it if setting is not encrypted no more.
+                 * Set raw value and do not encode it if setting is not encrypted anymore.
                  */
-                $this->logger->info(sprintf('Disabled encryption for %s setting.', $setting->getName()));
                 $setting->setValue($setting->getRawValue());
             } elseif (
                 $event->hasChangedField('encrypted') &&
                 $event->getNewValue('encrypted') === true &&
-                null !== $setting->getRawValue() &&
-                null !== $this->getEncoder()
+                null !== $setting->getRawValue()
             ) {
                 /*
                  * Encode value for the first time.
                  */
-                $this->logger->info(sprintf('Encode %s value for the first time.', $setting->getName()));
                 $setting->setValue($this->getEncoder()->encode(new HiddenString($setting->getRawValue())));
             } elseif (
                 $setting->isEncrypted() &&
                 $event->hasChangedField('value') &&
-                null !== $event->getNewValue('value') &&
-                null !== $this->getEncoder()
+                null !== $event->getNewValue('value')
             ) {
                 /*
                  * Encode setting if value has changed
                  */
-                $this->logger->info(sprintf('Encode %s value.', $setting->getName()));
                 $event->setNewValue('value', $this->getEncoder()->encode(new HiddenString($event->getNewValue('value'))));
                 $setting->setClearValue($event->getNewValue('value'));
             }
@@ -94,22 +88,32 @@ final class SettingLifeCycleSubscriber implements EventSubscriber
         if (
             $setting instanceof Setting &&
             $setting->isEncrypted() &&
-            null !== $setting->getRawValue() &&
-            null !== $this->getEncoder()
+            null !== $setting->getRawValue()
         ) {
             try {
-                $this->logger->debug(sprintf('Decode %s value', $setting->getName()));
                 $setting->setClearValue($this->getEncoder()->decode($setting->getRawValue())->getString());
             } catch (InvalidKey $exception) {
-                $this->logger->debug(sprintf('Failed to decode %s value', $setting->getName()));
+                $this->logger->error(
+                    sprintf('Failed to decode "%s" setting value', $setting->getName()),
+                    [
+                        'exception_message' => $exception->getMessage(),
+                        'trace' => $exception->getTraceAsString(),
+                    ]
+                );
             } catch (InvalidMessage $exception) {
-                $this->logger->debug(sprintf('Failed to decode %s value', $setting->getName()));
+                $this->logger->error(
+                    sprintf('Failed to decode "%s" setting value', $setting->getName()),
+                    [
+                        'exception_message' => $exception->getMessage(),
+                        'trace' => $exception->getTraceAsString(),
+                    ]
+                );
             }
         }
     }
 
-    protected function getEncoder(): ?UniqueKeyEncoderInterface
+    protected function getEncoder(): UniqueKeyEncoderInterface
     {
-        return $this->uniqueKeyEncoder;
+        return $this->uniqueKeyEncoderFactory->getEncoder($this->privateKeyName);
     }
 }

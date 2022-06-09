@@ -11,15 +11,20 @@ use Symfony\Component\Serializer\Annotation\Groups;
 final class DocumentOutput
 {
     /**
-     * @var string
+     * @var string|null
      * @Groups({"document", "document_display"})
      */
-    public string $relativePath = '';
+    public ?string $relativePath = null;
     /**
      * @var string
      * @Groups({"document", "document_display"})
      */
     public string $type = '';
+    /**
+     * @var string|null
+     * @Groups({"document", "document_display"})
+     */
+    public ?string $mimeType = null;
     /**
      * @var string|null
      * @Groups({"document", "document_display"})
@@ -46,10 +51,30 @@ final class DocumentOutput
      */
     public ?string $imageAverageColor = null;
     /**
+     * @var int|null
+     * @Groups({"document", "document_display"})
+     */
+    public ?int $imageWidth = null;
+    /**
+     * @var int|null
+     * @Groups({"document", "document_display"})
+     */
+    public ?int $imageHeight = null;
+    /**
+     * @var int|null
+     * @Groups({"document", "document_display"})
+     */
+    public ?int $mediaDuration = null;
+    /**
      * @var string|null
      * @Groups({"document", "document_display"})
      */
     public ?string $copyright = null;
+    /**
+     * @var string|null
+     * @Groups({"document", "document_display"})
+     */
+    public ?string $externalUrl = null;
     /**
      * @var bool
      * @Groups({"document", "document_display"})

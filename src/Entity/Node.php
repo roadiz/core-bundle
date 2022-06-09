@@ -319,26 +319,27 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
+     * @var float|string
      * @ORM\Column(type="decimal", precision=2, scale=1)
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
      */
-    private float $priority = 0.8;
+    private $priority = 0.8;
 
     /**
-     * @return float
+     * @return float|string
      */
-    public function getPriority(): float
+    public function getPriority()
     {
         return $this->priority;
     }
 
     /**
-     * @param float $priority
+     * @param float|string $priority
      * @return $this
      */
-    public function setPriority(float $priority)
+    public function setPriority($priority)
     {
         $this->priority = $priority;
         return $this;

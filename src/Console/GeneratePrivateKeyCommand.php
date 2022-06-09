@@ -31,12 +31,12 @@ class GeneratePrivateKeyCommand extends Command
 
     protected function configure()
     {
-        $this->setName('generate:private-key')
+        $this->setName('crypto:private-key:generate')
             ->setDescription('Generate a default private key to encode data in your database.')
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 

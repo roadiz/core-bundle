@@ -25,7 +25,7 @@ class CustomFormOutputDataTransformer implements DataTransformerInterface
     /**
      * @inheritDoc
      */
-    public function transform($data, string $to, array $context = [])
+    public function transform($data, string $to, array $context = []): object
     {
         if (!$data instanceof CustomForm) {
             throw new \InvalidArgumentException('Data to transform must be instance of ' . CustomForm::class);
@@ -37,6 +37,9 @@ class CustomFormOutputDataTransformer implements DataTransformerInterface
         $output->slug = (new AsciiSlugger())->slug($data->getName())->snake()->toString();
         $output->open = $data->isFormStillOpen();
         $output->definitionUrl = $this->urlGenerator->generate('api_custom_forms_item_definition', [
+            'id' => $data->getId()
+        ]);
+        $output->postUrl = $this->urlGenerator->generate('api_custom_forms_item_post', [
             'id' => $data->getId()
         ]);
 

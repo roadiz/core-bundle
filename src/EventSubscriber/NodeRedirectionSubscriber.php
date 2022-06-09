@@ -36,7 +36,7 @@ class NodeRedirectionSubscriber implements EventSubscriberInterface
         $this->previewResolver = $previewResolver;
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             NodePathChangedEvent::class => 'redirectOldPaths',

@@ -7,10 +7,12 @@ namespace RZ\Roadiz\CoreBundle\DependencyInjection\Compiler;
 use RZ\Roadiz\CoreBundle\Routing\ChainResourcePathResolver;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\DependencyInjection\Compiler\PriorityTaggedServiceTrait;
 
 class PathResolverCompilerPass implements CompilerPassInterface
 {
+    use PriorityTaggedServiceTrait;
+
     /**
      * @inheritDoc
      */
@@ -18,13 +20,14 @@ class PathResolverCompilerPass implements CompilerPassInterface
     {
         if ($container->has(ChainResourcePathResolver::class)) {
             $definition = $container->findDefinition(ChainResourcePathResolver::class);
-            $taggedServices = $container->findTaggedServiceIds(
-                'roadiz_core.path_resolver'
+            $references = $this->findAndSortTaggedServices(
+                'roadiz_core.path_resolver',
+                $container
             );
-            foreach ($taggedServices as $id => $tags) {
+            foreach ($references as $reference) {
                 $definition->addMethodCall(
                     'addPathResolver',
-                    [new Reference($id)]
+                    [$reference]
                 );
             }
         }

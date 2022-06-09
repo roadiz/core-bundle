@@ -11,7 +11,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  */
 abstract class AbstractXlsxSerializer implements SerializerInterface
 {
-    private TranslatorInterface $translator;
+    protected TranslatorInterface $translator;
 
     /**
      * @param TranslatorInterface $translator
@@ -30,11 +30,19 @@ abstract class AbstractXlsxSerializer implements SerializerInterface
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
-    public function serialize($obj)
+    public function serialize($obj): string
     {
         $data = $this->toArray($obj);
         $exporter = new XlsxExporter($this->translator);
 
         return $exporter->exportXlsx($data);
+    }
+
+    /**
+     * @return TranslatorInterface
+     */
+    public function getTranslator(): TranslatorInterface
+    {
+        return $this->translator;
     }
 }

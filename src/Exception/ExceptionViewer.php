@@ -184,7 +184,7 @@ class ExceptionViewer
                 'message' => $e->getMessage(),
                 'exception' => $class,
                 'humanMessage' => $humanMessage,
-                'status' => 'danger',
+                'status' => $this->getHttpStatusCode($e),
             ];
             if ($debug) {
                 $data['error_trace'] =  $e->getTrace();
@@ -257,19 +257,28 @@ class ExceptionViewer
     {
         if (
             $request->attributes->has('_format') &&
-            $request->attributes->get('_format') == 'json'
+            (
+                $request->attributes->get('_format') == 'json' ||
+                $request->attributes->get('_format') == 'ld+json'
+            )
         ) {
             return true;
         }
 
         if (
             $request->headers->get('Content-Type') &&
-            0 === strpos($request->headers->get('Content-Type'), 'application/json')
+            (
+                0 === strpos($request->headers->get('Content-Type'), 'application/json') ||
+                0 === strpos($request->headers->get('Content-Type'), 'application/ld+json')
+            )
         ) {
             return true;
         }
 
-        if (in_array('application/json', $request->getAcceptableContentTypes())) {
+        if (
+            in_array('application/json', $request->getAcceptableContentTypes()) ||
+            in_array('application/ld+json', $request->getAcceptableContentTypes())
+        ) {
             return true;
         }
 

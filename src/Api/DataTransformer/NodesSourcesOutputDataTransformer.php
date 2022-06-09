@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 abstract class NodesSourcesOutputDataTransformer implements DataTransformerInterface
 {
-    private UrlGeneratorInterface $urlGenerator;
+    protected UrlGeneratorInterface $urlGenerator;
 
     /**
      * @param UrlGeneratorInterface $urlGenerator

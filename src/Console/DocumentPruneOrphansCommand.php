@@ -49,7 +49,7 @@ final class DocumentPruneOrphansCommand extends Command
         return $this->managerRegistry->getRepository(Document::class)->createQueryBuilder('d');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $em = $this->managerRegistry->getManagerForClass(Document::class);
         $filesystem = new Filesystem();

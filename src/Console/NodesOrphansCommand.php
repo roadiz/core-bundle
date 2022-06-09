@@ -45,11 +45,11 @@ class NodesOrphansCommand extends Command
      * @param InputInterface  $input
      * @param OutputInterface $output
      *
-     * @return int|void|null
+     * @return int
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $entityManager = $this->managerRegistry->getManagerForClass(Node::class);
@@ -75,7 +75,7 @@ class NodesOrphansCommand extends Command
                 $tableContent[] = [
                     $node->getId(),
                     $node->getNodeName(),
-                    $node->getNodeType()->getName(),
+                    null !== $node->getNodeType() ? $node->getNodeType()->getName() : '',
                     (!$node->isVisible() ? 'X' : ''),
                     ($node->isPublished() ? 'X' : ''),
                 ];

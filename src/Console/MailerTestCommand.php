@@ -33,7 +33,7 @@ class MailerTestCommand extends Command
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->emailManager
             ->setReceiver($input->getArgument('email'))
@@ -48,6 +48,6 @@ class MailerTestCommand extends Command
             ])
             ->send();
         (new SymfonyStyle($input, $output))->success('Email sent.');
-        return 1;
+        return 0;
     }
 }

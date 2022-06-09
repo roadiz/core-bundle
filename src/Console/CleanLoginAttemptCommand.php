@@ -32,7 +32,7 @@ class CleanLoginAttemptCommand extends Command
             ->setDescription('Clean all login attempts older than 1 day');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 

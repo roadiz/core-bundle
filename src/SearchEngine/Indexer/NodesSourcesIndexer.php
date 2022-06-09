@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\SearchEngine\Indexer;
 
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use Solarium\Exception\HttpException;
 use Solarium\Plugin\BufferedAdd\BufferedAdd;
@@ -92,31 +93,34 @@ class NodesSourcesIndexer extends AbstractIndexer implements BatchIndexer
 
         $baseQb = $this->getAllQueryBuilder()->addSelect('n');
         if ($batchCount > 1) {
-            $limit = round($count / $batchCount);
-            $offset = $batchNumber * $limit;
+            $limit = (int) ceil($count / $batchCount);
+            $offset = (int) $batchNumber * $limit;
             if ($batchNumber === $batchCount - 1) {
                 $limit = $count - $offset;
                 $baseQb->setMaxResults($limit)->setFirstResult($offset);
                 if (null !== $this->io) {
-                    $this->io->note('Batch mode enabled (last): Limit to ' . $limit . ', offset from ' . $offset);
+                    $this->io->note(sprintf('Batch mode enabled (last): from %d to %d', $offset, ($offset + $limit) - 1));
                 }
             } else {
                 $baseQb->setMaxResults($limit)->setFirstResult($offset);
                 if (null !== $this->io) {
-                    $this->io->note('Batch mode enabled: Limit to ' . $limit . ', offset from ' . $offset);
+                    $this->io->note(sprintf('Batch mode enabled: from %d to %d', $offset, ($offset + $limit) - 1));
                 }
             }
             $count = $limit;
         }
-        $q = $baseQb->getQuery();
-        $iterableResult = $q->iterate();
+
+        /*
+         * Must use Paginator to avoid missing items due to SQL pagination issues with offset and limit
+         */
+        $paginator = new Paginator($baseQb->getQuery(), true);
 
         if (null !== $this->io) {
             $this->io->progressStart($count);
         }
 
-        while (($row = $iterableResult->next()) !== false) {
-            $solarium = $this->solariumFactory->createWithNodesSources($row[0]);
+        foreach ($paginator as $row) {
+            $solarium = $this->solariumFactory->createWithNodesSources($row);
             $solarium->createEmptyDocument($update);
             $solarium->index();
             $buffer->addDocument($solarium->getDocument());
@@ -124,6 +128,8 @@ class NodesSourcesIndexer extends AbstractIndexer implements BatchIndexer
             if (null !== $this->io) {
                 $this->io->progressAdvance();
             }
+            // detach from Doctrine, so that it can be Garbage-Collected immediately
+            $this->managerRegistry->getManager()->detach($row);
         }
 
         $buffer->flush();

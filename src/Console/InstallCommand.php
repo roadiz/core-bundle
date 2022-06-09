@@ -54,7 +54,7 @@ class InstallCommand extends Command
             ->setDescription('Install Roadiz roles, settings, translations and default backend theme');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 

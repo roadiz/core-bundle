@@ -66,7 +66,20 @@ class ExplorerProviderItemTransformer implements DataTransformerInterface
      */
     public function reverseTransform($value)
     {
-        $items = $this->explorerProvider->getItemsById($value);
+        if (empty($value)) {
+            $items = [];
+        } elseif ($value instanceof ExplorerItemInterface) {
+            $items = [$value];
+        } elseif (is_scalar($value)) {
+            $items = $this->explorerProvider->getItemsById([$value]);
+        } elseif (\is_array($value) && is_scalar(reset($value))) {
+            $items = $this->explorerProvider->getItemsById($value);
+        } elseif (\is_array($value) && reset($value) instanceof ExplorerItemInterface) {
+            $items = $value;
+        } else {
+            throw new TransformationFailedException('Cannot reverse transform submitted data to model.');
+        }
+
         $originals = [];
         foreach ($items as $item) {
             $originals[] = $item->getOriginal();

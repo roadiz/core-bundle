@@ -65,7 +65,7 @@ class AttributeGroupTranslationType extends AbstractType
     /**
      * @inheritDoc
      */
-    public function getBlockPrefix()
+    public function getBlockPrefix(): string
     {
         return 'attribute_group_translation';
     }

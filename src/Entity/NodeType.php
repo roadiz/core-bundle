@@ -469,8 +469,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableIn
     }
 
     /**
-     * @template T of NodesSources
-     * @return class-string<T>
+     * @return class-string<NodesSources>
      * @SymfonySerializer\Ignore
      */
     public function getSourceEntityFullQualifiedClassName(): string

@@ -41,6 +41,9 @@ class SolariumNodeSource extends AbstractSolarium
         $this->dispatcher = $dispatcher;
     }
 
+    /**
+     * @return int|string|null
+     */
     public function getDocumentId()
     {
         return $this->nodeSource->getId();
@@ -65,9 +68,9 @@ class SolariumNodeSource extends AbstractSolarium
      * Remove any document linked to current node-source.
      *
      * @param Query $update
-     * @return boolean
+     * @return bool
      */
-    public function clean(Query $update)
+    public function clean(Query $update): bool
     {
         $update->addDeleteQuery(
             static::IDENTIFIER_KEY . ':"' . $this->nodeSource->getId() . '"' .

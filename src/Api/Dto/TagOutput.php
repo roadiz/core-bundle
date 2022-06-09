@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Api\Dto;
 
 use RZ\Roadiz\CoreBundle\Entity\Document;
+use RZ\Roadiz\CoreBundle\Entity\Tag;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
 
 final class TagOutput
 {
@@ -39,4 +41,10 @@ final class TagOutput
      * @Groups({"tag", "tag_base"})
      */
     public array $documents = [];
+    /**
+     * @var Tag|null
+     * @Groups({"tag", "tag_base"})
+     * @MaxDepth(1)
+     */
+    public ?Tag $parent = null;
 }

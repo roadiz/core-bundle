@@ -41,7 +41,7 @@ class PreviewModeSubscriber implements EventSubscriberInterface
     /**
      * @return array
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             KernelEvents::REQUEST => ['onKernelRequest', 9999],
@@ -53,7 +53,7 @@ class PreviewModeSubscriber implements EventSubscriberInterface
     /**
      * @return bool
      */
-    protected function supports()
+    protected function supports(): bool
     {
         return $this->previewResolver->isPreview();
     }

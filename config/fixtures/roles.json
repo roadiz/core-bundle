@@ -203,6 +203,22 @@
         ]
     },
     {
+        "name": "ROLE_ACCESS_REALMS",
+        "groups": [
+            {
+                "name": "Admin"
+            }
+        ]
+    },
+    {
+        "name": "ROLE_ACCESS_REALM_NODES",
+        "groups": [
+            {
+                "name": "Admin"
+            }
+        ]
+    },
+    {
         "name": "ROLE_ALLOWED_TO_SWITCH",
         "groups": [
             {

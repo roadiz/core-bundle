@@ -33,7 +33,7 @@ class RoleSubscriber implements EventSubscriberInterface
     /**
      * @inheritDoc
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             PreCreatedRoleEvent::class => 'onRoleChanged',

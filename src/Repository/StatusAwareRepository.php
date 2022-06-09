@@ -8,7 +8,6 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
-use Symfony\Component\Security\Core\Exception\AuthenticationCredentialsNotFoundException;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
@@ -56,7 +55,7 @@ abstract class StatusAwareRepository extends EntityRepository
 
     /**
      * @param bool $displayNotPublishedNodes
-     * @return StatusAwareRepository
+     * @return static
      */
     public function setDisplayingNotPublishedNodes(bool $displayNotPublishedNodes)
     {
@@ -78,7 +77,7 @@ abstract class StatusAwareRepository extends EntityRepository
      *
      * @param bool $displayAllNodesStatuses
      *
-     * @return StatusAwareRepository
+     * @return static
      */
     public function setDisplayingAllNodesStatuses(bool $displayAllNodesStatuses)
     {
@@ -87,25 +86,11 @@ abstract class StatusAwareRepository extends EntityRepository
     }
 
     /**
-     * @return bool
-     * @deprecated Do not depend on granted ROLE, preview logic can vary
-     */
-    protected function isBackendUserWithPreview()
-    {
-        try {
-            return $this->previewResolver->isPreview() &&
-                $this->security->isGranted($this->previewResolver->getRequiredRole());
-        } catch (AuthenticationCredentialsNotFoundException $e) {
-            return false;
-        }
-    }
-
-    /**
      * @param QueryBuilder $qb
      * @param string $prefix
      * @return QueryBuilder
      */
-    protected function alterQueryBuilderWithAuthorizationChecker(
+    public function alterQueryBuilderWithAuthorizationChecker(
         QueryBuilder $qb,
         string $prefix = EntityRepository::NODE_ALIAS
     ) {

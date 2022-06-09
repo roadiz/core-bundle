@@ -36,14 +36,17 @@ class NodesDetailsCommand extends Command
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
         $translation = $this->managerRegistry->getRepository(Translation::class)
                                            ->findOneBy(['locale' => $input->getArgument('locale')]);
 
-        /** @var NodesSources|null $source */
+        /**
+         * @var NodesSources|null $source
+         * @phpstan-ignore-next-line
+         */
         $source = $this->managerRegistry->getRepository(NodesSources::class)
                                     ->setDisplayingNotPublishedNodes(true)
                                     ->findOneBy([

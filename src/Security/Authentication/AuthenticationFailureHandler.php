@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Security\Authentication;
 
 use RZ\Roadiz\CoreBundle\Security\Authentication\Manager\LoginAttemptManager;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Http\Authentication\DefaultAuthenticationFailureHandler;
@@ -20,7 +21,7 @@ class AuthenticationFailureHandler extends DefaultAuthenticationFailureHandler i
     /**
      * {@inheritdoc}
      */
-    public function onAuthenticationFailure(Request $request, AuthenticationException $exception)
+    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response
     {
         $username = $request->request->get('_username');
         $ipAddress = $request->getClientIp();

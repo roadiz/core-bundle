@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\CustomForm;
 
 use Doctrine\Persistence\ObjectManager;
-use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Entity\CustomFormAnswer;
@@ -56,20 +55,25 @@ class CustomFormHelper
     }
 
     /**
-     * @param Request    $request
-     * @param boolean    $forceExpanded
+     * @param Request $request
+     * @param boolean $forceExpanded
+     * @param bool $prefix
      * @return FormInterface
      */
     public function getForm(
         Request $request,
-        bool $forceExpanded = false
+        bool $forceExpanded = false,
+        bool $prefix = true
     ): FormInterface {
         $defaults = $request->query->all();
-        $name = (new AsciiSlugger())->slug($this->customForm->getName())->snake()->toString();
+        if ($prefix) {
+            $name = (new AsciiSlugger())->slug($this->customForm->getName())->snake()->toString();
+        } else {
+            $name = '';
+        }
         return $this->formFactory->createNamed($name, CustomFormsType::class, $defaults, [
             'recaptcha_public_key' => $this->settingsBag->get('recaptcha_public_key'),
             'recaptcha_private_key' => $this->settingsBag->get('recaptcha_private_key'),
-            'request' => $request,
             'customForm' => $this->customForm,
             'forceExpanded' => $forceExpanded,
         ]);
@@ -185,52 +189,6 @@ class CustomFormHelper
                 $this->customForm->getCreatedAt()->format('Ymd') . '_' .
                 substr($this->customForm->getDisplayName(), 0, 30)
             );
-    }
-
-    /**
-     * @param CustomFormAnswer|null $answer
-     * @param bool                  $forceExpanded
-     * @param array                 $options Options passed to final form
-     *
-     * @return FormInterface
-     * @throws \Exception
-     */
-    public function getFormFromAnswer(
-        CustomFormAnswer $answer = null,
-        bool $forceExpanded = false,
-        array $options = []
-    ): FormInterface {
-        $data = null;
-
-        if (null !== $answer) {
-            $data = [];
-            /** @var CustomFormFieldAttribute $attribute */
-            foreach ($answer->getAnswers() as $attribute) {
-                $type = $attribute->getCustomFormField()->getType();
-                $name = $attribute->getCustomFormField()->getName();
-
-                switch ($type) {
-                    case AbstractField::DATE_T:
-                    case AbstractField::DATETIME_T:
-                        $data[$name] = new \DateTime($attribute->getValue());
-                        break;
-                    case AbstractField::BOOLEAN_T:
-                        $data[$name] = (bool) $attribute->getValue();
-                        break;
-                    case AbstractField::MULTIPLE_T:
-                    case AbstractField::CHECK_GROUP_T:
-                        $data[$name] = explode(static::ARRAY_SEPARATOR, $attribute->getValue());
-                        break;
-                    default:
-                        $data[$name] = $attribute->getValue();
-                }
-            }
-        }
-
-        return $this->formFactory->create(CustomFormsType::class, $data, array_merge($options, [
-            'customForm' => $this->customForm,
-            'forceExpanded' => $forceExpanded,
-        ]));
     }
 
     /**

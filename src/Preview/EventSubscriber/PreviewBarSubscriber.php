@@ -25,7 +25,7 @@ class PreviewBarSubscriber implements EventSubscriberInterface
     /**
      * @return array
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             KernelEvents::RESPONSE => ['onKernelResponse', -128]
@@ -37,7 +37,7 @@ class PreviewBarSubscriber implements EventSubscriberInterface
      *
      * @return bool
      */
-    protected function supports(ResponseEvent $event)
+    protected function supports(ResponseEvent $event): bool
     {
         $response = $event->getResponse();
         if (

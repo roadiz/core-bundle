@@ -26,18 +26,17 @@ final class HttpRequestMessageHandler implements MessageHandlerInterface
         $this->client = $client ?? new Client();
     }
 
-    public function __invoke(HttpRequestMessage $message)
+    public function __invoke(HttpRequestMessage $message): void
     {
         try {
-            $this->logger->info(sprintf(
+            $this->logger->debug(sprintf(
                 'HTTP request executed: %s %s',
                 $message->getRequest()->getMethod(),
                 $message->getRequest()->getUri()
             ));
-            return $this->client->send($message->getRequest(), $message->getOptions());
+            $this->client->send($message->getRequest(), $message->getOptions());
         } catch (GuzzleException $exception) {
             $this->logger->error($exception->getMessage());
-            return null;
         }
     }
 }

@@ -46,7 +46,7 @@ class DocumentClearFolderCommand extends Command
             ->setParameter(':folderId', $folder);
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io = new SymfonyStyle($input, $output);
 

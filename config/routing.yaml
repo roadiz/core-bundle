@@ -11,9 +11,6 @@ FontFile:
 FontFaceCSS:
     path:     /font-faces.css
     controller: RZ\Roadiz\CoreBundle\Controller\FontFaceController::fontFacesAction
-#
-# InterventionRequest is hard coded before run app
-#
 
 #
 # Custom forms
@@ -42,6 +39,15 @@ customFormSentAction:
     requirements:
         customFormId: "[0-9]+"
 
+healthCheckAction:
+    methods: [GET]
+    path:     /health-check
+    controller: RZ\Roadiz\CoreBundle\Controller\HealthCheckController
+
 roadiz_core_themes:
     resource: .
     type: themes
+
+api_login_check:
+    methods: [POST]
+    path: /api/token

@@ -24,11 +24,11 @@ final class UserRepository extends EntityRepository
     /**
      * @param string $username
      *
-     * @return boolean
+     * @return bool
      * @throws \Doctrine\ORM\NoResultException
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    public function usernameExists($username)
+    public function usernameExists($username): bool
     {
         $qb = $this->createQueryBuilder('u');
         $qb->select($qb->expr()->count('u.username'))
@@ -41,10 +41,11 @@ final class UserRepository extends EntityRepository
 
     /**
      * @param string $email
-     *
-     * @return boolean
+     * @return bool
+     * @throws \Doctrine\ORM\NoResultException
+     * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    public function emailExists($email)
+    public function emailExists(string $email): bool
     {
         $qb = $this->createQueryBuilder('u');
         $qb->select($qb->expr()->count('u.email'))

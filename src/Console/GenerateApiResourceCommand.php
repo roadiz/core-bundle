@@ -136,8 +136,7 @@ class GenerateApiResourceCommand extends Command
             "document_display",
             ...$this->getGroupedFieldsSerializationGroups($nodeType)
         ];
-
-        return [
+        $operations = [
             'get' => [
                 'method' => 'GET',
                 'normalization_context' => [
@@ -145,6 +144,30 @@ class GenerateApiResourceCommand extends Command
                 ],
             ]
         ];
+
+        /*
+         * Create itemOperation for WebResponseController action
+         */
+        if ($nodeType->isReachable()) {
+            $operations['getByPath'] = [
+                'method' => 'GET',
+                'normalization_context' => [
+                    'enable_max_depth' => true,
+                    'groups' => array_merge(array_values(array_filter(array_unique($groups))), [
+                        'web_response',
+                        'position',
+                        'walker',
+                        'walker_level',
+                        'walker_metadata',
+                        'meta',
+                        'children',
+                        'children_count',
+                    ])
+                ],
+            ];
+        }
+
+        return $operations;
     }
 
     protected function getGroupedFieldsSerializationGroups(NodeTypeInterface $nodeType): array

@@ -17,7 +17,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class NodeTypeFilter implements EventSubscriberInterface
 {
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             QueryBuilderNodesSourcesBuildEvent::class => [['onNodesSourcesQueryBuilderBuild', 40]],
@@ -27,7 +27,7 @@ class NodeTypeFilter implements EventSubscriberInterface
         ];
     }
 
-    protected function supports(QueryBuilderBuildEvent $event)
+    protected function supports(QueryBuilderBuildEvent $event): bool
     {
         return $event->supports() && false !== strpos($event->getProperty(), 'nodeType.');
     }

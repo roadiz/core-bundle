@@ -28,7 +28,7 @@ final class SolrPaginator implements PaginatorInterface, \IteratorAggregate
         }
     }
 
-    public function count()
+    public function count(): int
     {
         $this->handleOnce();
         return $this->listManager->getItemCount();
@@ -58,7 +58,7 @@ final class SolrPaginator implements PaginatorInterface, \IteratorAggregate
         return $this->listManager->getAssignation()['itemPerPage'];
     }
 
-    public function getIterator()
+    public function getIterator(): \Traversable
     {
         $this->handleOnce();
         return new ArrayCollection($this->listManager->getEntities());

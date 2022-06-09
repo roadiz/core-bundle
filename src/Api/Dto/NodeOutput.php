@@ -19,6 +19,11 @@ final class NodeOutput
      */
     public bool $visible = false;
     /**
+     * @var float|null
+     * @Groups({"position", "node"})
+     */
+    public ?float $position = null;
+    /**
      * @var array
      * @Groups({"nodes_sources", "nodes_sources_base", "node"})
      */

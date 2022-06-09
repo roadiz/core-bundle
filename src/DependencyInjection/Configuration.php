@@ -15,7 +15,7 @@ class Configuration implements ConfigurationInterface
     public const INHERITANCE_TYPE_JOINED = 'joined';
     public const INHERITANCE_TYPE_SINGLE_TABLE = 'single_table';
 
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
         $builder = new TreeBuilder('roadiz_core');
         $root = $builder->getRootNode();
@@ -24,6 +24,10 @@ class Configuration implements ConfigurationInterface
             ->children()
             ->scalarNode('appNamespace')
                 ->defaultValue('roadiz_app')
+            ->end()
+            ->scalarNode('healthCheckToken')->end()
+            ->scalarNode('appVersion')
+                ->defaultValue('0.1.0')
             ->end()
             ->scalarNode('staticDomainName')
                 ->defaultValue(null)
@@ -34,9 +38,22 @@ class Configuration implements ConfigurationInterface
             ->booleanNode('useNativeJsonColumnType')
                 ->defaultValue(true)
             ->end()
+            ->booleanNode('useAcceptLanguageHeader')
+                ->defaultValue(false)
+                ->info(<<<EOT
+When no information to find locale is found and "force_locale" setting is ON,
+we must find translation based on Accept-Language header.
+Be careful if you are using a reverse-proxy cache, YOU MUST vary on Accept-Language header and normalize it.
+@see https://varnish-cache.org/docs/6.3/users-guide/increasing-your-hitrate.html#http-vary
+EOT)
+            ->end()
             ->arrayNode('security')
                 ->addDefaultsIfNotSet()
                 ->children()
+                    ->scalarNode('private_key_dir')
+                        ->defaultValue('%kernel.project_dir%/var/secret')
+                        ->info('Asymmetric cryptographic key directory.')
+                    ->end()
                     ->scalarNode('private_key_name')
                         ->defaultValue('default')
                         ->info('Asymmetric cryptographic key name.')
@@ -140,6 +157,16 @@ EOD
 Scopes requested during OpenId authentication process.
 EOD
                     )
+                    ->end()
+                ->end()
+                ->arrayNode('granted_roles')
+                    ->prototype('scalar')
+                    ->defaultValue(['ROLE_USER'])
+                    ->info(<<<EOD
+Roles granted to user logged in with OpenId authentication process.
+EOD
+                    )
+                    ->end()
                 ->end()
             ->end();
 

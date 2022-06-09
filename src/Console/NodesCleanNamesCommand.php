@@ -51,7 +51,7 @@ final class NodesCleanNamesCommand extends Command
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $entityManager = $this->managerRegistry->getManagerForClass(Node::class);
         $io = new SymfonyStyle($input, $output);
@@ -61,6 +61,7 @@ final class NodesCleanNamesCommand extends Command
             ->findDefault();
 
         if (null !== $translation) {
+            /** @phpstan-ignore-next-line  */
             $nodes = $entityManager
                 ->getRepository(Node::class)
                 ->setDisplayingNotPublishedNodes(true)

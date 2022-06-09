@@ -18,7 +18,7 @@ final class DefaultNodesSourcesIndexingSubscriber implements EventSubscriberInte
     /**
      * @inheritDoc
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             NodesSourcesIndexingEvent::class => ['onIndexing', 1000],
@@ -95,7 +95,9 @@ final class DefaultNodesSourcesIndexingSubscriber implements EventSubscriberInte
                         $tag->getTagName();
                     return $event->getSolariumDocument()->cleanTextContent($tagName, false);
                 },
-                $nodeSource->getNode()->getTags()->toArray()
+                $nodeSource->getNode()->getTags()->filter(function (Tag $tag) {
+                    return $tag->isVisible();
+                })->toArray()
             );
             // Use tags_txt to be compatible with other data types
             $assoc['tags_txt'] = $out;

@@ -1,7 +1,10 @@
 ---
 parameters:
     env(APP_NAMESPACE): "roadiz"
+    env(APP_VERSION): "0.1.0"
+    env(APP_USE_ACCEPT_LANGUAGE_HEADER): 'false'
     env(APP_UNSPLASH_CLIENT_ID): ~
+    env(APP_HEALTH_CHECK_TOKEN): ~
     env(OPEN_ID_CLIENT_ID): ~
     env(OPEN_ID_CLIENT_SECRET): ~
     env(OPEN_ID_HOSTED_DOMAIN): ~
@@ -16,6 +19,7 @@ services:
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         bind:
             $cmsVersion: '2.0.0'
+            $appVersion: '%roadiz_core.app_version%'
             $cmsVersionPrefix: 'alpha'
             $staticDomain: '%roadiz_core.static_domain_name%'
             $inheritanceType: '%roadiz_core.inheritance_type%'
@@ -28,6 +32,8 @@ services:
             $debug: '%kernel.debug%'
             $defaultControllerClass: '%roadiz_core.default_node_source_controller%'
             $webhookMessageTypes: '%roadiz_core.webhook.message_types%'
+            $useAcceptLanguageHeader: '%roadiz_core.use_accept_language_header%'
+            $healthCheckToken: '%roadiz_core.health_check_token%'
 
     RZ\Roadiz\CoreBundle\:
         resource: '../src/'
@@ -55,28 +61,48 @@ services:
         autowire: true
         public: true
 
-    RZ\Roadiz\CoreBundle\Serializer\NodesSourcesPathNormalizer:
+    RZ\Roadiz\CoreBundle\Serializer\Normalizer\RealmSerializationGroupNormalizer:
+        tags:
+            - { name: 'serializer.normalizer', priority: 64 }
+
+    RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer:
         # By default, .inner is passed as argument
         decorates: 'api_platform.jsonld.normalizer.item'
     # Need a different name to avoid duplicate YAML key
     roadiz_core.serializer.normalizer.nodes_sources_path.json:
-        class: 'RZ\Roadiz\CoreBundle\Serializer\NodesSourcesPathNormalizer'
-        decorates: 'api_platform.serializer.normalizer.item'
-
-    RZ\TreeWalker\Serializer\TreeWalkerNormalizer:
-        # By default, .inner is passed as argument
-        decorates: 'api_platform.jsonld.normalizer.item'
-    # Need a different name to avoid duplicate YAML key
-    roadiz_core.serializer.normalizer.tree_walker.json:
-        class: 'RZ\TreeWalker\Serializer\TreeWalkerNormalizer'
+        class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer'
         decorates: 'api_platform.serializer.normalizer.item'
 
     Limenius\Liform\LiformInterface:
         alias: liform
 
-    RZ\Roadiz\CoreBundle\Serializer\TranslationAwareNormalizer:
+    roadiz_core.liform.datetime_type.transformer:
+        class: Limenius\Liform\Transformer\StringTransformer
+        parent: Limenius\Liform\Transformer\AbstractTransformer
+        tags:
+            - { name: liform.transformer, form_type: datetime, widget: datetime }
+
+    roadiz_core.liform.date_type.transformer:
+        class: Limenius\Liform\Transformer\StringTransformer
+        parent: Limenius\Liform\Transformer\AbstractTransformer
+        tags:
+            - { name: liform.transformer, form_type: date, widget: date }
+
+    roadiz_core.liform.file_type.transformer:
+        class: Limenius\Liform\Transformer\StringTransformer
+        parent: Limenius\Liform\Transformer\AbstractTransformer
+        tags:
+            - { name: liform.transformer, form_type: file, widget: file }
+
+    RZ\Roadiz\CoreBundle\Serializer\Normalizer\TranslationAwareNormalizer:
         tags:
             - { name: 'serializer.normalizer', priority: 64 }
+
+    RZ\Roadiz\CoreBundle\Serializer\TranslationAwareContextBuilder:
+        decorates: 'api_platform.serializer.context_builder'
+        arguments: [ '@RZ\Roadiz\CoreBundle\Serializer\TranslationAwareContextBuilder.inner' ]
+        autowire: true
+        autoconfigure: false
 
     RZ\Roadiz\Document\EventSubscriber\:
         resource: '%kernel.project_dir%/vendor/roadiz/documents/src/Roadiz/Document/EventSubscriber/'
@@ -95,13 +121,23 @@ services:
 
     RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber\:
         resource: '../src/Doctrine/EventSubscriber'
-        tags: ['doctrine.event_subscriber']
+        tags:
+            - { name: monolog.logger, channel: doctrine }
+            - { name: doctrine.event_subscriber }
 
     RZ\Roadiz\Core\Events\DocumentLifeCycleSubscriber:
-        tags: ['doctrine.event_subscriber']
+        tags:
+            - { name: monolog.logger, channel: doctrine }
+            - { name: doctrine.event_subscriber }
 
     RZ\Roadiz\Core\Events\LeafEntityLifeCycleSubscriber:
-        tags: ['doctrine.event_subscriber']
+        tags:
+            - { name: monolog.logger, channel: doctrine }
+            - { name: doctrine.event_subscriber }
+
+    RZ\Roadiz\CoreBundle\Doctrine\SchemaUpdater:
+        tags:
+            - { name: monolog.logger, channel: doctrine }
 
     RZ\Roadiz\CoreBundle\Controller\:
         resource: '../src/Controller'
@@ -121,6 +157,15 @@ services:
 
     RZ\Roadiz\Utils\Asset\Packages: ~
     RZ\Roadiz\Utils\Document\DownscaleImageManager: ~
+
+    RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry:
+        arguments: ['@service_container']
+
+    RZ\Roadiz\CoreBundle\SearchEngine\Indexer\IndexerFactory:
+        arguments: ['@service_container']
+
+    RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory:
+        arguments: ['@service_container']
 
     RZ\Roadiz\Core\Handlers\HandlerFactoryInterface:
         alias: RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory
@@ -291,10 +336,10 @@ services:
     #
     roadiz_core.path_resolvers.nodes_sources:
         class: RZ\Roadiz\CoreBundle\Routing\NodesSourcesPathResolver
-        tags: [ 'roadiz_core.path_resolver' ]
+        tags: [ { name: 'roadiz_core.path_resolver', priority: 0 }  ]
     roadiz_core.path_resolvers.redirections:
         class: RZ\Roadiz\CoreBundle\Routing\RedirectionPathResolver
-        tags: [ 'roadiz_core.path_resolver' ]
+        tags: [ { name: 'roadiz_core.path_resolver', priority: 10 }  ]
     #
     # Twig
     #
@@ -343,7 +388,6 @@ services:
     RZ\Roadiz\OpenId\OpenIdJwtConfigurationFactory:
         arguments:
             - '@?RZ\Roadiz\OpenId\Discovery'
-            - '@security.csrf.token_manager'
             - '%roadiz_core.open_id.hosted_domain%'
             - '%roadiz_core.open_id.oauth_client_id%'
             - '%roadiz_core.open_id.verify_user_info%'
@@ -354,6 +398,10 @@ services:
 
     RZ\Roadiz\OpenId\Authentication\Provider\ChainJwtRoleStrategy: ~
     RZ\Roadiz\OpenId\Authentication\Provider\OpenIdAccountProvider: ~
+
+    RZ\Roadiz\CoreBundle\Node\NodeNamePolicyFactory: ~
+    RZ\Roadiz\CoreBundle\Node\NodeNamePolicyInterface:
+        factory: ['@RZ\Roadiz\CoreBundle\Node\NodeNamePolicyFactory', 'create']
 
     #
     # Workflows

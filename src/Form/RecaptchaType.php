@@ -46,7 +46,7 @@ class RecaptchaType extends AbstractType
     /**
      * @see \Symfony\Component\Form\AbstractType::getParent()
      */
-    public function getParent()
+    public function getParent(): ?string
     {
         return TextType::class;
     }
@@ -58,7 +58,7 @@ class RecaptchaType extends AbstractType
      *          <div class="g-recaptcha" data-sitekey="{{ configs.publicKey }}"></div>
      *      {%- endblock recaptcha_widget %}
      */
-    public function getBlockPrefix()
+    public function getBlockPrefix(): string
     {
         return 'recaptcha';
     }

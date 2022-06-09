@@ -6,9 +6,18 @@ namespace RZ\Roadiz\CoreBundle\DependencyInjection;
 
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\MarkdownConverter;
+use ParagonIE\Halite\Asymmetric\EncryptionSecretKey;
+use ParagonIE\Halite\Symmetric\EncryptionKey;
+use Pimple\Container;
+use RZ\Crypto\Encoder\AsymmetricUniqueKeyEncoder;
+use RZ\Crypto\Encoder\SymmetricUniqueKeyEncoder;
+use RZ\Crypto\Encoder\UniqueKeyEncoderInterface;
+use RZ\Crypto\KeyChain\AsymmetricFilesystemKeyChain;
+use RZ\Crypto\KeyChain\KeyChainInterface;
 use RZ\Roadiz\CoreBundle\Cache\CloudflareProxyCache;
 use RZ\Roadiz\CoreBundle\Cache\ReverseProxyCache;
 use RZ\Roadiz\CoreBundle\Cache\ReverseProxyCacheLocator;
+use RZ\Roadiz\CoreBundle\Crypto\UniqueKeyEncoderFactory;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\Node;
@@ -39,7 +48,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class RoadizCoreExtension extends Extension
 {
-    public function getAlias()
+    public function getAlias(): string
     {
         return 'roadiz_core';
     }
@@ -56,11 +65,19 @@ class RoadizCoreExtension extends Extension
         $config = $this->processConfiguration($configuration, $configs);
 
         $container->setParameter('roadiz_core.app_namespace', $config['appNamespace']);
+        $container->setParameter('roadiz_core.app_version', $config['appVersion']);
+        $container->setParameter('roadiz_core.health_check_token', $config['healthCheckToken']);
         $container->setParameter('roadiz_core.inheritance_type', $config['inheritance']['type']);
         $container->setParameter('roadiz_core.static_domain_name', $config['staticDomainName'] ?? '');
         $container->setParameter('roadiz_core.private_key_name', $config['security']['private_key_name']);
+        $container->setParameter('roadiz_core.private_key_dir', $config['security']['private_key_dir']);
+        $container->setParameter(
+            'roadiz_core.private_key_path',
+            $config['security']['private_key_dir'] . DIRECTORY_SEPARATOR . $config['security']['private_key_name']
+        );
         $container->setParameter('roadiz_core.default_node_source_controller', $config['defaultNodeSourceController']);
         $container->setParameter('roadiz_core.use_native_json_column_type', $config['useNativeJsonColumnType']);
+        $container->setParameter('roadiz_core.use_accept_language_header', $config['useAcceptLanguageHeader']);
 
         /*
          * Assets config
@@ -103,6 +120,31 @@ class RoadizCoreExtension extends Extension
         $this->registerSolr($config, $container);
         $this->registerMarkdown($config, $container);
         $this->registerOpenId($config, $container);
+        $this->registerCrypto($config, $container);
+    }
+
+    private function registerCrypto(array $config, ContainerBuilder $container): void
+    {
+        $container->setDefinition(
+            UniqueKeyEncoderFactory::class,
+            (new Definition())
+                ->setClass(UniqueKeyEncoderFactory::class)
+                ->setPublic(true)
+                ->setArguments([
+                    new Reference(KeyChainInterface::class),
+                    $container->getParameter('roadiz_core.private_key_name')
+                ])
+        );
+
+        $container->setDefinition(
+            KeyChainInterface::class,
+            (new Definition())
+                ->setClass(AsymmetricFilesystemKeyChain::class)
+                ->setPublic(true)
+                ->setArguments([
+                    $container->getParameter('roadiz_core.private_key_dir')
+                ])
+        );
     }
 
     private function registerOpenId(array $config, ContainerBuilder $container)
@@ -114,6 +156,7 @@ class RoadizCoreExtension extends Extension
         $container->setParameter('roadiz_core.open_id.oauth_client_secret', $config['open_id']['oauth_client_secret']);
         $container->setParameter('roadiz_core.open_id.openid_username_claim', $config['open_id']['openid_username_claim']);
         $container->setParameter('roadiz_core.open_id.scopes', $config['open_id']['scopes'] ?? []);
+        $container->setParameter('roadiz_core.open_id.granted_roles', $config['open_id']['granted_roles'] ?? []);
 
         if (!empty($config['open_id']['discovery_url'])) {
             $container->setDefinition(
@@ -123,7 +166,7 @@ class RoadizCoreExtension extends Extension
                     ->setPublic(true)
                     ->setArguments([
                         $config['open_id']['discovery_url'],
-                        new Reference('doctrine.orm.cache.provider.cache.doctrine.orm.default.metadata')
+                        new Reference(\Psr\Cache\CacheItemPoolInterface::class)
                     ])
             );
         }
@@ -230,21 +273,23 @@ class RoadizCoreExtension extends Extension
                 $solrEndpoints[] = 'roadiz_core.solr.endpoints.' . $name;
             }
         }
-        $container->setDefinition(
-            'roadiz_core.solr.client',
-            (new Definition())
-                ->setClass(Client::class)
-                ->setLazy(true)
-                ->setPublic(true)
-                ->setShared(true)
-                ->setArguments([
-                    new Reference('roadiz_core.solr.adapter'),
-                    new Reference(EventDispatcherInterface::class)
-                ])
-                ->addMethodCall('setEndpoints', [array_map(function (string $endpointId) {
-                    return new Reference($endpointId);
-                }, $solrEndpoints)])
-        );
+        if (count($solrEndpoints) > 0) {
+            $container->setDefinition(
+                'roadiz_core.solr.client',
+                (new Definition())
+                    ->setClass(Client::class)
+                    ->setLazy(true)
+                    ->setPublic(true)
+                    ->setShared(true)
+                    ->setArguments([
+                        new Reference('roadiz_core.solr.adapter'),
+                        new Reference(EventDispatcherInterface::class)
+                    ])
+                    ->addMethodCall('setEndpoints', [array_map(function (string $endpointId) {
+                        return new Reference($endpointId);
+                    }, $solrEndpoints)])
+            );
+        }
         $container->setParameter('roadiz_core.solr.clients', $solrEndpoints);
     }
 

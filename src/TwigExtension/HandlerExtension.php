@@ -26,7 +26,7 @@ final class HandlerExtension extends AbstractExtension
         $this->handlerFactory = $handlerFactory;
     }
 
-    public function getFilters()
+    public function getFilters(): array
     {
         return [
             new TwigFilter('handler', [$this, 'getHandler']),

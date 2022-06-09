@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Entity;
 
 use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -29,6 +30,21 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
  *     @ORM\Index(columns={"available", "override_locale"})
  * })
  * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
+ * @ApiFilter(BaseFilter\OrderFilter::class, properties={
+ *     "createdAt",
+ *     "updatedAt",
+ *     "locale",
+ *     "available",
+ *     "defaultTranslation"
+ * })
+ * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
+ *     "available",
+ *     "defaultTranslation"
+ * })
+ * @ApiFilter(BaseFilter\SearchFilter::class, properties={
+ *     "locale": "exact",
+ *     "name": "exact"
+ * })
  */
 class Translation extends AbstractDateTimed implements TranslationInterface
 {

@@ -8,7 +8,6 @@ use Doctrine\Common\Collections\Collection;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
-use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
 
 /**
@@ -30,8 +29,14 @@ class NodeSourceSearchHandler extends AbstractSearchHandler implements NodeSourc
      *
      * @return array|null
      */
-    protected function nativeSearch($q, $args = [], $rows = 20, $searchTags = false, $proximity = 10000000, $page = 1)
-    {
+    protected function nativeSearch(
+        $q,
+        $args = [],
+        $rows = 20,
+        $searchTags = false,
+        $proximity = 10000000,
+        $page = 1
+    ): ?array {
         if (!empty($q)) {
             $query = $this->createSolrQuery($args, $rows, $page);
             $queryTxt = $this->buildQuery($q, $args, $searchTags, $proximity);
@@ -82,7 +87,7 @@ class NodeSourceSearchHandler extends AbstractSearchHandler implements NodeSourc
      * @param array $args
      * @return mixed
      */
-    protected function argFqProcess(&$args)
+    protected function argFqProcess(array &$args)
     {
         if (!isset($args["fq"])) {
             $args["fq"] = [];
@@ -221,42 +226,9 @@ class NodeSourceSearchHandler extends AbstractSearchHandler implements NodeSourc
     /**
      * @return string
      */
-    protected function getDocumentType()
+    protected function getDocumentType(): string
     {
         return 'NodesSources';
-    }
-
-    /**
-     * @param array|null $response
-     * @return array
-     * @deprecated Use SolrSearchResults DTO
-     */
-    protected function parseSolrResponse($response)
-    {
-        if (null !== $response) {
-            $doc = array_map(
-                function ($n) use ($response) {
-                    if (isset($response["highlighting"])) {
-                        return [
-                            "nodeSource" => $this->em->find(
-                                NodesSources::class,
-                                (int) $n[SolariumNodeSource::IDENTIFIER_KEY]
-                            ),
-                            "highlighting" => $response["highlighting"][$n['id']],
-                        ];
-                    }
-                    return $this->em->find(
-                        NodesSources::class,
-                        $n[SolariumNodeSource::IDENTIFIER_KEY]
-                    );
-                },
-                $response['response']['docs']
-            );
-
-            return $doc;
-        }
-
-        return [];
     }
 
     /**

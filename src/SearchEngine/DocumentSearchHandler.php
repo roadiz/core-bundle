@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\SearchEngine;
 
-use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 
@@ -23,8 +22,14 @@ class DocumentSearchHandler extends AbstractSearchHandler
      *
      * @return array|null
      */
-    protected function nativeSearch($q, $args = [], $rows = 20, $searchTags = false, $proximity = 10000000, $page = 1)
-    {
+    protected function nativeSearch(
+        $q,
+        $args = [],
+        $rows = 20,
+        $searchTags = false,
+        $proximity = 10000000,
+        $page = 1
+    ): ?array {
         if (!empty($q)) {
             $query = $this->createSolrQuery($args, $rows, $page);
             $queryTxt = $this->buildQuery($q, $args, $searchTags, $proximity);
@@ -62,7 +67,7 @@ class DocumentSearchHandler extends AbstractSearchHandler
      * @param array $args
      * @return mixed
      */
-    protected function argFqProcess(&$args)
+    protected function argFqProcess(array &$args)
     {
         if (!isset($args["fq"])) {
             $args["fq"] = [];
@@ -117,37 +122,8 @@ class DocumentSearchHandler extends AbstractSearchHandler
     /**
      * @return string
      */
-    protected function getDocumentType()
+    protected function getDocumentType(): string
     {
         return 'DocumentTranslation';
-    }
-
-    /**
-     * @param array|null $response
-     * @return array
-     */
-    protected function parseSolrResponse($response)
-    {
-        if (null !== $response) {
-            $doc = array_map(
-                function ($n) use ($response) {
-                    if (isset($response["highlighting"])) {
-                        return [
-                            "document" => $this->em
-                                        ->getRepository(Document::class)
-                                        ->findOneByDocumentTranslationId($n[SolariumDocumentTranslation::IDENTIFIER_KEY]),
-                            "highlighting" => $response["highlighting"][$n['id']],
-                        ];
-                    }
-                    return $this->em
-                        ->getRepository(Document::class)
-                        ->findOneByDocumentTranslationId($n[SolariumDocumentTranslation::IDENTIFIER_KEY]);
-                },
-                $response['response']['docs']
-            );
-
-            return $doc;
-        }
-        return [];
     }
 }
