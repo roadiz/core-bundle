@@ -73,6 +73,14 @@ final class DoctrineHandler extends AbstractProcessingHandler
 
             $log->setChannel((string) $record['channel']);
             $data = $record['extra'];
+            if (isset($record['context']['exception']) && $record['context']['exception'] instanceof \Exception) {
+                $data = array_merge(
+                    $data,
+                    [
+                        get_class($record['context']['exception']) => $record['context']['exception']->getMessage()
+                    ]
+                );
+            }
             if (isset($record['context']['request'])) {
                 $data = array_merge(
                     $data,
