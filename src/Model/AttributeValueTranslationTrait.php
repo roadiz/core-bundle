@@ -37,11 +37,14 @@ trait AttributeValueTranslationTrait
     protected ?AttributeValueInterface $attributeValue = null;
 
     /**
-     * @return mixed
+     * @return mixed|null
      * @throws \Exception
      */
     public function getValue()
     {
+        if (null === $this->value) {
+            return null;
+        }
         switch ($this->getAttributeValue()->getType()) {
             case AttributeInterface::DECIMAL_T:
                 return (float) $this->value;
@@ -58,33 +61,32 @@ trait AttributeValueTranslationTrait
     }
 
     /**
-     * @param mixed $value
+     * @param mixed|null $value
      *
-     * @return mixed
+     * @return static
      */
     public function setValue($value)
     {
+        if (null === $value) {
+            $this->value = null;
+        }
         switch ($this->getAttributeValue()->getType()) {
             case AttributeInterface::EMAIL_T:
                 if (false === filter_var($value, FILTER_VALIDATE_EMAIL)) {
                     throw new \InvalidArgumentException('Email is not valid');
                 }
-                $this->value = $value;
+                $this->value = (string) $value;
                 return $this;
             case AttributeInterface::DATETIME_T:
             case AttributeInterface::DATE_T:
                 if ($value instanceof \DateTime) {
                     $this->value = $value->format('Y-m-d H:i:s');
                 } else {
-                    $this->value = $value;
+                    $this->value = (string) $value;
                 }
                 return $this;
-            case AttributeInterface::INTEGER_T:
-            case AttributeInterface::DECIMAL_T:
-                $this->value = (string) $value;
-                return $this;
             default:
-                $this->value = $value;
+                $this->value = (string) $value;
                 return $this;
         }
     }
@@ -92,7 +94,7 @@ trait AttributeValueTranslationTrait
     /**
      * @param TranslationInterface $translation
      *
-     * @return mixed
+     * @return static
      */
     public function setTranslation(TranslationInterface $translation)
     {
@@ -119,7 +121,7 @@ trait AttributeValueTranslationTrait
     /**
      * @param AttributeValueInterface $attributeValue
      *
-     * @return mixed
+     * @return static
      */
     public function setAttributeValue(AttributeValueInterface $attributeValue)
     {
