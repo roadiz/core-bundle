@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber;
 
 use Doctrine\Common\EventSubscriber;
+use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
@@ -39,7 +40,16 @@ final class NodesSourcesInheritanceSubscriber implements EventSubscriber
     {
         return [
             Events::loadClassMetadata,
+            Events::postLoad
         ];
+    }
+
+    public function postLoad(LifecycleEventArgs $event)
+    {
+        $object = $event->getObject();
+        if ($object instanceof NodesSources) {
+            $object->injectObjectManager($event->getObjectManager());
+        }
     }
 
     /**

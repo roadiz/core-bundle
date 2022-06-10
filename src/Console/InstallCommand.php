@@ -114,9 +114,8 @@ class InstallCommand extends Command
 
             if ($manager instanceof EntityManagerInterface) {
                 // Clear result cache
-                /** @var CacheProvider $cacheDriver */
                 $cacheDriver = $manager->getConfiguration()->getResultCacheImpl();
-                if ($cacheDriver !== null) {
+                if ($cacheDriver instanceof CacheProvider) {
                     $cacheDriver->deleteAll();
                 }
             }

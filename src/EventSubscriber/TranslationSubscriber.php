@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 
 use Doctrine\Common\Cache\CacheProvider;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Event\Cache\CachePurgeRequestEvent;
 use RZ\Roadiz\CoreBundle\Event\Translation\TranslationCreatedEvent;
 use RZ\Roadiz\CoreBundle\Event\Translation\TranslationDeletedEvent;
@@ -18,11 +20,11 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  */
 class TranslationSubscriber implements EventSubscriberInterface
 {
-    protected CacheProvider $cacheProvider;
+    protected ManagerRegistry $managerRegistry;
 
-    public function __construct(CacheProvider $cacheProvider)
+    public function __construct(ManagerRegistry $managerRegistry)
     {
-        $this->cacheProvider = $cacheProvider;
+        $this->managerRegistry = $managerRegistry;
     }
 
     public static function getSubscribedEvents(): array
@@ -42,7 +44,14 @@ class TranslationSubscriber implements EventSubscriberInterface
      */
     public function purgeCache(Event $event, string $eventName, EventDispatcherInterface $dispatcher)
     {
-        $this->cacheProvider->deleteAll();
+        $manager = $this->managerRegistry->getManager();
+        // Clear result cache
+        if (
+            $manager instanceof EntityManagerInterface &&
+            $manager->getConfiguration()->getResultCacheImpl() instanceof CacheProvider
+        ) {
+            $manager->getConfiguration()->getResultCacheImpl()->deleteAll();
+        }
         $dispatcher->dispatch(new CachePurgeRequestEvent());
     }
 }

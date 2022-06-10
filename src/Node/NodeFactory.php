@@ -63,7 +63,7 @@ final class NodeFactory
         /** @var NodesSources $source */
         $source = new $sourceClass($node, $translation);
         $manager = $this->managerRegistry->getManagerForClass(NodesSources::class);
-        $source->injectObjectManager($manager, $manager->getClassMetadata($sourceClass));
+        $source->injectObjectManager($manager);
         $source->setTitle($title);
         $source->setPublishedAt(new \DateTime());
 

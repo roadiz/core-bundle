@@ -53,7 +53,7 @@ final class NodeDuplicator
         $node = clone $this->originalNode;
 
         if ($this->objectManager->contains($node)) {
-            $this->objectManager->clear($node);
+            $this->objectManager->clear();
         }
 
         if ($parent !== null) {

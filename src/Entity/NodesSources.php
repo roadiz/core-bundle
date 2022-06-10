@@ -50,7 +50,7 @@ use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
  * @ApiFilter(RoadizFilter\LocaleFilter::class)
  * @ApiFilter(RoadizFilter\PublishableFilter::class)
  */
-class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggable
+class NodesSources extends AbstractEntity implements Loggable
 {
     /**
      * @var ObjectManager|null
@@ -63,7 +63,7 @@ class NodesSources extends AbstractEntity implements ObjectManagerAware, Loggabl
      * @inheritDoc
      * @Serializer\Exclude
      */
-    public function injectObjectManager(ObjectManager $objectManager, ClassMetadata $classMetadata): void
+    public function injectObjectManager(ObjectManager $objectManager): void
     {
         $this->objectManager = $objectManager;
     }
