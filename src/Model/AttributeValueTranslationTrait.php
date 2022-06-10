@@ -79,6 +79,10 @@ trait AttributeValueTranslationTrait
                     $this->value = $value;
                 }
                 return $this;
+            case AttributeInterface::INTEGER_T:
+            case AttributeInterface::DECIMAL_T:
+                $this->value = (string) $value;
+                return $this;
             default:
                 $this->value = $value;
                 return $this;
