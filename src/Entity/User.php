@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractHuman;
 use RZ\Roadiz\CoreBundle\Security\User\AdvancedUserInterface;
@@ -15,6 +16,7 @@ use RZ\Roadiz\Random\SaltGenerator;
 use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\UserRepository")
@@ -25,6 +27,8 @@ use Symfony\Component\Security\Core\User\UserInterface;
  *     @ORM\Index(columns={"locale"})
  * })
  * @ORM\HasLifecycleCallbacks
+ * @UniqueEntity("email")
+ * @UniqueEntity("username")
  */
 class User extends AbstractHuman implements UserInterface, AdvancedUserInterface, EquatableInterface, PasswordAuthenticatedUserInterface
 {
@@ -35,6 +39,16 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @var int
      */
     public const CONFIRMATION_TTL = 900;
+
+    /**
+     * @ORM\Column(type="string", unique=true, nullable=false)
+     * @Serializer\Groups({"user", "human"})
+     * @SymfonySerializer\Groups({"user", "human"})
+     * @var string|null
+     * @Assert\NotBlank()
+     * @Assert\Email()
+     */
+    protected ?string $email = null;
 
     /**
      * @var bool
@@ -81,6 +95,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @ORM\Column(type="string", unique=true)
      * @Serializer\Groups({"user", "log_user"})
      * @SymfonySerializer\Groups({"user", "log_user"})
+     * @Assert\NotBlank()
      * @var string
      */
     private string $username = '';

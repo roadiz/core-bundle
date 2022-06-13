@@ -12,23 +12,14 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 abstract class FilterUserEvent extends Event
 {
-    /**
-     * @var User
-     */
-    private $user;
+    private User $user;
 
-    /**
-     * @param User $user
-     */
     public function __construct(User $user)
     {
         $this->user = $user;
     }
 
-    /**
-     * @return User
-     */
-    public function getUser()
+    public function getUser(): User
     {
         return $this->user;
     }
