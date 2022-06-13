@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Security\User;
 
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\User;
@@ -18,19 +17,15 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 class UserViewer
 {
     protected Settings $settingsBag;
+    protected UrlGeneratorInterface $urlGenerator;
     protected TranslatorInterface $translator;
     protected EmailManager $emailManager;
     protected LoggerInterface $logger;
     protected ?User $user = null;
 
-    /**
-     * @param Settings $settingsBag
-     * @param TranslatorInterface $translator
-     * @param EmailManager $emailManager
-     * @param LoggerInterface $logger
-     */
     public function __construct(
         Settings $settingsBag,
+        UrlGeneratorInterface $urlGenerator,
         TranslatorInterface $translator,
         EmailManager $emailManager,
         LoggerInterface $logger
@@ -39,12 +34,12 @@ class UserViewer
         $this->translator = $translator;
         $this->emailManager = $emailManager;
         $this->logger = $logger;
+        $this->urlGenerator = $urlGenerator;
     }
 
     /**
      * Send email to reset user password.
      *
-     * @param UrlGeneratorInterface $urlGenerator
      * @param string|NodesSources $route
      * @param string $htmlTemplate
      * @param string $txtTemplate
@@ -53,7 +48,6 @@ class UserViewer
      * @throws \Exception
      */
     public function sendPasswordResetLink(
-        UrlGeneratorInterface $urlGenerator,
         $route = 'loginResetPage',
         string $htmlTemplate = '@RoadizCore/email/users/reset_password_email.html.twig',
         string $txtTemplate = '@RoadizCore/email/users/reset_password_email.txt.twig'
@@ -65,7 +59,7 @@ class UserViewer
         $siteName = $this->getSiteName();
 
         if (is_string($route)) {
-            $resetLink = $urlGenerator->generate(
+            $resetLink = $this->urlGenerator->generate(
                 $route,
                 [
                     'token' => $this->user->getConfirmationToken(),
@@ -73,7 +67,7 @@ class UserViewer
                 UrlGeneratorInterface::ABSOLUTE_URL
             );
         } else {
-            $resetLink = $urlGenerator->generate(
+            $resetLink = $this->urlGenerator->generate(
                 RouteObjectInterface::OBJECT_BASED_ROUTE_NAME,
                 [
                     RouteObjectInterface::ROUTE_OBJECT => $route,

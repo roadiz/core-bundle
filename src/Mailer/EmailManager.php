@@ -305,13 +305,15 @@ class EmailManager
     /**
      * Sets the value of sender.
      *
-     * @param string|array<string|int, string>|array<string|int, Address> $sender
+     * @param Address|string|array<string|int, string>|array<string|int, Address> $sender
      * @return EmailManager
      * @throws \Exception
      */
     public function setSender($sender)
     {
-        if (\is_string($sender)) {
+        if ($sender instanceof Address) {
+            $this->sender = [$sender];
+        } elseif (\is_string($sender)) {
             $this->sender = [new Address($sender)];
         } elseif (\is_array($sender)) {
             $this->sender = [];

@@ -54,7 +54,7 @@ trait LoginRequestTrait
                     /** @var UserViewer $userViewer */
                     $userViewer = $this->get(UserViewer::class);
                     $userViewer->setUser($user);
-                    $userViewer->sendPasswordResetLink($urlGenerator, $resetRoute);
+                    $userViewer->sendPasswordResetLink($resetRoute);
                     return true;
                 } catch (\Exception $e) {
                     $user->setPasswordRequestedAt(null);

@@ -28,26 +28,22 @@ class UserLifeCycleSubscriber implements EventSubscriber
     private UserViewer $userViewer;
     private EventDispatcherInterface $dispatcher;
     private PasswordHasherFactoryInterface $passwordHasherFactory;
-    private UrlGeneratorInterface $urlGenerator;
     private LoggerInterface $logger;
 
     /**
      * @param UserViewer $userViewer
      * @param EventDispatcherInterface $dispatcher
      * @param PasswordHasherFactoryInterface $passwordHasherFactory
-     * @param UrlGeneratorInterface $urlGenerator
      * @param LoggerInterface $logger
      */
     public function __construct(
         UserViewer $userViewer,
         EventDispatcherInterface $dispatcher,
         PasswordHasherFactoryInterface $passwordHasherFactory,
-        UrlGeneratorInterface $urlGenerator,
         LoggerInterface $logger
     ) {
         $this->userViewer = $userViewer;
         $this->dispatcher = $dispatcher;
-        $this->urlGenerator = $urlGenerator;
         $this->logger = $logger;
         $this->passwordHasherFactory = $passwordHasherFactory;
     }
@@ -196,7 +192,6 @@ class UserLifeCycleSubscriber implements EventSubscriber
 
                 $this->userViewer->setUser($user);
                 $this->userViewer->sendPasswordResetLink(
-                    $this->urlGenerator,
                     'loginResetPage',
                     '@RoadizCore/email/users/welcome_user_email.html.twig',
                     '@RoadizCore/email/users/welcome_user_email.txt.twig'
