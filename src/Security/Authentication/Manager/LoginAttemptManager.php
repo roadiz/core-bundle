@@ -80,7 +80,7 @@ class LoginAttemptManager
             throw new \RuntimeException('No manager found for class ' . LoginAttempt::class);
         }
         $loginAttempt = $this->getLoginAttemptRepository()->findOrCreateOneByIpAddressAndUsername(
-            $this->requestStack->getMasterRequest()->getClientIp(),
+            $this->requestStack->getMainRequest()->getClientIp(),
             $username
         );
 

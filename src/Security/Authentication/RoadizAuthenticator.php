@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace RZ\Roadiz\CoreBundle\Security\Authentication;
 
 use Doctrine\Persistence\ManagerRegistry;
@@ -9,6 +11,9 @@ use RZ\Roadiz\CoreBundle\Security\Authentication\Manager\LoginAttemptManager;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\PropertyAccess\Exception\AccessException;
+use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
@@ -33,28 +38,35 @@ abstract class RoadizAuthenticator extends AbstractLoginFormAuthenticator
     private ManagerRegistry $managerRegistry;
     private LoginAttemptManager $loginAttemptManager;
     private LoggerInterface $logger;
+    private string $usernamePath;
+    private string $passwordPath;
 
     public function __construct(
         UrlGeneratorInterface $urlGenerator,
         ManagerRegistry $managerRegistry,
         LoginAttemptManager $loginAttemptManager,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        string $usernamePath = 'username',
+        string $passwordPath = 'password'
     ) {
         $this->urlGenerator = $urlGenerator;
         $this->managerRegistry = $managerRegistry;
         $this->loginAttemptManager = $loginAttemptManager;
         $this->logger = $logger;
+        $this->usernamePath = $usernamePath;
+        $this->passwordPath = $passwordPath;
     }
 
     public function authenticate(Request $request): Passport
     {
-        $username = $request->request->get('username', '');
-
+        $credentials = $this->getCredentials($request);
+        $username = $credentials['username'];
         $request->getSession()->set(Security::LAST_USERNAME, $username);
+        $this->loginAttemptManager->checkLoginAttempts($username);
 
         return new Passport(
             new UserBadge($username),
-            new PasswordCredentials($request->request->get('password', '')),
+            new PasswordCredentials($credentials['password']),
             [
                 new CsrfTokenBadge('authenticate', $request->get('_csrf_token')),
                 new RememberMeBadge(),
@@ -85,19 +97,17 @@ abstract class RoadizAuthenticator extends AbstractLoginFormAuthenticator
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response
     {
-        $username = $request->request->get('_username') ??
-            $request->request->get('username') ??
-            $request->request->get('email');
+        $credentials = $this->getCredentials($request);
         $ipAddress = $request->getClientIp();
         $this->logger->error($exception->getMessage(), [
-            'username' => $username,
+            'username' => $credentials['username'],
             'ipAddress' => $ipAddress
         ]);
         if (
-            is_string($username) &&
+            is_string($credentials['username']) &&
             $exception instanceof BadCredentialsException
         ) {
-            $this->loginAttemptManager->onFailedLoginAttempt($username);
+            $this->loginAttemptManager->onFailedLoginAttempt($credentials['username']);
         }
 
         return parent::onAuthenticationFailure($request, $exception);
@@ -107,5 +117,35 @@ abstract class RoadizAuthenticator extends AbstractLoginFormAuthenticator
     protected function getLoginUrl(Request $request): string
     {
         return $this->urlGenerator->generate(self::LOGIN_ROUTE);
+    }
+
+    private function getCredentials(Request $request)
+    {
+        $credentials = [];
+        try {
+            $credentials['username'] = $request->request->get($this->usernamePath);
+
+            if (!\is_string($credentials['username'])) {
+                throw new BadRequestHttpException(sprintf('The key "%s" must be a string.', $this->usernamePath));
+            }
+
+            if (\strlen($credentials['username']) > Security::MAX_USERNAME_LENGTH) {
+                throw new BadCredentialsException('Invalid username.');
+            }
+        } catch (AccessException $e) {
+            throw new BadRequestHttpException(sprintf('The key "%s" must be provided.', $this->usernamePath), $e);
+        }
+
+        try {
+            $credentials['password'] = $request->request->get($this->passwordPath);
+
+            if (!\is_string($credentials['password'])) {
+                throw new BadRequestHttpException(sprintf('The key "%s" must be a string.', $this->passwordPath));
+            }
+        } catch (AccessException $e) {
+            throw new BadRequestHttpException(sprintf('The key "%s" must be provided.', $this->passwordPath), $e);
+        }
+
+        return $credentials;
     }
 }
