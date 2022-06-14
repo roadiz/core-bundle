@@ -22,6 +22,8 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  */
 trait LoginRequestTrait
 {
+    abstract protected function getUserViewer(): UserViewer;
+
     /**
      * @param FormInterface         $form
      * @param ObjectManager         $entityManager
@@ -51,8 +53,7 @@ trait LoginRequestTrait
                     $user->setPasswordRequestedAt(new \DateTime());
                     $user->setConfirmationToken($tokenGenerator->generateToken());
                     $entityManager->flush();
-                    /** @var UserViewer $userViewer */
-                    $userViewer = $this->get(UserViewer::class);
+                    $userViewer = $this->getUserViewer();
                     $userViewer->setUser($user);
                     $userViewer->sendPasswordResetLink($resetRoute);
                     return true;
