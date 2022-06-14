@@ -26,12 +26,29 @@ class UserProvider implements UserProviderInterface
         $this->managerRegistry = $managerRegistry;
     }
 
+    /**
+     * @param string $username
+     * @return UserInterface
+     * @deprecated since Symfony 5.3, use loadUserByIdentifier() instead
+     */
     public function loadUserByUsername(string $username): UserInterface
+    {
+        return $this->loadUserByUsernameOrEmail($username);
+    }
+
+    protected function loadUserByUsernameOrEmail(string $identifier): UserInterface
     {
         /** @var User|null $user */
         $user = $this->managerRegistry
-                     ->getRepository(User::class)
-                     ->findOneBy(['username' => $username]);
+            ->getRepository(User::class)
+            ->findOneBy(['username' => $identifier]);
+
+        if ($user === null) {
+            /** @var User|null $user */
+            $user = $this->managerRegistry
+                ->getRepository(User::class)
+                ->findOneBy(['email' => $identifier]);
+        }
 
         if ($user !== null) {
             return $user;
@@ -42,7 +59,7 @@ class UserProvider implements UserProviderInterface
 
     public function loadUserByIdentifier(string $identifier): UserInterface
     {
-        return $this->loadUserByUsername($identifier);
+        return $this->loadUserByUsernameOrEmail($identifier);
     }
 
     /**
