@@ -9,7 +9,6 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Query;
 use Lcobucci\JWT\Token\Plain;
 use Lcobucci\JWT\Validation\RequiredConstraintsViolated;
-use RZ\Roadiz\CoreBundle\Security\Authentication\Manager\LoginAttemptManager;
 use RZ\Roadiz\OpenId\Authentication\JwtAccountToken;
 use RZ\Roadiz\OpenId\Authentication\Provider\JwtRoleStrategy;
 use RZ\Roadiz\OpenId\Discovery;
@@ -22,7 +21,6 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Security;
-use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Credentials\CustomCredentials;
@@ -40,7 +38,6 @@ final class OpenIdAuthenticator extends AbstractAuthenticator
     private JwtRoleStrategy $roleStrategy;
     private OpenIdJwtConfigurationFactory $jwtConfigurationFactory;
     private UrlGeneratorInterface $urlGenerator;
-    private LoginAttemptManager $loginAttemptManager;
 
     private string $returnPath;
     private string $defaultRoute;
@@ -50,28 +47,12 @@ final class OpenIdAuthenticator extends AbstractAuthenticator
     private string $targetPathParameter;
     private array $defaultRoles;
 
-    /**
-     * @param HttpUtils $httpUtils
-     * @param Discovery|null $discovery
-     * @param JwtRoleStrategy $roleStrategy
-     * @param OpenIdJwtConfigurationFactory $jwtConfigurationFactory
-     * @param UrlGeneratorInterface $urlGenerator
-     * @param LoginAttemptManager $loginAttemptManager
-     * @param string $returnPath
-     * @param string $defaultRoute
-     * @param string|null $oauthClientId
-     * @param string|null $oauthClientSecret
-     * @param string $usernameClaim
-     * @param string $targetPathParameter
-     * @param array $defaultRoles
-     */
     public function __construct(
         HttpUtils $httpUtils,
         ?Discovery $discovery,
         JwtRoleStrategy $roleStrategy,
         OpenIdJwtConfigurationFactory $jwtConfigurationFactory,
         UrlGeneratorInterface $urlGenerator,
-        LoginAttemptManager $loginAttemptManager,
         string $returnPath,
         string $defaultRoute,
         ?string $oauthClientId,
@@ -95,7 +76,6 @@ final class OpenIdAuthenticator extends AbstractAuthenticator
         $this->defaultRoles = $defaultRoles;
         $this->defaultRoute = $defaultRoute;
         $this->urlGenerator = $urlGenerator;
-        $this->loginAttemptManager = $loginAttemptManager;
         $this->jwtConfigurationFactory = $jwtConfigurationFactory;
     }
 
@@ -242,11 +222,6 @@ final class OpenIdAuthenticator extends AbstractAuthenticator
      */
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        $user = $token->getUser();
-        if ($user instanceof UserInterface) {
-            $this->loginAttemptManager->onSuccessLoginAttempt($user->getUsername());
-        }
-
         if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
             return new RedirectResponse($targetPath);
         }
@@ -262,7 +237,6 @@ final class OpenIdAuthenticator extends AbstractAuthenticator
         if ($request->hasSession()) {
             $request->getSession()->set(Security::AUTHENTICATION_ERROR, $exception);
         }
-
         $url = $this->urlGenerator->generate($this->defaultRoute);
 
         return new RedirectResponse($url);

@@ -7,19 +7,16 @@ namespace RZ\Roadiz\CoreBundle\Security\Authentication;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Entity\User;
-use RZ\Roadiz\CoreBundle\Security\Authentication\Manager\LoginAttemptManager;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\PropertyAccess\Exception\AccessException;
-use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Core\Security;
-use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Http\Authenticator\AbstractLoginFormAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\CsrfTokenBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\RememberMeBadge;
@@ -36,7 +33,6 @@ abstract class RoadizAuthenticator extends AbstractLoginFormAuthenticator
 
     private UrlGeneratorInterface $urlGenerator;
     private ManagerRegistry $managerRegistry;
-    private LoginAttemptManager $loginAttemptManager;
     private LoggerInterface $logger;
     private string $usernamePath;
     private string $passwordPath;
@@ -44,14 +40,12 @@ abstract class RoadizAuthenticator extends AbstractLoginFormAuthenticator
     public function __construct(
         UrlGeneratorInterface $urlGenerator,
         ManagerRegistry $managerRegistry,
-        LoginAttemptManager $loginAttemptManager,
         LoggerInterface $logger,
         string $usernamePath = 'username',
         string $passwordPath = 'password'
     ) {
         $this->urlGenerator = $urlGenerator;
         $this->managerRegistry = $managerRegistry;
-        $this->loginAttemptManager = $loginAttemptManager;
         $this->logger = $logger;
         $this->usernamePath = $usernamePath;
         $this->passwordPath = $passwordPath;
@@ -60,12 +54,10 @@ abstract class RoadizAuthenticator extends AbstractLoginFormAuthenticator
     public function authenticate(Request $request): Passport
     {
         $credentials = $this->getCredentials($request);
-        $username = $credentials['username'];
-        $request->getSession()->set(Security::LAST_USERNAME, $username);
-        $this->loginAttemptManager->checkLoginAttempts($username);
+        $request->getSession()->set(Security::LAST_USERNAME, $credentials['username']);
 
         return new Passport(
-            new UserBadge($username),
+            new UserBadge($credentials['username']),
             new PasswordCredentials($credentials['password']),
             [
                 new CsrfTokenBadge('authenticate', $request->get('_csrf_token')),
@@ -77,9 +69,7 @@ abstract class RoadizAuthenticator extends AbstractLoginFormAuthenticator
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): Response
     {
         $user = $token->getUser();
-        if ($user instanceof UserInterface) {
-            $this->loginAttemptManager->onSuccessLoginAttempt($user->getUsername());
-        }
+
         if ($user instanceof User) {
             $user->setLastLogin(new \DateTime('now'));
             $manager = $this->managerRegistry->getManagerForClass(User::class);
@@ -103,12 +93,6 @@ abstract class RoadizAuthenticator extends AbstractLoginFormAuthenticator
             'username' => $credentials['username'],
             'ipAddress' => $ipAddress
         ]);
-        if (
-            is_string($credentials['username']) &&
-            $exception instanceof BadCredentialsException
-        ) {
-            $this->loginAttemptManager->onFailedLoginAttempt($credentials['username']);
-        }
 
         return parent::onAuthenticationFailure($request, $exception);
     }
@@ -119,7 +103,11 @@ abstract class RoadizAuthenticator extends AbstractLoginFormAuthenticator
         return $this->urlGenerator->generate(self::LOGIN_ROUTE);
     }
 
-    private function getCredentials(Request $request)
+    /**
+     * @param Request $request
+     * @return array<string>
+     */
+    private function getCredentials(Request $request): array
     {
         $credentials = [];
         try {

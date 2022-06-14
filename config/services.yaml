@@ -237,10 +237,6 @@ services:
     RZ\Roadiz\CoreBundle\Security\Authentication\JwtAuthenticationSuccessHandler:
         decorates: 'lexik_jwt_authentication.handler.authentication_success'
 
-    # Provides LoginAttemptManager aware authentication
-    RZ\Roadiz\CoreBundle\Security\Authentication\JwtAuthenticationFailureHandler:
-        decorates: 'lexik_jwt_authentication.handler.authentication_failure'
-
     RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\NodeChrootResolver:
         alias: RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\NodeChrootChainResolver
 

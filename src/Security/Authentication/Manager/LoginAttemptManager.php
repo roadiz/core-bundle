@@ -12,6 +12,10 @@ use RZ\Roadiz\CoreBundle\Repository\LoginAttemptRepository;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * @deprecated Use built-in Symfony Login throttling
+ * @see https://symfony.com/doc/current/security.html#limiting-login-attempts
+ */
 class LoginAttemptManager
 {
     protected int $ipAttemptGraceTime = 20 * 60;
