@@ -251,14 +251,16 @@ class EmailManager
     /**
      * Sets the value of receiver.
      *
-     * @param string|array<string, string>|array<Address> $receiver the receiver
+     * @param Address|string|array<string, string>|array<Address> $receiver the receiver
      *
      * @return EmailManager
      * @throws \Exception
      */
     public function setReceiver($receiver)
     {
-        if (\is_string($receiver)) {
+        if ($receiver instanceof Address) {
+            $this->receiver = [$receiver];
+        } elseif (\is_string($receiver)) {
             $this->receiver = [new Address($receiver)];
         } elseif (\is_array($receiver)) {
             $this->receiver = [];
