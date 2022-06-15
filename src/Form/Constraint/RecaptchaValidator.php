@@ -12,7 +12,7 @@ use Symfony\Component\Validator\ConstraintValidator;
 /**
  * @see https://github.com/thrace-project/form-bundle/blob/master/Validator/Constraint/RecaptchaValidator.php
  */
-class RecaptchaValidator extends ConstraintValidator
+class RecaptchaValidator extends ConstraintValidator implements RecaptchaServiceInterface
 {
     protected RequestStack $requestStack;
 
@@ -25,10 +25,10 @@ class RecaptchaValidator extends ConstraintValidator
     }
 
     /**
-     *
-     * @see \Symfony\Component\Validator\ConstraintValidator::validate()
      * @param mixed $data
      * @param Constraint $constraint
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @see \Symfony\Component\Validator\ConstraintValidator::validate()
      */
     public function validate($data, Constraint $constraint)
     {
@@ -47,7 +47,7 @@ class RecaptchaValidator extends ConstraintValidator
                 $this->context->buildViolation($constraint->emptyMessage)
                     ->atPath($propertyPath)
                     ->addViolation();
-            } elseif (true !== $response = $this->check($constraint, $responseField)) {
+            } elseif (true !== $response = $this->check($constraint->privateKey, $responseField, $constraint->verifyUrl)) {
                 $this->context->buildViolation($constraint->invalidMessage)
                     ->atPath($propertyPath)
                     ->addViolation();
@@ -71,20 +71,24 @@ class RecaptchaValidator extends ConstraintValidator
      * Makes a request to recaptcha service and checks if recaptcha field is valid.
      * Returns Google error-codes if recaptcha fails.
      *
-     * @param Recaptcha $constraint
-     * @param string $responseField
-     *
-     * @return bool|string|array
+     * @param string $privateKey
+     * @param string $responseValue
+     * @param string $verifyUrl
+     * @return true|string|array
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    protected function check(Recaptcha $constraint, string $responseField)
-    {
+    public function check(
+        string $privateKey,
+        string $responseValue,
+        string $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify'
+    ) {
         $data = [
-            'secret' => $constraint->privateKey,
-            'response' => $responseField,
+            'secret' => $privateKey,
+            'response' => $responseValue,
         ];
 
         $client = new Client();
-        $response = $client->post($constraint->verifyUrl, [
+        $response = $client->post($verifyUrl, [
             'form_params' => $data,
             'connect_timeout' => 10,
             'timeout' => 10,
@@ -95,7 +99,7 @@ class RecaptchaValidator extends ConstraintValidator
         $jsonResponse = json_decode($response->getBody()->getContents(), true);
 
         return (isset($jsonResponse['success']) && $jsonResponse['success'] === true) ?
-            ($jsonResponse['success']) :
+            (true) :
             ($jsonResponse['error-codes']);
     }
 }

@@ -285,7 +285,6 @@ class ContactFormManager extends EmailManager
     ) {
         $publicKey = $this->settingsBag->get('recaptcha_public_key');
         $privateKey = $this->settingsBag->get('recaptcha_private_key');
-        $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify';
 
         if (
             !empty($publicKey) &&
@@ -300,7 +299,6 @@ class ContactFormManager extends EmailManager
                     new Recaptcha([
                         'fieldName' => $validatorFieldName,
                         'privateKey' => $privateKey,
-                        'verifyUrl' => $verifyUrl,
                     ]),
                 ],
             ]);
