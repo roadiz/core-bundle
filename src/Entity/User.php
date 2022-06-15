@@ -8,14 +8,15 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Rollerworks\Component\PasswordStrength\Validator\Constraints\PasswordStrength;
 use RZ\Roadiz\Core\AbstractEntities\AbstractHuman;
 use RZ\Roadiz\CoreBundle\Security\User\AdvancedUserInterface;
 use RZ\Roadiz\Random\SaltGenerator;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -124,6 +125,8 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @var string|null
      * @Serializer\Exclude()
      * @SymfonySerializer\Ignore
+     * @PasswordStrength(minLength=8, minStrength=3)
+     * @Assert\NotBlank(groups={"no_empty_password"})
      */
     private ?string $plainPassword = null;
     /**

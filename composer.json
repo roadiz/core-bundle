@@ -50,7 +50,7 @@
         "roadiz/random": "~1.7.0 || dev-main",
         "limenius/liform-bundle": "dev-master",
         "rollerworks/password-strength-bundle": "^2.2",
-        "rollerworks/password-strength-validator": "^1.6",
+        "rollerworks/password-common-list": "^0.2.0",
         "scienta/doctrine-json-functions": "^4.2",
         "sensio/framework-extra-bundle": "^6.1",
         "solarium/solarium": "^6.0.4",
