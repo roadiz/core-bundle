@@ -7,7 +7,9 @@ namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 use Doctrine\Persistence\ManagerRegistry;
 use Fig\Link\GenericLinkProvider;
 use Psr\Link\EvolvableLinkProviderInterface;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
+use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ViewEvent;
@@ -18,15 +20,16 @@ class NodesSourcesLinkHeaderEventSubscriber implements EventSubscriberInterface
 {
     private ManagerRegistry $managerRegistry;
     private UrlGeneratorInterface $urlGenerator;
+    private PreviewResolverInterface $previewResolver;
 
-    /**
-     * @param ManagerRegistry $managerRegistry
-     * @param UrlGeneratorInterface $urlGenerator
-     */
-    public function __construct(ManagerRegistry $managerRegistry, UrlGeneratorInterface $urlGenerator)
-    {
+    public function __construct(
+        ManagerRegistry $managerRegistry,
+        UrlGeneratorInterface $urlGenerator,
+        PreviewResolverInterface $previewResolver
+    ) {
         $this->managerRegistry = $managerRegistry;
         $this->urlGenerator = $urlGenerator;
+        $this->previewResolver = $previewResolver;
     }
 
     /**
@@ -49,9 +52,13 @@ class NodesSourcesLinkHeaderEventSubscriber implements EventSubscriberInterface
             $allSources = $this->managerRegistry->getRepository(get_class($resources))->findBy([
                 'node' => $resources->getNode()
             ]);
+
             foreach ($allSources as $singleSource) {
                 $linkProvider = $request->attributes->get('_links', new GenericLinkProvider());
-                if ($linkProvider instanceof EvolvableLinkProviderInterface) {
+                if (
+                    $linkProvider instanceof EvolvableLinkProviderInterface &&
+                    ($singleSource->getTranslation()->isAvailable() || $this->previewResolver->isPreview())
+                ) {
                     $request->attributes->set('_links', $linkProvider->withLink(
                         (new Link(
                             'alternate',
