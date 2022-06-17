@@ -102,7 +102,7 @@
             </trans-unit>
       <trans-unit xml:space="preserve" id="you.need.to.choose.a.new.password.using.following.link" approved="yes">
                 <source>you.need.to.choose.a.new.password.using.following.link</source>
-                <target state="final">You need to create a new password for your account by using the following link.</target>
+                <target state="final">You need to create a new password for your account by clicking on the following link.</target>
             </trans-unit>
       <trans-unit xml:space="preserve" id="as.a.reminder.here.are.your.credentials" approved="yes">
                 <source>as.a.reminder.here.are.your.credentials</source>
