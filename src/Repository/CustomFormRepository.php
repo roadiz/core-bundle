@@ -24,6 +24,17 @@ final class CustomFormRepository extends EntityRepository
     }
 
     /**
+     * @return CustomForm[]
+     */
+    public function findAllWithRetentionTime(): array
+    {
+        $qb = $this->createQueryBuilder('cf');
+        return $qb->andWhere($qb->expr()->isNotNull('cf.retentionTime'))
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * @param Node          $node
      * @param NodeTypeField $field
      *

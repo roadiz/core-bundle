@@ -61,6 +61,13 @@ class CustomForm extends AbstractDateTimed
      */
     private ?string $email = null;
     /**
+     * @ORM\Column(type="string", length=15, nullable=true)
+     * @var string|null \DateInterval specification format
+     * @Serializer\Groups({"custom_form"})
+     * @SymfonySerializer\Groups({"custom_form"})
+     */
+    private ?string $retentionTime = null;
+    /**
      * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
      * @var bool
      * @Serializer\Groups({"custom_form", "nodes_sources"})
@@ -350,6 +357,33 @@ class CustomForm extends AbstractDateTimed
     public function isOpen(): bool
     {
         return $this->open;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getRetentionTime(): ?string
+    {
+        return $this->retentionTime;
+    }
+
+    public function getRetentionTimeInterval(): ?\DateInterval
+    {
+        try {
+            return null !== $this->getRetentionTime() ? new \DateInterval($this->getRetentionTime()) : null;
+        } catch (\Exception $exception) {
+            return null;
+        }
+    }
+
+    /**
+     * @param string|null $retentionTime
+     * @return CustomForm
+     */
+    public function setRetentionTime(?string $retentionTime): CustomForm
+    {
+        $this->retentionTime = $retentionTime;
+        return $this;
     }
 
     /**
