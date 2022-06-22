@@ -82,9 +82,15 @@ final class LocaleFilter extends GeneratedEntityFilter
             $resourceClass === NodesSources::class ||
             preg_match($this->getGeneratedEntityNamespacePattern(), $resourceClass) > 0
         ) {
-            $translation = $this->managerRegistry
-                ->getRepository(Translation::class)
-                ->findOneAvailableByLocaleOrOverrideLocale($value);
+            if ($this->previewResolver->isPreview()) {
+                $translation = $this->managerRegistry
+                    ->getRepository(Translation::class)
+                    ->findOneByLocaleOrOverrideLocale($value);
+            } else {
+                $translation = $this->managerRegistry
+                    ->getRepository(Translation::class)
+                    ->findOneAvailableByLocaleOrOverrideLocale($value);
+            }
 
             if (null === $translation) {
                 throw new InvalidArgumentException('No translation exist for locale: ' . $value);
