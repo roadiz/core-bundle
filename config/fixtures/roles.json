@@ -32,6 +32,14 @@
         ]
     },
     {
+        "name": "ROLE_ACCESS_CUSTOMFORMS_RETENTION",
+        "groups": [
+            {
+                "name": "Editors"
+            }
+        ]
+    },
+    {
         "name": "ROLE_ACCESS_CUSTOMFORMS_DELETE",
         "groups": [
             {
