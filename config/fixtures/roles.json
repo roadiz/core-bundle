@@ -64,6 +64,14 @@
         ]
     },
     {
+        "name": "ROLE_ACCESS_DOCUMENTS_LIMITATIONS",
+        "groups": [
+            {
+                "name": "Editors"
+            }
+        ]
+    },
+    {
         "name": "ROLE_ACCESS_DOCUMENTS_DELETE",
         "groups": [
             {
