@@ -54,11 +54,35 @@ use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
  * @ApiFilter(BaseFilter\OrderFilter::class, properties={
  *     "createdAt",
  *     "updatedAt",
+ *     "copyrightValidSince",
+ *     "copyrightValidUntil",
  *     "filesize"
+ * })
+ * @ApiFilter(BaseFilter\DateFilter::class, properties={
+ *     "createdAt",
+ *     "updatedAt",
+ *     "copyrightValidSince": "include_null_before",
+ *     "copyrightValidUntil": "include_null_after"
  * })
  */
 class Document extends AbstractDocument implements AdvancedDocumentInterface, HasThumbnailInterface, SizeableInterface, TimeableInterface, DisplayableInterface, FileHashInterface
 {
+    /**
+     * @ORM\Column(type="datetime", name="copyright_valid_since", nullable=true)
+     * @var \DateTime|null Null value is included in before filters
+     * @Serializer\Groups({"document_copyright"})
+     * @SymfonySerializer\Groups({"document_copyright"})
+     */
+    protected ?\DateTime $copyrightValidSince = null;
+
+    /**
+     * @ORM\Column(type="datetime", name="copyright_valid_until", nullable=true)
+     * @var \DateTime|null Null value is always included in after filters
+     * @Serializer\Groups({"document_copyright"})
+     * @SymfonySerializer\Groups({"document_copyright"})
+     */
+    protected ?\DateTime $copyrightValidUntil = null;
+
     /**
      * @ORM\OneToOne(targetEntity="Document", inversedBy="downscaledDocument", cascade={"all"}, fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="raw_document", referencedColumnName="id", onDelete="SET NULL")
@@ -813,6 +837,42 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     public function setFileHashAlgorithm(?string $algorithm): Document
     {
         $this->fileHashAlgorithm = $algorithm;
+        return $this;
+    }
+
+    /**
+     * @return \DateTime|null
+     */
+    public function getCopyrightValidSince(): ?\DateTime
+    {
+        return $this->copyrightValidSince;
+    }
+
+    /**
+     * @param \DateTime|null $copyrightValidSince
+     * @return Document
+     */
+    public function setCopyrightValidSince(?\DateTime $copyrightValidSince): Document
+    {
+        $this->copyrightValidSince = $copyrightValidSince;
+        return $this;
+    }
+
+    /**
+     * @return \DateTime|null
+     */
+    public function getCopyrightValidUntil(): ?\DateTime
+    {
+        return $this->copyrightValidUntil;
+    }
+
+    /**
+     * @param \DateTime|null $copyrightValidUntil
+     * @return Document
+     */
+    public function setCopyrightValidUntil(?\DateTime $copyrightValidUntil): Document
+    {
+        $this->copyrightValidUntil = $copyrightValidUntil;
         return $this;
     }
 
