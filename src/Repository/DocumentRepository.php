@@ -271,6 +271,24 @@ final class DocumentRepository extends EntityRepository
     }
 
     /**
+     * Restrict documents to their copyright valid datetime range or null.
+     *
+     * @param QueryBuilder $qb
+     * @param string $alias
+     * @return QueryBuilder
+     */
+    public function alterQueryBuilderWithCopyrightLimitations(QueryBuilder $qb, string $alias = 'd'): QueryBuilder
+    {
+        return $qb->andWhere($qb->expr()->orX(
+            $qb->expr()->isNull($alias . '.copyrightValidSince'),
+            $qb->expr()->lte($alias . '.copyrightValidSince', ':now')
+        ))->andWhere($qb->expr()->orX(
+            $qb->expr()->isNull($alias . '.copyrightValidUntil'),
+            $qb->expr()->gte($alias . '.copyrightValidUntil', ':now')
+        ))->setParameter(':now', new \DateTime());
+    }
+
+    /**
      * Create filters according to any translation criteria OR argument.
      *
      * @param array        $criteria
