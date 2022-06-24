@@ -38,6 +38,9 @@ class Configuration implements ConfigurationInterface
             ->booleanNode('useNativeJsonColumnType')
                 ->defaultValue(true)
             ->end()
+            ->booleanNode('hideRoadizVersion')
+                ->defaultValue(false)
+            ->end()
             ->booleanNode('useAcceptLanguageHeader')
                 ->defaultValue(false)
                 ->info(<<<EOT

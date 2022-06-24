@@ -45,7 +45,7 @@
         "roadiz/jwt": "~2.0.0 || dev-main",
         "roadiz/markdown": "dev-develop",
         "roadiz/models": "dev-develop",
-        "roadiz/nodetype-contracts": "~1.1.0 || dev-main",
+        "roadiz/nodetype-contracts": "~1.1.0",
         "roadiz/openid": "~2.0.0 || dev-develop",
         "roadiz/random": "~2.0.0 || dev-main",
         "limenius/liform-bundle": "dev-master",
