@@ -143,6 +143,10 @@ services:
         resource: '../src/Controller'
         tags: ['controller.service_arguments']
 
+    RZ\Roadiz\CoreBundle\Api\Controller\:
+        resource: '../src/Api/Controller'
+        tags: ['controller.service_arguments']
+
     RZ\Roadiz\CoreBundle\Security\Authorization\Voter\:
         resource: '../src/Security/Authorization/Voter'
         tags: [ 'security.voter' ]

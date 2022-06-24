@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Filter;
 
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\AbstractContextAwareFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryBuilderHelper;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use Doctrine\ORM\Query\Expr\Join;
@@ -14,18 +15,18 @@ use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\Security\Core\Security;
 
+/**
+ * Publishable filter is always used to avoid exposing non-published nodes and node-sources.
+ */
 final class PublishableFilter extends GeneratedEntityFilter
 {
-    private Security $security;
     private PreviewResolverInterface $previewResolver;
 
     /**
      * @param ManagerRegistry $managerRegistry
      * @param RequestStack $requestStack
      * @param PreviewResolverInterface $previewResolver
-     * @param Security $security
      * @param string $generatedEntityNamespacePattern
      * @param LoggerInterface|null $logger
      * @param array|null $properties
@@ -34,17 +35,21 @@ final class PublishableFilter extends GeneratedEntityFilter
         ManagerRegistry $managerRegistry,
         RequestStack $requestStack,
         PreviewResolverInterface $previewResolver,
-        Security $security,
         string $generatedEntityNamespacePattern = '#^App\\\GeneratedEntity\\\NS(?:[a-zA-Z]+)$#',
         LoggerInterface $logger = null,
         array $properties = null
     ) {
         parent::__construct($managerRegistry, $requestStack, $generatedEntityNamespacePattern, $logger, $properties);
 
-        $this->security = $security;
         $this->previewResolver = $previewResolver;
     }
 
+    public function apply(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, string $operationName = null/*, array $context = []*/)
+    {
+        @trigger_error(sprintf('Using "%s::apply()" is deprecated since 2.2. Use "%s::apply()" with the "filters" context key instead.', __CLASS__, AbstractContextAwareFilter::class), \E_USER_DEPRECATED);
+
+        $this->filterProperty('', '', $queryBuilder, $queryNameGenerator, $resourceClass, $operationName);
+    }
 
     /**
      * Passes a property through the filter.
@@ -65,13 +70,10 @@ final class PublishableFilter extends GeneratedEntityFilter
         string $resourceClass,
         string $operationName = null
     ) {
-        $canPreview = $this->previewResolver->isPreview() &&
-            $this->security->isGranted($this->previewResolver->getRequiredRole());
-
         /*
          * If we can preview still need to prevent deleted and archived nodes to appear
          */
-        if ($canPreview) {
+        if ($this->previewResolver->isPreview()) {
             /*
              * Apply publication filter for NodesSources
              */
