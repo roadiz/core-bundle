@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
 use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\Core\Handlers\AbstractHandler;
+use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
@@ -23,7 +24,7 @@ use Symfony\Component\Routing\Exception\ResourceNotFoundException;
  */
 class DocumentHandler extends AbstractHandler
 {
-    protected ?Document $document = null;
+    protected ?DocumentInterface $document = null;
     protected Packages $packages;
 
     /**
@@ -168,6 +169,9 @@ class DocumentHandler extends AbstractHandler
      */
     public function getFolders(Translation $translation = null): array
     {
+        if (!$this->document instanceof Document) {
+            return [];
+        }
         /** @var FolderRepository $repository */
         $repository = $this->objectManager->getRepository(Folder::class);
         if (null !== $translation) {
@@ -175,26 +179,23 @@ class DocumentHandler extends AbstractHandler
         }
 
         $docTranslation = $this->document->getDocumentTranslations()->first();
-        if (
-            null !== $docTranslation &&
-            $docTranslation instanceof DocumentTranslation
-        ) {
+        if ($docTranslation instanceof DocumentTranslation) {
             return $repository->findByDocumentAndTranslation($this->document, $docTranslation->getTranslation());
         }
 
         return $repository->findByDocumentAndTranslation($this->document);
     }
 
-    public function getDocument(): ?Document
+    public function getDocument(): ?DocumentInterface
     {
         return $this->document;
     }
 
     /**
-     * @param Document $document
+     * @param DocumentInterface $document
      * @return DocumentHandler
      */
-    public function setDocument(Document $document)
+    public function setDocument(DocumentInterface $document): DocumentHandler
     {
         $this->document = $document;
         return $this;

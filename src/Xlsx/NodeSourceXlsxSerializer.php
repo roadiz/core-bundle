@@ -6,9 +6,9 @@ namespace RZ\Roadiz\CoreBundle\Xlsx;
 
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Persistence\ObjectManager;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -105,10 +105,10 @@ class NodeSourceXlsxSerializer extends AbstractXlsxSerializer
     }
 
     /**
-     * @param NodeType $nodeType
+     * @param NodeTypeInterface $nodeType
      * @return array
      */
-    protected function getFields(NodeType $nodeType)
+    protected function getFields(NodeTypeInterface $nodeType)
     {
         $criteria = [
             'nodeType' => $nodeType,

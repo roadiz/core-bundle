@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
-use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Node\NodeFactory;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -79,13 +79,13 @@ class NodesCreationCommand extends Command
 
                 if ($locale) {
                     $translation = $this->managerRegistry
-                        ->getRepository(Translation::class)
+                        ->getRepository(TranslationInterface::class)
                         ->findOneBy(['locale' => $locale]);
                 }
 
                 if ($translation === null) {
                     $translation = $this->managerRegistry
-                        ->getRepository(Translation::class)
+                        ->getRepository(TranslationInterface::class)
                         ->findDefault();
                 }
 
@@ -104,12 +104,12 @@ class NodesCreationCommand extends Command
     /**
      * @param string $nodeName
      * @param NodeType $type
-     * @param Translation $translation
+     * @param TranslationInterface $translation
      */
     private function executeNodeCreation(
         string $nodeName,
         NodeType $type,
-        Translation $translation
+        TranslationInterface $translation
     ) {
         $node = $this->nodeFactory->create($nodeName, $type, $translation);
         $source = $node->getNodeSources()->first() ?: null;

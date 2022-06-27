@@ -480,7 +480,9 @@ class NodeHandler extends AbstractHandler
     {
         if ($this->getNode()->getParent() !== null) {
             $parentHandler = $this->createSelf();
-            $parentHandler->setNode($this->getNode()->getParent());
+            /** @var Node|null $parent */
+            $parent = $this->getNode()->getParent();
+            $parentHandler->setNode($parent);
             return $parentHandler->cleanChildrenPositions($setPositions);
         } else {
             return $this->cleanRootNodesPositions($setPositions);

@@ -161,10 +161,11 @@ final class FolderRepository extends EntityRepository
      * @param Folder $folder
      * @return array
      */
-    public function findAllChildrenIdFromFolder(Folder $folder)
+    public function findAllChildrenIdFromFolder(Folder $folder): array
     {
         $idsArray = $this->findChildrenIdFromFolder($folder);
 
+        /** @var Folder $child */
         foreach ($folder->getChildren() as $child) {
             $idsArray = array_merge($idsArray, $this->findAllChildrenIdFromFolder($child));
         }
@@ -176,7 +177,7 @@ final class FolderRepository extends EntityRepository
      * @param Folder $folder
      * @return array
      */
-    public function findChildrenIdFromFolder(Folder $folder)
+    public function findChildrenIdFromFolder(Folder $folder): array
     {
         $qb = $this->createQueryBuilder('f');
         $qb->select('f.id')

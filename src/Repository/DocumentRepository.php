@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
@@ -497,14 +498,13 @@ final class DocumentRepository extends EntityRepository
 
     /**
      * @param NodesSources  $nodeSource
-     * @param NodeTypeField $field
-     *
+     * @param NodeTypeFieldInterface $field
      * @return array
      */
     public function findByNodeSourceAndField(
         NodesSources $nodeSource,
-        NodeTypeField $field
-    ) {
+        NodeTypeFieldInterface $field
+    ): array {
         $qb = $this->createQueryBuilder('d');
         $qb->addSelect('dt')
             ->addSelect('dd')

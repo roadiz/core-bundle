@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\TwigExtension;
 
 use Doctrine\ORM\EntityManagerInterface;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Entity\AttributeValue;
+use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeGroupInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueTranslationInterface;
-use RZ\Roadiz\CoreBundle\Entity\AttributeValue;
-use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\Entity\Translation;
 use Twig\Error\SyntaxError;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
@@ -103,13 +103,13 @@ class AttributesExtension extends AbstractExtension
 
     /**
      * @param AttributableInterface|null $attributable
-     * @param Translation $translation
+     * @param TranslationInterface $translation
      * @param bool $hideNotTranslated
      *
      * @return array
      * @throws SyntaxError
      */
-    public function getAttributeValues($attributable, Translation $translation, bool $hideNotTranslated = false)
+    public function getAttributeValues($attributable, TranslationInterface $translation, bool $hideNotTranslated = false)
     {
         if (null === $attributable) {
             throw new SyntaxError('Cannot call get_attributes on NULL');
@@ -143,9 +143,9 @@ class AttributesExtension extends AbstractExtension
         foreach ($attributeValues as $attributeValue) {
             $attributeValueTranslation = $attributeValue->getAttributeValueTranslation($translation);
             if (null !== $attributeValueTranslation) {
-                array_push($attributeValueTranslations, $attributeValueTranslation);
+                $attributeValueTranslations[] = $attributeValueTranslation;
             } elseif (false !== $attributeValue->getAttributeValueTranslations()->first()) {
-                array_push($attributeValueTranslations, $attributeValue->getAttributeValueTranslations()->first());
+                $attributeValueTranslations[] = $attributeValue->getAttributeValueTranslations()->first();
             }
         }
 
@@ -206,11 +206,11 @@ class AttributesExtension extends AbstractExtension
 
     /**
      * @param mixed $mixed
-     * @param Translation|null $translation
+     * @param TranslationInterface|null $translation
      *
      * @return string|null
      */
-    public function getAttributeLabelOrCode($mixed, Translation $translation = null): ?string
+    public function getAttributeLabelOrCode($mixed, TranslationInterface $translation = null): ?string
     {
         if (null === $mixed) {
             return null;
@@ -232,7 +232,7 @@ class AttributesExtension extends AbstractExtension
         return null;
     }
 
-    public function getAttributeGroupLabelOrCode($mixed, Translation $translation = null): ?string
+    public function getAttributeGroupLabelOrCode($mixed, TranslationInterface $translation = null): ?string
     {
         if (null === $mixed) {
             return null;

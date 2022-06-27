@@ -28,7 +28,7 @@ final class CustomFormAnswerPurgeCommand extends Command
     {
         $this->setName('custom-form-answer:prune')
             ->setDescription('Prune all custom-form answers older than custom-form retention time policy.')
-            ->addOption('dry-run', InputOption::VALUE_NONE)
+            ->addOption('dry-run', 'd', InputOption::VALUE_NONE)
         ;
     }
 

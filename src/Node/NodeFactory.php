@@ -9,6 +9,7 @@ use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
+use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
 use RZ\Roadiz\CoreBundle\Repository\NodeRepository;
@@ -54,7 +55,9 @@ final class NodeFactory
             $node = new Node($type);
         }
 
-        $node->setTtl($node->getNodeType()->getDefaultTtl());
+        if ($type instanceof NodeType) {
+            $node->setTtl($type->getDefaultTtl());
+        }
         if (null !== $parent) {
             $node->setParent($parent);
         }

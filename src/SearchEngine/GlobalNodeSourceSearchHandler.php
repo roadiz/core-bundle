@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\SearchEngine;
 
+use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
@@ -25,7 +26,10 @@ class GlobalNodeSourceSearchHandler
         $this->em = $em;
     }
 
-    protected function getRepository(): NodesSourcesRepository
+    /**
+     * @return EntityRepository<NodesSources>
+     */
+    protected function getRepository(): EntityRepository
     {
         return $this->em->getRepository(NodesSources::class);
     }

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Repository;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Entity\Node;
-use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -34,13 +34,7 @@ final class CustomFormRepository extends EntityRepository
             ->getResult();
     }
 
-    /**
-     * @param Node          $node
-     * @param NodeTypeField $field
-     *
-     * @return array
-     */
-    public function findByNodeAndField($node, NodeTypeField $field)
+    public function findByNodeAndField(Node $node, NodeTypeFieldInterface $field): array
     {
         $query = $this->_em->createQuery('
             SELECT cf FROM RZ\Roadiz\CoreBundle\Entity\CustomForm cf

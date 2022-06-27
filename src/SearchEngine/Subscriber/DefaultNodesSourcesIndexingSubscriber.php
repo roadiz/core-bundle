@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\SearchEngine\Subscriber;
 
 use Doctrine\Common\Collections\Criteria;
+use RZ\Roadiz\Contracts\NodeType\SearchableInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
@@ -163,7 +164,7 @@ final class DefaultNodesSourcesIndexingSubscriber implements EventSubscriberInte
             return ((bool) $source->getShowTitle());
         }
 
-        if (null !== $source->getNode() && null !== $source->getNode()->getNodeType()) {
+        if (null !== $source->getNode() && $source->getNode()->getNodeType()) {
             return $source->getNode()->getNodeType()->isSearchable();
         }
         return true;

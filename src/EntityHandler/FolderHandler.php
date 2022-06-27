@@ -122,7 +122,9 @@ class FolderHandler extends AbstractHandler
     {
         if ($this->getFolder()->getParent() !== null) {
             $parentHandler = new FolderHandler($this->objectManager);
-            $parentHandler->setFolder($this->getFolder()->getParent());
+            /** @var Folder|null $parent */
+            $parent = $this->getFolder()->getParent();
+            $parentHandler->setFolder($parent);
             return $parentHandler->cleanChildrenPositions($setPositions);
         } else {
             return $this->cleanRootFoldersPositions($setPositions);

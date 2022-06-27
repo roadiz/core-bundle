@@ -9,13 +9,14 @@ use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Log;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments;
-use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Entity\Redirection;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
@@ -48,13 +49,15 @@ final class NodeTranstyper
     }
 
     /**
-     * @param NodeTypeField $oldField
-     * @param NodeType      $destinationNodeType
+     * @param NodeTypeFieldInterface $oldField
+     * @param NodeTypeInterface $destinationNodeType
      *
      * @return NodeTypeField|null
      */
-    private function getMatchingNodeTypeField(NodeTypeField $oldField, NodeType $destinationNodeType): ?NodeTypeField
-    {
+    private function getMatchingNodeTypeField(
+        NodeTypeFieldInterface $oldField,
+        NodeTypeInterface $destinationNodeType
+    ): ?NodeTypeFieldInterface {
         $criteria = Criteria::create();
         $criteria->andWhere(Criteria::expr()->eq('name', $oldField->getName()))
             ->andWhere(Criteria::expr()->eq('type', $oldField->getType()))
@@ -66,13 +69,13 @@ final class NodeTranstyper
     /**
      * Warning, this method DOES NOT flush entityManager at the end.
      *
-     * @param Node     $node
-     * @param NodeType $destinationNodeType
-     * @param bool     $mock
+     * @param Node $node
+     * @param NodeTypeInterface $destinationNodeType
+     * @param bool $mock
      *
      * @return Node
      */
-    public function transtype(Node $node, NodeType $destinationNodeType, bool $mock = true): Node
+    public function transtype(Node $node, NodeTypeInterface $destinationNodeType, bool $mock = true): Node
     {
         /*
          * Get an association between old fields and new fields
@@ -260,10 +263,10 @@ final class NodeTranstyper
     /**
      * Warning, this method flushes entityManager.
      *
-     * @param NodeType $nodeType
+     * @param NodeTypeInterface $nodeType
      * @throws \InvalidArgumentException If mock fails due to Source class not existing.
      */
-    protected function mockTranstype(NodeType $nodeType): void
+    protected function mockTranstype(NodeTypeInterface $nodeType): void
     {
         $sourceClass = $nodeType->getSourceEntityFullQualifiedClassName();
         if (!class_exists($sourceClass)) {

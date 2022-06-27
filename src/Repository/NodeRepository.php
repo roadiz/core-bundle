@@ -10,6 +10,7 @@ use Doctrine\ORM\Query\Expr;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderApplyEvent;
@@ -776,13 +777,13 @@ final class NodeRepository extends StatusAwareRepository
 
     /**
      * @param Node $node
-     * @param NodeTypeField $field
+     * @param NodeTypeFieldInterface $field
      * @return Node[]
      */
     public function findByNodeAndField(
         Node $node,
-        NodeTypeField $field
-    ) {
+        NodeTypeFieldInterface $field
+    ): array {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select(static::NODE_ALIAS)
             ->innerJoin('n.aNodes', 'ntn')
@@ -801,15 +802,15 @@ final class NodeRepository extends StatusAwareRepository
 
     /**
      * @param Node $node
-     * @param NodeTypeField $field
+     * @param NodeTypeFieldInterface $field
      * @param TranslationInterface $translation
-     * @return array|null
+     * @return array
      */
     public function findByNodeAndFieldAndTranslation(
         Node $node,
-        NodeTypeField $field,
+        NodeTypeFieldInterface $field,
         TranslationInterface $translation
-    ) {
+    ): array {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select('n, ns')
             ->innerJoin('n.aNodes', 'ntn')
@@ -831,13 +832,13 @@ final class NodeRepository extends StatusAwareRepository
 
     /**
      * @param Node $node
-     * @param NodeTypeField $field
+     * @param NodeTypeFieldInterface $field
      * @return array
      */
     public function findByReverseNodeAndField(
         Node $node,
-        NodeTypeField $field
-    ) {
+        NodeTypeFieldInterface $field
+    ): array {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select(static::NODE_ALIAS)
             ->innerJoin('n.bNodes', 'ntn')
@@ -856,15 +857,15 @@ final class NodeRepository extends StatusAwareRepository
 
     /**
      * @param Node $node
-     * @param NodeTypeField $field
+     * @param NodeTypeFieldInterface $field
      * @param TranslationInterface $translation
-     * @return array|null
+     * @return array
      */
     public function findByReverseNodeAndFieldAndTranslation(
         Node $node,
-        NodeTypeField $field,
+        NodeTypeFieldInterface $field,
         TranslationInterface $translation
-    ) {
+    ): array {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select('n, ns')
             ->innerJoin('n.bNodes', 'ntn')

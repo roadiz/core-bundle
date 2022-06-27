@@ -52,7 +52,7 @@ class UniqueNodeGenerator
     ): NodesSources {
         $name = $nodeType->getDisplayName() . " " . uniqid();
         $node = new Node($nodeType);
-        $node->setTtl($node->getNodeType()->getDefaultTtl());
+        $node->setTtl($nodeType->getDefaultTtl());
 
         if (null !== $tag) {
             $node->addTag($tag);

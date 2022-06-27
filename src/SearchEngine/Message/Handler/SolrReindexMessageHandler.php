@@ -31,7 +31,7 @@ final class SolrReindexMessageHandler implements MessageHandlerInterface
                 $this->indexerFactory->getIndexerFor($message->getClassname())->index($message->getIdentifier());
             }
         } catch (\LogicException $exception) {
-            $this->logger->error($exception);
+            $this->logger->error($exception->getMessage());
         }
     }
 }

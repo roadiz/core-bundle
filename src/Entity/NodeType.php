@@ -30,7 +30,7 @@ use RZ\Roadiz\Utils\StringHandler;
  *     @ORM\Index(columns={"searchable"}, name="nt_searchable")
  * })
  */
-class NodeType extends AbstractEntity implements NodeTypeInterface, SearchableInterface
+class NodeType extends AbstractEntity implements NodeTypeInterface
 {
     /**
      * @var string

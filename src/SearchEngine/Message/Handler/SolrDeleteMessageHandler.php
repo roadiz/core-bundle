@@ -31,7 +31,7 @@ final class SolrDeleteMessageHandler implements MessageHandlerInterface
                 $this->indexerFactory->getIndexerFor($message->getClassname())->delete($message->getIdentifier());
             }
         } catch (\LogicException $exception) {
-            $this->logger->error($exception);
+            $this->logger->error($exception->getMessage());
         }
     }
 }

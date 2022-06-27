@@ -1,5 +1,7 @@
 # Roadiz Core bundle
 
+[![Build Status](https://app.travis-ci.com/roadiz/core-bundle.svg?branch=main)](https://app.travis-ci.com/roadiz/core-bundle)
+
 Installation
 ============
 
@@ -47,7 +49,7 @@ return [
 - Create folders: `public/assets`, `public/themes`, `public/files`, `themes/`, `var/files` for app documents and runtime classes
 - Copy and merge `@RoadizCoreBundle/config/packages/*` files into your project `config/packages` folder
 - Make to change your `framework.session.name` if you have multiple website running on the same localhost
-- Add custom routes:
+- Add current bundle and `rezozero/intervention-request-bundle` routes to your project:
 ```yaml
 # config/routes.yaml
 roadiz_core:

@@ -212,7 +212,9 @@ class TagHandler extends AbstractHandler
     {
         if ($this->tag->getParent() !== null) {
             $tagHandler = new TagHandler($this->objectManager);
-            $tagHandler->setTag($this->tag->getParent());
+            /** @var Tag|null $parent */
+            $parent = $this->tag->getParent();
+            $tagHandler->setTag($parent);
             return $tagHandler->cleanChildrenPositions($setPositions);
         } else {
             return $this->cleanRootTagsPositions($setPositions);

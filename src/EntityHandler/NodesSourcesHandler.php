@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
+use Doctrine\ORM\EntityRepository;
 use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\Document;
@@ -41,9 +42,9 @@ class NodesSourcesHandler extends AbstractHandler
     }
 
     /**
-     * @return NodesSourcesRepository
+     * @return EntityRepository<NodesSources>
      */
-    protected function getRepository(): NodesSourcesRepository
+    protected function getRepository(): EntityRepository
     {
         return $this->objectManager->getRepository(NodesSources::class);
     }
