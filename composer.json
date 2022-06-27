@@ -36,7 +36,7 @@
         "phpdocumentor/reflection-docblock": "^5.2",
         "phpoffice/phpspreadsheet": "^1.15",
         "rezozero/crypto": "^0.2.0 || dev-master",
-        "rezozero/intervention-request-bundle": "dev-master",
+        "rezozero/intervention-request-bundle": "~2.0.0",
         "rezozero/tree-walker": "dev-master",
         "roadiz/doc-generator": "~2.0.0 || dev-develop",
         "roadiz/documents": "dev-develop",
