@@ -249,8 +249,8 @@ class NodesSourcesRepository extends StatusAwareRepository
     protected function getContextualQuery(
         array &$criteria,
         array $orderBy = null,
-              $limit = null,
-              $offset = null
+        $limit = null,
+        $offset = null
     ) {
         $qb = $this->createQueryBuilder(static::NODESSOURCES_ALIAS);
         $this->alterQueryBuilderWithAuthorizationChecker($qb, static::NODESSOURCES_ALIAS);
@@ -359,8 +359,8 @@ class NodesSourcesRepository extends StatusAwareRepository
     public function findBy(
         array $criteria,
         array $orderBy = null,
-              $limit = null,
-              $offset = null
+        $limit = null,
+        $offset = null
     ) {
         $qb = $this->getContextualQuery(
             $criteria,

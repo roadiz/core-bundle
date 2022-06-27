@@ -19,16 +19,13 @@ class NodesSourcesLinkHeaderEventSubscriber implements EventSubscriberInterface
 {
     private ManagerRegistry $managerRegistry;
     private UrlGeneratorInterface $urlGenerator;
-    private PreviewResolverInterface $previewResolver;
 
     public function __construct(
         ManagerRegistry $managerRegistry,
-        UrlGeneratorInterface $urlGenerator,
-        PreviewResolverInterface $previewResolver
+        UrlGeneratorInterface $urlGenerator
     ) {
         $this->managerRegistry = $managerRegistry;
         $this->urlGenerator = $urlGenerator;
-        $this->previewResolver = $previewResolver;
     }
 
     /**
@@ -41,13 +38,16 @@ class NodesSourcesLinkHeaderEventSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function onKernelView(ViewEvent $event)
+    public function onKernelView(ViewEvent $event): void
     {
         $request = $event->getRequest();
         $resources = $request->attributes->get('data', null);
         $linkProvider = $request->attributes->get('_links', new GenericLinkProvider());
 
         if ($resources instanceof NodesSources && $linkProvider instanceof EvolvableLinkProviderInterface) {
+            /*
+             * Preview and authentication is handled at repository level.
+             */
             /** @var NodesSources[] $allSources */
             $allSources = $this->managerRegistry
                 ->getRepository(get_class($resources))
