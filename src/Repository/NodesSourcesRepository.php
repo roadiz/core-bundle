@@ -196,7 +196,7 @@ class NodesSourcesRepository extends StatusAwareRepository
     public function alterQueryBuilderWithAuthorizationChecker(
         QueryBuilder $qb,
         string $prefix = EntityRepository::NODESSOURCES_ALIAS
-    ) {
+    ): QueryBuilder {
         if (true === $this->isDisplayingAllNodesStatuses()) {
             if (!$this->hasJoinedNode($qb, $prefix)) {
                 $qb->innerJoin($prefix . '.node', static::NODE_ALIAS);
@@ -249,8 +249,8 @@ class NodesSourcesRepository extends StatusAwareRepository
     protected function getContextualQuery(
         array &$criteria,
         array $orderBy = null,
-        $limit = null,
-        $offset = null
+              $limit = null,
+              $offset = null
     ) {
         $qb = $this->createQueryBuilder(static::NODESSOURCES_ALIAS);
         $this->alterQueryBuilderWithAuthorizationChecker($qb, static::NODESSOURCES_ALIAS);
@@ -359,8 +359,8 @@ class NodesSourcesRepository extends StatusAwareRepository
     public function findBy(
         array $criteria,
         array $orderBy = null,
-        $limit = null,
-        $offset = null
+              $limit = null,
+              $offset = null
     ) {
         $qb = $this->getContextualQuery(
             $criteria,
@@ -564,10 +564,10 @@ class NodesSourcesRepository extends StatusAwareRepository
     {
         $subQuery = $this->_em->createQueryBuilder();
         $subQuery->select('sns.id')
-                 ->from(Log::class, 'slog')
-                 ->innerJoin(NodesSources::class, 'sns')
-                 ->andWhere($subQuery->expr()->isNotNull('slog.nodeSource'))
-                 ->orderBy('slog.datetime', 'DESC');
+            ->from(Log::class, 'slog')
+            ->innerJoin(NodesSources::class, 'sns')
+            ->andWhere($subQuery->expr()->isNotNull('slog.nodeSource'))
+            ->orderBy('slog.datetime', 'DESC');
 
         $query = $this->createQueryBuilder(static::NODESSOURCES_ALIAS);
         $query->andWhere($query->expr()->in(static::NODESSOURCES_ALIAS . '.id', $subQuery->getQuery()->getDQL()));
@@ -721,6 +721,28 @@ class NodesSourcesRepository extends StatusAwareRepository
         $qb->setParameter('field', $field)
             ->setParameter('nodeA', $nodesSources->getNode())
             ->setParameter('translation', $nodesSources->getTranslation());
+
+        return $qb->getQuery()->getResult();
+    }
+
+    public function findByNode(Node $node): array
+    {
+        $qb = $this->createQueryBuilder(static::NODESSOURCES_ALIAS);
+        $qb->select('ns, n, ua')
+            ->innerJoin('ns.node', static::NODE_ALIAS)
+            ->innerJoin('ns.translation', static::TRANSLATION_ALIAS)
+            ->leftJoin('ns.urlAliases', 'ua')
+            ->andWhere($qb->expr()->eq('n.id', ':node'))
+            ->addOrderBy(static::TRANSLATION_ALIAS . '.defaultTranslation', 'DESC')
+            ->addOrderBy(static::TRANSLATION_ALIAS . '.locale', 'ASC')
+            ->setParameter('node', $node)
+            ->setCacheable(true);
+
+        $this->alterQueryBuilderWithAuthorizationChecker($qb);
+        if (!$this->previewResolver->isPreview()) {
+            $qb->andWhere($qb->expr()->eq(static::TRANSLATION_ALIAS . '.available', ':available'))
+                ->setParameter('available', true);
+        }
 
         return $qb->getQuery()->getResult();
     }

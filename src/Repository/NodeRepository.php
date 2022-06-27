@@ -257,8 +257,8 @@ final class NodeRepository extends StatusAwareRepository
     public function findByWithTranslation(
         array $criteria,
         array $orderBy = null,
-        $limit = null,
-        $offset = null,
+              $limit = null,
+              $offset = null,
         TranslationInterface $translation = null
     ) {
         return $this->findBy(
@@ -305,8 +305,8 @@ final class NodeRepository extends StatusAwareRepository
     public function findBy(
         array $criteria,
         array $orderBy = null,
-        $limit = null,
-        $offset = null,
+              $limit = null,
+              $offset = null,
         TranslationInterface $translation = null
     ) {
         $qb = $this->getContextualQueryWithTranslation(
@@ -355,8 +355,8 @@ final class NodeRepository extends StatusAwareRepository
     protected function getContextualQueryWithTranslation(
         array &$criteria,
         array $orderBy = null,
-        $limit = null,
-        $offset = null,
+              $limit = null,
+              $offset = null,
         TranslationInterface $translation = null
     ) {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
@@ -897,9 +897,9 @@ final class NodeRepository extends StatusAwareRepository
             $theOffprings = array_merge($theOffprings, $in);
             $subQb = $this->createQueryBuilder('n');
             $subQb->select('n.id')
-                  ->andWhere($subQb->expr()->in('n.parent', ':tab'))
-                  ->setParameter('tab', $in)
-                  ->setCacheable(true);
+                ->andWhere($subQb->expr()->in('n.parent', ':tab'))
+                ->setParameter('tab', $in)
+                ->setCacheable(true);
             $result = $subQb->getQuery()->getScalarResult();
             $in = [];
 

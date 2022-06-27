@@ -7,7 +7,6 @@ namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 use Doctrine\Persistence\ManagerRegistry;
 use Fig\Link\GenericLinkProvider;
 use Psr\Link\EvolvableLinkProviderInterface;
-use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
@@ -46,32 +45,28 @@ class NodesSourcesLinkHeaderEventSubscriber implements EventSubscriberInterface
     {
         $request = $event->getRequest();
         $resources = $request->attributes->get('data', null);
+        $linkProvider = $request->attributes->get('_links', new GenericLinkProvider());
 
-        if ($resources instanceof NodesSources) {
+        if ($resources instanceof NodesSources && $linkProvider instanceof EvolvableLinkProviderInterface) {
             /** @var NodesSources[] $allSources */
-            $allSources = $this->managerRegistry->getRepository(get_class($resources))->findBy([
-                'node' => $resources->getNode()
-            ]);
+            $allSources = $this->managerRegistry
+                ->getRepository(get_class($resources))
+                ->findByNode($resources->getNode());
 
             foreach ($allSources as $singleSource) {
-                $linkProvider = $request->attributes->get('_links', new GenericLinkProvider());
-                if (
-                    $linkProvider instanceof EvolvableLinkProviderInterface &&
-                    ($singleSource->getTranslation()->isAvailable() || $this->previewResolver->isPreview())
-                ) {
-                    $request->attributes->set('_links', $linkProvider->withLink(
-                        (new Link(
-                            'alternate',
-                            $this->urlGenerator->generate(RouteObjectInterface::OBJECT_BASED_ROUTE_NAME, [
-                                RouteObjectInterface::ROUTE_OBJECT => $singleSource
-                            ])
-                        ))
-                            ->withAttribute('hreflang', $singleSource->getTranslation()->getLocale())
-                            ->withAttribute('title', $singleSource->getTranslation()->getName())
-                            ->withAttribute('type', 'text/html')
-                    ));
-                }
+                $linkProvider = $linkProvider->withLink(
+                    (new Link(
+                        'alternate',
+                        $this->urlGenerator->generate(RouteObjectInterface::OBJECT_BASED_ROUTE_NAME, [
+                            RouteObjectInterface::ROUTE_OBJECT => $singleSource
+                        ])
+                    ))
+                        ->withAttribute('hreflang', $singleSource->getTranslation()->getLocale())
+                        ->withAttribute('title', $singleSource->getTranslation()->getName())
+                        ->withAttribute('type', 'text/html')
+                );
             }
+            $request->attributes->set('_links', $linkProvider);
         }
     }
 }

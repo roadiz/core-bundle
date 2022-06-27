@@ -93,7 +93,7 @@ abstract class StatusAwareRepository extends EntityRepository
     public function alterQueryBuilderWithAuthorizationChecker(
         QueryBuilder $qb,
         string $prefix = EntityRepository::NODE_ALIAS
-    ) {
+    ): QueryBuilder {
         if (true === $this->isDisplayingAllNodesStatuses()) {
             // do not filter on status
             return $qb;
