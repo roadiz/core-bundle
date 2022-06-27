@@ -454,17 +454,6 @@
         "default_values": ""
     },
     {
-        "name": "hide_roadiz_version",
-        "description": "hide_roadiz_version.help",
-        "visible": true,
-        "encrypted": false,
-        "setting_group": {
-            "name": "Site information",
-            "in_menu": true
-        },
-        "type": 5
-    },
-    {
         "name": "custom_preview_scheme",
         "description": "custom_preview_scheme.help",
         "visible": true,

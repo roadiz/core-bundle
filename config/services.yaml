@@ -22,6 +22,7 @@ services:
             $appVersion: '%roadiz_core.app_version%'
             $cmsVersionPrefix: 'alpha'
             $staticDomain: '%roadiz_core.static_domain_name%'
+            $hideRoadizVersion: '%roadiz_core.hide_roadiz_version%'
             $inheritanceType: '%roadiz_core.inheritance_type%'
             $maxPixelSize: '%rz_intervention_request.max_pixel_size%'
             $imageDriver: '%rz_intervention_request.driver%'
@@ -141,6 +142,10 @@ services:
 
     RZ\Roadiz\CoreBundle\Controller\:
         resource: '../src/Controller'
+        tags: ['controller.service_arguments']
+
+    RZ\Roadiz\CoreBundle\Api\Controller\:
+        resource: '../src/Api/Controller'
         tags: ['controller.service_arguments']
 
     RZ\Roadiz\CoreBundle\Security\Authorization\Voter\:

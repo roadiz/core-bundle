@@ -42,6 +42,17 @@ final class DefaultDocumentTranslationIndexingSubscriber implements EventSubscri
                 ->setTimezone(new \DateTimeZone('UTC'))
                 ->format('Y-m-d\TH:i:s\Z');
             ;
+
+            $copyrightValidSince = $document->getCopyrightValidSince() ?? new \DateTime('1970-01-01 00:00:00');
+            $copyrightValidUntil = $document->getCopyrightValidUntil() ?? new \DateTime('9999-12-31 23:59:59');
+            $assoc['copyright_valid_since_dt'] = $copyrightValidSince
+                ->setTimezone(new \DateTimeZone('UTC'))
+                ->format('Y-m-d\TH:i:s\Z');
+            ;
+            $assoc['copyright_valid_until_dt'] = $copyrightValidUntil
+                ->setTimezone(new \DateTimeZone('UTC'))
+                ->format('Y-m-d\TH:i:s\Z');
+            ;
         }
         $assoc['filename_s'] = $document->getFilename();
         $assoc['mime_type_s'] = $document->getMimeType();

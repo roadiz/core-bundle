@@ -19,22 +19,16 @@ class RoadizExtension extends AbstractExtension implements GlobalsInterface
     protected NodeChrootResolver $chrootResolver;
     protected string $cmsVersion;
     protected string $cmsVersionPrefix;
+    protected bool $hideRoadizVersion;
 
-    /**
-     * @param Settings $settingsBag
-     * @param NodeTypes $nodeTypesBag
-     * @param PreviewResolverInterface $previewResolver
-     * @param NodeChrootResolver $chrootResolver
-     * @param string $cmsVersion
-     * @param string $cmsVersionPrefix
-     */
     public function __construct(
         Settings $settingsBag,
         NodeTypes $nodeTypesBag,
         PreviewResolverInterface $previewResolver,
         NodeChrootResolver $chrootResolver,
         string $cmsVersion,
-        string $cmsVersionPrefix
+        string $cmsVersionPrefix,
+        bool $hideRoadizVersion
     ) {
         $this->settingsBag = $settingsBag;
         $this->nodeTypesBag = $nodeTypesBag;
@@ -42,6 +36,7 @@ class RoadizExtension extends AbstractExtension implements GlobalsInterface
         $this->chrootResolver = $chrootResolver;
         $this->cmsVersion = $cmsVersion;
         $this->cmsVersionPrefix = $cmsVersionPrefix;
+        $this->hideRoadizVersion = $hideRoadizVersion;
     }
 
     /**
@@ -50,8 +45,8 @@ class RoadizExtension extends AbstractExtension implements GlobalsInterface
     public function getGlobals(): array
     {
         return [
-            'cms_version' => !$this->settingsBag->get('hide_roadiz_version', false) ? $this->cmsVersion : null,
-            'cms_prefix' => !$this->settingsBag->get('hide_roadiz_version', false) ? $this->cmsVersionPrefix : null,
+            'cms_version' => !$this->hideRoadizVersion ? $this->cmsVersion : null,
+            'cms_prefix' => !$this->hideRoadizVersion ? $this->cmsVersionPrefix : null,
             'help_external_url' => 'http://docs.roadiz.io',
             'is_preview' => $this->previewResolver->isPreview(),
             'bags' => [

@@ -4,6 +4,7 @@ roadiz_core:
     healthCheckToken: '%env(string:APP_HEALTH_CHECK_TOKEN)%'
     staticDomainName: ~
     useNativeJsonColumnType: true
+    hideRoadizVersion: false
     useAcceptLanguageHeader: '%env(bool:APP_USE_ACCEPT_LANGUAGE_HEADER)%'
     security:
         private_key_name: default
