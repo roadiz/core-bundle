@@ -167,8 +167,8 @@ final class NodesSourcesPathResolver implements PathResolverInterface
         if (!empty($tokens[0])) {
             $firstToken = $tokens[0];
             $locale = mb_strtolower(strip_tags((string) $firstToken));
-            // First token is for language
-            if ($locale !== null && $locale != '') {
+            // First token is for language and should not exceed 11 chars, i.e. tzm-Latn-DZ
+            if ($locale !== null && $locale != '' && mb_strlen($locale) <= 11) {
                 $translation = $repository->findOneByLocaleOrOverrideLocale($locale);
                 if (null !== $translation) {
                     return $translation;
