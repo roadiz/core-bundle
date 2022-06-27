@@ -95,20 +95,25 @@
         "roadiz/roadiz": "*"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.5",
-        "symfony/browser-kit": "5.4.*",
-        "symfony/phpunit-bridge": "5.4.*",
-        "symfony/stopwatch": "5.4.*",
         "php-coveralls/php-coveralls": "^2.4",
         "phpstan/phpstan": "^1.5.3",
-        "squizlabs/php_codesniffer": "^3.5"
+        "phpunit/phpunit": "^9.5",
+        "roadiz/compat-bundle": "dev-main",
+        "squizlabs/php_codesniffer": "^3.5",
+        "symfony/browser-kit": "5.4.*",
+        "symfony/phpunit-bridge": "5.4.*",
+        "symfony/stopwatch": "5.4.*"
     },
     "config": {
         "optimize-autoloader": true,
         "preferred-install": {
             "*": "dist"
         },
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "symfony/flex": false,
+            "symfony/runtime": false
+        }
     },
     "autoload": {
         "psr-4": {
