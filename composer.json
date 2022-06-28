@@ -41,7 +41,7 @@
         "rezozero/tree-walker": "^1.1.0",
         "roadiz/doc-generator": "~2.0.0",
         "roadiz/documents": "dev-develop",
-        "roadiz/dts-generator": "~2.0.0 || dev-main",
+        "roadiz/dts-generator": "~2.0.0",
         "roadiz/entity-generator": "dev-main",
         "roadiz/jwt": "~2.0.0 || dev-main",
         "roadiz/markdown": "dev-develop",
