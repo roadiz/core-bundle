@@ -383,31 +383,6 @@ services:
         arguments: [[]]
         lazy: true
 
-    #
-    # Open ID
-    #
-    RZ\Roadiz\OpenId\OAuth2LinkGenerator:
-        arguments:
-            - '@?RZ\Roadiz\OpenId\Discovery'
-            - '@security.csrf.token_manager'
-            - '%roadiz_core.open_id.hosted_domain%'
-            - '%roadiz_core.open_id.oauth_client_id%'
-            - '%roadiz_core.open_id.scopes%'
-
-    RZ\Roadiz\OpenId\OpenIdJwtConfigurationFactory:
-        arguments:
-            - '@?RZ\Roadiz\OpenId\Discovery'
-            - '%roadiz_core.open_id.hosted_domain%'
-            - '%roadiz_core.open_id.oauth_client_id%'
-            - '%roadiz_core.open_id.verify_user_info%'
-
-    RZ\Roadiz\OpenId\Authentication\Provider\SettingsRoleStrategy:
-        arguments: ['@RZ\Roadiz\CoreBundle\Bag\Settings']
-        tags: ['roadiz_core.jwt_role_strategy']
-
-    RZ\Roadiz\OpenId\Authentication\Provider\ChainJwtRoleStrategy: ~
-    RZ\Roadiz\OpenId\Authentication\Provider\OpenIdAccountProvider: ~
-
     RZ\Roadiz\CoreBundle\Node\NodeNamePolicyFactory: ~
     RZ\Roadiz\CoreBundle\Node\NodeNamePolicyInterface:
         factory: ['@RZ\Roadiz\CoreBundle\Node\NodeNamePolicyFactory', 'create']

@@ -6,12 +6,6 @@ namespace RZ\Roadiz\CoreBundle\DependencyInjection;
 
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\MarkdownConverter;
-use ParagonIE\Halite\Asymmetric\EncryptionSecretKey;
-use ParagonIE\Halite\Symmetric\EncryptionKey;
-use Pimple\Container;
-use RZ\Crypto\Encoder\AsymmetricUniqueKeyEncoder;
-use RZ\Crypto\Encoder\SymmetricUniqueKeyEncoder;
-use RZ\Crypto\Encoder\UniqueKeyEncoderInterface;
 use RZ\Crypto\KeyChain\AsymmetricFilesystemKeyChain;
 use RZ\Crypto\KeyChain\KeyChainInterface;
 use RZ\Roadiz\CoreBundle\Cache\CloudflareProxyCache;
@@ -32,7 +26,6 @@ use RZ\Roadiz\CoreBundle\Webhook\Message\GitlabPipelineTriggerMessage;
 use RZ\Roadiz\CoreBundle\Webhook\Message\NetlifyBuildHookMessage;
 use RZ\Roadiz\Markdown\CommonMark;
 use RZ\Roadiz\Markdown\MarkdownInterface;
-use RZ\Roadiz\OpenId\Discovery;
 use Solarium\Client;
 use Solarium\Core\Client\Adapter\Curl;
 use Solarium\Core\Client\Endpoint;
@@ -120,7 +113,6 @@ class RoadizCoreExtension extends Extension
         $this->registerReverseProxyCache($config, $container);
         $this->registerSolr($config, $container);
         $this->registerMarkdown($config, $container);
-        $this->registerOpenId($config, $container);
         $this->registerCrypto($config, $container);
     }
 
@@ -148,30 +140,6 @@ class RoadizCoreExtension extends Extension
         );
     }
 
-    private function registerOpenId(array $config, ContainerBuilder $container)
-    {
-        $container->setParameter('roadiz_core.open_id.verify_user_info', $config['open_id']['verify_user_info']);
-        $container->setParameter('roadiz_core.open_id.discovery_url', $config['open_id']['discovery_url']);
-        $container->setParameter('roadiz_core.open_id.hosted_domain', $config['open_id']['hosted_domain']);
-        $container->setParameter('roadiz_core.open_id.oauth_client_id', $config['open_id']['oauth_client_id']);
-        $container->setParameter('roadiz_core.open_id.oauth_client_secret', $config['open_id']['oauth_client_secret']);
-        $container->setParameter('roadiz_core.open_id.openid_username_claim', $config['open_id']['openid_username_claim']);
-        $container->setParameter('roadiz_core.open_id.scopes', $config['open_id']['scopes'] ?? []);
-        $container->setParameter('roadiz_core.open_id.granted_roles', $config['open_id']['granted_roles'] ?? []);
-
-        if (!empty($config['open_id']['discovery_url'])) {
-            $container->setDefinition(
-                Discovery::class,
-                (new Definition())
-                    ->setClass(Discovery::class)
-                    ->setPublic(true)
-                    ->setArguments([
-                        $config['open_id']['discovery_url'],
-                        new Reference(\Psr\Cache\CacheItemPoolInterface::class)
-                    ])
-            );
-        }
-    }
     private function registerReverseProxyCache(array $config, ContainerBuilder $container): void
     {
         $reverseProxyCacheFrontendsReferences = [];

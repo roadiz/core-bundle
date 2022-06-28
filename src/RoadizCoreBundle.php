@@ -8,7 +8,6 @@ use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\CommonMarkCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\DoctrineMigrationCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\DocumentRendererCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\ImporterCompilerPass;
-use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\JwtRoleStrategyCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\NodesSourcesEntitiesPathCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\NodeWorkflowCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\PathResolverCompilerPass;
@@ -30,7 +29,6 @@ class RoadizCoreBundle extends Bundle
         $container->addCompilerPass(new CommonMarkCompilerPass());
         $container->addCompilerPass(new DocumentRendererCompilerPass());
         $container->addCompilerPass(new ImporterCompilerPass());
-        $container->addCompilerPass(new JwtRoleStrategyCompilerPass());
         $container->addCompilerPass(new NodeWorkflowCompilerPass());
         $container->addCompilerPass(new DoctrineMigrationCompilerPass());
         $container->addCompilerPass(new RateLimitersCompilerPass());

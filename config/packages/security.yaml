@@ -8,15 +8,13 @@ security:
 
     # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
     providers:
-        openid_user_provider:
-            id: RZ\Roadiz\OpenId\Authentication\Provider\OpenIdAccountProvider
         roadiz_user_provider:
             entity:
                 class: RZ\Roadiz\CoreBundle\Entity\User
                 property: username
         all_users:
             chain:
-                providers: [ 'openid_user_provider', 'roadiz_user_provider' ]
+                providers: [ 'roadiz_user_provider' ]
 
     firewalls:
         dev:

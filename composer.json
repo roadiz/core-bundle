@@ -47,7 +47,6 @@
         "roadiz/markdown": "dev-develop",
         "roadiz/models": "dev-develop",
         "roadiz/nodetype-contracts": "~1.1.2",
-        "roadiz/openid": "~2.0.0 || dev-develop",
         "roadiz/random": "~2.0.0 || dev-main",
         "rollerworks/password-common-list": "^0.2.0",
         "rollerworks/password-strength-bundle": "^2.2",
