@@ -49,9 +49,9 @@ class AccessDeniedHandler implements AccessDeniedHandlerInterface
      * @param Request $request
      * @param AccessDeniedException $accessDeniedException
      *
-     * @return Response may return null
+     * @return Response|null may return null
      */
-    public function handle(Request $request, AccessDeniedException $accessDeniedException)
+    public function handle(Request $request, AccessDeniedException $accessDeniedException): ?Response
     {
         $this->logger->error('User tried to access: ' . $request->getUri());
 
