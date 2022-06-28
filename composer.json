@@ -38,7 +38,7 @@
         "rezozero/crypto": "^1.0.0",
         "rezozero/intervention-request-bundle": "~2.0.0",
         "rezozero/liform-bundle": "^0.18.0",
-        "rezozero/tree-walker": "dev-master",
+        "rezozero/tree-walker": "^1.1.0",
         "roadiz/doc-generator": "~2.0.0 || dev-develop",
         "roadiz/documents": "dev-develop",
         "roadiz/dts-generator": "~2.0.0 || dev-main",
