@@ -44,7 +44,7 @@
         "roadiz/dts-generator": "~2.0.0",
         "roadiz/entity-generator": "~2.0.1",
         "roadiz/jwt": "~2.0.0",
-        "roadiz/markdown": "dev-develop",
+        "roadiz/markdown": "~2.0.0",
         "roadiz/models": "~2.0.0",
         "roadiz/nodetype-contracts": "~1.1.2",
         "roadiz/random": "~2.0.0",
