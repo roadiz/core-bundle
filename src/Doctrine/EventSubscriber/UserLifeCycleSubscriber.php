@@ -203,7 +203,7 @@ class UserLifeCycleSubscriber implements EventSubscriber
             /*
              * Force a Gravatar image if not defined
              */
-            if ($user->getPictureUrl() == '') {
+            if (empty($user->getPictureUrl())) {
                 $user->setPictureUrl($user->getGravatarUrl());
             }
         }

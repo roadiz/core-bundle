@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Tag;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Entity\TagTranslation;
-use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Repository\TagRepository;
 use RZ\Roadiz\Utils\StringHandler;
 
@@ -24,14 +24,14 @@ final class TagFactory
     }
 
     /**
-     * @param string           $name
-     * @param Translation|null $translation
-     * @param Tag|null         $parent
-     * @param int|float        $latestPosition
+     * @param string $name
+     * @param TranslationInterface|null $translation
+     * @param Tag|null $parent
+     * @param int|float $latestPosition
      *
      * @return Tag
      */
-    public function create(string $name, ?Translation $translation = null, ?Tag $parent = null, $latestPosition = 0): Tag
+    public function create(string $name, ?TranslationInterface $translation = null, ?Tag $parent = null, $latestPosition = 0): Tag
     {
         $name = strip_tags(trim($name));
         $tagName = StringHandler::slugify($name);
@@ -50,7 +50,7 @@ final class TagFactory
         }
 
         if ($translation === null) {
-            $translation = $this->managerRegistry->getRepository(Translation::class)->findDefault();
+            $translation = $this->managerRegistry->getRepository(TranslationInterface::class)->findDefault();
         }
 
         if ($latestPosition <= 0) {

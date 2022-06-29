@@ -17,7 +17,7 @@ class ValidFacebookNameValidator extends ConstraintValidator
                 $this->context->addViolation($constraint->message);
             } else {
                 /*
-                 * Test if the user name really exists.
+                 * Test if the username really exists.
                  */
                 $facebook = new FacebookPictureFinder($value);
                 try {
