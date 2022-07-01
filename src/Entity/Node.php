@@ -118,7 +118,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param string $nodeName
      * @return $this
      */
-    public function setNodeName(string $nodeName): self
+    public function setNodeName(string $nodeName): Node
     {
         $this->nodeName = StringHandler::slugify($nodeName);
         return $this;
@@ -148,7 +148,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param bool $dynamicNodeName
      * @return $this
      */
-    public function setDynamicNodeName(bool $dynamicNodeName): self
+    public function setDynamicNodeName(bool $dynamicNodeName): Node
     {
         $this->dynamicNodeName = (bool) $dynamicNodeName;
         return $this;
@@ -174,7 +174,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param bool $home
      * @return $this
      */
-    public function setHome(bool $home): self
+    public function setHome(bool $home): Node
     {
         $this->home = $home;
         return $this;
@@ -200,7 +200,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param bool $visible
      * @return $this
      */
-    public function setVisible(bool $visible): self
+    public function setVisible(bool $visible): Node
     {
         $this->visible = $visible;
         return $this;
@@ -227,7 +227,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @return $this
      * @internal You should use node Workflow to perform change on status.
      */
-    public function setStatus(int $status): self
+    public function setStatus(int $status): Node
     {
         $this->status = $status;
         return $this;
@@ -341,7 +341,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param float|string $priority
      * @return $this
      */
-    public function setPriority($priority): self
+    public function setPriority($priority): Node
     {
         $this->priority = $priority;
         return $this;
@@ -368,7 +368,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param bool $hideChildren
      * @return Node
      */
-    public function setHideChildren(bool $hideChildren): self
+    public function setHideChildren(bool $hideChildren): Node
     {
         $this->hideChildren = $hideChildren;
         return $this;
@@ -388,7 +388,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function setHidingChildren(bool $hideChildren): self
+    public function setHidingChildren(bool $hideChildren): Node
     {
         $this->hideChildren = $hideChildren;
         return $this;
@@ -423,7 +423,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param bool $sterile
      * @return $this
      */
-    public function setSterile(bool $sterile): self
+    public function setSterile(bool $sterile): Node
     {
         $this->sterile = $sterile;
         return $this;
@@ -450,7 +450,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param string $childrenOrder
      * @return $this
      */
-    public function setChildrenOrder(string $childrenOrder): self
+    public function setChildrenOrder(string $childrenOrder): Node
     {
         $this->childrenOrder = $childrenOrder;
         return $this;
@@ -477,7 +477,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param string $childrenOrderDirection
      * @return $this
      */
-    public function setChildrenOrderDirection(string $childrenOrderDirection): self
+    public function setChildrenOrderDirection(string $childrenOrderDirection): Node
     {
         $this->childrenOrderDirection = $childrenOrderDirection;
         return $this;
@@ -504,7 +504,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param NodeTypeInterface|null $nodeType
      * @return $this
      */
-    public function setNodeType(?NodeTypeInterface $nodeType = null): self
+    public function setNodeType(?NodeTypeInterface $nodeType = null): Node
     {
         $this->nodeType = $nodeType;
         return $this;
@@ -517,7 +517,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Serializer\Exclude
      * @SymfonySerializer\Ignore
      */
-    protected ?LeafInterface $parent = null;
+    private ?LeafInterface $parent = null;
 
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Node", mappedBy="parent", orphanRemoval=true)
@@ -526,7 +526,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Serializer\Groups({"node_children"})
      * @SymfonySerializer\Groups({"node_children"})
      */
-    protected Collection $children;
+    private Collection $children;
 
     /**
      * @ORM\ManyToMany(targetEntity="Tag", inversedBy="nodes")
@@ -550,7 +550,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return Node
      */
-    public function setTags(Collection $tags): self
+    public function setTags(Collection $tags): Node
     {
         $this->tags = $tags;
         return $this;
@@ -561,7 +561,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function removeTag(Tag $tag): self
+    public function removeTag(Tag $tag): Node
     {
         if ($this->getTags()->contains($tag)) {
             $this->getTags()->removeElement($tag);
@@ -575,7 +575,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function addTag(Tag $tag): self
+    public function addTag(Tag $tag): Node
     {
         if (!$this->getTags()->contains($tag)) {
             $this->getTags()->add($tag);
@@ -604,7 +604,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param Collection<NodesCustomForms> $customForms
      * @return Node
      */
-    public function setCustomForms(Collection $customForms): self
+    public function setCustomForms(Collection $customForms): Node
     {
         $this->customForms = $customForms;
         return $this;
@@ -616,7 +616,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param NodesCustomForms $nodesCustomForms
      * @return Node
      */
-    public function addCustomForm(NodesCustomForms $nodesCustomForms): self
+    public function addCustomForm(NodesCustomForms $nodesCustomForms): Node
     {
         if (!$this->customForms->contains($nodesCustomForms)) {
             $this->customForms->add($nodesCustomForms);
@@ -638,7 +638,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @return Collection<NodeType>
      */
-    public function getStackTypes()
+    public function getStackTypes(): Collection
     {
         return $this->stackTypes;
     }
@@ -648,7 +648,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function removeStackType(NodeType $stackType)
+    public function removeStackType(NodeType $stackType): Node
     {
         if ($this->getStackTypes()->contains($stackType)) {
             $this->getStackTypes()->removeElement($stackType);
@@ -662,7 +662,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function addStackType(NodeType $stackType)
+    public function addStackType(NodeType $stackType): Node
     {
         if (!$this->getStackTypes()->contains($stackType)) {
             $this->getStackTypes()->add($stackType);
@@ -682,7 +682,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @return Collection<NodesSources>
      */
-    public function getNodeSources()
+    public function getNodeSources(): Collection
     {
         return $this->nodeSources;
     }
@@ -691,10 +691,10 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * Get node-sources using a given translation.
      *
      * @param TranslationInterface $translation
-     * @return Collection
+     * @return Collection<NodesSources>
      * @SymfonySerializer\Ignore
      */
-    public function getNodeSourcesByTranslation(TranslationInterface $translation)
+    public function getNodeSourcesByTranslation(TranslationInterface $translation): Collection
     {
         return $this->nodeSources->filter(function (NodesSources $nodeSource) use ($translation) {
             return $nodeSource->getTranslation()->getLocale() === $translation->getLocale();
@@ -706,7 +706,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function removeNodeSources(NodesSources $ns)
+    public function removeNodeSources(NodesSources $ns): Node
     {
         if ($this->getNodeSources()->contains($ns)) {
             $this->getNodeSources()->removeElement($ns);
@@ -720,7 +720,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function addNodeSources(NodesSources $ns)
+    public function addNodeSources(NodesSources $ns): Node
     {
         if (!$this->getNodeSources()->contains($ns)) {
             $this->getNodeSources()->add($ns);
@@ -742,14 +742,14 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Serializer\Exclude()
      * @SymfonySerializer\Ignore
      */
-    protected Collection $bNodes;
+    private Collection $bNodes;
 
     /**
      * Return nodes related to this (B nodes).
      *
      * @return Collection<NodesToNodes>
      */
-    public function getBNodes()
+    public function getBNodes(): Collection
     {
         return $this->bNodes;
     }
@@ -757,10 +757,10 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @param NodeTypeField $field
      *
-     * @return ArrayCollection|Collection
+     * @return Collection<NodesToNodes>
      * @SymfonySerializer\Ignore
      */
-    public function getBNodesByField(NodeTypeField $field)
+    public function getBNodesByField(NodeTypeField $field): Collection
     {
         $criteria = Criteria::create();
         $criteria->andWhere(Criteria::expr()->eq('field', $field));
@@ -826,14 +826,14 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Serializer\Exclude()
      * @SymfonySerializer\Ignore
      */
-    protected Collection $aNodes;
+    private Collection $aNodes;
 
     /**
      * Return nodes which own a relation with this (A nodes).
      *
      * @return Collection<NodesToNodes>
      */
-    public function getANodes()
+    public function getANodes(): Collection
     {
         return $this->aNodes;
     }
@@ -845,7 +845,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Serializer\Groups({"nodes_sources", "node"})
      * @SymfonySerializer\Groups({"nodes_sources", "node"})
      */
-    protected Collection $attributeValues;
+    private Collection $attributeValues;
 
     /**
      * Create a new empty Node according to given node-type.
