@@ -27,7 +27,7 @@ final class AssetsCacheEventSubscriber implements EventSubscriberInterface
     {
         return [
             CachePurgeAssetsRequestEvent::class => ['onPurgeAssetsRequest', 0],
-            \RZ\Roadiz\Core\Events\Cache\CachePurgeAssetsRequestEvent::class => ['onPurgeAssetsRequest', 0],
+            '\RZ\Roadiz\Core\Events\Cache\CachePurgeAssetsRequestEvent' => ['onPurgeAssetsRequest', 0],
         ];
     }
 

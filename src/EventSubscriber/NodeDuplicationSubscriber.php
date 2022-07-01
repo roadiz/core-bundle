@@ -32,7 +32,7 @@ class NodeDuplicationSubscriber implements EventSubscriberInterface
     {
         return [
             NodeDuplicatedEvent::class => 'cleanPosition',
-            \RZ\Roadiz\Core\Events\Node\NodeDuplicatedEvent::class => 'cleanPosition',
+            '\RZ\Roadiz\Core\Events\Node\NodeDuplicatedEvent' => 'cleanPosition',
         ];
     }
 

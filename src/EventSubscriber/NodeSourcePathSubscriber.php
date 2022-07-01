@@ -28,7 +28,7 @@ class NodeSourcePathSubscriber implements EventSubscriberInterface
     {
         return [
             NodesSourcesPathGeneratingEvent::class => [['onNodesSourcesPath', -100]],
-            \RZ\Roadiz\Core\Events\NodesSources\NodesSourcesPathGeneratingEvent::class => [['onNodesSourcesPath', -100]],
+            '\RZ\Roadiz\Core\Events\NodesSources\NodesSourcesPathGeneratingEvent' => [['onNodesSourcesPath', -100]],
         ];
     }
 

@@ -8,7 +8,6 @@ use Doctrine\Persistence\ManagerRegistry;
 use Fig\Link\GenericLinkProvider;
 use Psr\Link\EvolvableLinkProviderInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ViewEvent;
