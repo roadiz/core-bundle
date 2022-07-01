@@ -15,7 +15,7 @@ abstract class NodesSourcesDto
      * @var string
      * @Groups({"nodes_sources", "nodes_sources_base"})
      */
-    public string $title = '';
+    public ?string $title = '';
     /**
      * @var string
      * @Groups({"nodes_sources", "nodes_sources_base"})
