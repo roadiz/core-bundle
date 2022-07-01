@@ -26,6 +26,8 @@ parameters:
         - '#does not have a field named \$node\.home#'
         - '#Raven_Client#'
         - '#Raven_ErrorHandler#'
+        # @see https://github.com/phpstan/phpstan/issues/1066
+        - '#Psr\\Cache\\InvalidArgumentException is not subtype of Throwable#'
         # PHPStan Doctrine does not support ResolveTargetEntityListener
         - '#Property ([a-zA-Z\\\:\$]+) type mapping mismatch: property can contain ([a-zA-Z\\\&\>\<]+)Interface\>?\|null but database expects ([a-zA-Z\\\&\>\<]+)\|null#'
         - '#Property ([a-zA-Z\\\:\$]+) type mapping mismatch: property can contain ([a-zA-Z\\\&\>\<]+)Interface\>? but database expects ([a-zA-Z\\\&\>\<]+)#'
