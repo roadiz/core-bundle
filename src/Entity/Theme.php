@@ -12,7 +12,15 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
  */
 class Theme extends AbstractEntity
 {
-    private bool $available = false;
+    protected string $hostname = '*';
+    protected bool $staticTheme = false;
+    protected bool $available = false;
+    /**
+     * @var class-string
+     */
+    protected string $className;
+    private string $routePrefix = '';
+    private bool $backendTheme = false;
 
     /**
      * @return boolean
@@ -34,11 +42,6 @@ class Theme extends AbstractEntity
     }
 
     /**
-     *
-     */
-    protected $staticTheme = false;
-
-    /**
      * Static means that your theme is not suitable for responding from
      * nodes urls but only static routes.
      *
@@ -56,30 +59,6 @@ class Theme extends AbstractEntity
     public function setStaticTheme(bool $staticTheme): Theme
     {
         $this->staticTheme = (bool) $staticTheme;
-        return $this;
-    }
-
-
-    /**
-     * @var string
-     */
-    private $className;
-
-    /**
-     * @return string
-     */
-    public function getClassName(): string
-    {
-        return $this->className;
-    }
-
-    /**
-     * @param string $className
-     * @return $this
-     */
-    public function setClassName($className): Theme
-    {
-        $this->className = $className;
         return $this;
     }
 
@@ -123,9 +102,22 @@ class Theme extends AbstractEntity
     }
 
     /**
-     * @var string
+     * @return class-string
      */
-    private $hostname = '*';
+    public function getClassName(): string
+    {
+        return $this->className;
+    }
+
+    /**
+     * @param class-string $className
+     * @return $this
+     */
+    public function setClassName(string $className): Theme
+    {
+        $this->className = $className;
+        return $this;
+    }
 
     /**
      * @return string
@@ -147,11 +139,6 @@ class Theme extends AbstractEntity
     }
 
     /**
-     * @var string
-     */
-    private $routePrefix = '';
-
-    /**
      * @return string
      */
     public function getRoutePrefix(): string
@@ -169,11 +156,6 @@ class Theme extends AbstractEntity
         $this->routePrefix = $routePrefix;
         return $this;
     }
-
-    /**
-     * @var boolean
-     */
-    private $backendTheme = false;
 
     /**
      * @return boolean
