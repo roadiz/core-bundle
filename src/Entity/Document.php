@@ -169,6 +169,11 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
      *     "folders.visible"
      * })
+     * Use IntersectionFilter after SearchFilter!
+     * @ApiFilter(RoadizFilter\IntersectionFilter::class, properties={
+     *     "folders.id",
+     *     "folders.folderName"
+     * })
      * @var Collection<Folder>
      */
     protected Collection $folders;

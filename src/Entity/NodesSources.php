@@ -4,23 +4,21 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
-use Doctrine\Persistence\Mapping\ClassMetadata;
+use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Persistence\ObjectManager;
-use Doctrine\Persistence\ObjectManagerAware;
 use Gedmo\Loggable\Loggable;
+use Gedmo\Mapping\Annotation as Gedmo;
+use JMS\Serializer\Annotation as Serializer;
 use RuntimeException;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
-use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use Symfony\Component\Serializer\Annotation as SymfonySerializer;
-use Gedmo\Mapping\Annotation as Gedmo;
-use Doctrine\ORM\Mapping as ORM;
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 /**
  * NodesSources store Node content according to a translation and a NodeType.
@@ -98,6 +96,11 @@ class NodesSources extends AbstractEntity implements Loggable
      *     "node.home",
      *     "node.nodeType.reachable",
      *     "node.nodeType.publishable"
+     * })
+     * Use IntersectionFilter after SearchFilter!
+     * @ApiFilter(RoadizFilter\IntersectionFilter::class, properties={
+     *     "node.tags",
+     *     "node.tags.tagName"
      * })
      */
     private ?Node $node = null;
