@@ -57,6 +57,9 @@ services:
         autowire: true
         tags: [ { name: 'api_platform.filter' } ]
 
+    RZ\Roadiz\CoreBundle\Api\Extension\ArchiveExtension:
+        tags: [ { name: 'api_platform.doctrine.orm.query_extension.collection', priority: -65 } ]
+
     RZ\Roadiz\CoreBundle\Bag\:
         resource: '../src/Bag/'
         autowire: true
