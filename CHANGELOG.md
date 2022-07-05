@@ -1,3 +1,9 @@
+## 2.0.1 (2022-07-05)
+
+### Features
+
+* Added `IntersectionFilter` to create intersection with tags and folders aware entities. ([25c1dc5](https://github.com/roadiz/core-bundle/commit/25c1dc54b46dfadc02ed17b8e9de892eed784d73))
+
 ## 2.0.0 (2022-07-01)
 
 ### ⚠ BREAKING CHANGES
