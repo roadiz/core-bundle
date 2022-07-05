@@ -1,3 +1,36 @@
+## 2.0.2 (2022-07-05)
+
+### Features
+
+Added true filtrable archives endpoint extension for any Doctrine entities ([597803d](https://github.com/roadiz/core-bundle/commit/597803d37cb324c3d7076f323a5821d497e9fbf5)).
+You need to add a custom collection operation for each Entity you want to enable archives for:
+
+```yaml
+# config/api_resources/nodes_sources.yml
+RZ\Roadiz\CoreBundle\Entity\NodesSources:
+    iri: NodesSources
+    shortName: NodesSources
+    collectionOperations:
+        # ...
+        archives:
+            method: 'GET'
+            path: '/nodes_sources/archives'
+            pagination_enabled: false
+            pagination_client_enabled: false
+            archive_enabled: true
+            archive_publication_field_name: publishedAt
+            normalization_context:
+                groups:
+                    - get
+                    - archives
+            openapi_context:
+                summary: Get available NodesSources archives
+                parameters: ~
+                description: |
+                    Get available NodesSources archives (years and months) based on their `publishedAt` field
+```
+
+
 ## 2.0.1 (2022-07-05)
 
 ### Features
