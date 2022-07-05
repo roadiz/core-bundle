@@ -104,7 +104,7 @@ final class ArchiveExtension implements QueryResultCollectionExtensionInterface
                 if (!isset($dates[$year])) {
                     $dates[$year] = [];
                 }
-                if (!isset($dates[$month])) {
+                if (!isset($dates[$year][$month])) {
                     $dates[$year][$month] = new \DateTime($dateTimeField->format('Y-m-01'));
                 }
             }
