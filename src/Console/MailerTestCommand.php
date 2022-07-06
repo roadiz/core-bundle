@@ -10,6 +10,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Mime\Address;
 
 class MailerTestCommand extends Command
 {
@@ -36,9 +37,8 @@ class MailerTestCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->emailManager
-            ->setReceiver($input->getArgument('email'))
-            ->setOrigin('origin@test.test')
-            ->setSender('sender@roadiz.io')
+            ->setReceiver(Address::create($input->getArgument('email')))
+            // Uses email_sender customizable setting
             ->setSubject('Test email')
             ->setEmailPlainTextTemplate('@RoadizCore/email/base_email.txt.twig')
             ->setEmailTemplate('@RoadizCore/email/base_email.html.twig')
