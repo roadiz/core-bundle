@@ -1,3 +1,9 @@
+## 2.0.3 (2022-07-06)
+
+### Bug Fixes
+
+* Mailer test command sender and origin emails ([ae26d01](https://github.com/roadiz/core-bundle/commit/ae26d014fcf62c878f3c9e08c260313b9d855752))
+
 ## 2.0.2 (2022-07-05)
 
 ### Features
