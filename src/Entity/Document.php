@@ -126,6 +126,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("string")
      * @ApiFilter(BaseFilter\SearchFilter::class, strategy="exact")
+     * @ApiFilter(RoadizFilter\NotFilter::class)
      */
     protected ?string $embedPlatform = null;
     /**
@@ -169,6 +170,10 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
      *     "folders.visible"
      * })
+     * @ApiFilter(RoadizFilter\NotFilter::class, properties={
+     *     "folders.id",
+     *     "folders.folderName"
+     * })
      * Use IntersectionFilter after SearchFilter!
      * @ApiFilter(RoadizFilter\IntersectionFilter::class, properties={
      *     "folders.id",
@@ -201,6 +206,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @Serializer\Type("string")
      * @var string|null
      * @ApiFilter(BaseFilter\SearchFilter::class, strategy="exact")
+     * @ApiFilter(RoadizFilter\NotFilter::class)
      */
     private ?string $mimeType = null;
     /**
