@@ -7,6 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Serializer;
 use ApiPlatform\Core\Serializer\SerializerContextBuilderInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use RZ\Roadiz\CoreBundle\Repository\TranslationRepository;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -14,13 +15,16 @@ final class TranslationAwareContextBuilder implements SerializerContextBuilderIn
 {
     private ManagerRegistry $managerRegistry;
     private SerializerContextBuilderInterface $decorated;
+    private PreviewResolverInterface $previewResolver;
 
     public function __construct(
         SerializerContextBuilderInterface $decorated,
-        ManagerRegistry $managerRegistry
+        ManagerRegistry $managerRegistry,
+        PreviewResolverInterface $previewResolver
     ) {
         $this->decorated = $decorated;
         $this->managerRegistry = $managerRegistry;
+        $this->previewResolver = $previewResolver;
     }
     /**
      * @inheritDoc
@@ -30,15 +34,22 @@ final class TranslationAwareContextBuilder implements SerializerContextBuilderIn
         $context = $this->decorated->createFromRequest($request, $normalization, $extractedAttributes);
 
         if (!isset($context['translation']) || !($context['translation'] instanceof TranslationInterface)) {
-            if (!empty($request->query->get('_locale'))) {
-                /** @var TranslationRepository $repository */
-                $repository = $this->managerRegistry
-                    ->getRepository(TranslationInterface::class);
-                $translation = $repository->findOneAvailableByLocaleOrOverrideLocale($request->query->get('_locale'));
+            /** @var TranslationRepository $repository */
+            $repository = $this->managerRegistry
+                ->getRepository(TranslationInterface::class);
 
-                if ($translation instanceof TranslationInterface) {
-                    $context['translation'] = $translation;
-                }
+            if ($this->previewResolver->isPreview()) {
+                $translation = $repository->findOneByLocaleOrOverrideLocale(
+                    $request->query->get('_locale', $request->getLocale())
+                );
+            } else {
+                $translation = $repository->findOneAvailableByLocaleOrOverrideLocale(
+                    $request->query->get('_locale', $request->getLocale())
+                );
+            }
+
+            if ($translation instanceof TranslationInterface) {
+                $context['translation'] = $translation;
             }
         }
         return $context;
