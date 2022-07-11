@@ -1,3 +1,13 @@
+## 2.0.4 (2022-07-11)
+
+### ⚠ BREAKING CHANGES
+
+* WebResponseInterface now requires `getItem(): ?PersistableInterface` method to be implemented.
+
+### Bug Fixes
+
+* Set context translation from a WebResponseInterface object ([fbde288](https://github.com/roadiz/core-bundle/commit/fbde288f157f6c2bd84aadb786a8f23ed73300c2))
+
 ## 2.0.3 (2022-07-06)
 
 ### Bug Fixes
