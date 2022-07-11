@@ -51,6 +51,14 @@ final class WebResponse implements WebResponseInterface, BlocksAwareWebResponseI
     private bool $hidingBlocks = false;
 
     /**
+     * @return PersistableInterface|null
+     */
+    public function getItem(): ?PersistableInterface
+    {
+        return $this->item;
+    }
+
+    /**
      * @return Collection<WalkerInterface>|null
      */
     public function getBlocks(): ?Collection
