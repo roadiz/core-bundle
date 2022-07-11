@@ -6,8 +6,11 @@ namespace RZ\Roadiz\CoreBundle\Serializer\Normalizer;
 
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Api\Model\WebResponseInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
+use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
+use RZ\Roadiz\CoreBundle\Repository\TranslationRepository;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Serializer\Normalizer\ContextAwareNormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerAwareInterface;
@@ -19,17 +22,18 @@ final class TranslationAwareNormalizer implements ContextAwareNormalizerInterfac
 
     private RequestStack $requestStack;
     private ManagerRegistry $managerRegistry;
+    private PreviewResolverInterface $previewResolver;
 
     private const ALREADY_CALLED = 'TRANSLATION_AWARE_NORMALIZER_ALREADY_CALLED';
 
-    /**
-     * @param RequestStack $requestStack
-     * @param ManagerRegistry $managerRegistry
-     */
-    public function __construct(RequestStack $requestStack, ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        RequestStack $requestStack,
+        ManagerRegistry $managerRegistry,
+        PreviewResolverInterface $previewResolver
+    ) {
         $this->requestStack = $requestStack;
         $this->managerRegistry = $managerRegistry;
+        $this->previewResolver = $previewResolver;
     }
 
     /**
@@ -41,14 +45,19 @@ final class TranslationAwareNormalizer implements ContextAwareNormalizerInterfac
      */
     public function normalize($object, $format = null, array $context = [])
     {
-        if (!isset($context['translation']) || !($context['translation'] instanceof TranslationInterface)) {
-            if ($object instanceof NodesSources) {
-                $context['translation'] = $object->getTranslation();
-            } else {
-                $translation = $this->getTranslationFromRequest();
-                if (null !== $translation) {
-                    $context['translation'] = $translation;
-                }
+        if ($object instanceof WebResponseInterface) {
+            $item = $object->getItem();
+            if ($item instanceof NodesSources) {
+                $context['translation'] = $item->getTranslation();
+            } elseif (method_exists($item, 'getLocale') && is_string($item->getLocale())) {
+                $context['translation'] = $this->getTranslationFromLocale($item->getLocale());
+            }
+        } elseif ($object instanceof NodesSources) {
+            $context['translation'] = $object->getTranslation();
+        } elseif (!isset($context['translation']) || !($context['translation'] instanceof TranslationInterface)) {
+            $translation = $this->getTranslationFromRequest();
+            if (null !== $translation) {
+                $context['translation'] = $translation;
             }
         }
 
@@ -57,13 +66,29 @@ final class TranslationAwareNormalizer implements ContextAwareNormalizerInterfac
         return $this->normalizer->normalize($object, $format, $context);
     }
 
+    private function getTranslationFromLocale(string $locale): ?TranslationInterface
+    {
+        /** @var TranslationRepository $repository */
+        $repository = $this->managerRegistry
+            ->getRepository(TranslationInterface::class);
+
+        if ($this->previewResolver->isPreview()) {
+            return $repository->findOneByLocaleOrOverrideLocale($locale);
+        } else {
+            return $repository->findOneAvailableByLocaleOrOverrideLocale($locale);
+        }
+    }
+
     private function getTranslationFromRequest(): ?TranslationInterface
     {
         $request = $this->requestStack->getMainRequest();
-        if (null !== $request && !empty($request->query->get('_locale'))) {
-            return $this->managerRegistry
-                ->getRepository(Translation::class)
-                ->findOneAvailableByLocaleOrOverrideLocale($request->query->get('_locale'));
+        if (
+            null !== $request &&
+            null !== $translation = $this->getTranslationFromLocale(
+                $request->query->get('_locale', $request->getLocale())
+            )
+        ) {
+            return $translation;
         }
 
         return $this->managerRegistry
