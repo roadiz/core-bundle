@@ -1,3 +1,10 @@
+## 2.0.5 (2022-07-13)
+
+### Features
+
+* Added `NotFilter` ([29a608d](https://github.com/roadiz/core-bundle/commit/29a608d76782a68ddfa2e25b7e4ab5e8081cd3e2))
+* Purge custom-form answers **documents** as well when retention time is over. ([a00a619](https://github.com/roadiz/core-bundle/commit/a00a619b5458c443f5099e59dfa964518d49e88d))
+
 ## 2.0.4 (2022-07-11)
 
 ### ⚠ BREAKING CHANGES
