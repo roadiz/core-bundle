@@ -4,24 +4,36 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
+use Psr\Log\LoggerInterface;
+use RZ\Roadiz\Core\Events\DocumentDeletedEvent;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Entity\CustomFormAnswer;
+use RZ\Roadiz\CoreBundle\Entity\Document;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Exception\LogicException;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class CustomFormAnswerPurgeCommand extends Command
 {
     private ManagerRegistry $managerRegistry;
+    private EventDispatcherInterface $eventDispatcher;
+    private LoggerInterface $logger;
 
-    public function __construct(ManagerRegistry $managerRegistry, string $name = null)
-    {
+    public function __construct(
+        ManagerRegistry $managerRegistry,
+        EventDispatcherInterface $eventDispatcher,
+        LoggerInterface $logger,
+        string $name = null
+    ) {
         parent::__construct($name);
         $this->managerRegistry = $managerRegistry;
+        $this->eventDispatcher = $eventDispatcher;
+        $this->logger = $logger;
     }
 
     protected function configure()
@@ -40,33 +52,70 @@ final class CustomFormAnswerPurgeCommand extends Command
             ->findAllWithRetentionTime();
 
         foreach ($customForms as $customForm) {
-            $interval = $customForm->getRetentionTimeInterval();
             if (null !== $interval = $customForm->getRetentionTimeInterval()) {
                 $purgeBefore = (new \DateTime())->sub($interval);
                 $customFormAnswers = $this->managerRegistry
                     ->getRepository(CustomFormAnswer::class)
                     ->findByCustomFormSubmittedBefore($customForm, $purgeBefore);
                 $count = count($customFormAnswers);
-                $io->info(\sprintf(
-                    'Purge %d answer(s) from “%s” before %s',
-                    $count,
-                    $customForm->getName(),
-                    $purgeBefore->format('Y-m-d H:i')
-                ));
 
-                if (
-                    $count > 0 &&
-                    !$input->getOption('dry-run') &&
-                    (!$input->isInteractive() || $io->confirm(\sprintf(
-                        'Are you sure you want to delete %d answer(s) from “%s” before %s',
-                        count($customFormAnswers),
+                $documents = $this->managerRegistry
+                    ->getRepository(Document::class)
+                    ->findByCustomFormSubmittedBefore($customForm, $purgeBefore);
+                $documentsCount = count($documents);
+
+                if ($output->isVeryVerbose()) {
+                    $io->info(\sprintf(
+                        'Checking if “%s” custom-form has answers before %s',
                         $customForm->getName(),
                         $purgeBefore->format('Y-m-d H:i')
-                    ), false))
-                ) {
-                    $this->managerRegistry
-                        ->getRepository(CustomFormAnswer::class)
-                        ->deleteByCustomFormSubmittedBefore($customForm, $purgeBefore);
+                    ));
+                }
+
+                if ($count > 0) {
+                    $io->info(\sprintf(
+                        'Purge %d custom-form answer(s) with %d documents(s) from “%s” before %s',
+                        $count,
+                        $documentsCount,
+                        $customForm->getName(),
+                        $purgeBefore->format('Y-m-d H:i')
+                    ));
+
+                    if (
+                        !$input->getOption('dry-run') &&
+                        (!$input->isInteractive() || $io->confirm(\sprintf(
+                            'Are you sure you want to delete %d custom-form answer(s) and %d document(s) from “%s” before %s',
+                            $count,
+                            $documentsCount,
+                            $customForm->getName(),
+                            $purgeBefore->format('Y-m-d H:i')
+                        ), false))
+                    ) {
+                        $this->managerRegistry
+                            ->getRepository(CustomFormAnswer::class)
+                            ->deleteByCustomFormSubmittedBefore($customForm, $purgeBefore);
+
+                        foreach ($documents as $document) {
+                            $this->eventDispatcher->dispatch(
+                                new DocumentDeletedEvent($document)
+                            );
+                            if ($output->isVeryVerbose()) {
+                                $io->info(\sprintf(
+                                    '“%s” document has been deleted',
+                                    $document->getRelativePath()
+                                ));
+                            }
+                            $this->managerRegistry->getManager()->remove($document);
+                        }
+                        $this->managerRegistry->getManager()->flush();
+                        $this->logger->info(\sprintf(
+                            '%d answer(s) and %d document(s) were deleted from “%s” custom-form before %s',
+                            $count,
+                            $documentsCount,
+                            $customForm->getName(),
+                            $purgeBefore->format('Y-m-d H:i')
+                        ));
+                    }
                 }
             }
         }

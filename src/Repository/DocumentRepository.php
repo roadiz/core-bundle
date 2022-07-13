@@ -12,11 +12,11 @@ use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
+use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Entity\Setting;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
@@ -49,6 +49,28 @@ final class DocumentRepository extends EntityRepository
             ->setMaxResults(1);
 
         return $qb->getQuery()->getOneOrNullResult();
+    }
+
+    protected function getCustomFormSubmittedBeforeQueryBuilder(): QueryBuilder
+    {
+        $qb = $this->createQueryBuilder('d');
+        return $qb->innerJoin('d.customFormFieldAttributes', 'cffa')
+            ->innerJoin('cffa.customFormAnswer', 'cfa')
+            ->andWhere($qb->expr()->eq('cfa.customForm', ':customForm'))
+            ->andWhere($qb->expr()->lte('cfa.submittedAt', ':submittedAt'));
+    }
+
+    /**
+     * @param CustomForm $customForm
+     * @param \DateTime $submittedAt
+     * @return array<Document>
+     */
+    public function findByCustomFormSubmittedBefore(CustomForm $customForm, \DateTime $submittedAt): array
+    {
+        $qb = $this->getCustomFormSubmittedBeforeQueryBuilder()
+            ->setParameter(':customForm', $customForm)
+            ->setParameter(':submittedAt', $submittedAt);
+        return $qb->getQuery()->getResult();
     }
 
     /**

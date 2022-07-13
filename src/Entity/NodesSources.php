@@ -97,6 +97,11 @@ class NodesSources extends AbstractEntity implements Loggable
      *     "node.nodeType.reachable",
      *     "node.nodeType.publishable"
      * })
+     * @ApiFilter(RoadizFilter\NotFilter::class, properties={
+     *     "node.nodeType.name",
+     *     "node.id",
+     *     "node.tags.tagName"
+     * })
      * Use IntersectionFilter after SearchFilter!
      * @ApiFilter(RoadizFilter\IntersectionFilter::class, properties={
      *     "node.tags",
