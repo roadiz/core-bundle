@@ -916,71 +916,6 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     *
-     * @see https://github.com/FriendsOfSymfony/FOSUserBundle/blob/master/Model/User.php
-     * @SymfonySerializer\Ignore
-     * @deprecated Use __serialize
-     */
-    public function serialize()
-    {
-        return serialize([
-            $this->password,
-            $this->salt,
-            $this->username,
-            $this->enabled,
-            $this->id,
-            $this->email,
-            // needed for token roles
-            $this->roleEntities,
-            $this->groups,
-            // needed for advancedUserinterface
-            $this->expired,
-            $this->expiresAt,
-            $this->locked,
-            $this->credentialsExpired,
-            $this->credentialsExpiresAt,
-        ]);
-    }
-    /**
-     * {@inheritdoc}
-     *
-     * @see https://github.com/FriendsOfSymfony/FOSUserBundle/blob/master/Model/User.php
-     * @deprecated Use __unserialize
-     */
-    public function unserialize($serialized)
-    {
-        $data = unserialize($serialized);
-        if (count($data) === 6) {
-            // Compatibility with Roadiz <=1.4
-            [
-                $this->password,
-                $this->salt,
-                $this->username,
-                $this->enabled,
-                $this->id,
-                $this->email,
-            ] = $data;
-        } else {
-            [
-                $this->password,
-                $this->salt,
-                $this->username,
-                $this->enabled,
-                $this->id,
-                $this->email,
-                $this->roleEntities,
-                $this->groups,
-                $this->expired,
-                $this->expiresAt,
-                $this->locked,
-                $this->credentialsExpired,
-                $this->credentialsExpiresAt,
-            ] = $data;
-        }
-    }
-
     public function __serialize()
     {
         return [
@@ -1004,33 +939,21 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
 
     public function __unserialize($data)
     {
-        if (count($data) === 6) {
-            // Compatibility with Roadiz <=1.4
-            [
-                $this->password,
-                $this->salt,
-                $this->username,
-                $this->enabled,
-                $this->id,
-                $this->email,
-            ] = $data;
-        } else {
-            [
-                $this->password,
-                $this->salt,
-                $this->username,
-                $this->enabled,
-                $this->id,
-                $this->email,
-                $this->roleEntities,
-                $this->groups,
-                $this->expired,
-                $this->expiresAt,
-                $this->locked,
-                $this->credentialsExpired,
-                $this->credentialsExpiresAt,
-            ] = $data;
-        }
+        [
+            $this->password,
+            $this->salt,
+            $this->username,
+            $this->enabled,
+            $this->id,
+            $this->email,
+            $this->roleEntities,
+            $this->groups,
+            $this->expired,
+            $this->expiresAt,
+            $this->locked,
+            $this->credentialsExpired,
+            $this->credentialsExpiresAt,
+        ] = $data;
     }
 
     /**

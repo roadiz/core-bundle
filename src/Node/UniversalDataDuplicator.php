@@ -67,6 +67,8 @@ final class UniversalDataDuplicator
                                 case AbstractField::DOCUMENTS_T:
                                     $this->duplicateDocumentsField($source, $otherSource, $universalField);
                                     break;
+                                case AbstractField::MULTI_PROVIDER_T:
+                                case AbstractField::SINGLE_PROVIDER_T:
                                 case AbstractField::MANY_TO_ONE_T:
                                 case AbstractField::MANY_TO_MANY_T:
                                     $this->duplicateNonVirtualField($source, $otherSource, $universalField);
