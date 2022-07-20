@@ -9,15 +9,19 @@ use Exception;
 use Limenius\Liform\LiformInterface;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\CustomForm\CustomFormHelperFactory;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
+use RZ\Roadiz\CoreBundle\Entity\CustomFormAnswer;
 use RZ\Roadiz\CoreBundle\Exception\EntityAlreadyExistsException;
 use RZ\Roadiz\CoreBundle\Form\Error\FormErrorSerializerInterface;
 use RZ\Roadiz\CoreBundle\Mailer\EmailManager;
+use RZ\Roadiz\Utils\Asset\Packages;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -45,6 +49,7 @@ final class CustomFormController extends AbstractController
     private FormErrorSerializerInterface $formErrorSerializer;
     private ManagerRegistry $registry;
     private RateLimiterFactory $customFormLimiter;
+    private Packages $packages;
 
     public function __construct(
         EmailManager $emailManager,
@@ -56,7 +61,8 @@ final class CustomFormController extends AbstractController
         SerializerInterface $serializer,
         FormErrorSerializerInterface $formErrorSerializer,
         ManagerRegistry $registry,
-        RateLimiterFactory $customFormLimiter
+        RateLimiterFactory $customFormLimiter,
+        Packages $packages
     ) {
         $this->emailManager = $emailManager;
         $this->settingsBag = $settingsBag;
@@ -68,6 +74,7 @@ final class CustomFormController extends AbstractController
         $this->formErrorSerializer = $formErrorSerializer;
         $this->registry = $registry;
         $this->customFormLimiter = $customFormLimiter;
+        $this->packages = $packages;
     }
 
     protected function getTranslation(string $_locale = 'fr'): TranslationInterface
@@ -238,12 +245,14 @@ final class CustomFormController extends AbstractController
     /**
      * Send an answer form by Email.
      *
+     * @param CustomFormAnswer $answer
      * @param array $assignation
      * @param string|array|null $receiver
      * @return bool
      * @throws Exception
      */
     public function sendAnswer(
+        CustomFormAnswer $answer,
         array $assignation,
         $receiver
     ): bool {
@@ -255,6 +264,15 @@ final class CustomFormController extends AbstractController
         $this->emailManager->setSubject($assignation['title']);
         $this->emailManager->setEmailTitle($assignation['title']);
         $this->emailManager->setSender($defaultSender);
+        $files = [];
+
+        foreach ($answer->getAnswers() as $customFormAnswerAttr) {
+            $files = array_merge($files, $customFormAnswerAttr->getDocuments()->map(function (DocumentInterface $document) {
+                return new File($this->packages->getDocumentFilePath($document));
+            })->toArray());
+        }
+
+        $this->emailManager->setFiles($files);
 
         if (empty($receiver)) {
             $this->emailManager->setReceiver($defaultSender);
@@ -355,6 +373,7 @@ final class CustomFormController extends AbstractController
                     return new Address($email);
                 }, $receiver);
                 $this->sendAnswer(
+                    $answer,
                     [
                         'mailContact' => $assignation['mailContact'],
                         'fields' => $assignation["emailFields"],

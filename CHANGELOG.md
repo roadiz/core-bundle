@@ -1,3 +1,9 @@
+## 2.0.6 (2022-07-20)
+
+### Bug Fixes
+
+* Attach documents to custom-form notification emails ([c213e87](https://github.com/roadiz/core-bundle/commit/c213e87f9095ac1e21bda17c08cf7d5f389dff7b))
+
 ## 2.0.5 (2022-07-13)
 
 ### Features
