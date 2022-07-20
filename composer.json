@@ -42,7 +42,7 @@
         "roadiz/doc-generator": "~2.0.0",
         "roadiz/documents": "~2.0.0",
         "roadiz/dts-generator": "~2.0.0",
-        "roadiz/entity-generator": "~2.0.1",
+        "roadiz/entity-generator": "~2.0.3",
         "roadiz/jwt": "~2.0.0",
         "roadiz/markdown": "~2.0.0",
         "roadiz/models": "~2.0.0",

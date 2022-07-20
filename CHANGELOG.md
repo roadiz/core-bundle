@@ -1,3 +1,9 @@
+## 2.0.7 (2022-07-20)
+
+### Features
+
+* Added new `NodeTranslator` service and remove dead code on User entity ([7f211c5](https://github.com/roadiz/core-bundle/commit/7f211c5354dac0ec953138a514e5d4e82f06e41f))
+
 ## 2.0.6 (2022-07-20)
 
 ### Bug Fixes
