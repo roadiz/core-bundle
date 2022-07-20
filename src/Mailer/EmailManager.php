@@ -8,6 +8,7 @@ use InlineStyle\InlineStyle;
 use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface;
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Mailer\MailerInterface;
@@ -42,6 +43,8 @@ class EmailManager
     protected ?Email $message;
     protected ?Settings $settingsBag;
     protected ?DocumentUrlGeneratorInterface $documentUrlGenerator;
+    /** @var File[] */
+    protected array $files = [];
 
     /**
      * @param RequestStack $requestStack
@@ -138,6 +141,9 @@ class EmailManager
 
     /**
      * @return Email
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
     public function createMessage(): Email
     {
@@ -182,6 +188,10 @@ class EmailManager
 
         if (null === $this->message) {
             $this->message = $this->createMessage();
+        }
+
+        foreach ($this->files as $file) {
+            $this->message->attachFromPath($file->getRealPath(), $file->getFilename());
         }
 
         // Send the message
@@ -550,6 +560,24 @@ class EmailManager
     public function setEmailType(?string $emailType)
     {
         $this->emailType = $emailType;
+        return $this;
+    }
+
+    /**
+     * @return File[]
+     */
+    public function getFiles(): array
+    {
+        return $this->files;
+    }
+
+    /**
+     * @param File[] $files
+     * @return EmailManager
+     */
+    public function setFiles(array $files): EmailManager
+    {
+        $this->files = $files;
         return $this;
     }
 }
