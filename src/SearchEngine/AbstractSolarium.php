@@ -201,19 +201,20 @@ abstract class AbstractSolarium
     public function index()
     {
         if ($this->document instanceof Document) {
-            $this->document->setField('id', uniqid('', true));
+            $this->document->setKey('id', uniqid('', true));
 
             try {
                 foreach ($this->getFieldsAssoc() as $key => $value) {
-                    $this->document->setField($key, $value);
+                    if (!\is_array($value) || \count($value) > 0) {
+                        $this->document->setField($key, $value);
+                    }
                 }
                 return true;
             } catch (\RuntimeException $e) {
                 return false;
             }
-        } else {
-            throw new \RuntimeException("No Solr item available for current entity", 1);
         }
+        throw new \RuntimeException("No Solr item available for current entity", 1);
     }
 
     /**
@@ -300,7 +301,7 @@ abstract class AbstractSolarium
         /*
          * Strip markdown syntax
          */
-        if (true === $stripMarkdown && null !== $this->markdown) {
+        if (true === $stripMarkdown) {
             $content = $this->markdown->textExtra($content);
             // replace BR with space to avoid merged words.
             $content = str_replace(['<br>', '<br />', '<br/>'], ' ', $content);

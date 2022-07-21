@@ -1,3 +1,9 @@
+## 2.0.8 (2022-07-21)
+
+### Bug Fixes
+
+* Do not index empty arrays since [solariumphp/solarium 6.2.5](https://github.com/solariumphp/solarium/issues/1023) breaks empty array indexing ([c9da177](https://github.com/roadiz/core-bundle/commit/c9da177fd9af28e273048373f45c846ec8ca75d7))
+
 ## 2.0.7 (2022-07-20)
 
 ### Features
