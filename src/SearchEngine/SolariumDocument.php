@@ -49,7 +49,7 @@ class SolariumDocument extends AbstractSolarium
     }
 
     /**
-     * @return array Each document translation Solr document
+     * @return array<\Solarium\QueryType\Update\Query\Document> Each document translation Solr document
      */
     public function getDocuments()
     {
@@ -64,7 +64,7 @@ class SolariumDocument extends AbstractSolarium
 
     public function getDocumentId()
     {
-        return 0;
+        throw new \RuntimeException('SolariumDocument should not provide any ID');
     }
 
     /**
