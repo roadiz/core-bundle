@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\SearchEngine\Message\Handler;
 
 use Psr\Log\LoggerInterface;
+use RZ\Roadiz\CoreBundle\Exception\SolrServerNotAvailableException;
 use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\IndexerFactoryInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\Message\SolrDeleteMessage;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
@@ -30,6 +31,8 @@ final class SolrDeleteMessageHandler implements MessageHandlerInterface
             if (!empty($message->getIdentifier())) {
                 $this->indexerFactory->getIndexerFor($message->getClassname())->delete($message->getIdentifier());
             }
+        } catch (SolrServerNotAvailableException $exception) {
+            return;
         } catch (\LogicException $exception) {
             $this->logger->error($exception->getMessage());
         }
