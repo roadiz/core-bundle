@@ -1,3 +1,9 @@
+## 2.0.9 (2022-07-25)
+
+### Bug Fixes
+
+* **SearchEngine:** Do no trigger error on Solr messages if Solr is not available ([785c559](https://github.com/roadiz/core-bundle/commit/785c5593db7a0fa4a3b11e3d277a035ff63d2361))
+
 ## 2.0.8 (2022-07-21)
 
 ### Bug Fixes

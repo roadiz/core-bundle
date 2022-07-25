@@ -7,6 +7,7 @@ namespace RZ\Roadiz\CoreBundle\SearchEngine;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Markdown\MarkdownInterface;
+use Solarium\Core\Query\DocumentInterface;
 use Solarium\QueryType\Update\Query\Query;
 
 /**
@@ -49,7 +50,7 @@ class SolariumDocument extends AbstractSolarium
     }
 
     /**
-     * @return array<\Solarium\QueryType\Update\Query\Document> Each document translation Solr document
+     * @return array<\Solarium\QueryType\Update\Query\Document|DocumentInterface> Each document translation Solr document
      */
     public function getDocuments()
     {
@@ -59,7 +60,7 @@ class SolariumDocument extends AbstractSolarium
             $documents[] = $documentTranslationItem->getDocument();
         }
 
-        return $documents;
+        return array_filter($documents);
     }
 
     public function getDocumentId()
