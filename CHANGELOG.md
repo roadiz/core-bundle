@@ -1,3 +1,9 @@
+## 2.0.10 (2022-07-29)
+
+### Bug Fixes
+
+* DocumentFinder now extends AbstractDocumentFinder ([670516a](https://github.com/roadiz/core-bundle/commit/670516a9fbbdb7d312c356acc7f5626059f2150d))
+
 ## 2.0.9 (2022-07-25)
 
 ### Bug Fixes
