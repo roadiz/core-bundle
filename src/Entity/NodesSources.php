@@ -615,7 +615,6 @@ class NodesSources extends AbstractEntity implements Loggable
 
     /**
      * @return string
-     * @SymfonySerializer\Ignore
      */
     public function __toString()
     {
@@ -649,7 +648,6 @@ class NodesSources extends AbstractEntity implements Loggable
      *
      * Be careful not to persist nor flush current entity after
      * calling clone as it empties its relations.
-     * @SymfonySerializer\Ignore
      */
     public function __clone()
     {

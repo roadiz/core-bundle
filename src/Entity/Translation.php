@@ -627,7 +627,6 @@ class Translation extends AbstractDateTimed implements TranslationInterface
 
     /**
      * @return string
-     * @SymfonySerializer\Ignore
      */
     public function __toString(): string
     {

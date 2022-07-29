@@ -259,7 +259,6 @@ class Log extends AbstractEntity
 
     /**
      * @ORM\PrePersist
-     * @SymfonySerializer\Ignore
      */
     public function prePersist()
     {
