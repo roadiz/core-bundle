@@ -1,3 +1,9 @@
+## 2.0.11 (2022-07-29)
+
+### Features
+
+* Added `altSources` to Document DTO and optimize document downscaled relationship ([82a5fd6](https://github.com/roadiz/core-bundle/commit/82a5fd6cd0e37f15bff81655d34f63f9b2897fb3))
+
 ## 2.0.10 (2022-07-29)
 
 ### Bug Fixes
