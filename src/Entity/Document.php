@@ -84,12 +84,10 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     protected ?\DateTime $copyrightValidUntil = null;
 
     /**
-     * @ORM\OneToOne(targetEntity="Document", inversedBy="downscaledDocument", cascade={"all"}, fetch="EXTRA_LAZY")
+     * @ORM\ManyToOne(targetEntity="Document", inversedBy="downscaledDocuments", cascade={"all"}, fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="raw_document", referencedColumnName="id", onDelete="SET NULL")
-     * @Serializer\Groups({"document"})
-     * @SymfonySerializer\Groups({"document"})
-     * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Document")
-     * @var Document|null
+     * @Serializer\Exclude
+     * @SymfonySerializer\Ignore
      */
     protected ?DocumentInterface $rawDocument = null;
     /**
@@ -160,9 +158,6 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Folder", mappedBy="documents")
      * @ORM\JoinTable(name="documents_folders")
-     * @Serializer\Groups({"document"})
-     * @SymfonySerializer\Groups({"document"})
-     * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Folder>")
      * @ApiFilter(BaseFilter\SearchFilter::class, properties={
      *     "folders.id": "exact",
      *     "folders.folderName": "exact",
@@ -210,12 +205,12 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      */
     private ?string $mimeType = null;
     /**
-     * @ORM\OneToOne(targetEntity="Document", mappedBy="rawDocument")
+     * @ORM\OneToMany(targetEntity="Document", mappedBy="rawDocument", fetch="EXTRA_LAZY")
      * @Serializer\Exclude
      * @SymfonySerializer\Ignore
-     * @var Document|null
+     * @var Collection<DocumentInterface>
      */
-    private ?DocumentInterface $downscaledDocument = null;
+    private Collection $downscaledDocuments;
     /**
      * @ORM\Column(type="string")
      * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
@@ -275,7 +270,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
 
     /**
      * @var Collection<Document>
-     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Document", mappedBy="original")
+     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Document", mappedBy="original", fetch="EXTRA_LAZY")
      * @Serializer\Groups({"document_thumbnails"})
      * @SymfonySerializer\Groups({"document_thumbnails"})
      * @Serializer\MaxDepth(2)
@@ -286,7 +281,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
 
     /**
      * @var Document|null
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Document", inversedBy="thumbnails")
+     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Document", inversedBy="thumbnails", fetch="EXTRA_LAZY")
      * @ORM\JoinColumn(name="original", nullable=true, onDelete="SET NULL")
      * @Serializer\Groups({"document_original"})
      * @SymfonySerializer\Groups({"document_original"})
@@ -301,6 +296,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         parent::__construct();
 
         $this->folders = new ArrayCollection();
+        $this->downscaledDocuments = new ArrayCollection();
         $this->documentTranslations = new ArrayCollection();
         $this->nodesSourcesByFields = new ArrayCollection();
         $this->tagTranslations = new ArrayCollection();
@@ -600,7 +596,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      */
     public function getDownscaledDocument(): ?DocumentInterface
     {
-        return $this->downscaledDocument;
+        return $this->downscaledDocuments->first() ?: null;
     }
 
     /**
