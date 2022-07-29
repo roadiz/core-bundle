@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Document;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Core\Models\DocumentInterface;
+use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Repository\DocumentRepository;
-use RZ\Roadiz\Document\DocumentFinderInterface;
+use RZ\Roadiz\Document\AbstractDocumentFinder;
 
-final class DocumentFinder implements DocumentFinderInterface
+final class DocumentFinder extends AbstractDocumentFinder
 {
     private ManagerRegistry $managerRegistry;
 
@@ -25,7 +25,7 @@ final class DocumentFinder implements DocumentFinderInterface
     /**
      * @inheritDoc
      */
-    public function findAllByFilenames(array $fileNames)
+    public function findAllByFilenames(array $fileNames): iterable
     {
         return $this->getRepository()->findBy([
             "filename" => $fileNames,
