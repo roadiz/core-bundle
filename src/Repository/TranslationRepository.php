@@ -29,7 +29,7 @@ final class TranslationRepository extends EntityRepository
      *
      * @return TranslationInterface|null
      */
-    public function findDefault()
+    public function findDefault(): ?TranslationInterface
     {
         $qb = $this->createQueryBuilder('t');
         $qb->andWhere($qb->expr()->eq('t.available', ':available'))
