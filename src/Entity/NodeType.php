@@ -499,7 +499,6 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
 
     /**
      * @return string
-     * @SymfonySerializer\Ignore
      */
     public function __toString(): string
     {

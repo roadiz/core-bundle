@@ -52,9 +52,6 @@ class TagTranslationDocuments extends AbstractPositioned
         $this->tagTranslation = $tagTranslation;
     }
 
-    /**
-     * @SymfonySerializer\Ignore
-     */
     public function __clone()
     {
         if ($this->id) {

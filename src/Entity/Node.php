@@ -942,7 +942,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
 
     /**
      * @return string
-     * @SymfonySerializer\Ignore
      */
     public function __toString()
     {
