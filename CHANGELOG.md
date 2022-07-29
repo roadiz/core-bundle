@@ -1,3 +1,9 @@
+## 2.0.12 (2022-07-29)
+
+### Bug Fixes
+
+* **Serializer:** Ignore can only be added on methods beginning with "get", "is", "has" or "set" ([78b52aa](https://github.com/roadiz/core-bundle/commit/78b52aa794413b73f67b08efad787300f6ebf07a))
+
 ## 2.0.11 (2022-07-29)
 
 ### Features
