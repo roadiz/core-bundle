@@ -1,3 +1,9 @@
+## 2.0.13 (2022-07-29)
+
+### Bug Fixes
+
+* Remove useless eager join on document downscaledDocuments on DocumentRepository ([d821586](https://github.com/roadiz/core-bundle/commit/d82158616c6e8259c9264715e458bf1e2f0ccdb7))
+
 ## 2.0.12 (2022-07-29)
 
 ### Bug Fixes
