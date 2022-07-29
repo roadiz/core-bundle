@@ -221,7 +221,6 @@ class Role implements PersistableInterface
 
     /**
      * @return string
-     * @SymfonySerializer\Ignore
      */
     public function __toString(): string
     {

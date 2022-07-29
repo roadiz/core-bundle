@@ -383,7 +383,6 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
 
     /**
      * @return string
-     * @SymfonySerializer\Ignore
      */
     public function __toString()
     {

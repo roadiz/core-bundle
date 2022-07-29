@@ -713,10 +713,6 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
             parent::getAlternativeText();
     }
 
-    /**
-     * Clone current document.
-     * @SymfonySerializer\Ignore
-     */
     public function __clone()
     {
         if ($this->id) {
@@ -804,7 +800,6 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
 
     /**
      * @return bool
-     * @SymfonySerializer\Ignore
      */
     public function needsThumbnail(): bool
     {
@@ -885,7 +880,6 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
 
     /**
      * @return string
-     * @SymfonySerializer\Ignore
      */
     public function __toString()
     {
