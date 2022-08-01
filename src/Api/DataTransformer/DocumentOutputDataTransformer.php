@@ -42,7 +42,7 @@ class DocumentOutputDataTransformer implements DataTransformerInterface
         $output->imageAverageColor = $object->getImageAverageColor();
         $output->mediaDuration = $object->getMediaDuration();
 
-        if (!$object->isImage() && false !== $object->getThumbnails()->first()) {
+        if (($object->isEmbed() || !$object->isImage()) && false !== $object->getThumbnails()->first()) {
             $output->thumbnail = $object->getThumbnails()->first();
         }
 
