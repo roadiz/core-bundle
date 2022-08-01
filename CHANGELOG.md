@@ -1,3 +1,9 @@
+## 2.0.16 (2022-08-01)
+
+### Bug Fixes
+
+* **Document:** Fixed context groups undefined key ([8bbdc31](https://github.com/roadiz/core-bundle/commit/8bbdc313b29ecebf2ef594aec03cb30d7b487ea9))
+
 ## 2.0.15 (2022-08-01)
 
 ### Bug Fixes
