@@ -1,3 +1,9 @@
+## 2.0.15 (2022-08-01)
+
+### Bug Fixes
+
+* **Document:** Fixed document DTO thumbnail when document is Embed (it's an image too because an image has been downloaded from platform) ([0d7fef4](https://github.com/roadiz/core-bundle/commit/0d7fef4ed44fc2f2867eaf5ea54efb189bda404a))
+
 ## 2.0.14 (2022-08-01)
 
 ### Bug Fixes
