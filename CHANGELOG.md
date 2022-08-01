@@ -1,3 +1,9 @@
+## 2.0.14 (2022-08-01)
+
+### Bug Fixes
+
+* **ArchiveFilter:** Prevent normalizing not-string values ([b1fe49e](https://github.com/roadiz/core-bundle/commit/b1fe49ea909ec59170c5c5cf13a03465ceab901a))
+
 ## 2.0.13 (2022-07-29)
 
 ### Bug Fixes
