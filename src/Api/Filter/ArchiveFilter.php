@@ -8,6 +8,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Common\PropertyHelperTrait;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\AbstractFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use ApiPlatform\Core\Exception\InvalidArgumentException;
 use Doctrine\ORM\QueryBuilder;
 
 final class ArchiveFilter extends AbstractFilter
@@ -50,6 +51,13 @@ final class ArchiveFilter extends AbstractFilter
 
         if ($this->isPropertyNested($property, $resourceClass)) {
             [$alias, $field] = $this->addJoinsForNestedProperty($property, $alias, $queryBuilder, $queryNameGenerator, $resourceClass);
+        }
+
+        if (!is_string($values[self::PARAMETER_ARCHIVE])) {
+            throw new InvalidArgumentException(sprintf(
+                '“%s” filter must be only used with a string value.',
+                self::PARAMETER_ARCHIVE
+            ));
         }
 
         $range = $this->normalizeFilteringDates($values[self::PARAMETER_ARCHIVE]);
