@@ -42,6 +42,9 @@ class DocumentOutputDataTransformer implements DataTransformerInterface
         $output->imageAverageColor = $object->getImageAverageColor();
         $output->mediaDuration = $object->getMediaDuration();
 
+        /** @var array<string> $serializationGroups */
+        $serializationGroups = isset($context['groups']) && is_array($context['groups']) ? $context['groups'] : [];
+
         if (($object->isEmbed() || !$object->isImage()) && false !== $object->getThumbnails()->first()) {
             $output->thumbnail = $object->getThumbnails()->first();
         }
@@ -57,11 +60,11 @@ class DocumentOutputDataTransformer implements DataTransformerInterface
             }
         }
 
-        if (in_array('document_folders', $context['groups'])) {
+        if (in_array('document_folders', $serializationGroups)) {
             $output->folders = $object->getFolders()->toArray();
         }
 
-        if (in_array('document_display_sources', $context['groups'])) {
+        if (in_array('document_display_sources', $serializationGroups)) {
             if ($object->isLocal() && $object->isVideo()) {
                 foreach ($this->documentFinder->findVideosWithFilename($object->getRelativePath()) as $document) {
                     if ($document->getRelativePath() !== $object->getRelativePath()) {
