@@ -1,3 +1,9 @@
+## 2.0.17 (2022-08-02)
+
+### Bug Fixes
+
+* **SearchEngine:** Use `Solarium\Core\Client\Client` instead of `Solarium\Client` because it's not compatible with Preload (defined constant at runtime) ([320df16](https://github.com/roadiz/core-bundle/commit/320df160182464f2aa35a82813f1676ce428d59c))
+
 ## 2.0.16 (2022-08-01)
 
 ### Bug Fixes
