@@ -7,7 +7,7 @@ namespace RZ\Roadiz\CoreBundle\SearchEngine;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Exception\SolrServerNotAvailableException;
 use RZ\Roadiz\Markdown\MarkdownInterface;
-use Solarium\Client;
+use Solarium\Core\Client\Client;
 use Solarium\Core\Query\DocumentInterface;
 use Solarium\Core\Query\Result\Result;
 use Solarium\QueryType\Update\Query\Document;

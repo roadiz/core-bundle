@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\SearchEngine;
 
-use Solarium\Client;
+use Solarium\Core\Client\Client;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class ClientRegistry

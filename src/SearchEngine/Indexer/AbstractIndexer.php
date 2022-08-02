@@ -9,7 +9,7 @@ use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Exception\SolrServerNotAvailableException;
 use RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry;
 use RZ\Roadiz\CoreBundle\SearchEngine\SolariumFactoryInterface;
-use Solarium\Client;
+use Solarium\Core\Client\Client;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 abstract class AbstractIndexer implements CliAwareIndexer
