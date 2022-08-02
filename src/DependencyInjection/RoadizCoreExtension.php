@@ -26,7 +26,7 @@ use RZ\Roadiz\CoreBundle\Webhook\Message\GitlabPipelineTriggerMessage;
 use RZ\Roadiz\CoreBundle\Webhook\Message\NetlifyBuildHookMessage;
 use RZ\Roadiz\Markdown\CommonMark;
 use RZ\Roadiz\Markdown\MarkdownInterface;
-use Solarium\Client;
+use Solarium\Core\Client\Client;
 use Solarium\Core\Client\Adapter\Curl;
 use Solarium\Core\Client\Endpoint;
 use Symfony\Component\Config\FileLocator;
