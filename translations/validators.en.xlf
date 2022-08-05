@@ -6,6 +6,10 @@
                 <source>{{ value }} is not a valid email address.</source>
                 <target state="translated">{{ value }} is not a valid email address.</target>
             </trans-unit>
+      <trans-unit id="tagName.%name%.alreadyExists" xml:space="preserve">
+                <source>tagName.%name%.alreadyExists</source>
+                <target state="translated">Tag %name% already exists.</target>
+            </trans-unit>
     </body>
   </file>
 </xliff>
