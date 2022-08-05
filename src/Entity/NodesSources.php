@@ -44,9 +44,7 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
  * @ORM\HasLifecycleCallbacks
  * @Gedmo\Loggable(logEntryClass="RZ\Roadiz\CoreBundle\Entity\UserLogEntry")
  * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
- * @ApiFilter(RoadizFilter\DiscriminatorFilter::class)
  * @ApiFilter(RoadizFilter\LocaleFilter::class)
- * @ApiFilter(RoadizFilter\PublishableFilter::class)
  */
 class NodesSources extends AbstractEntity implements Loggable
 {

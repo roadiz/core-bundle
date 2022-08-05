@@ -50,7 +50,6 @@ use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
  *     @ORM\Index(columns={"mime_type"})
  * })
  * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
- * @ApiFilter(RoadizFilter\RawDocumentFilter::class)
  * @ApiFilter(BaseFilter\OrderFilter::class, properties={
  *     "createdAt",
  *     "updatedAt",
