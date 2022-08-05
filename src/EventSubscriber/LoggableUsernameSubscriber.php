@@ -42,7 +42,7 @@ final class LoggableUsernameSubscriber implements EventSubscriberInterface
      */
     public function onRequest(RequestEvent $event)
     {
-        if ($event->isMasterRequest()) {
+        if ($event->isMainRequest()) {
             $token = $this->tokenStorage->getToken();
             if ($token && $token->getUsername() !== '') {
                 if (
