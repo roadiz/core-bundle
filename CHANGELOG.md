@@ -1,3 +1,10 @@
+## 2.0.18 (2022-08-05)
+
+### Bug Fixes
+
+* Missing validator translation message ([33648a3](https://github.com/roadiz/core-bundle/commit/33648a3b1b36010459d39dba73929a018700dece))
+* **Security:** Use QueryItemExtension and QueryCollectionExtension to filter out non-published nodes-sources and raw documents ([f7c4688](https://github.com/roadiz/core-bundle/commit/f7c4688eee09034c7317de7c3fd01be7845e4f1d))
+
 ## 2.0.17 (2022-08-02)
 
 ### Bug Fixes
