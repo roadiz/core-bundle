@@ -14,7 +14,7 @@ final class DocumentQueryExtension implements QueryItemExtensionInterface, Query
 {
     private function apply(
         QueryBuilder $queryBuilder,
-        QueryNameGeneratorInterface $queryNameGenerator,src/Entity/PositionedPageUser.php
+        QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
         string $operationName = null
     ): void {
