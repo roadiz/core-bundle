@@ -7,7 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Api\TreeWalker;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\CoreBundle\Api\TreeWalker\Definition\MultiTypeChildrenDefinition;
-use RZ\TreeWalker\AbstractWalker;
+use RZ\TreeWalker\AbstractCycleAwareWalker;
 use RZ\TreeWalker\Definition\ZeroChildrenDefinition;
 
 /**
@@ -16,7 +16,7 @@ use RZ\TreeWalker\Definition\ZeroChildrenDefinition;
  *
  * Override this class to customize definitions
  */
-class AutoChildrenNodeSourceWalker extends AbstractWalker
+class AutoChildrenNodeSourceWalker extends AbstractCycleAwareWalker
 {
     protected function initializeDefinitions(): void
     {

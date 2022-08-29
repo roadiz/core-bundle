@@ -1,3 +1,9 @@
+## 2.0.19 (2022-08-29)
+
+### Bug Fixes
+
+* Updated *rezozero/tree-walker* in order to extend `AbstractCycleAwareWalker` and prevent cyclic children collection ([eb80381](https://github.com/roadiz/core-bundle/commit/eb80381738f7fa90cf1aa466827522982d4a2036))
+
 ## 2.0.18 (2022-08-05)
 
 ### Bug Fixes
