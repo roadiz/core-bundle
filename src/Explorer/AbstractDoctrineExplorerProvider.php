@@ -9,6 +9,7 @@ use RZ\Roadiz\CoreBundle\ListManager\EntityListManager;
 use RZ\Roadiz\CoreBundle\ListManager\EntityListManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
  * @package Themes\Rozier\Explorer
@@ -17,15 +18,16 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
 {
     protected ManagerRegistry $managerRegistry;
     protected RequestStack $requestStack;
+    protected UrlGeneratorInterface $urlGenerator;
 
-    /**
-     * @param ManagerRegistry $managerRegistry
-     * @param RequestStack $requestStack
-     */
-    public function __construct(ManagerRegistry $managerRegistry, RequestStack $requestStack)
-    {
+    public function __construct(
+        ManagerRegistry $managerRegistry,
+        RequestStack $requestStack,
+        UrlGeneratorInterface $urlGenerator
+    ) {
         $this->managerRegistry = $managerRegistry;
         $this->requestStack = $requestStack;
+        $this->urlGenerator = $urlGenerator;
     }
 
     /**
