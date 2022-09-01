@@ -69,6 +69,9 @@ final class NodeTranstyper
     /**
      * Warning, this method DOES NOT flush entityManager at the end.
      *
+     * Trans-typing SHOULD be executed in one single transaction
+     * @see https://www.doctrine-project.org/projects/doctrine-orm/en/latest/reference/transactions-and-concurrency.html
+     *
      * @param Node $node
      * @param NodeTypeInterface $destinationNodeType
      * @param bool $mock
