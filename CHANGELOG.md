@@ -1,3 +1,10 @@
+## 2.0.20 (2022-09-01)
+
+### Features
+
+* Added Folder `locked` and `color` fields, improved table indexes ([b8f344d](https://github.com/roadiz/core-bundle/commit/b8f344db0fcadbed3532127812467a5f295f061a))
+* Improved AbstractExplorerItem and AbstractExplorerItem ([66386d6](https://github.com/roadiz/core-bundle/commit/66386d6c5a63828577f2ddf24ad58296b8b379de))
+
 ## 2.0.19 (2022-08-29)
 
 ### Bug Fixes
