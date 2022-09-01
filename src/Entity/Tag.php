@@ -135,6 +135,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @Serializer\Groups({"tag"})
      * @SymfonySerializer\Groups({"tag"})
      * @Serializer\Type("bool")
+     * @ApiFilter(BaseFilter\BooleanFilter::class)
      */
     private bool $locked = false;
     /**

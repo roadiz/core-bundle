@@ -162,7 +162,8 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      *     "folders.folderName": "exact",
      * })
      * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
-     *     "folders.visible"
+     *     "folders.visible",
+     *     "folders.locked"
      * })
      * @ApiFilter(RoadizFilter\NotFilter::class, properties={
      *     "folders.id",
