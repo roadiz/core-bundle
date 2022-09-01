@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimedPositioned;
 use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
 use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
@@ -15,7 +18,6 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\Core\Models\FolderInterface;
 use RZ\Roadiz\Utils\StringHandler;
-use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 /**
@@ -25,10 +27,20 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
  * @ORM\HasLifecycleCallbacks
  * @ORM\Table(name="folders", indexes={
  *     @ORM\Index(columns={"visible"}),
+ *     @ORM\Index(columns={"locked"}),
  *     @ORM\Index(columns={"position"}),
  *     @ORM\Index(columns={"created_at"}),
  *     @ORM\Index(columns={"updated_at"}),
- *     @ORM\Index(columns={"parent_id", "position"}, name="folder_parent_position")
+ *     @ORM\Index(columns={"parent_id", "position"}, name="folder_parent_position"),
+ *     @ORM\Index(columns={"visible", "position"}, name="folder_visible_position"),
+ *     @ORM\Index(columns={"parent_id", "visible"}, name="folder_parent_visible"),
+ *     @ORM\Index(columns={"parent_id", "visible", "position"}, name="folder_parent_visible_position")
+ * })
+ * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
+ * @ApiFilter(BaseFilter\OrderFilter::class, properties={
+ *     "position",
+ *     "createdAt",
+ *     "updatedAt"
  * })
  */
 class Folder extends AbstractDateTimedPositioned implements FolderInterface
@@ -41,6 +53,10 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @var Folder|null
      * @Serializer\Exclude
      * @SymfonySerializer\Ignore
+     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
+     *     "parent.id": "exact",
+     *     "parent.folderName": "exact"
+     * })
      */
     protected ?LeafInterface $parent = null;
     /**
@@ -57,6 +73,14 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @var Collection<Document>
      * @Serializer\Groups({"folder"})
      * @SymfonySerializer\Groups({"folder"})
+     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
+     *     "documents.id": "exact",
+     *     "documents.mimeType": "exact",
+     *     "documents.filename": "exact",
+     *     "documents.embedPlatform": "exact",
+     *     "documents.folders": "exact",
+     *     "documents.folders.folderName": "exact",
+     * })
      */
     protected Collection $documents;
     /**
@@ -64,6 +88,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @var string
      * @Serializer\Groups({"folder", "document"})
      * @SymfonySerializer\Groups({"folder", "document"})
+     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
      */
     private string $folderName = '';
     /**
@@ -77,8 +102,25 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @var bool
      * @Serializer\Groups({"folder", "document"})
      * @SymfonySerializer\Groups({"folder", "document"})
+     * @ApiFilter(BaseFilter\BooleanFilter::class)
      */
     private bool $visible = true;
+    /**
+     * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
+     * @Serializer\Groups({"folder"})
+     * @SymfonySerializer\Groups({"folder"})
+     * @Serializer\Type("bool")
+     * @ApiFilter(BaseFilter\BooleanFilter::class)
+     */
+    private bool $locked = false;
+    /**
+     * @var string
+     * @ORM\Column(type="string", name="color", length=7, unique=false, nullable=false, options={"default" = "#000000"})
+     * @Serializer\Groups({"folder", "folder_color"})
+     * @SymfonySerializer\Groups({"folder", "folder_color"})
+     * @Serializer\Type("string")
+     */
+    protected string $color = '#000000';
     /**
      * @ORM\OneToMany(targetEntity="FolderTranslation", mappedBy="folder", orphanRemoval=true)
      * @var Collection<FolderTranslation>
@@ -234,6 +276,42 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
     public function setDirtyFolderName($dirtyFolderName)
     {
         $this->dirtyFolderName = $dirtyFolderName;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isLocked(): bool
+    {
+        return $this->locked;
+    }
+
+    /**
+     * @param bool $locked
+     * @return Folder
+     */
+    public function setLocked(bool $locked): Folder
+    {
+        $this->locked = $locked;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getColor(): string
+    {
+        return $this->color;
+    }
+
+    /**
+     * @param string $color
+     * @return Folder
+     */
+    public function setColor(string $color): Folder
+    {
+        $this->color = $color;
         return $this;
     }
 
