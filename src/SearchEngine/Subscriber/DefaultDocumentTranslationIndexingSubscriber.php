@@ -90,7 +90,8 @@ final class DefaultDocumentTranslationIndexingSubscriber implements EventSubscri
         $folderNames = [];
         /** @var Folder $folder */
         foreach ($folders as $folder) {
-            if ($folder->isVisible() && $fTrans = $folder->getTranslatedFoldersByTranslation($translation)->first()) {
+            $folderNames[] = $folder->getFolderName();
+            if ($fTrans = $folder->getTranslatedFoldersByTranslation($translation)->first()) {
                 $folderNames[] = $fTrans->getName();
             }
         }
