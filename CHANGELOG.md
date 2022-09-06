@@ -1,3 +1,10 @@
+## 2.0.23 (2022-09-06)
+
+### Bug Fixes
+
+* Force int progress start ([24247d2](https://github.com/roadiz/core-bundle/commit/24247d2bc99058f02a7e1b5f19ddc24ae55f7a07))
+* Upgraded rezozero Liform to handle properly FileType multiple option ([cd1b147](https://github.com/roadiz/core-bundle/commit/cd1b147b7308c3a94dee0f9a78840907001438e8))
+
 ## 2.0.22 (2022-09-06)
 
 ### Bug Fixes

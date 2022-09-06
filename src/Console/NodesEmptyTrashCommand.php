@@ -57,7 +57,7 @@ class NodesEmptyTrashCommand extends Command
             if ($io->askQuestion($confirmation) || !$input->isInteractive()) {
                 $i = 0;
                 $batchSize = 100;
-                $io->progressStart($emptiedCount);
+                $io->progressStart((int) $emptiedCount);
 
                 $qb = $this->createNodeQueryBuilder();
                 $q = $qb->select('n')
