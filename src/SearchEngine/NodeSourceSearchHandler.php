@@ -69,12 +69,11 @@ class NodeSourceSearchHandler extends AbstractSearchHandler implements NodeSourc
                 'locale_s',
             ]);
 
-            if (null !== $this->logger) {
-                $this->logger->debug('[Solr] Request node-sources search…', [
-                    'query' => $queryTxt,
-                    'params' => $query->getParams(),
-                ]);
-            }
+            $this->logger->debug('[Solr] Request node-sources search…', [
+                'query' => $queryTxt,
+                'fq' => $args["fq"] ?? [],
+                'params' => $query->getParams(),
+            ]);
 
             $solrRequest = $this->getSolr()->execute($query);
             return $solrRequest->getData();
@@ -104,11 +103,11 @@ class NodeSourceSearchHandler extends AbstractSearchHandler implements NodeSourc
         // filter by tag or tags
         if (!empty($args['tags'])) {
             if ($args['tags'] instanceof Tag) {
-                $args["fq"][] = "tags_txt:" . $args['tags']->getTranslatedTags()->first()->getName();
+                $args["fq"][] = sprintf('tags_txt:"%s"', $args['tags']->getTranslatedTags()->first()->getName());
             } elseif (is_array($args['tags'])) {
                 foreach ($args['tags'] as $tag) {
                     if ($tag instanceof Tag) {
-                        $args["fq"][] = "tags_txt:" . $tag->getTranslatedTags()->first()->getName();
+                        $args["fq"][] = sprintf('tags_txt:"%s"', $tag->getTranslatedTags()->first()->getName());
                     }
                 }
             }
@@ -122,11 +121,11 @@ class NodeSourceSearchHandler extends AbstractSearchHandler implements NodeSourc
         if (!empty($nodeType)) {
             if (is_array($nodeType) || $nodeType instanceof Collection) {
                 $orQuery = [];
-                foreach ($nodeType as $nodeType) {
-                    if ($nodeType instanceof NodeTypeInterface) {
-                        $orQuery[] = $nodeType->getName();
-                    } else {
-                        $orQuery[] = $nodeType;
+                foreach ($nodeType as $singleNodeType) {
+                    if ($singleNodeType instanceof NodeTypeInterface) {
+                        $orQuery[] = $singleNodeType->getName();
+                    } elseif (is_string($singleNodeType)) {
+                        $orQuery[] = $singleNodeType;
                     }
                 }
                 $args["fq"][] = "node_type_s:(" . implode(' OR ', $orQuery) . ')';
