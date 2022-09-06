@@ -92,12 +92,6 @@ services:
         tags:
             - { name: liform.transformer, form_type: date, widget: date }
 
-    roadiz_core.liform.file_type.transformer:
-        class: Limenius\Liform\Transformer\StringTransformer
-        parent: Limenius\Liform\Transformer\AbstractTransformer
-        tags:
-            - { name: liform.transformer, form_type: file, widget: file }
-
     RZ\Roadiz\CoreBundle\Serializer\Normalizer\TranslationAwareNormalizer:
         tags:
             - { name: 'serializer.normalizer', priority: 64 }
