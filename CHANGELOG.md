@@ -1,3 +1,9 @@
+## 2.0.22 (2022-09-06)
+
+### Bug Fixes
+
+* Folder names and Tags names must be quoted in Solr filter query parameters ([d68d9b5](https://github.com/roadiz/core-bundle/commit/d68d9b51f1e507c3c57ec8c09ca1ca3f5fdd4264))
+
 ## 2.0.21 (2022-09-06)
 
 ### Bug Fixes

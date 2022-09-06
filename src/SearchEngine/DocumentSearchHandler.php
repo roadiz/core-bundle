@@ -48,13 +48,11 @@ class DocumentSearchHandler extends AbstractSearchHandler
                 'locale_s',
             ]);
 
-
-            if (null !== $this->logger) {
-                $this->logger->debug('[Solr] Request document search…', [
-                    'query' => $queryTxt,
-                    'params' => $query->getParams(),
-                ]);
-            }
+            $this->logger->debug('[Solr] Request document search…', [
+                'query' => $queryTxt,
+                'fq' => $args["fq"] ?? [],
+                'params' => $query->getParams(),
+            ]);
 
             $solrRequest = $this->getSolr()->execute($query);
             return $solrRequest->getData();
@@ -76,11 +74,11 @@ class DocumentSearchHandler extends AbstractSearchHandler
         // filter by tag or tags
         if (!empty($args['folders'])) {
             if ($args['folders'] instanceof Folder) {
-                $args["fq"][] = "tags_txt:" . $args['folders']->getTranslatedFolders()->first()->getName();
+                $args["fq"][] = sprintf('tags_txt:"%s"', $args['folders']->getFolderName());
             } elseif (is_array($args['folders'])) {
-                foreach ($args['folders'] as $tag) {
-                    if ($tag instanceof Folder) {
-                        $args["fq"][] = "tags_txt:" . $tag->getTranslatedFolders()->first()->getName();
+                foreach ($args['folders'] as $folder) {
+                    if ($folder instanceof Folder) {
+                        $args["fq"][] = sprintf('tags_txt:"%s"', $folder->getFolderName());
                     }
                 }
             }
@@ -113,7 +111,7 @@ class DocumentSearchHandler extends AbstractSearchHandler
          * Filter by filename
          */
         if (isset($args['filename'])) {
-            $args["fq"][] = "filename_s:" . trim($args['filename']);
+            $args["fq"][] = sprintf('filename_s:"%s"', trim($args['filename']));
         }
 
         /*
