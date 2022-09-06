@@ -6,5 +6,4 @@ namespace RZ\Roadiz\CoreBundle\Document\Message;
 
 class DocumentAverageColorMessage extends AbstractDocumentMessage
 {
-
 }

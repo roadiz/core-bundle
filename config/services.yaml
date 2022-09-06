@@ -35,6 +35,7 @@ services:
             $webhookMessageTypes: '%roadiz_core.webhook.message_types%'
             $useAcceptLanguageHeader: '%roadiz_core.use_accept_language_header%'
             $healthCheckToken: '%roadiz_core.health_check_token%'
+            $ffmpegPath: '%roadiz_core.medias.ffmpeg_path%'
 
     RZ\Roadiz\CoreBundle\:
         resource: '../src/'
@@ -162,7 +163,13 @@ services:
         tags:
             -   name: messenger.message_handler
                 handles: RZ\Roadiz\CoreBundle\Document\Message\DocumentAudioVideoMessage
-                priority: -100
+            - { name: monolog.logger, channel: messenger }
+
+    RZ\Roadiz\CoreBundle\Document\MessageHandler\DocumentVideoThumbnailMessageHandler:
+        autoconfigure: false
+        tags:
+            -   name: messenger.message_handler
+                handles: RZ\Roadiz\CoreBundle\Document\Message\DocumentVideoThumbnailMessage
             - { name: monolog.logger, channel: messenger }
 
     RZ\Roadiz\CoreBundle\SearchEngine\Indexer\:
