@@ -1,3 +1,9 @@
+## 2.0.21 (2022-09-06)
+
+### Bug Fixes
+
+* Always index all documents folder names to Solr, not only visible ones (i.e. to restrict documents search with an invisible folder) ([c76fffc](https://github.com/roadiz/core-bundle/commit/c76fffcaa61e5cc60d19b271c3d638aebb3c166f))
+
 ## 2.0.20 (2022-09-01)
 
 ### Features
