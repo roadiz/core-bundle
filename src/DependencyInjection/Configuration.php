@@ -111,6 +111,7 @@ EOD
         $node->addDefaultsIfNotSet()
             ->children()
             ->scalarNode('unsplash_client_id')->defaultNull()->end()
+            ->scalarNode('ffmpeg_path')->defaultNull()->end()
             ->end();
 
         return $node;

@@ -20,17 +20,19 @@ class DocumentSizeCommand extends Command
     protected SymfonyStyle $io;
     protected ManagerRegistry $managerRegistry;
     private Packages $packages;
-    private ImageManager $manager;
+    private ImageManager $imageManager;
 
     /**
      * @param ManagerRegistry $managerRegistry
      * @param Packages $packages
+     * @param ImageManager $imageManager
      */
-    public function __construct(ManagerRegistry $managerRegistry, Packages $packages)
+    public function __construct(ManagerRegistry $managerRegistry, Packages $packages, ImageManager $imageManager)
     {
         parent::__construct();
         $this->managerRegistry = $managerRegistry;
         $this->packages = $packages;
+        $this->imageManager = $imageManager;
     }
 
     protected function configure()
@@ -43,7 +45,6 @@ class DocumentSizeCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io = new SymfonyStyle($input, $output);
-        $this->manager = new ImageManager();
 
         $em = $this->managerRegistry->getManagerForClass(Document::class);
         $batchSize = 20;
@@ -86,7 +87,7 @@ class DocumentSizeCommand extends Command
         if ($document->isImage()) {
             $documentPath = $this->packages->getDocumentFilePath($document);
             try {
-                $imageProcess = $this->manager->make($documentPath);
+                $imageProcess = $this->imageManager->make($documentPath);
                 $document->setImageWidth($imageProcess->width());
                 $document->setImageHeight($imageProcess->height());
             } catch (NotReadableException $exception) {

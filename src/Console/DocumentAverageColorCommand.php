@@ -18,20 +18,22 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class DocumentAverageColorCommand extends Command
 {
     protected SymfonyStyle $io;
-    private ImageManager $manager;
     private AverageColorResolver $colorResolver;
     private ManagerRegistry $managerRegistry;
     private Packages $packages;
+    private ImageManager $imageManager;
 
     /**
      * @param ManagerRegistry $managerRegistry
      * @param Packages $packages
+     * @param ImageManager $imageManager
      */
-    public function __construct(ManagerRegistry $managerRegistry, Packages $packages)
+    public function __construct(ManagerRegistry $managerRegistry, Packages $packages, ImageManager $imageManager)
     {
         parent::__construct();
         $this->managerRegistry = $managerRegistry;
         $this->packages = $packages;
+        $this->imageManager = $imageManager;
     }
 
     protected function configure()
@@ -44,7 +46,6 @@ class DocumentAverageColorCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->io = new SymfonyStyle($input, $output);
-        $this->manager = new ImageManager();
         $this->colorResolver = new AverageColorResolver();
 
         $batchSize = 20;
@@ -88,7 +89,7 @@ class DocumentAverageColorCommand extends Command
         if ($document->isImage()) {
             $documentPath = $this->packages->getDocumentFilePath($document);
             try {
-                $mediumColor = $this->colorResolver->getAverageColor($this->manager->make($documentPath));
+                $mediumColor = $this->colorResolver->getAverageColor($this->imageManager->make($documentPath));
                 $document->setImageAverageColor($mediumColor);
             } catch (NotReadableException $exception) {
                 /*

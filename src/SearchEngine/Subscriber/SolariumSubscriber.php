@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\SearchEngine\Subscriber;
 
+use RZ\Roadiz\Core\Events\DocumentCreatedEvent;
 use RZ\Roadiz\Core\Events\DocumentDeletedEvent;
 use RZ\Roadiz\Core\Events\DocumentFileUploadedEvent;
 use RZ\Roadiz\Core\Events\DocumentInFolderEvent;
@@ -63,7 +64,7 @@ class SolariumSubscriber implements EventSubscriberInterface
             NodeTaggedEvent::class => 'onSolariumNodeUpdate',
             NodeCreatedEvent::class => 'onSolariumNodeUpdate',
             TagUpdatedEvent::class => 'onSolariumTagUpdate', // Possibly too greedy if lots of nodes tagged
-            DocumentFileUploadedEvent::class => 'onSolariumDocumentUpdate',
+            DocumentCreatedEvent::class => 'onSolariumDocumentUpdate',
             DocumentTranslationUpdatedEvent::class => 'onSolariumDocumentUpdate',
             DocumentInFolderEvent::class => 'onSolariumDocumentUpdate',
             DocumentOutFolderEvent::class => 'onSolariumDocumentUpdate',
