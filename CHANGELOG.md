@@ -1,3 +1,15 @@
+## 2.0.24 (2022-09-07)
+
+### Features
+
+* Added `DocumentVideoThumbnailMessageHandler` to wrap `ffmpeg` process and extract videos first frame as thumbnail ([4b7d096](https://github.com/roadiz/core-bundle/commit/4b7d0969a772717c077cf9b915388dbf98776254))
+* `ImageManager` is registered as a service to use app-wise configured driver ([cfa0b84](https://github.com/roadiz/core-bundle/commit/cfa0b845dda1fc9a101916e502ac201761797d68))
+* Moved all document processes from event-subscribers to async messenger, read AV media size and duration ([251b9b5](https://github.com/roadiz/core-bundle/commit/251b9b5dc514a4177765200822544ef1d5a06d68))
+
+### Bug Fixes
+
+* Revert registering ImageManager as service since rezozero/intervention-request-bundle does it ([064c865](https://github.com/roadiz/core-bundle/commit/064c865678cd03d69985b6346436f834b56cd5d5))
+
 ## 2.0.23 (2022-09-06)
 
 ### Bug Fixes
