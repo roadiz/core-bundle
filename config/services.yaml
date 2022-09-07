@@ -102,10 +102,6 @@ services:
         autowire: true
         autoconfigure: false
 
-    Intervention\Image\ImageManager:
-        arguments:
-            - { driver: '%rz_intervention_request.driver%' }
-
     # Do not register roadiz/document packages event-subscribers
     # They've been replaced with MessageHandlers
 
