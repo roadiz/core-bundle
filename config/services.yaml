@@ -25,7 +25,6 @@ services:
             $hideRoadizVersion: '%roadiz_core.hide_roadiz_version%'
             $inheritanceType: '%roadiz_core.inheritance_type%'
             $maxPixelSize: '%rz_intervention_request.max_pixel_size%'
-            $imageDriver: '%rz_intervention_request.driver%'
             $appNamespace: '%roadiz_core.app_namespace%'
             $exportDir: '%kernel.project_dir%/var/export'
             $privateKeyName: '%roadiz_core.private_key_name%'
@@ -102,6 +101,10 @@ services:
         arguments: [ '@RZ\Roadiz\CoreBundle\Serializer\TranslationAwareContextBuilder.inner' ]
         autowire: true
         autoconfigure: false
+
+    Intervention\Image\ImageManager:
+        arguments:
+            - { driver: '%rz_intervention_request.driver%' }
 
     # Do not register roadiz/document packages event-subscribers
     # They've been replaced with MessageHandlers
