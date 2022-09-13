@@ -5,7 +5,9 @@
     "copy-from-recipe": {
         "config/api_resources/": "%CONFIG_DIR%/api_resources/",
         "config/packages/": "%CONFIG_DIR%/packages/",
-        "var/": "%VAR_DIR%/"
+        "var/": "%VAR_DIR%/",
+        "public/": "%PUBLIC_DIR%/",
+        "themes/": "themes/"
     },
     "env": {
         "APP_NAMESPACE": "my_website",
