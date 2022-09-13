@@ -2,7 +2,7 @@
     "bundles": {
         "RZ\\Roadiz\\CoreBundle\\RoadizCoreBundle": ["all"]
     },
-    "copy-from-recipe": {
+    "copy-from-package": {
         "config/api_resources/": "%CONFIG_DIR%/api_resources/",
         "config/packages/": "%CONFIG_DIR%/packages/",
         "var/": "%VAR_DIR%/",
@@ -27,5 +27,12 @@
         "HTTP_CACHE_MAX_AGE": 60,
         "HTTP_CACHE_SHARED_MAX_AGE": 600
     },
-    "aliases": ["roadiz-core"]
+    "aliases": ["roadiz-core"],
+    "gitignore": [
+        "/public/assets/*",
+        "/public/files/*",
+        "/var/files/fonts/*",
+        "/var/files/private/*",
+        "/var/secret/*"
+    ]
 }
