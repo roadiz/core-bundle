@@ -2,16 +2,10 @@
 RZ\Roadiz\CoreBundle\Entity\Document:
     attributes:
         output: RZ\Roadiz\CoreBundle\Api\Dto\DocumentOutput
-    collectionOperations:
-        get:
-            method: "GET"
-            normalization_context:
-                groups: ["urls", "document", "document_display"]
-                enable_max_depth: true
+    collectionOperations: {}
     itemOperations:
         get:
             method: 'GET'
             normalization_context:
-                groups: ["urls", "document", "document_display"]
                 enable_max_depth: true
 
