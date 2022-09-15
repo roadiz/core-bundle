@@ -1,3 +1,15 @@
+## 2.0.25 (2022-09-15)
+
+### Features
+
+* Added Flex manifest and updated config files ([8ace107](https://github.com/roadiz/core-bundle/commit/8ace107e2a0448f13dec1af06f6c94ab6756706c))
+* Added PathResolverInterface::resolvePath `$allowNonReachableNodes` arg to restrict path resolution to reachable node-types ([d78754d](https://github.com/roadiz/core-bundle/commit/d78754d8708e4584e9f8dd26b2d8ec391c3e7afd))
+* Added `public` and `themes` dir in flex manifest ([305800d](https://github.com/roadiz/core-bundle/commit/305800dda9004505d622cc7413622c4a71cbf07b))
+
+### Bug Fixes
+
+* Missing default configuration value for `healthCheckToken` ([28668c4](https://github.com/roadiz/core-bundle/commit/28668c43591d3b1ef7f9b3472f8f1be074c69543))
+
 ## 2.0.24 (2022-09-07)
 
 ### Features
