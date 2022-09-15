@@ -59,7 +59,7 @@ class SettingDocumentType extends AbstractType
                     $this->documentFactory->setFile($file);
                     $document = $this->documentFactory->getDocument();
 
-                    if (null !== $document && $document instanceof Document) {
+                    if ($document instanceof Document) {
                         $manager = $this->managerRegistry->getManagerForClass(Document::class);
                         $manager->persist($document);
                         $manager->flush();
