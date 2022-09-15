@@ -93,7 +93,10 @@ final class NodeUrlMatcher extends DynamicUrlMatcher implements NodeUrlMatcherIn
      */
     public function matchNode(string $decodedUrl, ?Theme $theme): array
     {
-        $resourceInfo = $this->pathResolver->resolvePath($decodedUrl, $this->getSupportedFormatExtensions());
+        $resourceInfo = $this->pathResolver->resolvePath(
+            $decodedUrl,
+            $this->getSupportedFormatExtensions()
+        );
         $nodeSource = $resourceInfo->getResource();
 
         if ($nodeSource instanceof NodesSources && !$nodeSource->getNode()->isHome()) {

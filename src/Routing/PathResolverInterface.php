@@ -12,11 +12,13 @@ interface PathResolverInterface
      * @param string $path
      * @param array<string> $supportedFormatExtensions
      * @param bool $allowRootPaths Allow resolving / and /en, /fr paths to home pages
+     * @param bool $allowNonReachableNodes Allow resolving non-reachable nodes
      * @return ResourceInfo
      */
     public function resolvePath(
         string $path,
         array $supportedFormatExtensions = ['html'],
-        bool $allowRootPaths = false
+        bool $allowRootPaths = false,
+        bool $allowNonReachableNodes = true
     ): ResourceInfo;
 }

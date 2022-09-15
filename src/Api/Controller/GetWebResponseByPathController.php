@@ -76,7 +76,12 @@ final class GetWebResponseByPathController extends AbstractController
          * Serve any PersistableInterface Resource by implementing
          * your PathResolver and tagging it "roadiz_core.path_resolver"
          */
-        $resourceInfo = $this->pathResolver->resolvePath($path, ['html', 'json'], true);
+        $resourceInfo = $this->pathResolver->resolvePath(
+            $path,
+            ['html', 'json'],
+            true,
+            false
+        );
         $resource = $resourceInfo->getResource();
 
         /*
