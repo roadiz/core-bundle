@@ -2,15 +2,10 @@
 RZ\Roadiz\CoreBundle\Entity\Realm:
     iri: Realm
     shortName: Realm
-    collectionOperations:
-        get:
-            method: "GET"
-            normalization_context:
-                groups: [ "realm" ]
-                enable_max_depth: true
+    collectionOperations: {}
     itemOperations:
         get:
             method: "GET"
             normalization_context:
-                groups: [ "realm" ]
+                groups: [ "get", "realm" ]
                 enable_max_depth: true

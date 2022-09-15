@@ -44,15 +44,13 @@ final class NodesSourcesPathResolver implements PathResolverInterface
     }
 
     /**
-     * @param string $path
-     * @param array $supportedFormatExtensions
-     * @param bool $allowRootPaths Allow resolving / and /en, /fr paths to home pages
-     * @return ResourceInfo
+     * @inheritDoc
      */
     public function resolvePath(
         string $path,
         array $supportedFormatExtensions = ['html'],
-        bool $allowRootPaths = false
+        bool $allowRootPaths = false,
+        bool $allowNonReachableNodes = true
     ): ResourceInfo {
         $resourceInfo = new ResourceInfo();
         $tokens = $this->tokenizePath($path);
@@ -105,7 +103,7 @@ final class NodesSourcesPathResolver implements PathResolverInterface
              * Try with URL Aliases OR nodeName
              */
             $this->stopwatch->start('parseFromIdentifier');
-            $nodeSource = $this->parseFromIdentifier($tokens, $translation);
+            $nodeSource = $this->parseFromIdentifier($tokens, $translation, $allowNonReachableNodes);
             $this->stopwatch->stop('parseFromIdentifier');
         }
 
@@ -206,11 +204,14 @@ final class NodesSourcesPathResolver implements PathResolverInterface
     /**
      * @param array<string> $tokens
      * @param TranslationInterface|null $translation
-     *
+     * @param bool $allowNonReachableNodes
      * @return NodesSources|null
      */
-    private function parseFromIdentifier(array &$tokens, ?TranslationInterface $translation = null): ?NodesSources
-    {
+    private function parseFromIdentifier(
+        array &$tokens,
+        ?TranslationInterface $translation = null,
+        bool $allowNonReachableNodes = true
+    ): ?NodesSources {
         if (!empty($tokens[0])) {
             /*
              * If the only url token is not for language
@@ -223,7 +224,8 @@ final class NodesSourcesPathResolver implements PathResolverInterface
                         ->findNodeTypeNameAndSourceIdByIdentifier(
                             $identifier,
                             $translation,
-                            !$this->previewResolver->isPreview()
+                            !$this->previewResolver->isPreview(),
+                            $allowNonReachableNodes
                         );
                     if (null !== $array) {
                         /** @var NodesSources|null $nodeSource */

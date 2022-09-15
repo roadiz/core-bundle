@@ -20,7 +20,8 @@ final class RedirectionPathResolver implements PathResolverInterface
     public function resolvePath(
         string $path,
         array $supportedFormatExtensions = ['html'],
-        bool $allowRootPaths = false
+        bool $allowRootPaths = false,
+        bool $allowNonReachableNodes = true
     ): ResourceInfo {
         $redirection = $this->managerRegistry
             ->getRepository(Redirection::class)

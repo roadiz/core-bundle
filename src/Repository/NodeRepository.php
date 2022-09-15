@@ -163,7 +163,7 @@ final class NodeRepository extends StatusAwareRepository
      * * key => array('>', $value)
      * * key => array('BETWEEN', $value, $value)
      * * key => array('LIKE', $value)
-     * * key => array('NOT IN', $array)
+     * * key => array('NOT IN', $array)
      * * key => 'NOT NULL'
      *
      * You can filter with translations relation, examples:
@@ -250,8 +250,8 @@ final class NodeRepository extends StatusAwareRepository
      *
      * @param array $criteria
      * @param array|null $orderBy
-     * @param integer|null $limit
-     * @param integer|null $offset
+     * @param int|null $limit
+     * @param int|null $offset
      * @param TranslationInterface|null $translation
      * @return array
      */
@@ -298,8 +298,8 @@ final class NodeRepository extends StatusAwareRepository
      *
      * @param array $criteria
      * @param array|null $orderBy
-     * @param integer|null $limit
-     * @param integer|null $offset
+     * @param int|null $limit
+     * @param int|null $offset
      * @param TranslationInterface|null $translation
      * @return array|Paginator
      */
@@ -348,8 +348,8 @@ final class NodeRepository extends StatusAwareRepository
      *
      * @param array $criteria
      * @param array|null $orderBy
-     * @param integer|null $limit
-     * @param integer|null $offset
+     * @param int|null $limit
+     * @param int|null $offset
      * @param TranslationInterface|null $translation
      * @return QueryBuilder
      */
@@ -410,7 +410,7 @@ final class NodeRepository extends StatusAwareRepository
     public function findOneByWithTranslation(
         array $criteria,
         TranslationInterface $translation = null
-    ) {
+    ): ?Node {
         return $this->findOneBy(
             $criteria,
             null,
@@ -430,7 +430,7 @@ final class NodeRepository extends StatusAwareRepository
         array $criteria,
         array $orderBy = null,
         TranslationInterface $translation = null
-    ) {
+    ): ?Node {
         $qb = $this->getContextualQueryWithTranslation(
             $criteria,
             $orderBy,
@@ -460,7 +460,7 @@ final class NodeRepository extends StatusAwareRepository
     public function findWithTranslation(
         $nodeId,
         TranslationInterface $translation
-    ) {
+    ): ?Node {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select('n, ns')
             ->innerJoin('n.nodeSources', static::NODESSOURCES_ALIAS)
@@ -484,7 +484,7 @@ final class NodeRepository extends StatusAwareRepository
      */
     public function findWithDefaultTranslation(
         $nodeId
-    ) {
+    ): ?Node {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select('n, ns')
             ->innerJoin('n.nodeSources', static::NODESSOURCES_ALIAS)
@@ -509,12 +509,12 @@ final class NodeRepository extends StatusAwareRepository
      *
      * @return null|Node
      * @throws NonUniqueResultException
-     * @deprecated Use findOneByIdentifier
+     * @deprecated Use findNodeTypeNameAndSourceIdByIdentifier
      */
     public function findByNodeNameWithTranslation(
         $nodeName,
         TranslationInterface $translation
-    ) {
+    ): ?Node {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select('n, ns')
             ->innerJoin('n.nodeSources', static::NODESSOURCES_ALIAS)
@@ -533,16 +533,18 @@ final class NodeRepository extends StatusAwareRepository
     /**
      * Find one node using its nodeName and a translation, or a unique URL alias.
      *
-     * @param string           $identifier
+     * @param string $identifier
      * @param TranslationInterface|null $translation
-     * @param bool             $availableTranslation
-     *
+     * @param bool $availableTranslation
+     * @param bool $allowNonReachableNodes
      * @return array|null Array with node-type "name" and node-source "id"
+     * @throws NonUniqueResultException
      */
     public function findNodeTypeNameAndSourceIdByIdentifier(
         string $identifier,
         ?TranslationInterface $translation,
-        bool $availableTranslation = false
+        bool $availableTranslation = false,
+        bool $allowNonReachableNodes = true
     ): ?array {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select('nt.name, ns.id')
@@ -561,6 +563,11 @@ final class NodeRepository extends StatusAwareRepository
             ->setParameter('translation', $translation)
             ->setMaxResults(1)
             ->setCacheable(true);
+
+        if (!$allowNonReachableNodes) {
+            $qb->andWhere($qb->expr()->eq('nt.reachable', ':reachable'))
+                ->setParameter('reachable', true);
+        }
 
         if ($availableTranslation) {
             $qb->andWhere($qb->expr()->eq('t.available', ':available'))
@@ -581,11 +588,11 @@ final class NodeRepository extends StatusAwareRepository
      *
      * @return null|Node
      * @throws NonUniqueResultException
-     * @deprecated Use findOneByIdentifier
+     * @deprecated Use findNodeTypeNameAndSourceIdByIdentifier
      */
     public function findByNodeNameWithDefaultTranslation(
         $nodeName
-    ) {
+    ): ?Node {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select('n, ns')
             ->innerJoin('n.nodeSources', static::NODESSOURCES_ALIAS)
@@ -607,10 +614,11 @@ final class NodeRepository extends StatusAwareRepository
      *
      * @param TranslationInterface|null $translation
      * @return null|Node
+     * @throws NonUniqueResultException
      */
     public function findHomeWithTranslation(
         TranslationInterface $translation = null
-    ) {
+    ): ?Node {
         if (null === $translation) {
             return $this->findHomeWithDefaultTranslation();
         }
@@ -634,8 +642,9 @@ final class NodeRepository extends StatusAwareRepository
      * Find the Home node with the default translation.
      *
      * @return null|Node
+     * @throws NonUniqueResultException
      */
-    public function findHomeWithDefaultTranslation()
+    public function findHomeWithDefaultTranslation(): ?Node
     {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select('n, ns')
@@ -661,7 +670,7 @@ final class NodeRepository extends StatusAwareRepository
     public function findByParentWithTranslation(
         TranslationInterface $translation,
         Node $parent = null
-    ) {
+    ): array {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select('n, ns, ua')
             ->innerJoin('n.nodeSources', static::NODESSOURCES_ALIAS)
@@ -687,7 +696,7 @@ final class NodeRepository extends StatusAwareRepository
      * @param Node|null $parent
      * @return Node[]
      */
-    public function findByParentWithDefaultTranslation(Node $parent = null)
+    public function findByParentWithDefaultTranslation(Node $parent = null): array
     {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select('n, ns')
@@ -715,7 +724,7 @@ final class NodeRepository extends StatusAwareRepository
      * @return null|Node
      * @throws NonUniqueResultException
      */
-    public function findOneWithAliasAndAvailableTranslation(string $urlAliasAlias)
+    public function findOneWithAliasAndAvailableTranslation(string $urlAliasAlias): ?Node
     {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select('n, ns, t, uas')
@@ -740,7 +749,7 @@ final class NodeRepository extends StatusAwareRepository
      * @return null|Node
      * @throws NonUniqueResultException
      */
-    public function findOneWithAlias($urlAliasAlias)
+    public function findOneWithAlias($urlAliasAlias): ?Node
     {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select('n, ns, t, uas')
@@ -763,7 +772,7 @@ final class NodeRepository extends StatusAwareRepository
      * @return bool
      * @throws NonUniqueResultException|\Doctrine\ORM\NoResultException
      */
-    public function exists($nodeName)
+    public function exists($nodeName): bool
     {
         $qb = $this->createQueryBuilder(static::NODE_ALIAS);
         $qb->select($qb->expr()->countDistinct('n.nodeName'))
@@ -918,8 +927,8 @@ final class NodeRepository extends StatusAwareRepository
      * @param Node $node
      * @param array $criteria
      * @param array|null $orderBy
-     * @param int $limit
-     * @param int $offset
+     * @param int|null $limit
+     * @param int|null $offset
      * @param TranslationInterface|null $translation
      * @return array|null
      */

@@ -4,4 +4,4 @@ twig:
 
 when@test:
     twig:
-        strict_variables: false
+        strict_variables: true
