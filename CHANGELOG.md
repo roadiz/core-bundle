@@ -1,3 +1,9 @@
+## 2.0.26 (2022-09-16)
+
+### Features
+
+* Migrated constraints from Symfony forms to global entity validation ([11741a3](https://github.com/roadiz/core-bundle/commit/11741a384fba8d630fc744034e506b1bf15c8d17))
+
 ## 2.0.25 (2022-09-15)
 
 ### Features
