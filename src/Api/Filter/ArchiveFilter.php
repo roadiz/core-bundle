@@ -7,7 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Api\Filter;
 use ApiPlatform\Core\Bridge\Doctrine\Common\PropertyHelperTrait;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\AbstractFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use ApiPlatform\Core\Exception\InvalidArgumentException;
 use Doctrine\ORM\QueryBuilder;
 
