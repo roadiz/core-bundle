@@ -5,17 +5,19 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Entity;
 
 use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
-use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimedPositioned;
 use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
 use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\Utils\StringHandler;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Tags are hierarchical entities used
@@ -40,6 +42,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
  *     "createdAt",
  *     "updatedAt"
  * })
+ * @UniqueEntity(fields={"tagName"})
  */
 class Tag extends AbstractDateTimedPositioned implements LeafInterface
 {
@@ -98,6 +101,9 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @Serializer\Type("string")
      * @Serializer\Accessor(getter="getTagName", setter="setTagName")
      * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
+     * @Assert\NotNull()
+     * @Assert\NotBlank()
+     * @Assert\Length(max=250)
      */
     private string $tagName = '';
     /**

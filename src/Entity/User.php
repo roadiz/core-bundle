@@ -46,7 +46,9 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @Serializer\Groups({"user", "human"})
      * @SymfonySerializer\Groups({"user", "human"})
      * @var string|null
+     * @Assert\NotNull()
      * @Assert\NotBlank()
+     * @Assert\Length(max=200)
      * @Assert\Email()
      */
     protected ?string $email = null;
@@ -96,7 +98,9 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @ORM\Column(type="string", unique=true)
      * @Serializer\Groups({"user", "log_user"})
      * @SymfonySerializer\Groups({"user", "log_user"})
+     * @Assert\NotNull()
      * @Assert\NotBlank()
+     * @Assert\Length(max=200)
      * @var string
      */
     private string $username = '';

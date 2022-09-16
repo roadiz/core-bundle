@@ -5,15 +5,13 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Form;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
 use RZ\Roadiz\CoreBundle\Form\Constraint\UniqueNodeName;
 use RZ\Roadiz\CoreBundle\Form\DataTransformer\TranslationTransformer;
-use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Component\Validator\Constraints\NotNull;
 
 class UrlAliasType extends AbstractType
 {
@@ -37,11 +35,6 @@ class UrlAliasType extends AbstractType
             'attr' => [
                 'placeholder' => 'urlAlias',
             ],
-            'constraints' => [
-                new NotNull(),
-                new NotBlank(),
-                new UniqueNodeName(),
-            ]
         ]);
         if ($options['with_translation']) {
             $builder->add('translation', TranslationsType::class, [

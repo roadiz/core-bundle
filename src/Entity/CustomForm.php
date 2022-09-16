@@ -10,10 +10,12 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
 use RZ\Roadiz\Utils\StringHandler;
 use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * CustomForms describe each node structure family,
@@ -22,6 +24,7 @@ use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
  * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\CustomFormRepository")
  * @ORM\Table(name="custom_forms")
  * @ORM\HasLifecycleCallbacks
+ * @UniqueEntity(fields={"name"})
  */
 class CustomForm extends AbstractDateTimed
 {
@@ -37,6 +40,9 @@ class CustomForm extends AbstractDateTimed
      * @var string
      * @Serializer\Groups({"custom_form", "nodes_sources"})
      * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
+     * @Assert\NotNull()
+     * @Assert\NotBlank()
+     * @Assert\Length(max=250)
      */
     private string $name = 'Untitled';
     /**
@@ -44,6 +50,9 @@ class CustomForm extends AbstractDateTimed
      * @var string
      * @Serializer\Groups({"custom_form", "nodes_sources"})
      * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
+     * @Assert\NotNull()
+     * @Assert\NotBlank()
+     * @Assert\Length(max=250)
      */
     private string $displayName = 'Untitled';
     /**

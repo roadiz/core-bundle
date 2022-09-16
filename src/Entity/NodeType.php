@@ -9,11 +9,13 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
-use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
-use RZ\Roadiz\Contracts\NodeType\SearchableInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Utils\StringHandler;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Validator\Constraints as Assert;
+use RZ\Roadiz\CoreBundle\Form\Constraint as RoadizAssert;
 
 /**
  * NodeType describes each node structure family,
@@ -29,6 +31,8 @@ use RZ\Roadiz\Utils\StringHandler;
  *     @ORM\Index(columns={"reachable"}),
  *     @ORM\Index(columns={"searchable"}, name="nt_searchable")
  * })
+ * @UniqueEntity(fields={"name"})
+ * @UniqueEntity(fields={"displayName"})
  */
 class NodeType extends AbstractEntity implements NodeTypeInterface
 {
@@ -38,6 +42,11 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
      * @Serializer\Groups({"node_type", "node"})
      * @SymfonySerializer\Groups({"node_type", "node"})
      * @Serializer\Type("string")
+     * @Assert\NotNull()
+     * @Assert\NotBlank()
+     * @RoadizAssert\NonSqlReservedWord()
+     * @RoadizAssert\SimpleLatinString()
+     * @Assert\Length(max=250)
      */
     private string $name = '';
 
@@ -64,6 +73,9 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
      * @Serializer\Groups({"node_type", "node"})
      * @SymfonySerializer\Groups({"node_type", "node"})
      * @Serializer\Type("string")
+     * @Assert\NotNull()
+     * @Assert\NotBlank()
+     * @Assert\Length(max=250)
      */
     private string $displayName = '';
 
@@ -339,6 +351,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
      * @Serializer\Groups({"node_type"})
      * @SymfonySerializer\Groups({"node_type"})
      * @Serializer\Type("int")
+     * @Assert\GreaterThanOrEqual(value=0)
      */
     private int $defaultTtl = 0;
 

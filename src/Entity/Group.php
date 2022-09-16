@@ -9,13 +9,16 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * A group gather User and Roles.
  *
  * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\GroupRepository")
  * @ORM\Table(name="usergroups")
+ * @UniqueEntity(fields={"name"})
  */
 class Group extends AbstractEntity
 {
@@ -24,6 +27,8 @@ class Group extends AbstractEntity
      * @Serializer\Groups({"user", "role", "group"})
      * @SymfonySerializer\Groups({"user", "role", "group"})
      * @Serializer\Type("string")
+     * @Assert\NotBlank()
+     * @Assert\Length(max=250)
      * @var string
      */
     private string $name = '';

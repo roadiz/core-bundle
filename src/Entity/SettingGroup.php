@@ -4,19 +4,21 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Settings entity are a simple key-value configuration system.
  *
  * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\SettingGroupRepository")
  * @ORM\Table(name="settings_groups")
- *
+ * @UniqueEntity(fields={"name"})
  */
 class SettingGroup extends AbstractEntity
 {
@@ -25,6 +27,9 @@ class SettingGroup extends AbstractEntity
      * @Serializer\Groups({"setting", "setting_group"})
      * @SymfonySerializer\Groups({"setting", "setting_group"})
      * @Serializer\Type("string")
+     * @Assert\NotNull()
+     * @Assert\NotBlank()
+     * @Assert\Length(max=250)
      * @var string
      */
     private string $name = '';

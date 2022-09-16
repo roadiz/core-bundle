@@ -10,6 +10,7 @@ use RZ\Roadiz\Utils\StringHandler;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Validator\Constraints as Assert;
 
 trait AttributeTrait
 {
@@ -19,6 +20,8 @@ trait AttributeTrait
      * @Serializer\Groups({"attribute", "node", "nodes_sources"})
      * @SymfonySerializer\Groups({"attribute", "node", "nodes_sources"})
      * @Serializer\Type("string")
+     * @Assert\NotNull()
+     * @Assert\NotBlank()
      */
     protected string $code = '';
 

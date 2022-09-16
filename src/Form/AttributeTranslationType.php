@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Form;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\CoreBundle\Form\Constraint\UniqueEntity;
-use RZ\Roadiz\CoreBundle\Form\DataTransformer\TranslationTransformer;
 use RZ\Roadiz\CoreBundle\Entity\AttributeTranslation;
+use RZ\Roadiz\CoreBundle\Form\DataTransformer\TranslationTransformer;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -69,8 +69,10 @@ class AttributeTranslationType extends AbstractType
         parent::configureOptions($resolver);
         $resolver->setDefault('data_class', AttributeTranslation::class);
         $resolver->setDefault('constraints', [
+            // Keep this constraint as class annotation is not validated
             new UniqueEntity([
                 'fields' => ['attribute', 'translation'],
+                'errorPath' => 'translation'
             ])
         ]);
     }

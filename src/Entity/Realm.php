@@ -9,12 +9,14 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * A Realm is an entity to describe authentication inside an area for API WebResponse.
@@ -33,6 +35,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
  *     "behaviour": "exact",
  *     "name": "exact"
  * })
+ * @UniqueEntity(fields={"name"})
  */
 class Realm extends AbstractEntity implements RealmInterface
 {
@@ -55,6 +58,10 @@ class Realm extends AbstractEntity implements RealmInterface
      * @ORM\Column(name="name", unique=true)
      * @Serializer\Groups({"get", "realm", "web_response"})
      * @SymfonySerializer\Groups({"get", "realm", "web_response"})
+     * @Assert\NotBlank()
+     * @Assert\NotNull()
+     * @Assert\Length(max=250)
+     * @Assert\Regex("#^[\w\s]+$#u")
      */
     private string $name = '';
     /**

@@ -18,7 +18,9 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\Core\Models\FolderInterface;
 use RZ\Roadiz\Utils\StringHandler;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Folders entity represent a directory on server with datetime and naming.
@@ -42,6 +44,7 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
  *     "createdAt",
  *     "updatedAt"
  * })
+ * @UniqueEntity(fields={"folderName"})
  */
 class Folder extends AbstractDateTimedPositioned implements FolderInterface
 {
@@ -89,6 +92,9 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @Serializer\Groups({"folder", "document"})
      * @SymfonySerializer\Groups({"folder", "document"})
      * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
+     * @Assert\NotBlank()
+     * @Assert\NotNull()
+     * @Assert\Length(max=250)
      */
     private string $folderName = '';
     /**

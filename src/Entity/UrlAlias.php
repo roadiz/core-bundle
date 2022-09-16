@@ -9,6 +9,8 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Utils\StringHandler;
 use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Validator\Constraints as Assert;
+use RZ\Roadiz\CoreBundle\Form\Constraint as RoadizAssert;
 
 /**
  * UrlAliases are used to translate Nodes URLs.
@@ -23,6 +25,9 @@ class UrlAlias extends AbstractEntity
      * @var string
      * @Serializer\Groups({"url_alias"})
      * @SymfonySerializer\Groups({"url_alias"})
+     * @Assert\NotNull()
+     * @Assert\NotBlank()
+     * @RoadizAssert\UniqueNodeName()
      */
     private string $alias = '';
 
