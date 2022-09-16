@@ -6,7 +6,9 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Http redirection which are editable by BO users.
@@ -14,17 +16,21 @@ use Symfony\Component\HttpFoundation\Response;
  * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\RedirectionRepository")
  * @ORM\Table(name="redirections")
  * @ORM\HasLifecycleCallbacks
+ * @UniqueEntity(fields={"query"})
  */
 class Redirection extends AbstractDateTimed
 {
     /**
      * @ORM\Column(type="string", unique=true, length=255)
+     * @Assert\NotBlank()
+     * @Assert\Length(max=255)
      * @var string
      */
     private string $query = "";
 
     /**
      * @ORM\Column(name="redirectUri", type="text", nullable=true, length=2048)
+     * @Assert\Length(max=2048)
      * @var string|null
      */
     private ?string $redirectUri = null;

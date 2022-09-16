@@ -18,6 +18,7 @@ use RuntimeException;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 /**
@@ -45,6 +46,7 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
  * @Gedmo\Loggable(logEntryClass="RZ\Roadiz\CoreBundle\Entity\UserLogEntry")
  * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
  * @ApiFilter(RoadizFilter\LocaleFilter::class)
+ * @UniqueEntity(fields={"node", "translation"})
  */
 class NodesSources extends AbstractEntity implements Loggable
 {

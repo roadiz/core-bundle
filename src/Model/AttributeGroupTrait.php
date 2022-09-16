@@ -9,6 +9,7 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\Utils\StringHandler;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Model
@@ -20,6 +21,8 @@ trait AttributeGroupTrait
      * @ORM\Column(type="string", name="canonical_name", nullable=false, unique=true)
      * @Serializer\Groups({"attribute_group", "attribute", "node", "nodes_sources"})
      * @Serializer\Type("string")
+     * @Assert\NotNull()
+     * @Assert\NotBlank()
      */
     protected string $canonicalName = '';
 

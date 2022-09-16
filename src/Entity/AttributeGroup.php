@@ -10,6 +10,7 @@ use RZ\Roadiz\CoreBundle\Model\AttributeGroupInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeGroupTrait;
 use RZ\Roadiz\CoreBundle\Model\AttributeGroupTranslationInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Entity
@@ -18,6 +19,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
  *     @ORM\Index(columns={"canonical_name"})
  * })
  * @ORM\HasLifecycleCallbacks
+ * @UniqueEntity(fields={"canonicalName"})
  */
 class AttributeGroup extends AbstractEntity implements AttributeGroupInterface
 {

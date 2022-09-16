@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
 
-use RZ\Roadiz\CoreBundle\Form\Constraint\UniqueEntity;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\CoreBundle\Entity\Setting;
 use Symfony\Component\Form\AbstractType;
@@ -16,8 +15,6 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Email;
-use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Component\Validator\Constraints\NotNull;
 use Symfony\Component\Validator\Constraints\Type;
 
 class SettingType extends AbstractType
@@ -40,11 +37,8 @@ class SettingType extends AbstractType
         if ($options['shortEdit'] === false) {
             $builder
                 ->add('name', TextType::class, [
+                    'empty_data' => '',
                     'label' => 'name',
-                    'constraints' => [
-                        new NotNull(),
-                        new NotBlank(),
-                    ],
                 ])
                 ->add('description', MarkdownType::class, [
                     'label' => 'description',
@@ -115,11 +109,6 @@ class SettingType extends AbstractType
     {
         $resolver->setDefault('data_class', Setting::class);
         $resolver->setDefault('shortEdit', false);
-        $resolver->setDefault('constraints', [
-            new UniqueEntity([
-                'fields' => ['name'],
-            ])
-        ]);
         $resolver->setAllowedTypes('shortEdit', ['boolean']);
     }
 

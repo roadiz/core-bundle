@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
 
-use RZ\Roadiz\CoreBundle\Form\Constraint\UniqueEntity;
 use RZ\Roadiz\CoreBundle\Entity\AttributeGroup;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Component\Validator\Constraints\NotNull;
 
 class AttributeGroupType extends AbstractType
 {
@@ -20,10 +17,7 @@ class AttributeGroupType extends AbstractType
     {
         $builder->add('canonicalName', TextType::class, [
                 'label' => 'attribute_group.form.canonicalName',
-                'constraints' => [
-                    new NotNull(),
-                    new NotBlank(),
-                ]
+                'empty_data' => '',
             ])
             ->add('attributeGroupTranslations', CollectionType::class, [
                 'label' => 'attribute_group.form.attributeGroupTranslations',
@@ -48,10 +42,5 @@ class AttributeGroupType extends AbstractType
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefault('data_class', AttributeGroup::class);
-        $resolver->setDefault('constraints', [
-            new UniqueEntity([
-                'fields' => ['canonicalName'],
-            ])
-        ]);
     }
 }

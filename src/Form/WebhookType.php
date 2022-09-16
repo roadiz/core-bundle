@@ -13,10 +13,6 @@ use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Validator\Constraints\GreaterThan;
-use Symfony\Component\Validator\Constraints\Length;
-use Symfony\Component\Validator\Constraints\NotNull;
-use Symfony\Component\Validator\Constraints\Url;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
@@ -41,30 +37,15 @@ class WebhookType extends AbstractType
         ])->add('description', TextType::class, [
             'required' => true,
             'label' => 'webhooks.description',
-            'constraints' => [
-                new NotNull(),
-                new Length([
-                    'min' => 1,
-                    'max' => 250
-                ])
-            ]
         ])->add('uri', TextareaType::class, [
             'required' => true,
             'label' => 'webhooks.uri',
-            'constraints' => [
-                new NotNull(),
-                new Url()
-            ]
         ])->add('payload', YamlType::class, [
             'required' => false,
             'label' => 'webhooks.payload',
         ])->add('throttleSeconds', IntegerType::class, [
             'required' => true,
             'label' => 'webhooks.throttleSeconds',
-            'constraints' => [
-                new NotNull(),
-                new GreaterThan(0),
-            ]
         ])->add('automatic', CheckboxType::class, [
             'required' => false,
             'label' => 'webhooks.automatic',

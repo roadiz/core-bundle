@@ -6,11 +6,13 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Contracts\NodeType\SerializableInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
+use RZ\Roadiz\CoreBundle\Form\Constraint as RoadizAssert;
 
 /**
  * NodeTypeField entities are used to create NodeTypes with
@@ -30,6 +32,8 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractField;
  *     uniqueConstraints={@ORM\UniqueConstraint(columns={"name", "node_type_id"})}
  * )
  * @ORM\HasLifecycleCallbacks
+ * @UniqueEntity(fields={"name", "nodeType"})
+ * @RoadizAssert\NodeTypeField
  */
 class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, SerializableInterface
 {

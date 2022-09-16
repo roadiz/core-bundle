@@ -18,6 +18,7 @@ use Symfony\Component\Validator\Exception\ConstraintDefinitionException;
  * @author Benjamin Eberlei <kontakt@beberlei.de>
  * @package RZ\Roadiz\CoreBundle\Form\Constraint
  * @see https://github.com/symfony/doctrine-bridge/blob/master/Validator/Constraints/UniqueEntityValidator.php
+ * @deprecated Use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntityValidator
  */
 class UniqueEntityValidator extends ConstraintValidator
 {

@@ -24,7 +24,7 @@ class UniqueTagNameValidator extends ConstraintValidator
 
     /**
      * @param string $value
-     * @param Constraint $constraint
+     * @param UniqueTagName $constraint
      */
     public function validate($value, Constraint $constraint)
     {
@@ -41,9 +41,9 @@ class UniqueTagNameValidator extends ConstraintValidator
 
     /**
      * @param string|null $value
-     * @param Constraint $constraint
+     * @param UniqueTagName $constraint
      */
-    protected function testSingleValue($value, Constraint $constraint)
+    protected function testSingleValue(?string $value, Constraint $constraint)
     {
         $value = StringHandler::slugify($value ?? '');
 
@@ -67,7 +67,7 @@ class UniqueTagNameValidator extends ConstraintValidator
      *
      * @return bool
      */
-    protected function tagNameExists($name)
+    protected function tagNameExists(string $name): bool
     {
         $entity = $this->managerRegistry->getRepository(Tag::class)->findOneByTagName($name);
 
@@ -78,7 +78,7 @@ class UniqueTagNameValidator extends ConstraintValidator
      * @param string|null $value
      * @return bool
      */
-    protected function isMulti($value)
+    protected function isMulti(?string $value): bool
     {
         return (bool) strpos($value ?? '', ',');
     }

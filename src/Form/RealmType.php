@@ -12,9 +12,6 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Component\Validator\Constraints\NotNull;
-use Symfony\Component\Validator\Constraints\Regex;
 
 class RealmType extends AbstractType
 {
@@ -25,11 +22,6 @@ class RealmType extends AbstractType
             'empty_data' => '',
             'by_reference' => true,
             'required' => true,
-            'constraints' => [
-                new NotNull(),
-                new NotBlank(),
-                new Regex('#^[\w\s]+$#u'),
-            ]
         ])->add('type', ChoiceType::class, [
             'label' => 'realm.type',
             'help' => 'realm.type.help',

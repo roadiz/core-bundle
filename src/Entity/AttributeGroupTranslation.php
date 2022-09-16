@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\CoreBundle\Model\AttributeGroupTranslationInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\CoreBundle\Model\AttributeGroupTranslationTrait;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Entity
@@ -19,6 +20,8 @@ use RZ\Roadiz\CoreBundle\Model\AttributeGroupTranslationTrait;
  *     @ORM\UniqueConstraint(columns={"name", "translation_id"})
  * }))
  * @ORM\HasLifecycleCallbacks
+ * @UniqueEntity(fields={"attributeGroup", "translation"})
+ * @UniqueEntity(fields={"name", "translation"})
  */
 class AttributeGroupTranslation extends AbstractEntity implements AttributeGroupTranslationInterface
 {

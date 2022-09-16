@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
@@ -25,8 +27,10 @@ class UniqueNodeNameValidator extends ConstraintValidator
     }
 
     /**
-     * @param mixed      $value
-     * @param Constraint $constraint
+     * @param mixed $value
+     * @param UniqueNodeName $constraint
+     * @throws NoResultException
+     * @throws NonUniqueResultException
      */
     public function validate($value, Constraint $constraint)
     {
@@ -52,22 +56,22 @@ class UniqueNodeNameValidator extends ConstraintValidator
      *
      * @return bool
      */
-    protected function urlAliasExists($name)
+    protected function urlAliasExists(string $name): bool
     {
         return (bool) $this->managerRegistry->getRepository(UrlAlias::class)->exists($name);
     }
 
     /**
-     * @param string        $name
+     * @param string $name
      *
      * @return bool
      * @throws \Doctrine\ORM\NonUniqueResultException|\Doctrine\ORM\NoResultException
      */
-    protected function nodeNameExists($name)
+    protected function nodeNameExists(string $name): bool
     {
         /** @var NodeRepository $nodeRepo */
         $nodeRepo = $this->managerRegistry->getRepository(Node::class);
         $nodeRepo->setDisplayingNotPublishedNodes(true);
-        return (bool) $nodeRepo->exists($name);
+        return $nodeRepo->exists($name);
     }
 }

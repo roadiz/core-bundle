@@ -20,8 +20,11 @@ use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\Utils\StringHandler;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Symfony\Component\Validator\Constraints as Assert;
+use RZ\Roadiz\CoreBundle\Form\Constraint as RoadizAssert;
 
 /**
  * Node entities are the central feature of Roadiz,
@@ -52,6 +55,7 @@ use Gedmo\Mapping\Annotation as Gedmo;
  * @ORM\HasLifecycleCallbacks
  * @Gedmo\Loggable(logEntryClass="RZ\Roadiz\CoreBundle\Entity\UserLogEntry")
  * @ApiFilter(PropertyFilter::class)
+ * @UniqueEntity(fields={"nodeName"})
  */
 class Node extends AbstractDateTimedPositioned implements LeafInterface, AttributableInterface, Loggable
 {
@@ -103,6 +107,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Serializer\Groups({"nodes_sources", "nodes_sources_base", "node", "log_sources"})
      * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base", "node", "log_sources"})
      * @Serializer\Accessor(getter="getNodeName", setter="setNodeName")
+     * @Assert\NotNull()
+     * @Assert\NotBlank()
+     * @Assert\Length(max=255)
      */
     private string $nodeName = '';
 
@@ -237,6 +244,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @var int
      * @ORM\Column(type="integer", nullable=false, options={"default" = 0})
      * @Gedmo\Versioned
+     * @Assert\GreaterThanOrEqual(value=0)
      * @Serializer\Exclude()
      * @SymfonySerializer\Ignore
      */

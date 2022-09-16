@@ -6,7 +6,6 @@ namespace RZ\Roadiz\CoreBundle\Form;
 
 use RZ\Roadiz\CoreBundle\Entity\RealmNode;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -36,11 +35,5 @@ final class RealmNodeType extends AbstractType
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefault('data_class', RealmNode::class);
-        $resolver->setDefault('constraints', [
-            new UniqueEntity([
-                'node',
-                'realm'
-            ])
-        ]);
     }
 }
