@@ -6,10 +6,12 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use Symfony\Component\String\UnicodeString;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Settings entity are a simple key-value configuration system.
@@ -20,6 +22,7 @@ use Symfony\Component\String\UnicodeString;
  *     @ORM\Index(columns={"name"}),
  *     @ORM\Index(columns={"visible"})
  * })
+ * @UniqueEntity(fields={"name"})
  */
 class Setting extends AbstractEntity
 {
@@ -55,6 +58,8 @@ class Setting extends AbstractEntity
      * @Serializer\Groups({"setting", "nodes_sources"})
      * @SymfonySerializer\Groups({"setting", "nodes_sources"})
      * @Serializer\Type("string")
+     * @Assert\NotBlank()
+     * @Assert\Length(max=250)
      */
     private string $name = '';
 

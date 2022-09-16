@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 
@@ -25,6 +26,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractField;
  *     @ORM\Index(columns={"custom_form_id", "position"}, name="cfield_customform_position")
 *  })
  * @ORM\HasLifecycleCallbacks
+ * @UniqueEntity(fields={"label", "customForm"})
  */
 class CustomFormField extends AbstractField
 {

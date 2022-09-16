@@ -7,6 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
 
@@ -20,6 +21,7 @@ use RZ\Roadiz\CoreBundle\Model\RealmInterface;
  * }, uniqueConstraints={
  *     @ORM\UniqueConstraint(name="realms_nodes_unique", columns={"node_id", "realm_id"}),
  *  })
+ * @UniqueEntity(fields={"node", "realm"})
  */
 class RealmNode extends AbstractEntity
 {

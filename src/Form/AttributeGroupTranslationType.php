@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Form;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\CoreBundle\Form\Constraint\UniqueEntity;
-use RZ\Roadiz\CoreBundle\Form\DataTransformer\TranslationTransformer;
 use RZ\Roadiz\CoreBundle\Entity\AttributeGroupTranslation;
+use RZ\Roadiz\CoreBundle\Form\DataTransformer\TranslationTransformer;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -55,11 +54,6 @@ class AttributeGroupTranslationType extends AbstractType
     {
         parent::configureOptions($resolver);
         $resolver->setDefault('data_class', AttributeGroupTranslation::class);
-        $resolver->setDefault('constraints', [
-            new UniqueEntity([
-                'fields' => ['name', 'translation'],
-            ])
-        ]);
     }
 
     /**

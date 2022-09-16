@@ -8,7 +8,9 @@ use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Translated representation of Folders.
@@ -19,6 +21,7 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
  * @ORM\Table(name="folders_translations", uniqueConstraints={
  *      @ORM\UniqueConstraint(columns={"folder_id", "translation_id"})
  * })
+ * @UniqueEntity(fields={"folder", "translation"})
  */
 class FolderTranslation extends AbstractEntity
 {
@@ -26,6 +29,7 @@ class FolderTranslation extends AbstractEntity
      * @ORM\Column(type="string")
      * @Serializer\Groups({"folder", "document"})
      * @SymfonySerializer\Groups({"folder", "document"})
+     * @Assert\Length(max=250)
      * @var string
      */
     protected string $name = '';

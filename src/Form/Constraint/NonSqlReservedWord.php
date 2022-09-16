@@ -6,6 +6,11 @@ namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 
 use Symfony\Component\Validator\Constraint;
 
+/**
+ * @Annotation
+ * @Target({"PROPERTY", "METHOD", "ANNOTATION"})
+ */
+#[\Attribute(\Attribute::TARGET_PROPERTY | \Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
 class NonSqlReservedWord extends Constraint
 {
     /**
@@ -13,9 +18,9 @@ class NonSqlReservedWord extends Constraint
      *
      * These are SQL reserved words.
      *
-     * @var array
+     * @var array<string>
      */
-    public static $forbiddenNames = [
+    public static array $forbiddenNames = [
         'title', 'id', 'translation', 'node', 'urlAliases', 'url_aliases', 'documentsByFields',
         'publishedAt', 'published_at', 'published at', 'documents_by_fields',
         'metaTitle', 'metaKeywords', 'metaDescription', 'order', 'integer', 'int', 'float', 'join',
@@ -63,5 +68,5 @@ class NonSqlReservedWord extends Constraint
         'while', 'with', 'write', 'xor', 'year_month', 'zerofill',
     ];
 
-    public $message = 'string.should.not.be.a.sql.reserved.word';
+    public string $message = 'string.should.not.be.a.sql.reserved.word';
 }

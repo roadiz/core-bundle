@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\CoreBundle\Model\AttributeInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeTrait;
@@ -23,6 +24,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
  *     @ORM\Index(columns={"group_id"})
  * })
  * @ORM\HasLifecycleCallbacks
+ * @UniqueEntity(fields={"code"})
  */
 class Attribute extends AbstractEntity implements AttributeInterface
 {

@@ -7,7 +7,9 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
 use RZ\Roadiz\Utils\StringHandler;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Fonts are entities which store each webfont file for a
@@ -15,7 +17,9 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  *
  * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\FontRepository")
  * @ORM\Table(name="fonts",uniqueConstraints={
- *     @ORM\UniqueConstraint(columns={"name", "variant"})})
+ *     @ORM\UniqueConstraint(columns={"name", "variant"})
+ * })
+ * @UniqueEntity(fields={"name", "variant"})
  */
 class Font extends AbstractDateTimed
 {
@@ -123,6 +127,9 @@ class Font extends AbstractDateTimed
     private $svgFilename = null;
     /**
      * @ORM\Column(type="string", nullable=false, unique=false)
+     * @Assert\NotNull()
+     * @Assert\NotBlank()
+     * @Assert\Length(max=100)
      * @var string
      */
     private $name = '';

@@ -8,15 +8,18 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
-use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\String\UnicodeString;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Roles are persisted version of string Symfony's roles.
  *
  * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\RoleRepository")
  * @ORM\Table(name="roles")
+ * @UniqueEntity(fields={"name"})
  */
 class Role implements PersistableInterface
 {
@@ -54,6 +57,10 @@ class Role implements PersistableInterface
      * @Serializer\Groups({"user", "role", "group"})
      * @SymfonySerializer\Groups({"user", "role", "group"})
      * @Serializer\Type("string")
+     * @Assert\NotNull()
+     * @Assert\NotBlank()
+     * @Assert\Regex(pattern="#^ROLE_([A-Z0-9\_]+)$#", message="role.name.must_comply_with_standard")
+     * @Assert\Length(max=250)
      * @var string
      */
     private string $name = '';

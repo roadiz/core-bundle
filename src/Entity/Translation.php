@@ -13,7 +13,9 @@ use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\Utils\StringHandler;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Translations describe language locales to be used by Nodes,
@@ -45,6 +47,9 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
  *     "locale": "exact",
  *     "name": "exact"
  * })
+ * @UniqueEntity(fields={"name"})
+ * @UniqueEntity(fields={"locale"})
+ * @UniqueEntity(fields={"overrideLocale"})
  */
 class Translation extends AbstractDateTimed implements TranslationInterface
 {
@@ -547,6 +552,9 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      * @Serializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder", "log_sources"})
      * @SymfonySerializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder", "log_sources"})
      * @Serializer\Type("string")
+     * @Assert\NotBlank()
+     * @Assert\NotNull()
+     * @Assert\Length(max=10)
      */
     private string $locale = '';
     /**
@@ -555,6 +563,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      * @Serializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder"})
      * @SymfonySerializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder"})
      * @Serializer\Type("string")
+     * @Assert\Length(max=10)
      */
     private ?string $overrideLocale = null;
     /**
@@ -563,6 +572,9 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      * @Serializer\Groups({"translation"})
      * @SymfonySerializer\Groups({"translation"})
      * @Serializer\Type("string")
+     * @Assert\NotNull()
+     * @Assert\NotBlank()
+     * @Assert\Length(max=250)
      */
     private string $name = '';
     /**

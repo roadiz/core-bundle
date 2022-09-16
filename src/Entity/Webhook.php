@@ -9,6 +9,8 @@ use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
 use RZ\Roadiz\CoreBundle\Webhook\WebhookInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Constraints\Length;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Webhook\Entity
@@ -40,6 +42,8 @@ class Webhook extends AbstractDateTimed implements WebhookInterface
      * @var string|null
      * @ORM\Column(type="text", nullable=true)
      * @Serializer\Type("string")
+     * @Assert\NotBlank()
+     * @Assert\Length(min=1, max=250)
      */
     protected ?string $description = null;
 
@@ -54,6 +58,8 @@ class Webhook extends AbstractDateTimed implements WebhookInterface
      * @var string|null
      * @ORM\Column(type="text", nullable=true)
      * @Serializer\Type("string")
+     * @Assert\NotBlank()
+     * @Assert\Url()
      */
     protected ?string $uri = null;
 
@@ -68,6 +74,8 @@ class Webhook extends AbstractDateTimed implements WebhookInterface
      * @var int Wait between webhook call and webhook triggering request.
      * @ORM\Column(type="integer", nullable=false, name="throttleseconds")
      * @Serializer\Type("int")
+     * @Assert\NotNull()
+     * @Assert\GreaterThan(value=0)
      */
     protected int $throttleSeconds = 60;
 

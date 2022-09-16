@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Form;
 
 use RZ\Roadiz\CoreBundle\Entity\Attribute;
-use RZ\Roadiz\CoreBundle\Form\Constraint\UniqueEntity;
 use RZ\Roadiz\CoreBundle\Model\AttributeInterface;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -13,10 +12,7 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Component\Validator\Constraints\NotNull;
 
 class AttributeType extends AbstractType
 {
@@ -29,10 +25,6 @@ class AttributeType extends AbstractType
                 'label' => 'attributes.form.code',
                 'required' => true,
                 'help' => 'attributes.form_help.code',
-                'constraints' => [
-                    new NotNull(),
-                    new NotBlank()
-                ]
             ])
             ->add('group', AttributeGroupsType::class, [
                 'label' => 'attributes.form.group',
@@ -100,14 +92,6 @@ class AttributeType extends AbstractType
     {
         parent::configureOptions($resolver);
         $resolver->setDefault('data_class', Attribute::class);
-
-        $resolver->setNormalizer('constraints', function (Options $options) {
-            return [
-                new UniqueEntity([
-                    'fields' => ['code'],
-                ])
-            ];
-        });
     }
 
     /**

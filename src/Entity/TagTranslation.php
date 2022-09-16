@@ -7,11 +7,13 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
-use JMS\Serializer\Annotation as Serializer;
-use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Gedmo\Mapping\Annotation as Gedmo;
+use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Translated representation of Tags.
@@ -23,6 +25,7 @@ use Gedmo\Mapping\Annotation as Gedmo;
  *      @ORM\UniqueConstraint(columns={"tag_id", "translation_id"})
  * })
  * @Gedmo\Loggable(logEntryClass="RZ\Roadiz\CoreBundle\Entity\UserLogEntry")
+ * @UniqueEntity(fields={"tag", "translation"})
  */
 class TagTranslation extends AbstractEntity
 {
@@ -31,6 +34,8 @@ class TagTranslation extends AbstractEntity
      * @Serializer\Groups({"tag", "node", "nodes_sources"})
      * @SymfonySerializer\Groups({"tag", "node", "nodes_sources"})
      * @Serializer\Type("string")
+     * @Assert\NotBlank()
+     * @Assert\Length(max=250)
      * @Gedmo\Versioned
      */
     protected string $name = '';

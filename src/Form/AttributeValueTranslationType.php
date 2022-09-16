@@ -6,7 +6,6 @@ namespace RZ\Roadiz\CoreBundle\Form;
 
 use RZ\Roadiz\CoreBundle\Model\AttributeInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueTranslationInterface;
-use RZ\Roadiz\CoreBundle\Form\ColorType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
