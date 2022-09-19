@@ -58,7 +58,8 @@ services:
         tags: [ { name: 'api_platform.filter' } ]
 
     RZ\Roadiz\CoreBundle\Api\Extension\ArchiveExtension:
-        tags: [ { name: 'api_platform.doctrine.orm.query_extension.collection', priority: -65 } ]
+        # Extension must be called after all filtering BUT before default pagination extension
+        tags: [ { name: 'api_platform.doctrine.orm.query_extension.collection', priority: -40 } ]
 
     RZ\Roadiz\CoreBundle\Bag\:
         resource: '../src/Bag/'
