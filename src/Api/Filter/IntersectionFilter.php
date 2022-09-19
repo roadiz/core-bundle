@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Filter;
 
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\AbstractFilter;
-use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\AbstractContextAwareFilter;
 use ApiPlatform\Core\Exception\InvalidArgumentException;
+use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 
 /**
  * Intersection filter must be used AFTER SearchFilter if you want to combine both.
  */
-final class IntersectionFilter extends AbstractFilter
+final class IntersectionFilter extends AbstractContextAwareFilter
 {
     public const PARAMETER = 'intersect';
 
@@ -37,7 +37,7 @@ final class IntersectionFilter extends AbstractFilter
             if (empty($fieldName)) {
                 throw new InvalidArgumentException(sprintf('“%s” filter must be only used with an associative array with fields as keys.', $property));
             }
-            if ($this->isPropertyEnabled($fieldName)) {
+            if ($this->isPropertyEnabled($fieldName, $resourceClass)) {
                 // Allow single value intersection
                 if (!is_array($fieldValue)) {
                     $fieldValue = [$fieldValue];

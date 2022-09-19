@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Filter;
 
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\AbstractFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\AbstractContextAwareFilter;
 use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
-final class NotFilter extends AbstractFilter
+final class NotFilter extends AbstractContextAwareFilter
 {
     public const PARAMETER = 'not';
 
