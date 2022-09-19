@@ -1,13 +1,11 @@
-## 2.0.28 (2022-09-19)
+## 2.0.29 (2022-09-19)
+
+Bug fixes due to *api-platform/core* upgrade to 2.7.0
 
 ### Bug Fixes
 
+* **api-platform:** Increased `ArchiveExtension` service tag priority to be called before `PaginationExtension` ([3a7158a](https://github.com/roadiz/core-bundle/commit/3a7158ad6d47e052c008a93ae4a2e47f6246493e))
 * **api-platform:** Address nullable RequestStack in `AbstractFilter` constructor ([de9b901](https://github.com/roadiz/core-bundle/commit/de9b90161e75d9933c2edab34e817b1815d762fa))
-
-## 2.0.27 (2022-09-19)
-
-### Bug Fixes
-
 * **api-platform:** Fixed `AbstractFilter` deprecation using `AbstractContextAwareFilter` ([a85db5d](https://github.com/roadiz/core-bundle/commit/a85db5de112a12ab2b9211770d86dbf09f9ada70))
 
 ## 2.0.26 (2022-09-16)
