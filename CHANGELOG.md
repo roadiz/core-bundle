@@ -1,3 +1,9 @@
+## 2.0.27 (2022-09-19)
+
+### Bug Fixes
+
+* **api-platform:** Fixed `AbstractFilter` deprecation using `AbstractContextAwareFilter` ([a85db5d](https://github.com/roadiz/core-bundle/commit/a85db5de112a12ab2b9211770d86dbf09f9ada70))
+
 ## 2.0.26 (2022-09-16)
 
 ### Features
