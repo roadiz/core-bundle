@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Filter;
 
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\AbstractFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\AbstractContextAwareFilter;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
-abstract class GeneratedEntityFilter extends AbstractFilter
+abstract class GeneratedEntityFilter extends AbstractContextAwareFilter
 {
     private string $generatedEntityNamespacePattern;
 

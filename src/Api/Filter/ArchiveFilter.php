@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Api\Filter;
 
 use ApiPlatform\Core\Bridge\Doctrine\Common\PropertyHelperTrait;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\AbstractFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\AbstractContextAwareFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use ApiPlatform\Core\Exception\InvalidArgumentException;
+use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use Doctrine\ORM\QueryBuilder;
 
-final class ArchiveFilter extends AbstractFilter
+final class ArchiveFilter extends AbstractContextAwareFilter
 {
     use PropertyHelperTrait;
 
