@@ -40,9 +40,7 @@ final class NodeQueryExtension implements QueryItemExtensionInterface, QueryColl
         string $resourceClass,
         string $operationName = null
     ): void {
-        if (
-            $resourceClass !== Node::class
-        ) {
+        if ($resourceClass !== Node::class) {
             return;
         }
 
@@ -68,8 +66,12 @@ final class NodeQueryExtension implements QueryItemExtensionInterface, QueryColl
         return;
     }
 
-    public function applyToCollection(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, string $operationName = null)
-    {
+    public function applyToCollection(
+        QueryBuilder $queryBuilder,
+        QueryNameGeneratorInterface $queryNameGenerator,
+        string $resourceClass,
+        string $operationName = null
+    ): void {
         $this->apply($queryBuilder, $queryNameGenerator, $resourceClass, $operationName);
     }
 }

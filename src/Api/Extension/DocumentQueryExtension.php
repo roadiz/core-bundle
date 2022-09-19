@@ -38,8 +38,12 @@ final class DocumentQueryExtension implements QueryItemExtensionInterface, Query
         $this->apply($queryBuilder, $queryNameGenerator, $resourceClass, $operationName);
     }
 
-    public function applyToCollection(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, string $operationName = null)
-    {
+    public function applyToCollection(
+        QueryBuilder $queryBuilder,
+        QueryNameGeneratorInterface $queryNameGenerator,
+        string $resourceClass,
+        string $operationName = null
+    ): void {
         $this->apply($queryBuilder, $queryNameGenerator, $resourceClass, $operationName);
     }
 }

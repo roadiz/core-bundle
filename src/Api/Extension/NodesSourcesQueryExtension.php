@@ -43,7 +43,7 @@ final class NodesSourcesQueryExtension implements QueryItemExtensionInterface, Q
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
         string $operationName = null
-    ) {
+    ): void {
         $this->apply($queryBuilder, $queryNameGenerator, $resourceClass, $operationName);
     }
 

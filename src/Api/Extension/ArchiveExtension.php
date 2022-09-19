@@ -59,8 +59,15 @@ final class ArchiveExtension implements QueryResultCollectionExtensionInterface
         $this->defaultPublicationFieldName = $defaultPublicationFieldName;
     }
 
-    public function applyToCollection(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, string $operationName = null): void
-    {
+    public function applyToCollection(
+        QueryBuilder $queryBuilder,
+        QueryNameGeneratorInterface $queryNameGenerator,
+        string $resourceClass,
+        string $operationName = null
+    ): void {
+        if (!$this->supportsResult($resourceClass, $operationName)) {
+            return;
+        }
         if (null === $request = $this->requestStack->getCurrentRequest()) {
             return;
         }
@@ -120,13 +127,29 @@ final class ArchiveExtension implements QueryResultCollectionExtensionInterface
         return $entities;
     }
 
-    private function isArchiveEnabled(Request $request, ResourceMetadata $resourceMetadata, string $operationName = null): bool
-    {
-        return $resourceMetadata->getCollectionOperationAttribute($operationName, 'archive_enabled', false, true);
+    private function isArchiveEnabled(
+        Request $request,
+        ResourceMetadata $resourceMetadata,
+        string $operationName = null
+    ): bool {
+        return $resourceMetadata->getCollectionOperationAttribute(
+            $operationName,
+            'archive_enabled',
+            false,
+            true
+        );
     }
 
-    private function getPublicationFieldName(Request $request, ResourceMetadata $resourceMetadata, string $operationName = null): string
-    {
-        return $resourceMetadata->getCollectionOperationAttribute($operationName, 'archive_publication_field_name', $this->defaultPublicationFieldName, true);
+    private function getPublicationFieldName(
+        Request $request,
+        ResourceMetadata $resourceMetadata,
+        string $operationName = null
+    ): string {
+        return $resourceMetadata->getCollectionOperationAttribute(
+            $operationName,
+            'archive_publication_field_name',
+            $this->defaultPublicationFieldName,
+            true
+        );
     }
 }
