@@ -15,14 +15,14 @@ abstract class GeneratedEntityFilter extends AbstractContextAwareFilter
 
     /**
      * @param ManagerRegistry $managerRegistry
-     * @param RequestStack $requestStack
+     * @param RequestStack|null $requestStack
      * @param string $generatedEntityNamespacePattern
      * @param LoggerInterface|null $logger
      * @param array|null $properties
      */
     public function __construct(
         ManagerRegistry $managerRegistry,
-        RequestStack $requestStack,
+        ?RequestStack $requestStack = null,
         string $generatedEntityNamespacePattern = '#^App\\\GeneratedEntity\\\NS(?:[a-zA-Z]+)$#',
         LoggerInterface $logger = null,
         array $properties = null
