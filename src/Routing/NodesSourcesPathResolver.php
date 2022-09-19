@@ -161,13 +161,16 @@ final class NodesSourcesPathResolver implements PathResolverInterface
     {
         /** @var TranslationRepository $repository */
         $repository = $this->managerRegistry->getRepository(Translation::class);
+        $findOneByMethod = $this->previewResolver->isPreview() ?
+            'findOneByLocaleOrOverrideLocale' :
+            'findOneAvailableByLocaleOrOverrideLocale';
 
         if (!empty($tokens[0])) {
             $firstToken = $tokens[0];
             $locale = mb_strtolower(strip_tags((string) $firstToken));
             // First token is for language and should not exceed 11 chars, i.e. tzm-Latn-DZ
             if ($locale !== null && $locale != '' && mb_strlen($locale) <= 11) {
-                $translation = $repository->findOneByLocaleOrOverrideLocale($locale);
+                $translation = $repository->$findOneByMethod($locale);
                 if (null !== $translation) {
                     return $translation;
                 } elseif (in_array($tokens[0], Translation::getAvailableLocales())) {
@@ -191,7 +194,7 @@ final class NodesSourcesPathResolver implements PathResolverInterface
                 null !== $request &&
                 null !== $preferredLocale = $request->getPreferredLanguage($repository->getAvailableLocales())
             ) {
-                $translation = $repository->findOneByLocaleOrOverrideLocale($preferredLocale);
+                $translation = $repository->$findOneByMethod($preferredLocale);
                 if (null !== $translation) {
                     return $translation;
                 }

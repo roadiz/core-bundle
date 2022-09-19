@@ -1,3 +1,9 @@
+## 2.0.31 (2022-09-19)
+
+### Bug Fixes
+
+* **Translation:** NodesSourcesPathResolver must not use unavailable translations unless preview mode is active ([459580b](https://github.com/roadiz/core-bundle/commit/459580b7d1d2eb448473d30718901e3ad31a3a93))
+
 ## 2.0.30 (2022-09-19)
 
 Bug fixes due to *api-platform/core* upgrade to 2.7.0
