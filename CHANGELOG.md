@@ -1,3 +1,9 @@
+## 2.0.28 (2022-09-19)
+
+### Bug Fixes
+
+* **api-platform:** Address nullable RequestStack in `AbstractFilter` constructor ([de9b901](https://github.com/roadiz/core-bundle/commit/de9b90161e75d9933c2edab34e817b1815d762fa))
+
 ## 2.0.27 (2022-09-19)
 
 ### Bug Fixes

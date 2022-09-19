@@ -23,7 +23,7 @@ final class LocaleFilter extends GeneratedEntityFilter
     public function __construct(
         PreviewResolverInterface $previewResolver,
         ManagerRegistry $managerRegistry,
-        RequestStack $requestStack,
+        ?RequestStack $requestStack = null,
         string $generatedEntityNamespacePattern = '#^App\\\GeneratedEntity\\\NS(?:[a-zA-Z]+)$#',
         LoggerInterface $logger = null,
         array $properties = null
