@@ -100,14 +100,17 @@ class NodeSourceSearchHandler extends AbstractSearchHandler implements NodeSourc
             $args["fq"][] = $tmp;
         }
 
-        // filter by tag or tags
+        /*
+         * filter by tag or tags
+         * `all_tags_txt` can store all tags, even technical ones, this fields should not user-searchable.
+         */
         if (!empty($args['tags'])) {
             if ($args['tags'] instanceof Tag) {
-                $args["fq"][] = sprintf('tags_txt:"%s"', $args['tags']->getTranslatedTags()->first()->getName());
+                $args["fq"][] = sprintf('all_tags_txt:"%s"', $args['tags']->getTagName());
             } elseif (is_array($args['tags'])) {
                 foreach ($args['tags'] as $tag) {
                     if ($tag instanceof Tag) {
-                        $args["fq"][] = sprintf('tags_txt:"%s"', $tag->getTranslatedTags()->first()->getName());
+                        $args["fq"][] = sprintf('all_tags_txt:"%s"', $tag->getTagName());
                     }
                 }
             }

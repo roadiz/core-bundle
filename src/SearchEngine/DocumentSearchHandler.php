@@ -71,14 +71,16 @@ class DocumentSearchHandler extends AbstractSearchHandler
             $args["fq"] = [];
         }
 
-        // filter by tag or tags
+        /*
+         * `all_tags_txt` can store all folders, even technical ones, this fields should not user-searchable.
+         */
         if (!empty($args['folders'])) {
             if ($args['folders'] instanceof Folder) {
-                $args["fq"][] = sprintf('tags_txt:"%s"', $args['folders']->getFolderName());
+                $args["fq"][] = sprintf('all_tags_txt:"%s"', $args['folders']->getFolderName());
             } elseif (is_array($args['folders'])) {
                 foreach ($args['folders'] as $folder) {
                     if ($folder instanceof Folder) {
-                        $args["fq"][] = sprintf('tags_txt:"%s"', $folder->getFolderName());
+                        $args["fq"][] = sprintf('all_tags_txt:"%s"', $folder->getFolderName());
                     }
                 }
             }
