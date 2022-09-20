@@ -1,3 +1,11 @@
+## 2.0.33 (2022-09-20)
+
+**Reverting**: https://github.com/api-platform/core/issues/4988
+
+### Bug Fixes
+
+* **api-platform:** Revert to api-platform/core 2.6 ([1a23f28](https://github.com/roadiz/core-bundle/commit/1a23f282a123016260320358d6d93f86f80467d1))
+
 ## 2.0.32 (2022-09-20)
 
 ### Features
