@@ -87,6 +87,9 @@ final class DefaultNodesSourcesIndexingSubscriber implements EventSubscriberInte
                 $assoc['node_parent_s'] = $parent->getNodeName();
             }
 
+            /*
+             * `tags_txt` Must store only public, visible and user-searchable content.
+             */
             $out = array_map(
                 function (Tag $tag) use ($event, $nodeSource) {
                     $translatedTag = $tag->getTranslatedTagsByTranslation($nodeSource->getTranslation())->first();
@@ -99,10 +102,24 @@ final class DefaultNodesSourcesIndexingSubscriber implements EventSubscriberInte
                     return $tag->isVisible();
                 })->toArray()
             );
+            $out = array_filter(array_unique($out));
             // Use tags_txt to be compatible with other data types
             $assoc['tags_txt'] = $out;
             // Compile all tags names into a single localized text field.
             $assoc['tags_txt_' . $lang] = implode(' ', $out);
+
+            /*
+             * `all_tags_txt` can store all tags, even technical one, this fields should not user searchable.
+             */
+            $allOut = array_map(
+                function (Tag $tag) {
+                    return $tag->getTagName();
+                },
+                $nodeSource->getNode()->getTags()->toArray()
+            );
+            $allOut = array_filter(array_unique($allOut));
+            // Use all_tags_txt to be compatible with other data types
+            $assoc['all_tags_txt'] = $allOut;
         }
 
         $criteria = new Criteria();

@@ -86,20 +86,37 @@ final class DefaultDocumentTranslationIndexingSubscriber implements EventSubscri
         $collection[] = $assoc['description' . $suffix];
         $collection[] = $assoc['copyright' . $suffix];
 
-        $folders = $document->getFolders();
-        $folderNames = [];
+        /*
+         * `tags_txt` Must store only public, visible and user-searchable content.
+         */
+        $visibleFolders = $document->getFolders()->filter(function (Folder $folder) {
+            return $folder->isVisible();
+        })->toArray();
+        $visibleFolderNames = [];
         /** @var Folder $folder */
-        foreach ($folders as $folder) {
-            $folderNames[] = $folder->getFolderName();
+        foreach ($visibleFolders as $folder) {
+            $visibleFolderNames[] = $folder->getFolderName();
             if ($fTrans = $folder->getTranslatedFoldersByTranslation($translation)->first()) {
-                $folderNames[] = $fTrans->getName();
+                $visibleFolderNames[] = $fTrans->getName();
             }
         }
-
+        $visibleFolderNames = array_filter(array_unique($visibleFolderNames));
         // Use tags_txt to be compatible with other data types
-        $assoc['tags_txt'] = $folderNames;
+        $assoc['tags_txt'] = $visibleFolderNames;
         // Compile all tags names into a single localized text field.
-        $assoc['tags_txt_' . $lang] = implode(' ', $folderNames);
+        $assoc['tags_txt_' . $lang] = implode(' ', $visibleFolderNames);
+
+        /*
+         * `all_tags_txt` can store all folders, even technical one, this fields should not user searchable.
+         */
+        $allFolders = $document->getFolders();
+        $allFolderNames = [];
+        /** @var Folder $folder */
+        foreach ($allFolders as $folder) {
+            $allFolderNames[] = $folder->getFolderName();
+        }
+        // Use all_tags_txt to be compatible with other data types
+        $assoc['all_tags_txt'] = array_filter(array_unique($allFolderNames));
 
         /*
          * Collect data in a single field

@@ -1,3 +1,9 @@
+## 2.0.32 (2022-09-20)
+
+### Features
+
+* **Solr:** Differentiate tags_txt for visible Folders/Tags and all_tags_txt for filtering Solr queries. ([9d0c7e5](https://github.com/roadiz/core-bundle/commit/9d0c7e59b0eeb6e60b921560028265e130e1e51d))
+
 ## 2.0.31 (2022-09-19)
 
 ### Bug Fixes
