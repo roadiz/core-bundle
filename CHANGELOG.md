@@ -1,3 +1,9 @@
+## 2.0.34 (2022-09-21)
+
+### Bug Fixes
+
+* **Constraints:** Missing `CLASS_CONSTRAINT` for NodeTypeField class constraint ([08246c7](https://github.com/roadiz/core-bundle/commit/08246c7801ed0d7831ecace9ed49e00f2c7d82b2))
+
 ## 2.0.33 (2022-09-20)
 
 **Reverting**: https://github.com/api-platform/core/issues/4988
