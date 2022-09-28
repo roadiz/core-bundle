@@ -1,3 +1,10 @@
+## 2.0.35 (2022-09-28)
+
+### Features
+
+* Upgrade to `roadiz/documents` 2.0.6 minimum
+* Dispatch async document messages only for DocumentFileUpdatedEvent, dispatch DocumentCreatedEvent on custom-form post ([e008da6](https://github.com/roadiz/core-bundle/commit/e008da6643b417a69e411d1d62891fdeefae49df))
+
 ## 2.0.34 (2022-09-21)
 
 ### Bug Fixes
