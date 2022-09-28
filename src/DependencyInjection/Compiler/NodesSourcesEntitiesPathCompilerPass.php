@@ -16,5 +16,7 @@ class NodesSourcesEntitiesPathCompilerPass implements CompilerPassInterface
     {
         $projectDir = $container->getParameter('kernel.project_dir');
         $container->setParameter('roadiz_core.generated_entities_dir', $projectDir . '/src/GeneratedEntity');
+        $container->setParameter('roadiz_core.serialized_node_types_dir', $projectDir . '/src/Resources/node-types');
+        $container->setParameter('roadiz_core.import_files_config_path', $projectDir . '/src/Resources/config.yml');
     }
 }
