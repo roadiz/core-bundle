@@ -125,7 +125,7 @@ class NodeTypeHandler extends AbstractHandler
         return false;
     }
 
-    protected function exportNodeTypeJsonFile(): ?string
+    public function exportNodeTypeJsonFile(): ?string
     {
         $fileSystem = new Filesystem();
         if ($fileSystem->exists($this->serializedNodeTypesDir)) {
@@ -142,6 +142,16 @@ class NodeTypeHandler extends AbstractHandler
             return $file;
         }
         return null;
+    }
+
+    protected function removeNodeTypeJsonFile(): void
+    {
+        $fileSystem = new Filesystem();
+        $file = $this->serializedNodeTypesDir . DIRECTORY_SEPARATOR . $this->nodeType->getName() . '.json';
+        if ($fileSystem->exists($file)) {
+            @unlink($file);
+            $this->removeNodeTypeFromImportFilesConfiguration($fileSystem, $file);
+        }
     }
 
     protected function addNodeTypeToImportFilesConfiguration(Filesystem $fileSystem, string $file): void
@@ -169,6 +179,39 @@ class NodeTypeHandler extends AbstractHandler
                         $config['importFiles']['nodetypes'][] = $relativePath;
                         sort($config['importFiles']['nodetypes']);
 
+                        $yamlContent = Yaml::dump($config, 3);
+                        @file_put_contents($this->importFilesConfigPath, $yamlContent);
+                    }
+                } catch (ParseException $exception) {
+                    // Silent errors
+                }
+            }
+        }
+    }
+
+    protected function removeNodeTypeFromImportFilesConfiguration(Filesystem $fileSystem, string $file): void
+    {
+        if ($fileSystem->exists($this->importFilesConfigPath)) {
+            $configFile = new File($this->importFilesConfigPath);
+            if ($configFile->isWritable()) {
+                try {
+                    $config = Yaml::parseFile($this->importFilesConfigPath);
+                    if (!isset($config['importFiles'])) {
+                        return;
+                    }
+                    if (!isset($config['importFiles']['nodetypes'])) {
+                        return;
+                    }
+
+                    $relativePath = str_replace(
+                        $this->kernelProjectDir . DIRECTORY_SEPARATOR,
+                        '',
+                        $file
+                    );
+                    if (false !== $key = array_search($relativePath, $config['importFiles']['nodetypes'])) {
+                        unset($config['importFiles']['nodetypes'][$key]);
+                        $config['importFiles']['nodetypes'] = array_values(array_filter($config['importFiles']['nodetypes']));
+                        sort($config['importFiles']['nodetypes']);
                         $yamlContent = Yaml::dump($config, 3);
                         @file_put_contents($this->importFilesConfigPath, $yamlContent);
                     }
@@ -275,6 +318,7 @@ class NodeTypeHandler extends AbstractHandler
     public function deleteSchema(): NodeTypeHandler
     {
         $this->removeSourceEntityClass();
+        $this->removeNodeTypeJsonFile();
         $this->clearCaches();
 
         return $this;
