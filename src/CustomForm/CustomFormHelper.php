@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\CustomForm;
 
 use Doctrine\Persistence\ObjectManager;
+use RZ\Roadiz\Core\Events\DocumentCreatedEvent;
+use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Entity\CustomFormAnswer;
@@ -19,6 +21,7 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\String\Slugger\AsciiSlugger;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @package RZ\Roadiz\Utils\CustomForm
@@ -32,6 +35,7 @@ class CustomFormHelper
     protected CustomForm $customForm;
     protected FormFactoryInterface $formFactory;
     protected Settings $settingsBag;
+    protected EventDispatcherInterface $eventDispatcher;
 
     /**
      * @param ObjectManager $em
@@ -39,19 +43,22 @@ class CustomFormHelper
      * @param AbstractDocumentFactory $documentFactory
      * @param FormFactoryInterface $formFactory
      * @param Settings $settingsBag
+     * @param EventDispatcherInterface $eventDispatcher
      */
     public function __construct(
         ObjectManager $em,
         CustomForm $customForm,
         AbstractDocumentFactory $documentFactory,
         FormFactoryInterface $formFactory,
-        Settings $settingsBag
+        Settings $settingsBag,
+        EventDispatcherInterface $eventDispatcher
     ) {
         $this->em = $em;
         $this->customForm = $customForm;
         $this->documentFactory = $documentFactory;
         $this->formFactory = $formFactory;
         $this->settingsBag = $settingsBag;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
@@ -104,6 +111,7 @@ class CustomFormHelper
             }
             $answer->setSubmittedAt(new \DateTime());
             $answer->setIp($ipAddress);
+            $documentsUploaded = [];
 
             /** @var CustomFormField $customFormField */
             foreach ($this->customForm->getFields() as $customFormField) {
@@ -142,10 +150,10 @@ class CustomFormHelper
                     if (is_array($data) && isset($data[0]) && $data[0] instanceof UploadedFile) {
                         /** @var UploadedFile $file */
                         foreach ($data as $file) {
-                            $this->handleUploadedFile($file, $fieldAttr);
+                            $documentsUploaded[] = $this->handleUploadedFile($file, $fieldAttr);
                         }
                     } elseif ($data instanceof UploadedFile) {
-                        $this->handleUploadedFile($data, $fieldAttr);
+                        $documentsUploaded[] = $this->handleUploadedFile($data, $fieldAttr);
                     } else {
                         $fieldAttr->setValue($this->formValueToString($data));
                     }
@@ -153,6 +161,14 @@ class CustomFormHelper
             }
 
             $this->em->flush();
+
+            // Dispatch event on document uploaded
+            foreach ($documentsUploaded as $documentUploaded) {
+                if ($documentUploaded instanceof DocumentInterface) {
+                    $this->eventDispatcher->dispatch(new DocumentCreatedEvent($documentUploaded));
+                }
+            }
+
             $this->em->refresh($answer);
 
             return $answer;
@@ -164,18 +180,20 @@ class CustomFormHelper
     /**
      * @param UploadedFile $file
      * @param CustomFormFieldAttribute $fieldAttr
-     * @return CustomFormFieldAttribute
+     * @return DocumentInterface|null
      */
     protected function handleUploadedFile(
         UploadedFile $file,
         CustomFormFieldAttribute $fieldAttr
-    ): CustomFormFieldAttribute {
+    ): ?DocumentInterface {
         $this->documentFactory->setFile($file);
         $this->documentFactory->setFolder($this->getDocumentFolderForCustomForm());
         $document = $this->documentFactory->getDocument();
-        $fieldAttr->getDocuments()->add($document);
-        $fieldAttr->setValue($fieldAttr->getValue() . ', ' . $file->getPathname());
-        return $fieldAttr;
+        if (null !== $document) {
+            $fieldAttr->getDocuments()->add($document);
+            $fieldAttr->setValue($fieldAttr->getValue() . ', ' . $file->getPathname());
+        }
+        return $document;
     }
 
     /**

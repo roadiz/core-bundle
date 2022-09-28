@@ -41,7 +41,7 @@
         "rezozero/liform-bundle": "^0.18.1",
         "rezozero/tree-walker": "^1.2.1",
         "roadiz/doc-generator": "~2.0.0",
-        "roadiz/documents": "~2.0.5",
+        "roadiz/documents": "~2.0.6",
         "roadiz/dts-generator": "~2.0.0",
         "roadiz/entity-generator": "~2.0.3",
         "roadiz/jwt": "~2.0.0",

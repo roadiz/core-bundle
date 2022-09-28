@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Document\EventSubscriber;
 
 use RZ\Roadiz\Core\Events\DocumentCreatedEvent;
-use RZ\Roadiz\Core\Events\DocumentUpdatedEvent;
+use RZ\Roadiz\Core\Events\DocumentFileUpdatedEvent;
 use RZ\Roadiz\Core\Events\FilterDocumentEvent;
 use RZ\Roadiz\CoreBundle\Document\Message\DocumentAudioVideoMessage;
 use RZ\Roadiz\CoreBundle\Document\Message\DocumentAverageColorMessage;
@@ -38,8 +38,9 @@ final class DocumentMessageDispatchSubscriber implements EventSubscriberInterfac
     public static function getSubscribedEvents(): array
     {
         return [
+            // Only dispatch async message when document files are updated or created
              DocumentCreatedEvent::class => ['onFilterDocumentEvent', 0],
-             DocumentUpdatedEvent::class => ['onFilterDocumentEvent', 0],
+             DocumentFileUpdatedEvent::class => ['onFilterDocumentEvent', 0],
         ];
     }
 
