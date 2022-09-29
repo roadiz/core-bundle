@@ -122,6 +122,15 @@ services:
         class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\DocumentNormalizer'
         decorates: 'api_platform.serializer.normalizer.item'
 
+    # Folder
+    RZ\Roadiz\CoreBundle\Serializer\Normalizer\FolderNormalizer:
+        # By default, .inner is passed as argument
+        decorates: 'api_platform.jsonld.normalizer.item'
+    # Need a different name to avoid duplicate YAML key
+    roadiz_core.serializer.normalizer.folder.json:
+        class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\FolderNormalizer'
+        decorates: 'api_platform.serializer.normalizer.item'
+
     Limenius\Liform\LiformInterface:
         alias: liform
 
