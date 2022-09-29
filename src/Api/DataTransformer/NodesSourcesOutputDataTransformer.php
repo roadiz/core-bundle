@@ -9,6 +9,9 @@ use RZ\Roadiz\CoreBundle\Api\Dto\NodesSourcesDto;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
+/**
+ * @deprecated Use NodesSourcesPathNormalizer
+ */
 abstract class NodesSourcesOutputDataTransformer implements DataTransformerInterface
 {
     protected UrlGeneratorInterface $urlGenerator;
