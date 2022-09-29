@@ -55,6 +55,16 @@ services:
         shared: false
         public: true
 
+    # Removed DataTransformers
+    RZ\Roadiz\CoreBundle\Api\DataTransformer\:
+        resource: '../src/Api/DataTransformer/'
+        autowire: false
+        autoconfigure: false
+    # Except for WebResponse
+    RZ\Roadiz\CoreBundle\Api\DataTransformer\WebResponseOutputDataTransformer:
+        autowire: true
+        autoconfigure: true
+
     RZ\Roadiz\CoreBundle\Api\Filter\:
         resource: '../src/Api/Filter/'
         autowire: true
@@ -69,6 +79,9 @@ services:
         autowire: true
         public: true
 
+    #
+    # API Platform normalizers
+    #
     RZ\Roadiz\CoreBundle\Serializer\Normalizer\RealmSerializationGroupNormalizer:
         tags:
             - { name: 'serializer.normalizer', priority: 64 }
@@ -79,6 +92,14 @@ services:
     # Need a different name to avoid duplicate YAML key
     roadiz_core.serializer.normalizer.nodes_sources_path.json:
         class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer'
+        decorates: 'api_platform.serializer.normalizer.item'
+
+    RZ\Roadiz\CoreBundle\Serializer\Normalizer\CustomFormNormalizer:
+        # By default, .inner is passed as argument
+        decorates: 'api_platform.jsonld.normalizer.item'
+    # Need a different name to avoid duplicate YAML key
+    roadiz_core.serializer.normalizer.custom_form.json:
+        class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\CustomFormNormalizer'
         decorates: 'api_platform.serializer.normalizer.item'
 
     Limenius\Liform\LiformInterface:

@@ -50,6 +50,7 @@ abstract class NodesSourcesDto
      * @var string|null
      * @Serializer\MaxDepth(4)
      * @Groups({"nodes_sources", "nodes_sources_base", "urls"})
+     * @deprecated NodesSources url is exposed via RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer
      */
     public ?string $url = null;
 }

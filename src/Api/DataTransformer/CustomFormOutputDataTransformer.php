@@ -10,6 +10,9 @@ use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
+/**
+ * @deprecated Use Normalizer instead
+ */
 class CustomFormOutputDataTransformer implements DataTransformerInterface
 {
     private UrlGeneratorInterface $urlGenerator;
