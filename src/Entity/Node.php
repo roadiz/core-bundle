@@ -134,6 +134,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @ORM\Column(type="boolean", name="dynamic_node_name", nullable=false, options={"default" = true})
      * @Gedmo\Versioned
+     * @SymfonySerializer\Ignore()
      */
     private bool $dynamicNodeName = true;
 
@@ -217,6 +218,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\Column(type="integer")
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      * @internal You should use node Workflow to perform change on status.
      */
     private int $status = Node::DRAFT;
@@ -307,6 +309,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      */
     private bool $locked = false;
 
@@ -334,6 +337,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      */
     private $priority = 0.8;
 
@@ -361,6 +365,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      */
     private bool $hideChildren = false;
 
@@ -416,6 +421,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      */
     private bool $sterile = false;
 
@@ -443,6 +449,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      */
     private string $childrenOrder = 'position';
 
@@ -470,6 +477,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      */
     private string $childrenOrderDirection = 'ASC';
 
@@ -496,6 +504,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\JoinColumn(name="nodeType_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      * @var NodeTypeInterface|null
      */
     private ?NodeTypeInterface $nodeType = null;
@@ -640,6 +649,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @var Collection<NodeType>
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      */
     private Collection $stackTypes;
 
@@ -683,6 +693,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\OneToMany(targetEntity="NodesSources", mappedBy="node", orphanRemoval=true, fetch="EXTRA_LAZY")
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      * @var Collection<NodesSources>
      */
     private Collection $nodeSources;
@@ -852,6 +863,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\OrderBy({"position" = "ASC"})
      * @Serializer\Groups({"nodes_sources", "node"})
      * @SymfonySerializer\Groups({"nodes_sources", "node"})
+     * @SymfonySerializer\Ignore()
      */
     private Collection $attributeValues;
 

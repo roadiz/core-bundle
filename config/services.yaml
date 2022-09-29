@@ -86,6 +86,7 @@ services:
         tags:
             - { name: 'serializer.normalizer', priority: 64 }
 
+    # NodesSources
     RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer:
         # By default, .inner is passed as argument
         decorates: 'api_platform.jsonld.normalizer.item'
@@ -94,12 +95,22 @@ services:
         class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer'
         decorates: 'api_platform.serializer.normalizer.item'
 
+    # CustomForm
     RZ\Roadiz\CoreBundle\Serializer\Normalizer\CustomFormNormalizer:
         # By default, .inner is passed as argument
         decorates: 'api_platform.jsonld.normalizer.item'
     # Need a different name to avoid duplicate YAML key
     roadiz_core.serializer.normalizer.custom_form.json:
         class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\CustomFormNormalizer'
+        decorates: 'api_platform.serializer.normalizer.item'
+
+    # Tag
+    RZ\Roadiz\CoreBundle\Serializer\Normalizer\TagNormalizer:
+        # By default, .inner is passed as argument
+        decorates: 'api_platform.jsonld.normalizer.item'
+    # Need a different name to avoid duplicate YAML key
+    roadiz_core.serializer.normalizer.tag.json:
+        class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\TagNormalizer'
         decorates: 'api_platform.serializer.normalizer.item'
 
     Limenius\Liform\LiformInterface:

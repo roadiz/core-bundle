@@ -8,6 +8,9 @@ use ApiPlatform\Core\DataTransformer\DataTransformerInterface;
 use RZ\Roadiz\CoreBundle\Api\Dto\NodeOutput;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 
+/**
+ * @deprecated Use serialization groups or custom normalizer
+ */
 class NodeOutputDataTransformer implements DataTransformerInterface
 {
     /**

@@ -29,8 +29,10 @@ final class CustomFormNormalizer extends AbstractPathNormalizer
             $data['slug'] = (new AsciiSlugger())->slug($object->getName())->snake()->toString();
             $data['open'] = $object->isFormStillOpen();
 
-            if (isset($context['groups']) &&
-                in_array('urls', $context['groups'])) {
+            if (
+                isset($context['groups']) &&
+                in_array('urls', $context['groups'])
+            ) {
                 $data['definitionUrl'] = $this->urlGenerator->generate('api_custom_forms_item_definition', [
                     'id' => $object->getId()
                 ]);

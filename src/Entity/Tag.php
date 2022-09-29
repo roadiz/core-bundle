@@ -61,7 +61,8 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @ORM\JoinColumn(name="parent_tag_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Tag|null
      * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
+     * @SymfonySerializer\MaxDepth(2)
+     * @SymfonySerializer\Groups({"tag", "tag_base"})
      * @ApiFilter(BaseFilter\SearchFilter::class, properties={
      *     "parent.id": "exact",
      *     "parent.tagName": "exact"
@@ -97,7 +98,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @var string
      * @ORM\Column(type="string", name="tag_name", unique=true)
      * @Serializer\Groups({"tag", "tag_base", "node", "nodes_sources"})
-     * @SymfonySerializer\Groups({"tag", "tag_base", "node", "nodes_sources"})
+     * @SymfonySerializer\Ignore
      * @Serializer\Type("string")
      * @Serializer\Accessor(getter="getTagName", setter="setTagName")
      * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
@@ -124,7 +125,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     /**
      * @ORM\Column(type="string", name="children_order", options={"default" = "position"})
      * @Serializer\Groups({"tag"})
-     * @SymfonySerializer\Groups({"tag"})
+     * @SymfonySerializer\Ignore
      * @Serializer\Type("string")
      */
     private string $childrenOrder = 'position';
@@ -132,14 +133,14 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     /**
      * @ORM\Column(type="string", name="children_order_direction", length=4, options={"default" = "ASC"})
      * @Serializer\Groups({"tag"})
-     * @SymfonySerializer\Groups({"tag"})
+     * @SymfonySerializer\Ignore
      * @Serializer\Type("string")
      */
     private string $childrenOrderDirection = 'ASC';
     /**
      * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
      * @Serializer\Groups({"tag"})
-     * @SymfonySerializer\Groups({"tag"})
+     * @SymfonySerializer\Ignore
      * @Serializer\Type("bool")
      * @ApiFilter(BaseFilter\BooleanFilter::class)
      */
@@ -400,7 +401,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @return string|null
      *
      * @Serializer\Groups({"tag", "tag_base", "node", "nodes_sources"})
-     * @SymfonySerializer\Groups({"tag", "tag_base", "node", "nodes_sources"})
+     * @SymfonySerializer\Ignore
      * @Serializer\VirtualProperty
      * @Serializer\Type("string|null")
      */
@@ -415,7 +416,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @return string|null
      *
      * @Serializer\Groups({"tag", "node", "nodes_sources"})
-     * @SymfonySerializer\Groups({"tag", "node", "nodes_sources"})
+     * @SymfonySerializer\Ignore
      * @Serializer\VirtualProperty
      * @Serializer\Type("string|null")
      */
@@ -430,7 +431,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @return array
      *
      * @Serializer\Groups({"tag", "node", "nodes_sources"})
-     * @SymfonySerializer\Groups({"tag", "node", "nodes_sources"})
+     * @SymfonySerializer\Ignore
      * @Serializer\VirtualProperty
      * @Serializer\Type("array<RZ\Roadiz\CoreBundle\Entity\Document>")
      */
