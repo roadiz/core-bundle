@@ -6,6 +6,8 @@ namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\Persistence\ObjectManager;
+use JMS\Serializer\SerializationContext;
+use JMS\Serializer\SerializerInterface;
 use RZ\Roadiz\Core\Handlers\AbstractHandler;
 use RZ\Roadiz\CoreBundle\Doctrine\SchemaUpdater;
 use RZ\Roadiz\CoreBundle\Entity\Node;
@@ -14,6 +16,9 @@ use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\EntityGenerator\EntityGeneratorFactory;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Yaml\Exception\ParseException;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * Handle operations with node-type entities.
@@ -25,6 +30,10 @@ class NodeTypeHandler extends AbstractHandler
     private HandlerFactory $handlerFactory;
     private string $generatedEntitiesDir;
     private SchemaUpdater $schemaUpdater;
+    private SerializerInterface $serializer;
+    private string $serializedNodeTypesDir;
+    private string $importFilesConfigPath;
+    private string $kernelProjectDir;
 
     /**
      * @return NodeType
@@ -54,20 +63,32 @@ class NodeTypeHandler extends AbstractHandler
      * @param EntityGeneratorFactory $entityGeneratorFactory
      * @param HandlerFactory $handlerFactory
      * @param SchemaUpdater $schemaUpdater
+     * @param SerializerInterface $serializer
      * @param string $generatedEntitiesDir
+     * @param string $serializedNodeTypesDir
+     * @param string $importFilesConfigPath
+     * @param string $kernelProjectDir
      */
     public function __construct(
         ObjectManager $objectManager,
         EntityGeneratorFactory $entityGeneratorFactory,
         HandlerFactory $handlerFactory,
         SchemaUpdater $schemaUpdater,
-        string $generatedEntitiesDir
+        SerializerInterface $serializer,
+        string $generatedEntitiesDir,
+        string $serializedNodeTypesDir,
+        string $importFilesConfigPath,
+        string $kernelProjectDir
     ) {
         parent::__construct($objectManager);
         $this->entityGeneratorFactory = $entityGeneratorFactory;
         $this->handlerFactory = $handlerFactory;
         $this->generatedEntitiesDir = $generatedEntitiesDir;
         $this->schemaUpdater = $schemaUpdater;
+        $this->serializer = $serializer;
+        $this->serializedNodeTypesDir = $serializedNodeTypesDir;
+        $this->importFilesConfigPath = $importFilesConfigPath;
+        $this->kernelProjectDir = $kernelProjectDir;
     }
 
 
@@ -83,7 +104,6 @@ class NodeTypeHandler extends AbstractHandler
 
     /**
      * Remove node type entity class file from server.
-     *
      */
     public function removeSourceEntityClass(): bool
     {
@@ -103,6 +123,103 @@ class NodeTypeHandler extends AbstractHandler
         }
 
         return false;
+    }
+
+    public function exportNodeTypeJsonFile(): ?string
+    {
+        $fileSystem = new Filesystem();
+        if ($fileSystem->exists($this->serializedNodeTypesDir)) {
+            $content = $this->serializer->serialize(
+                $this->nodeType,
+                'json',
+                SerializationContext::create()->setGroups(['node_type', 'position'])
+            );
+            $file = $this->serializedNodeTypesDir . DIRECTORY_SEPARATOR . $this->nodeType->getName() . '.json';
+            @file_put_contents($file, $content);
+
+            $this->addNodeTypeToImportFilesConfiguration($fileSystem, $file);
+
+            return $file;
+        }
+        return null;
+    }
+
+    protected function removeNodeTypeJsonFile(): void
+    {
+        $fileSystem = new Filesystem();
+        $file = $this->serializedNodeTypesDir . DIRECTORY_SEPARATOR . $this->nodeType->getName() . '.json';
+        if ($fileSystem->exists($file)) {
+            @unlink($file);
+            $this->removeNodeTypeFromImportFilesConfiguration($fileSystem, $file);
+        }
+    }
+
+    protected function addNodeTypeToImportFilesConfiguration(Filesystem $fileSystem, string $file): void
+    {
+        if ($fileSystem->exists($this->importFilesConfigPath)) {
+            $configFile = new File($this->importFilesConfigPath);
+            if ($configFile->isWritable()) {
+                try {
+                    $config = Yaml::parseFile($this->importFilesConfigPath);
+                    if (!isset($config['importFiles'])) {
+                        $config['importFiles'] = [
+                            'nodetypes' => []
+                        ];
+                    }
+                    if (!isset($config['importFiles']['nodetypes'])) {
+                        $config['importFiles']['nodetypes'] = [];
+                    }
+
+                    $relativePath = str_replace(
+                        $this->kernelProjectDir . DIRECTORY_SEPARATOR,
+                        '',
+                        $file
+                    );
+                    if (!in_array($relativePath, $config['importFiles']['nodetypes'])) {
+                        $config['importFiles']['nodetypes'][] = $relativePath;
+                        sort($config['importFiles']['nodetypes']);
+
+                        $yamlContent = Yaml::dump($config, 3);
+                        @file_put_contents($this->importFilesConfigPath, $yamlContent);
+                    }
+                } catch (ParseException $exception) {
+                    // Silent errors
+                }
+            }
+        }
+    }
+
+    protected function removeNodeTypeFromImportFilesConfiguration(Filesystem $fileSystem, string $file): void
+    {
+        if ($fileSystem->exists($this->importFilesConfigPath)) {
+            $configFile = new File($this->importFilesConfigPath);
+            if ($configFile->isWritable()) {
+                try {
+                    $config = Yaml::parseFile($this->importFilesConfigPath);
+                    if (!isset($config['importFiles'])) {
+                        return;
+                    }
+                    if (!isset($config['importFiles']['nodetypes'])) {
+                        return;
+                    }
+
+                    $relativePath = str_replace(
+                        $this->kernelProjectDir . DIRECTORY_SEPARATOR,
+                        '',
+                        $file
+                    );
+                    if (false !== $key = array_search($relativePath, $config['importFiles']['nodetypes'])) {
+                        unset($config['importFiles']['nodetypes'][$key]);
+                        $config['importFiles']['nodetypes'] = array_values(array_filter($config['importFiles']['nodetypes']));
+                        sort($config['importFiles']['nodetypes']);
+                        $yamlContent = Yaml::dump($config, 3);
+                        @file_put_contents($this->importFilesConfigPath, $yamlContent);
+                    }
+                } catch (ParseException $exception) {
+                    // Silent errors
+                }
+            }
+        }
     }
 
     /**
@@ -171,10 +288,11 @@ class NodeTypeHandler extends AbstractHandler
      *
      * @return $this
      */
-    public function updateSchema()
+    public function updateSchema(): NodeTypeHandler
     {
         $this->clearCaches(false);
         $this->regenerateEntityClass();
+        $this->exportNodeTypeJsonFile();
         // Clear cache only after generating NSEntity class.
         $this->clearCaches();
 
@@ -184,7 +302,7 @@ class NodeTypeHandler extends AbstractHandler
     /**
      * Delete and recreate entity class file.
      */
-    public function regenerateEntityClass()
+    public function regenerateEntityClass(): NodeTypeHandler
     {
         $this->removeSourceEntityClass();
         $this->generateSourceEntityClass();
@@ -197,9 +315,10 @@ class NodeTypeHandler extends AbstractHandler
      *
      * @return $this
      */
-    public function deleteSchema()
+    public function deleteSchema(): NodeTypeHandler
     {
         $this->removeSourceEntityClass();
+        $this->removeNodeTypeJsonFile();
         $this->clearCaches();
 
         return $this;
@@ -218,8 +337,10 @@ class NodeTypeHandler extends AbstractHandler
      * before removing it from node-types table.
      *
      * @return $this
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
      */
-    public function deleteWithAssociations()
+    public function deleteWithAssociations(): NodeTypeHandler
     {
         /*
          * Delete every nodes
