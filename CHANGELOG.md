@@ -1,3 +1,11 @@
+## 2.0.36 (2022-09-30)
+
+### Features
+
+* **NodeType:** Automatically store JSON serialized node-type in project and update `./src/Resources/config.yml` file ([2e1dc8a](https://github.com/roadiz/core-bundle/commit/2e1dc8a99d502719aabc6d16f7667d7bc909425d))
+* **NodeType:** Remove JSON node-type field and update `./src/Resources/config.yml` after Node-type deletion ([32a325f](https://github.com/roadiz/core-bundle/commit/32a325f29ded18b0c0ea4a5ff0349743efb69974))
+* **Translation:** Let user choose source and destination translations ([8426fa0](https://github.com/roadiz/core-bundle/commit/8426fa0ab88d2061acc636c7c636a18403cc6b07))
+
 ## 2.0.35 (2022-09-28)
 
 ### Features
