@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Serializer\Normalizer;
 
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Entity\TagTranslation;
 
@@ -27,11 +28,15 @@ final class TagNormalizer extends AbstractPathNormalizer
             $data['slug'] = $object->getTagName();
 
             if (isset($context['translation']) && $context['translation'] instanceof TranslationInterface) {
+                $documentsContext = $context;
+                $documentsContext['groups'] = ['document_display'];
                 $translatedData = $object->getTranslatedTagsByTranslation($context['translation'])->first() ?: null;
                 if ($translatedData instanceof TagTranslation) {
                     $data['name'] = $translatedData->getName();
                     $data['description'] = $translatedData->getDescription();
-                    $data['documents'] = $translatedData->getDocuments();
+                    $data['documents'] = array_map(function (DocumentInterface $document) use ($format, $documentsContext) {
+                        return $this->decorated->normalize($document, $format, $documentsContext);
+                    }, $translatedData->getDocuments());
                 }
             }
         }

@@ -62,7 +62,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @var Tag|null
      * @Serializer\Exclude
      * @SymfonySerializer\MaxDepth(2)
-     * @SymfonySerializer\Groups({"tag", "tag_base"})
+     * @SymfonySerializer\Groups({"tag_parent"})
      * @ApiFilter(BaseFilter\SearchFilter::class, properties={
      *     "parent.id": "exact",
      *     "parent.tagName": "exact"
@@ -73,8 +73,8 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @ORM\OneToMany(targetEntity="Tag", mappedBy="parent", orphanRemoval=true, cascade={"persist", "merge"})
      * @ORM\OrderBy({"position" = "ASC"})
      * @var Collection<Tag>
-     * @Serializer\Groups({"tag"})
-     * @SymfonySerializer\Groups({"tag"})
+     * @Serializer\Groups({"tag_children"})
+     * @SymfonySerializer\Groups({"tag_children"})
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Tag>")
      * @Serializer\Accessor(setter="setChildren", getter="getChildren")
      */

@@ -55,18 +55,24 @@ final class DocumentNormalizer extends AbstractPathNormalizer
             }
 
             if (in_array('document_display_sources', $serializationGroups)) {
+                /*
+                 * Reduce serialization group to avoid normalization loop.
+                 */
+                $sourcesContext = $context;
+                $sourcesContext['groups'] = ['document_display'];
+
                 if ($object->isLocal() && $object->isVideo()) {
                     $data['altSources'] = [];
                     foreach ($this->documentFinder->findVideosWithFilename($object->getRelativePath()) as $document) {
                         if ($document->getRelativePath() !== $object->getRelativePath()) {
-                            $data['altSources'][] = $document;
+                            $data['altSources'][] = $this->decorated->normalize($document, $format, $sourcesContext);
                         }
                     }
                 } elseif ($object->isLocal() && $object->isAudio()) {
                     $data['altSources'] = [];
                     foreach ($this->documentFinder->findAudiosWithFilename($object->getRelativePath()) as $document) {
                         if ($document->getRelativePath() !== $object->getRelativePath()) {
-                            $data['altSources'][] = $document;
+                            $data['altSources'][] = $this->decorated->normalize($document, $format, $sourcesContext);
                         }
                     }
                 }
