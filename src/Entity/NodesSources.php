@@ -149,7 +149,7 @@ class NodesSources extends AbstractEntity implements Loggable
      * @ORM\JoinColumn(name="translation_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"nodes_sources", "log_sources"})
      * @Serializer\Exclude(if="!object.isReachable()")
-     * @SymfonySerializer\Ignore
+     * @SymfonySerializer\Groups({"translation_base"})
      * @ApiFilter(BaseFilter\SearchFilter::class, properties={
      *     "translation.id": "exact",
      *     "translation.locale": "exact",

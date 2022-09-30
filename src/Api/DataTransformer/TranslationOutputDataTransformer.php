@@ -8,6 +8,9 @@ use ApiPlatform\Core\DataTransformer\DataTransformerInterface;
 use RZ\Roadiz\CoreBundle\Api\Dto\TranslationOutput;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 
+/**
+ * @deprecated Just use `translation_base` serialization group
+ */
 class TranslationOutputDataTransformer implements DataTransformerInterface
 {
     /**

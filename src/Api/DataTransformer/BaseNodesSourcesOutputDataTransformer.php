@@ -7,6 +7,9 @@ namespace RZ\Roadiz\CoreBundle\Api\DataTransformer;
 use RZ\Roadiz\CoreBundle\Api\Dto\NodesSourcesOutput;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 
+/**
+ * @deprecated
+ */
 class BaseNodesSourcesOutputDataTransformer extends NodesSourcesOutputDataTransformer
 {
     /**

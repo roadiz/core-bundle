@@ -550,7 +550,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      * @var string
      * @ORM\Column(type="string", unique=true, length=10)
      * @Serializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder", "log_sources"})
-     * @SymfonySerializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder", "log_sources"})
+     * @SymfonySerializer\Ignore()
      * @Serializer\Type("string")
      * @Assert\NotBlank()
      * @Assert\NotNull()
@@ -561,7 +561,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      * @var string|null
      * @ORM\Column(type="string", name="override_locale", length=10, unique=true, nullable=true)
      * @Serializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder"})
-     * @SymfonySerializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder"})
+     * @SymfonySerializer\Ignore()
      * @Serializer\Type("string")
      * @Assert\Length(max=10)
      */
@@ -569,8 +569,8 @@ class Translation extends AbstractDateTimed implements TranslationInterface
     /**
      * @var string
      * @ORM\Column(type="string", unique=true)
-     * @Serializer\Groups({"translation"})
-     * @SymfonySerializer\Groups({"translation"})
+     * @Serializer\Groups({"translation", "translation_base"})
+     * @SymfonySerializer\Groups({"translation", "translation_base"})
      * @Serializer\Type("string")
      * @Assert\NotNull()
      * @Assert\NotBlank()
@@ -580,16 +580,16 @@ class Translation extends AbstractDateTimed implements TranslationInterface
     /**
      * @var bool
      * @ORM\Column(name="default_translation", type="boolean", nullable=false, options={"default" = false})
-     * @Serializer\Groups({"translation"})
-     * @SymfonySerializer\Groups({"translation"})
+     * @Serializer\Groups({"translation", "translation_base"})
+     * @SymfonySerializer\Groups({"translation", "translation_base"})
      * @Serializer\Type("bool")
      */
     private bool $defaultTranslation = false;
     /**
      * @var bool
      * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
-     * @Serializer\Groups({"translation"})
-     * @SymfonySerializer\Groups({"translation"})
+     * @Serializer\Groups({"translation", "translation_base"})
+     * @SymfonySerializer\Groups({"translation", "translation_base"})
      * @Serializer\Type("bool")
      */
     private bool $available = true;
@@ -775,6 +775,8 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      * Get preferred locale between overrideLocale or locale.
      *
      * @return string
+     * @SymfonySerializer\SerializedName("locale")
+     * @SymfonySerializer\Groups({"translation_base"})
      */
     public function getPreferredLocale(): string
     {
