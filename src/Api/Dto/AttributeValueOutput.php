@@ -8,6 +8,9 @@ use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 
+/**
+ * @deprecated
+ */
 final class AttributeValueOutput
 {
     /**

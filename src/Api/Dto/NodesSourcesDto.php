@@ -9,6 +9,9 @@ use RZ\Roadiz\CoreBundle\Entity\Node;
 use Symfony\Component\Serializer\Annotation as Serializer;
 use Symfony\Component\Serializer\Annotation\Groups;
 
+/**
+ * @deprecated
+ */
 abstract class NodesSourcesDto
 {
     /**

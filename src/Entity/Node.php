@@ -11,20 +11,19 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Loggable\Loggable;
+use Gedmo\Mapping\Annotation as Gedmo;
+use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
-use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
-use RZ\Roadiz\CoreBundle\Model\AttributableTrait;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimedPositioned;
 use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
 use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
+use RZ\Roadiz\CoreBundle\Model\AttributableTrait;
 use RZ\Roadiz\Utils\StringHandler;
-use JMS\Serializer\Annotation as Serializer;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
-use Gedmo\Mapping\Annotation as Gedmo;
 use Symfony\Component\Validator\Constraints as Assert;
-use RZ\Roadiz\CoreBundle\Form\Constraint as RoadizAssert;
 
 /**
  * Node entities are the central feature of Roadiz,
@@ -861,9 +860,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @var Collection<AttributeValue>
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\AttributeValue", mappedBy="node", orphanRemoval=true)
      * @ORM\OrderBy({"position" = "ASC"})
-     * @Serializer\Groups({"nodes_sources", "node"})
-     * @SymfonySerializer\Groups({"nodes_sources", "node"})
-     * @SymfonySerializer\Ignore()
+     * @Serializer\Groups({"node_attributes"})
+     * @SymfonySerializer\Groups({"node_attributes"})
+     * @SymfonySerializer\MaxDepth(1)
      */
     private Collection $attributeValues;
 

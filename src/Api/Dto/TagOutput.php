@@ -9,6 +9,9 @@ use RZ\Roadiz\CoreBundle\Entity\Tag;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 
+/**
+ * @deprecated
+ */
 final class TagOutput
 {
     /**

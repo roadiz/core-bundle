@@ -5,15 +5,17 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Entity;
 
 use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
 use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueTrait;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueTranslationInterface;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
-use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Entity
@@ -22,6 +24,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
  *     @ORM\Index(columns={"attribute_id", "node_id"})
  * })
  * @ORM\HasLifecycleCallbacks
+ * @ApiFilter(PropertyFilter::class)
  */
 class AttributeValue extends AbstractPositioned implements AttributeValueInterface
 {
@@ -32,13 +35,16 @@ class AttributeValue extends AbstractPositioned implements AttributeValueInterfa
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Node", inversedBy="attributeValues")
      * @ORM\JoinColumn(name="node_id", onDelete="CASCADE")
      * @ApiFilter(BaseFilter\SearchFilter::class, properties={
+     *     "node": "exact",
      *     "node.id": "exact",
      *     "node.nodeName": "exact"
      * })
      * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
      *     "node.visible"
      * })
-     * @Serializer\Exclude
+     * @Serializer\Groups({"attribute_node"})
+     * @SymfonySerializer\Groups({"attribute_node"})
+     * @SymfonySerializer\MaxDepth(1)
      */
     protected ?Node $node = null;
 

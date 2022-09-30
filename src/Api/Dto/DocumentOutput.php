@@ -10,6 +10,9 @@ use RZ\Roadiz\CoreBundle\Entity\Folder;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 
+/**
+ * @deprecated
+ */
 final class DocumentOutput
 {
     /**

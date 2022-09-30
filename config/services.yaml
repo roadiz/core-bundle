@@ -60,6 +60,10 @@ services:
         resource: '../src/Api/DataTransformer/'
         autowire: false
         autoconfigure: false
+    RZ\Roadiz\CoreBundle\Api\Dto\:
+        resource: '../src/Api/Dto/'
+        autowire: false
+        autoconfigure: false
     # Except for WebResponse
     RZ\Roadiz\CoreBundle\Api\DataTransformer\WebResponseOutputDataTransformer:
         autowire: true
@@ -86,13 +90,22 @@ services:
         tags:
             - { name: 'serializer.normalizer', priority: 64 }
 
-    # NodesSources
-    RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer:
+    # Folder
+    RZ\Roadiz\CoreBundle\Serializer\Normalizer\FolderNormalizer:
         # By default, .inner is passed as argument
         decorates: 'api_platform.jsonld.normalizer.item'
     # Need a different name to avoid duplicate YAML key
-    roadiz_core.serializer.normalizer.nodes_sources_path.json:
-        class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer'
+    roadiz_core.serializer.normalizer.folder.json:
+        class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\FolderNormalizer'
+        decorates: 'api_platform.serializer.normalizer.item'
+
+    # Document
+    RZ\Roadiz\CoreBundle\Serializer\Normalizer\DocumentNormalizer:
+        # By default, .inner is passed as argument
+        decorates: 'api_platform.jsonld.normalizer.item'
+    # Need a different name to avoid duplicate YAML key
+    roadiz_core.serializer.normalizer.document.json:
+        class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\DocumentNormalizer'
         decorates: 'api_platform.serializer.normalizer.item'
 
     # CustomForm
@@ -113,22 +126,22 @@ services:
         class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\TagNormalizer'
         decorates: 'api_platform.serializer.normalizer.item'
 
-    # Document
-    RZ\Roadiz\CoreBundle\Serializer\Normalizer\DocumentNormalizer:
+    # AttributeValue
+    RZ\Roadiz\CoreBundle\Serializer\Normalizer\AttributeValueNormalizer:
         # By default, .inner is passed as argument
         decorates: 'api_platform.jsonld.normalizer.item'
     # Need a different name to avoid duplicate YAML key
-    roadiz_core.serializer.normalizer.document.json:
-        class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\DocumentNormalizer'
+    roadiz_core.serializer.normalizer.attribute_value.json:
+        class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\AttributeValueNormalizer'
         decorates: 'api_platform.serializer.normalizer.item'
 
-    # Folder
-    RZ\Roadiz\CoreBundle\Serializer\Normalizer\FolderNormalizer:
+    # NodesSources
+    RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer:
         # By default, .inner is passed as argument
         decorates: 'api_platform.jsonld.normalizer.item'
     # Need a different name to avoid duplicate YAML key
-    roadiz_core.serializer.normalizer.folder.json:
-        class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\FolderNormalizer'
+    roadiz_core.serializer.normalizer.nodes_sources_path.json:
+        class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer'
         decorates: 'api_platform.serializer.normalizer.item'
 
     Limenius\Liform\LiformInterface:
