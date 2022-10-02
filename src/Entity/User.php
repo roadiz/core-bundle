@@ -55,15 +55,15 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
 
     /**
      * @var bool
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Exclude()
+     * @SymfonySerializer\Ignore()
      */
     protected bool $sendCreationConfirmationEmail = false;
     /**
      * @var string|null
      * @ORM\Column(type="string", name="facebook_name", unique=false, nullable=true)
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_social"})
+     * @SymfonySerializer\Groups({"user_social"})
      */
     protected ?string $facebookName = null;
     /**
@@ -76,21 +76,21 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     /**
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      */
     protected bool $enabled = true;
     /**
      * @ORM\Column(name="confirmation_token", type="string", unique=true, nullable=true)
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      * @var string|null
      */
     protected ?string $confirmationToken = null;
     /**
      * @ORM\Column(name="password_requested_at", type="datetime", nullable=true)
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      * @var \DateTime|null
      */
     protected ?\DateTime $passwordRequestedAt = null;
@@ -127,8 +127,8 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * **Must not be persisted.**
      *
      * @var string|null
-     * @Serializer\Exclude()
-     * @SymfonySerializer\Ignore
+     * @Serializer\Groups({"user:write"})
+     * @SymfonySerializer\Groups({"user:write"})
      * @PasswordStrength(minLength=8, minStrength=3)
      * @Assert\NotBlank(groups={"no_empty_password"})
      */
@@ -136,8 +136,8 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     /**
      * @var \DateTime|null
      * @ORM\Column(name="last_login", type="datetime", nullable=true)
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      */
     private ?\DateTime $lastLogin = null;
     /**
@@ -174,43 +174,43 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     /**
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      */
     private bool $expired = false;
     /**
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      */
     private bool $locked = false;
     /**
      * @ORM\Column(name="credentials_expires_at", type="datetime", nullable=true)
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      * @var \DateTime|null
      */
     private ?\DateTime $credentialsExpiresAt = null;
     /**
      * @var boolean
      * @ORM\Column(type="boolean", name="credentials_expired", nullable=false, options={"default" = false})
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      */
     private bool $credentialsExpired = false;
     /**
      * @ORM\Column(name="expires_at", type="datetime", nullable=true)
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      * @var \DateTime|null
      */
     private ?\DateTime $expiresAt = null;
     /**
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Node")
      * @ORM\JoinColumn(name="chroot_id", referencedColumnName="id", onDelete="SET NULL")
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_chroot"})
+     * @SymfonySerializer\Groups({"user_chroot"})
      * @var Node|null
      */
     private ?Node $chroot = null;

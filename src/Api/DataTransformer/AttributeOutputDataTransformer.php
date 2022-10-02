@@ -9,6 +9,9 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Api\Dto\AttributeOutput;
 use RZ\Roadiz\CoreBundle\Model\AttributeInterface;
 
+/**
+ * @deprecated
+ */
 class AttributeOutputDataTransformer implements DataTransformerInterface
 {
     /**
