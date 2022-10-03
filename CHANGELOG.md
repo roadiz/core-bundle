@@ -1,3 +1,9 @@
+## 2.0.37 (2022-10-03)
+
+### Bug Fixes
+
+* **Normalization:** Set higher priority for `NodesSourcesPathNormalizer` ([05498d2](https://github.com/roadiz/core-bundle/commit/05498d24bada43db5f0eb3d512a19a0606cb5001))
+
 ## 2.0.36 (2022-09-30)
 
 ### Features
