@@ -73,13 +73,19 @@ services:
         tags:
             - { name: 'serializer.normalizer', priority: 64 }
 
+    RZ\Roadiz\CoreBundle\Serializer\Normalizer\TranslationAwareNormalizer:
+        tags:
+            - { name: 'serializer.normalizer', priority: 64 }
+
     RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer:
         # By default, .inner is passed as argument
         decorates: 'api_platform.jsonld.normalizer.item'
+        decoration_priority: 15
     # Need a different name to avoid duplicate YAML key
     roadiz_core.serializer.normalizer.nodes_sources_path.json:
         class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer'
         decorates: 'api_platform.serializer.normalizer.item'
+        decoration_priority: 15
 
     Limenius\Liform\LiformInterface:
         alias: liform
@@ -95,10 +101,6 @@ services:
         parent: Limenius\Liform\Transformer\AbstractTransformer
         tags:
             - { name: liform.transformer, form_type: date, widget: date }
-
-    RZ\Roadiz\CoreBundle\Serializer\Normalizer\TranslationAwareNormalizer:
-        tags:
-            - { name: 'serializer.normalizer', priority: 64 }
 
     RZ\Roadiz\CoreBundle\Serializer\TranslationAwareContextBuilder:
         decorates: 'api_platform.serializer.context_builder'
