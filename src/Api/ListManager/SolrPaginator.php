@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\ListManager;
 
-use ApiPlatform\Core\DataProvider\PaginatorInterface;
+use ApiPlatform\State\Pagination\PaginatorInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 
 final class SolrPaginator implements PaginatorInterface, \IteratorAggregate

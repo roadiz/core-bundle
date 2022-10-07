@@ -27,7 +27,7 @@ class Roles extends LazyParameterBag
     /**
      * @return RoleRepository
      */
-    public function getRepository()
+    public function getRepository(): RoleRepository
     {
         if (null === $this->repository) {
             $this->repository = $this->managerRegistry->getRepository(Role::class);

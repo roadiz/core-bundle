@@ -12,8 +12,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Class CleanLoginAttemptCommand
- *
  * @package RZ\Roadiz\CoreBundle\Console
  */
 class CleanLoginAttemptCommand extends Command
