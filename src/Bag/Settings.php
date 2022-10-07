@@ -28,7 +28,7 @@ class Settings extends LazyParameterBag
     /**
      * @return SettingRepository
      */
-    public function getRepository()
+    public function getRepository(): SettingRepository
     {
         if (null === $this->repository) {
             $this->repository = $this->managerRegistry->getRepository(Setting::class);

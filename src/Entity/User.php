@@ -18,6 +18,7 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\Validator\Constraints as Assert;
+use RZ\Roadiz\CoreBundle\Form\Constraint\ValidFacebookName;
 
 /**
  * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\UserRepository")
@@ -43,8 +44,8 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
 
     /**
      * @ORM\Column(type="string", unique=true, nullable=false)
-     * @Serializer\Groups({"user", "human"})
-     * @SymfonySerializer\Groups({"user", "human"})
+     * @Serializer\Groups({"user_personal", "human"})
+     * @SymfonySerializer\Groups({"user_personal", "human"})
      * @var string|null
      * @Assert\NotNull()
      * @Assert\NotBlank()
@@ -55,15 +56,16 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
 
     /**
      * @var bool
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Exclude()
+     * @SymfonySerializer\Ignore()
      */
     protected bool $sendCreationConfirmationEmail = false;
     /**
      * @var string|null
      * @ORM\Column(type="string", name="facebook_name", unique=false, nullable=true)
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_social"})
+     * @SymfonySerializer\Groups({"user_social"})
+     * @ValidFacebookName
      */
     protected ?string $facebookName = null;
     /**
@@ -71,33 +73,34 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @ORM\Column(type="text", name="picture_url", nullable=true)
      * @Serializer\Groups({"user"})
      * @SymfonySerializer\Groups({"user"})
+     * @Assert\Length(max=250)
      */
     protected ?string $pictureUrl = null;
     /**
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      */
     protected bool $enabled = true;
     /**
      * @ORM\Column(name="confirmation_token", type="string", unique=true, nullable=true)
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      * @var string|null
      */
     protected ?string $confirmationToken = null;
     /**
      * @ORM\Column(name="password_requested_at", type="datetime", nullable=true)
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      * @var \DateTime|null
      */
     protected ?\DateTime $passwordRequestedAt = null;
     /**
      * @ORM\Column(type="string", unique=true)
-     * @Serializer\Groups({"user", "log_user"})
-     * @SymfonySerializer\Groups({"user", "log_user"})
+     * @Serializer\Groups({"user_personal", "log_user"})
+     * @SymfonySerializer\Groups({"user_personal", "log_user"})
      * @Assert\NotNull()
      * @Assert\NotBlank()
      * @Assert\Length(max=200)
@@ -127,8 +130,8 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * **Must not be persisted.**
      *
      * @var string|null
-     * @Serializer\Exclude()
-     * @SymfonySerializer\Ignore
+     * @Serializer\Groups({"user:write"})
+     * @SymfonySerializer\Groups({"user:write"})
      * @PasswordStrength(minLength=8, minStrength=3)
      * @Assert\NotBlank(groups={"no_empty_password"})
      */
@@ -136,15 +139,15 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     /**
      * @var \DateTime|null
      * @ORM\Column(name="last_login", type="datetime", nullable=true)
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      */
     private ?\DateTime $lastLogin = null;
     /**
      * @var Collection<Role>
      * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Role")
-     * @Serializer\Groups({"user_role"})
-     * @SymfonySerializer\Groups({"user_role"})
+     * @Serializer\Exclude()
+     * @SymfonySerializer\Ignore()
      * @ORM\JoinTable(name="users_roles",
      *      joinColumns={@ORM\JoinColumn(name="user_id", referencedColumnName="id", onDelete="CASCADE")},
      *      inverseJoinColumns={@ORM\JoinColumn(name="role_id", referencedColumnName="id", onDelete="CASCADE")}
@@ -156,8 +159,8 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * to be compatible with symfony security scheme
      *
      * @var array<string>|null
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Exclude()
+     * @SymfonySerializer\Ignore()
      */
     private ?array $roles = null;
     /**
@@ -174,43 +177,43 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     /**
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      */
     private bool $expired = false;
     /**
      * @var boolean
      * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      */
     private bool $locked = false;
     /**
      * @ORM\Column(name="credentials_expires_at", type="datetime", nullable=true)
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      * @var \DateTime|null
      */
     private ?\DateTime $credentialsExpiresAt = null;
     /**
      * @var boolean
      * @ORM\Column(type="boolean", name="credentials_expired", nullable=false, options={"default" = false})
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      */
     private bool $credentialsExpired = false;
     /**
      * @ORM\Column(name="expires_at", type="datetime", nullable=true)
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      * @var \DateTime|null
      */
     private ?\DateTime $expiresAt = null;
     /**
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Node")
      * @ORM\JoinColumn(name="chroot_id", referencedColumnName="id", onDelete="SET NULL")
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_chroot"})
+     * @SymfonySerializer\Groups({"user_chroot"})
      * @var Node|null
      */
     private ?Node $chroot = null;
@@ -259,12 +262,12 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     }
 
     /**
-     * Get available user name data, first name and last name
+     * Get available username data, first name and last name
      * or username as a last try.
      *
      * @return string
-     * @Serializer\Groups({"user"})
-     * @Serializer\VirtualProperty()
+     * @Serializer\Exclude()
+     * @SymfonySerializer\Ignore()
      */
     public function getIdentifier(): string
     {
@@ -277,6 +280,13 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
         }
     }
 
+    /**
+     * @return string
+     * @Serializer\Groups({"user_identifier", "user_personal"})
+     * @SymfonySerializer\SerializedName("identifier")
+     * @SymfonySerializer\Groups({"user_identifier", "user_personal"})
+     * @Serializer\VirtualProperty()
+     */
     public function getUserIdentifier(): string
     {
         return $this->username;
@@ -646,8 +656,8 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @return bool    true if the user's account is non expired, false otherwise
      *
      * @see AccountExpiredException
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      * @Serializer\VirtualProperty()
      */
     public function isAccountNonExpired(): bool
@@ -671,8 +681,8 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @return bool true if the user is not locked, false otherwise
      *
      * @see LockedException
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      * @Serializer\VirtualProperty()
      */
     public function isAccountNonLocked(): bool
@@ -791,9 +801,10 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     /**
      * Get prototype abstract Gravatar url.
      *
+     * @Serializer\Exclude()
+     * @SymfonySerializer\Ignore
      * @param string $type Default: "identicon"
      * @param string $size Default: "200"
-     *
      * @return string
      */
     public function getGravatarUrl(string $type = "identicon", string $size = "200"): string
@@ -873,6 +884,8 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * Get roles names as a simple array, combining groups roles.
      *
      * @return array<string>
+     * @SymfonySerializer\SerializedName("roles")
+     * @SymfonySerializer\Groups({"user_role"})
      */
     public function getRoles(): array
     {
@@ -961,9 +974,8 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     }
 
     /**
-     * @Serializer\Groups({"user"})
-     * @SymfonySerializer\Groups({"user"})
-     * @Serializer\VirtualProperty()
+     * @Serializer\Groups({"user_security"})
+     * @SymfonySerializer\Groups({"user_security"})
      */
     public function isSuperAdmin(): bool
     {

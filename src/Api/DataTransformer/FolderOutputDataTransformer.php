@@ -11,6 +11,9 @@ use RZ\Roadiz\CoreBundle\Api\Dto\FolderOutput;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\CoreBundle\Entity\FolderTranslation;
 
+/**
+ * @deprecated Use FolderNormalizer
+ */
 class FolderOutputDataTransformer implements DataTransformerInterface
 {
     /**

@@ -9,6 +9,9 @@ use RZ\Roadiz\CoreBundle\Entity\Node;
 use Symfony\Component\Serializer\Annotation as Serializer;
 use Symfony\Component\Serializer\Annotation\Groups;
 
+/**
+ * @deprecated
+ */
 abstract class NodesSourcesDto
 {
     /**
@@ -50,6 +53,7 @@ abstract class NodesSourcesDto
      * @var string|null
      * @Serializer\MaxDepth(4)
      * @Groups({"nodes_sources", "nodes_sources_base", "urls"})
+     * @deprecated NodesSources url is exposed via RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer
      */
     public ?string $url = null;
 }

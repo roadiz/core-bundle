@@ -10,6 +10,9 @@ use RZ\Roadiz\CoreBundle\Api\Dto\AttributeValueOutput;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueTranslationInterface;
 
+/**
+ * @deprecated Use AttributeValueNormalizer
+ */
 class AttributeValueOutputDataTransformer implements DataTransformerInterface
 {
     /**

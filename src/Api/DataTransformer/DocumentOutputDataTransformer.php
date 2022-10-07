@@ -12,6 +12,9 @@ use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\Document\DocumentFinderInterface;
 
+/**
+ * @deprecated Use DocumentNormalizer
+ */
 class DocumentOutputDataTransformer implements DataTransformerInterface
 {
     protected DocumentFinderInterface $documentFinder;

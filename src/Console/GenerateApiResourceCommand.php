@@ -119,6 +119,7 @@ class GenerateApiResourceCommand extends Command
                 'get' => [
                     'method' => 'GET',
                     'normalization_context' => [
+                        'enable_max_depth' => true,
                         'groups' => array_values(array_filter(array_unique($groups)))
                     ],
                 ]
@@ -157,7 +158,6 @@ class GenerateApiResourceCommand extends Command
                     'enable_max_depth' => true,
                     'groups' => array_merge(array_values(array_filter(array_unique($groups))), [
                         'web_response',
-                        'position',
                         'walker',
                         'walker_level',
                         'walker_metadata',

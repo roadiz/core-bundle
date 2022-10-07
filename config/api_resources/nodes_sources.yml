@@ -7,6 +7,7 @@ RZ\Roadiz\CoreBundle\Entity\NodesSources:
         get:
             method: "GET"
             normalization_context:
+                enable_max_depth: true
                 groups:
                     - nodes_sources_base
                     - nodes_sources_default
@@ -45,6 +46,7 @@ RZ\Roadiz\CoreBundle\Entity\NodesSources:
         get:
             method: 'GET'
             normalization_context:
+                enable_max_depth: true
                 groups:
                     - nodes_sources
                     - urls

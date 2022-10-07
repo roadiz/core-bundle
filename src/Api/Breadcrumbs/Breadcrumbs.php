@@ -11,9 +11,9 @@ final class Breadcrumbs implements BreadcrumbsInterface
 {
     /**
      * @var array<PersistableInterface>
-     * @Serializer\Groups({"breadcrumbs", "web_response"})
-     * @Serializer\MaxDepth(1)
      */
+    #[Serializer\Groups(["breadcrumbs", "web_response"])]
+    #[Serializer\MaxDepth(1)]
     private array $items;
 
     /**

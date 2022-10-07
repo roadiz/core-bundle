@@ -6,13 +6,14 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Contracts\NodeType\SerializableInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\CoreBundle\Form\Constraint as RoadizAssert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * NodeTypeField entities are used to create NodeTypes with
@@ -37,6 +38,19 @@ use RZ\Roadiz\CoreBundle\Form\Constraint as RoadizAssert;
  */
 class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, SerializableInterface
 {
+    /**
+     * @ORM\Column(type="string")
+     * @Serializer\Expose
+     * @Serializer\Groups({"node_type", "setting"})
+     * @SymfonySerializer\Groups({"node_type", "setting"})
+     * @Assert\Length(max=250)
+     * @Serializer\Type("string")
+     * @RoadizAssert\NonSqlReservedWord()
+     * @RoadizAssert\SimpleLatinString()
+     * @var string
+     */
+    protected string $name;
+
     /**
      * If current field data should be the same over translations or not.
      *

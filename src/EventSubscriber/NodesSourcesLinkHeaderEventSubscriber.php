@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Fig\Link\GenericLinkProvider;
 use Psr\Link\EvolvableLinkProviderInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ViewEvent;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\WebLink\GenericLinkProvider;
 use Symfony\Component\WebLink\Link;
 
 class NodesSourcesLinkHeaderEventSubscriber implements EventSubscriberInterface

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -38,14 +39,14 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     @ORM\Index(columns={"parent_id", "visible"}, name="folder_parent_visible"),
  *     @ORM\Index(columns={"parent_id", "visible", "position"}, name="folder_parent_visible_position")
  * })
- * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
- * @ApiFilter(BaseFilter\OrderFilter::class, properties={
- *     "position",
- *     "createdAt",
- *     "updatedAt"
- * })
  * @UniqueEntity(fields={"folderName"})
  */
+#[ApiFilter(PropertyFilter::class)]
+#[ApiFilter(BaseFilter\OrderFilter::class, properties: [
+    "position",
+    "createdAt",
+    "updatedAt"
+])]
 class Folder extends AbstractDateTimedPositioned implements FolderInterface
 {
     use LeafTrait;
@@ -54,20 +55,22 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Folder", inversedBy="children")
      * @ORM\JoinColumn(name="parent_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Folder|null
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "parent.id": "exact",
-     *     "parent.folderName": "exact"
-     * })
+     * @Serializer\Groups({"folder_parent"})
+     * @SymfonySerializer\Groups({"folder_parent"})
+     * @SymfonySerializer\MaxDepth(1)
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "parent.id" => "exact",
+        "parent.folderName" => "exact"
+    ])]
     protected ?LeafInterface $parent = null;
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Folder", mappedBy="parent", orphanRemoval=true)
      * @ORM\OrderBy({"position" = "ASC"})
      * @var Collection<Folder>
-     * @Serializer\Groups({"folder"})
-     * @SymfonySerializer\Groups({"folder"})
+     * @Serializer\Groups({"folder_children"})
+     * @SymfonySerializer\Groups({"folder_children"})
+     * @SymfonySerializer\MaxDepth(1)
      */
     protected Collection $children;
     /**
@@ -75,27 +78,28 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @ORM\JoinTable(name="documents_folders")
      * @var Collection<Document>
      * @Serializer\Groups({"folder"})
-     * @SymfonySerializer\Groups({"folder"})
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "documents.id": "exact",
-     *     "documents.mimeType": "exact",
-     *     "documents.filename": "exact",
-     *     "documents.embedPlatform": "exact",
-     *     "documents.folders": "exact",
-     *     "documents.folders.folderName": "exact",
-     * })
+     * @SymfonySerializer\Ignore
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "documents.id" => "exact",
+        "documents.mimeType" => "exact",
+        "documents.filename" => "exact",
+        "documents.embedPlatform" => "exact",
+        "documents.folders" => "exact",
+        "documents.folders.folderName" => "exact",
+    ])]
     protected Collection $documents;
     /**
      * @ORM\Column(name="folder_name", type="string", unique=true, nullable=false)
      * @var string
-     * @Serializer\Groups({"folder", "document"})
-     * @SymfonySerializer\Groups({"folder", "document"})
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
+     * @Serializer\Groups({"folder", "document_folders"})
+     * @SymfonySerializer\Groups({"folder", "document_folders"})
+     * @SymfonySerializer\SerializedName("slug")
      * @Assert\NotBlank()
      * @Assert\NotNull()
      * @Assert\Length(max=250)
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
     private string $folderName = '';
     /**
      * @var string
@@ -106,18 +110,18 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
     /**
      * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
      * @var bool
-     * @Serializer\Groups({"folder", "document"})
-     * @SymfonySerializer\Groups({"folder", "document"})
-     * @ApiFilter(BaseFilter\BooleanFilter::class)
+     * @Serializer\Groups({"folder", "document_folders"})
+     * @SymfonySerializer\Groups({"folder", "document_folders"})
      */
+    #[ApiFilter(BaseFilter\BooleanFilter::class)]
     private bool $visible = true;
     /**
      * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
      * @Serializer\Groups({"folder"})
      * @SymfonySerializer\Groups({"folder"})
      * @Serializer\Type("bool")
-     * @ApiFilter(BaseFilter\BooleanFilter::class)
      */
+    #[ApiFilter(BaseFilter\BooleanFilter::class)]
     private bool $locked = false;
     /**
      * @var string
@@ -131,7 +135,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @ORM\OneToMany(targetEntity="FolderTranslation", mappedBy="folder", orphanRemoval=true)
      * @var Collection<FolderTranslation>
      * @Serializer\Groups({"folder", "document"})
-     * @SymfonySerializer\Groups({"folder", "document"})
+     * @SymfonySerializer\Ignore()
      */
     private Collection $translatedFolders;
 
@@ -227,6 +231,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
     /**
      * @param TranslationInterface $translation
      * @return Collection<FolderTranslation>
+     * @SymfonySerializer\Ignore
      */
     public function getTranslatedFoldersByTranslation(TranslationInterface $translation): Collection
     {
@@ -258,7 +263,8 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
     /**
      * @return string|null
      * @Serializer\VirtualProperty
-     * @Serializer\Groups({"folder"})
+     * @Serializer\Groups({"folder", "document_folders"})
+     * @SymfonySerializer\Groups({"folder", "document_folders"})
      */
     public function getName(): ?string
     {
@@ -325,6 +331,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * Get folder full path using folder names.
      *
      * @return string
+     * @SymfonySerializer\Ignore
      */
     public function getFullPath(): string
     {

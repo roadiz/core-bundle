@@ -4,27 +4,26 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Loggable\Loggable;
+use Gedmo\Mapping\Annotation as Gedmo;
+use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
-use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
-use RZ\Roadiz\CoreBundle\Model\AttributableTrait;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimedPositioned;
 use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
 use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
+use RZ\Roadiz\CoreBundle\Model\AttributableTrait;
 use RZ\Roadiz\Utils\StringHandler;
-use JMS\Serializer\Annotation as Serializer;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
-use Gedmo\Mapping\Annotation as Gedmo;
 use Symfony\Component\Validator\Constraints as Assert;
-use RZ\Roadiz\CoreBundle\Form\Constraint as RoadizAssert;
 
 /**
  * Node entities are the central feature of Roadiz,
@@ -54,9 +53,9 @@ use RZ\Roadiz\CoreBundle\Form\Constraint as RoadizAssert;
  * })
  * @ORM\HasLifecycleCallbacks
  * @Gedmo\Loggable(logEntryClass="RZ\Roadiz\CoreBundle\Entity\UserLogEntry")
- * @ApiFilter(PropertyFilter::class)
  * @UniqueEntity(fields={"nodeName"})
  */
+#[ApiFilter(PropertyFilter::class)]
 class Node extends AbstractDateTimedPositioned implements LeafInterface, AttributableInterface, Loggable
 {
     use LeafTrait;
@@ -134,6 +133,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @ORM\Column(type="boolean", name="dynamic_node_name", nullable=false, options={"default" = true})
      * @Gedmo\Versioned
+     * @SymfonySerializer\Ignore()
      */
     private bool $dynamicNodeName = true;
 
@@ -217,6 +217,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\Column(type="integer")
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      * @internal You should use node Workflow to perform change on status.
      */
     private int $status = Node::DRAFT;
@@ -307,6 +308,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      */
     private bool $locked = false;
 
@@ -334,6 +336,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      */
     private $priority = 0.8;
 
@@ -361,6 +364,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      */
     private bool $hideChildren = false;
 
@@ -416,6 +420,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      */
     private bool $sterile = false;
 
@@ -443,6 +448,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      */
     private string $childrenOrder = 'position';
 
@@ -470,6 +476,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @Gedmo\Versioned
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      */
     private string $childrenOrderDirection = 'ASC';
 
@@ -496,6 +503,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\JoinColumn(name="nodeType_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      * @var NodeTypeInterface|null
      */
     private ?NodeTypeInterface $nodeType = null;
@@ -640,6 +648,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @var Collection<NodeType>
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      */
     private Collection $stackTypes;
 
@@ -683,6 +692,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @ORM\OneToMany(targetEntity="NodesSources", mappedBy="node", orphanRemoval=true, fetch="EXTRA_LAZY")
      * @Serializer\Groups({"node"})
      * @SymfonySerializer\Groups({"node"})
+     * @SymfonySerializer\Ignore()
      * @var Collection<NodesSources>
      */
     private Collection $nodeSources;
@@ -850,8 +860,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @var Collection<AttributeValue>
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\AttributeValue", mappedBy="node", orphanRemoval=true)
      * @ORM\OrderBy({"position" = "ASC"})
-     * @Serializer\Groups({"nodes_sources", "node"})
-     * @SymfonySerializer\Groups({"nodes_sources", "node"})
+     * @Serializer\Groups({"node_attributes"})
+     * @SymfonySerializer\Groups({"node_attributes"})
+     * @SymfonySerializer\MaxDepth(1)
      */
     private Collection $attributeValues;
 

@@ -6,6 +6,9 @@ namespace RZ\Roadiz\CoreBundle\Api\Dto;
 
 use Symfony\Component\Serializer\Annotation\Groups;
 
+/**
+ * @deprecated
+ */
 final class FolderOutput
 {
     /**

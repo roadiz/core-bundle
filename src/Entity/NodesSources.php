@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -44,10 +45,10 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
  * @ORM\DiscriminatorColumn(name="discr", type="string")
  * @ORM\HasLifecycleCallbacks
  * @Gedmo\Loggable(logEntryClass="RZ\Roadiz\CoreBundle\Entity\UserLogEntry")
- * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
- * @ApiFilter(RoadizFilter\LocaleFilter::class)
  * @UniqueEntity(fields={"node", "translation"})
  */
+#[ApiFilter(PropertyFilter::class)]
+#[ApiFilter(RoadizFilter\LocaleFilter::class)]
 class NodesSources extends AbstractEntity implements Loggable
 {
     /**
@@ -72,42 +73,42 @@ class NodesSources extends AbstractEntity implements Loggable
      * @ORM\JoinColumn(name="node_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
      * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "node.id": "exact",
-     *     "node.nodeName": "exact",
-     *     "node.parent": "exact",
-     *     "node.parent.nodeName": "exact",
-     *     "node.tags": "exact",
-     *     "node.tags.tagName": "exact",
-     *     "node.nodeType": "exact",
-     *     "node.nodeType.name": "exact"
-     * })
-     * @ApiFilter(BaseFilter\OrderFilter::class, properties={
-     *     "node.position",
-     *     "node.createdAt",
-     *     "node.updatedAt"
-     * })
-     * @ApiFilter(BaseFilter\DateFilter::class, properties={
-     *     "node.createdAt",
-     *     "node.updatedAt"
-     * })
-     * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
-     *     "node.visible",
-     *     "node.home",
-     *     "node.nodeType.reachable",
-     *     "node.nodeType.publishable"
-     * })
-     * @ApiFilter(RoadizFilter\NotFilter::class, properties={
-     *     "node.nodeType.name",
-     *     "node.id",
-     *     "node.tags.tagName"
-     * })
-     * Use IntersectionFilter after SearchFilter!
-     * @ApiFilter(RoadizFilter\IntersectionFilter::class, properties={
-     *     "node.tags",
-     *     "node.tags.tagName"
-     * })
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "node.id" => "exact",
+        "node.nodeName" => "exact",
+        "node.parent" => "exact",
+        "node.parent.nodeName" => "exact",
+        "node.tags" => "exact",
+        "node.tags.tagName" => "exact",
+        "node.nodeType" => "exact",
+        "node.nodeType.name" => "exact"
+    ])]
+    #[ApiFilter(BaseFilter\OrderFilter::class, properties: [
+        "node.position",
+        "node.createdAt",
+        "node.updatedAt"
+    ])]
+    #[ApiFilter(BaseFilter\DateFilter::class, properties: [
+        "node.createdAt",
+        "node.updatedAt"
+    ])]
+    #[ApiFilter(BaseFilter\BooleanFilter::class, properties: [
+        "node.visible",
+        "node.home",
+        "node.nodeType.reachable",
+        "node.nodeType.publishable"
+    ])]
+    #[ApiFilter(RoadizFilter\NotFilter::class, properties: [
+        "node.nodeType.name",
+        "node.id",
+        "node.tags.tagName"
+    ])]
+    # Use IntersectionFilter after SearchFilter!
+    #[ApiFilter(RoadizFilter\IntersectionFilter::class, properties: [
+        "node.tags",
+        "node.tags.tagName"
+    ])]
     private ?Node $node = null;
 
     /**
@@ -149,12 +150,12 @@ class NodesSources extends AbstractEntity implements Loggable
      * @ORM\JoinColumn(name="translation_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"nodes_sources", "log_sources"})
      * @Serializer\Exclude(if="!object.isReachable()")
-     * @SymfonySerializer\Ignore
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "translation.id": "exact",
-     *     "translation.locale": "exact",
-     * })
+     * @SymfonySerializer\Groups({"translation_base"})
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "translation.id" => "exact",
+        "translation.locale" => "exact",
+    ])]
     private ?TranslationInterface $translation = null;
 
     /**
@@ -406,8 +407,8 @@ class NodesSources extends AbstractEntity implements Loggable
      * @Serializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
      * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
      * @Gedmo\Versioned
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
     protected ?string $title = null;
 
     /**
@@ -435,10 +436,10 @@ class NodesSources extends AbstractEntity implements Loggable
      * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base"})
      * @Gedmo\Versioned
      * @Serializer\Exclude(if="!object.isPublishable()")
-     * @ApiFilter(BaseFilter\DateFilter::class)
-     * @ApiFilter(BaseFilter\OrderFilter::class)
-     * @ApiFilter(RoadizFilter\ArchiveFilter::class)
      */
+    #[ApiFilter(BaseFilter\DateFilter::class)]
+    #[ApiFilter(BaseFilter\OrderFilter::class)]
+    #[ApiFilter(RoadizFilter\ArchiveFilter::class)]
     protected ?\DateTime $publishedAt = null;
 
     /**
@@ -465,8 +466,8 @@ class NodesSources extends AbstractEntity implements Loggable
      * @SymfonySerializer\Groups({"nodes_sources"})
      * @Gedmo\Versioned
      * @Serializer\Exclude(if="!object.isReachable()")
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
     protected string $metaTitle = '';
 
     /**
@@ -521,9 +522,9 @@ class NodesSources extends AbstractEntity implements Loggable
      * @Serializer\Groups({"nodes_sources"})
      * @SymfonySerializer\Groups({"nodes_sources"})
      * @Serializer\Exclude(if="!object.isReachable()")
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
      * @Gedmo\Versioned
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
     protected string $metaDescription = '';
 
     /**

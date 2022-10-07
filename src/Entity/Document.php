@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -49,21 +50,21 @@ use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
  *     @ORM\Index(columns={"imageHeight"}, name="document_image_height"),
  *     @ORM\Index(columns={"mime_type"})
  * })
- * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
- * @ApiFilter(BaseFilter\OrderFilter::class, properties={
- *     "createdAt",
- *     "updatedAt",
- *     "copyrightValidSince",
- *     "copyrightValidUntil",
- *     "filesize"
- * })
- * @ApiFilter(BaseFilter\DateFilter::class, properties={
- *     "createdAt",
- *     "updatedAt",
- *     "copyrightValidSince": "include_null_before",
- *     "copyrightValidUntil": "include_null_after"
- * })
  */
+#[ApiFilter(PropertyFilter::class)]
+#[ApiFilter(BaseFilter\OrderFilter::class, properties: [
+    "createdAt",
+    "updatedAt",
+    "copyrightValidSince",
+    "copyrightValidUntil",
+    "filesize"
+])]
+#[ApiFilter(BaseFilter\DateFilter::class, properties: [
+    "createdAt",
+    "updatedAt",
+    "copyrightValidSince" => "include_null_before",
+    "copyrightValidUntil" => "include_null_after"
+])]
 class Document extends AbstractDocument implements AdvancedDocumentInterface, HasThumbnailInterface, SizeableInterface, TimeableInterface, DisplayableInterface, FileHashInterface
 {
     /**
@@ -92,7 +93,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @ORM\Column(type="boolean", name="raw", nullable=false, options={"default" = false})
      * @Serializer\Groups({"document"})
-     * @SymfonySerializer\Groups({"document"})
+     * @SymfonySerializer\Ignore
      * @Serializer\Type("bool")
      */
     protected bool $raw = false;
@@ -122,9 +123,9 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("string")
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="exact")
-     * @ApiFilter(RoadizFilter\NotFilter::class)
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "exact")]
+    #[ApiFilter(RoadizFilter\NotFilter::class)]
     protected ?string $embedPlatform = null;
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments", mappedBy="document")
@@ -157,42 +158,44 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Folder", mappedBy="documents")
      * @ORM\JoinTable(name="documents_folders")
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "folders.id": "exact",
-     *     "folders.folderName": "exact",
-     * })
-     * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
-     *     "folders.visible",
-     *     "folders.locked"
-     * })
-     * @ApiFilter(RoadizFilter\NotFilter::class, properties={
-     *     "folders.id",
-     *     "folders.folderName"
-     * })
-     * Use IntersectionFilter after SearchFilter!
-     * @ApiFilter(RoadizFilter\IntersectionFilter::class, properties={
-     *     "folders.id",
-     *     "folders.folderName"
-     * })
      * @var Collection<Folder>
+     * @SymfonySerializer\Groups({"document_folders"})
+     * @SymfonySerializer\MaxDepth(1)
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "folders.id" => "exact",
+        "folders.folderName" => "exact",
+    ])]
+    #[ApiFilter(BaseFilter\BooleanFilter::class, properties: [
+        "folders.visible",
+        "folders.locked"
+    ])]
+    #[ApiFilter(RoadizFilter\NotFilter::class, properties: [
+        "folders.id",
+        "folders.folderName"
+    ])]
+    # Use IntersectionFilter after SearchFilter!
+    #[ApiFilter(RoadizFilter\IntersectionFilter::class, properties: [
+        "folders.id",
+        "folders.folderName"
+    ])]
     protected Collection $folders;
     /**
      * @ORM\OneToMany(targetEntity="DocumentTranslation", mappedBy="document", orphanRemoval=true, fetch="EAGER")
      * @var Collection<DocumentTranslation>
      * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Ignore()
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\DocumentTranslation>")
      */
     protected Collection $documentTranslations;
     /**
      * @ORM\Column(type="string", name="filename", nullable=true)
      * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Ignore()
      * @Serializer\Type("string")
      * @var string|null
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
     private ?string $filename = null;
     /**
      * @ORM\Column(name="mime_type", type="string", nullable=true)
@@ -200,9 +203,9 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("string")
      * @var string|null
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="exact")
-     * @ApiFilter(RoadizFilter\NotFilter::class)
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "exact")]
+    #[ApiFilter(RoadizFilter\NotFilter::class)]
     private ?string $mimeType = null;
     /**
      * @ORM\OneToMany(targetEntity="Document", mappedBy="rawDocument", fetch="EXTRA_LAZY")
@@ -214,7 +217,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @ORM\Column(type="string")
      * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Ignore()
      * @Serializer\Type("string")
      * @var string
      */
@@ -222,7 +225,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
      * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Ignore()
      * @Serializer\Type("bool")
      * @var bool
      */
@@ -263,7 +266,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @var int|null The filesize in bytes.
      * @ORM\Column(type="integer", name="filesize", nullable=true, unique=false)
      * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
+     * @SymfonySerializer\Groups({"document_filesize"})
      * @Serializer\Type("int")
      */
     private ?int $filesize = null;
@@ -272,9 +275,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @var Collection<Document>
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Document", mappedBy="original", fetch="EXTRA_LAZY")
      * @Serializer\Groups({"document_thumbnails"})
-     * @SymfonySerializer\Groups({"document_thumbnails"})
-     * @Serializer\MaxDepth(2)
-     * @SymfonySerializer\MaxDepth(2)
+     * @SymfonySerializer\Ignore()
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Document>")
      */
     private Collection $thumbnails;
@@ -285,8 +286,8 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @ORM\JoinColumn(name="original", nullable=true, onDelete="SET NULL")
      * @Serializer\Groups({"document_original"})
      * @SymfonySerializer\Groups({"document_original"})
-     * @Serializer\MaxDepth(2)
-     * @SymfonySerializer\MaxDepth(2)
+     * @Serializer\MaxDepth(1)
+     * @SymfonySerializer\MaxDepth(1)
      * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Document")
      */
     private ?DocumentInterface $original = null;
@@ -500,6 +501,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @param TranslationInterface $translation
      * @return Collection<DocumentTranslation>
+     * @SymfonySerializer\Ignore
      */
     public function getDocumentTranslationsByTranslation(TranslationInterface $translation)
     {
@@ -593,6 +595,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * Gets the downscaledDocument.
      *
      * @return DocumentInterface|null
+     * @SymfonySerializer\Ignore
      */
     public function getDownscaledDocument(): ?DocumentInterface
     {
@@ -641,6 +644,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
 
     /**
      * @return float|null
+     * @SymfonySerializer\Ignore
      */
     public function getImageRatio(): ?float
     {
@@ -796,6 +800,21 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     public function hasThumbnails(): bool
     {
         return $this->getThumbnails()->count() > 0;
+    }
+
+    /**
+     * @return DocumentInterface|null
+     * @SymfonySerializer\Groups({"document_thumbnails"})
+     * @SymfonySerializer\SerializedName("thumbnail")
+     * @Serializer\MaxDepth(1)
+     * @SymfonySerializer\MaxDepth(1)
+     */
+    public function getFirstThumbnail(): ?DocumentInterface
+    {
+        if ($this->isEmbed() || !$this->isImage()) {
+            return $this->getThumbnails()->first() ?: null;
+        }
+        return null;
     }
 
     /**
