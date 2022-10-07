@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -24,8 +24,8 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
  *     @ORM\Index(columns={"attribute_id", "node_id"})
  * })
  * @ORM\HasLifecycleCallbacks
- * @ApiFilter(PropertyFilter::class)
  */
+#[ApiFilter(PropertyFilter::class)]
 class AttributeValue extends AbstractPositioned implements AttributeValueInterface
 {
     use AttributeValueTrait;
@@ -34,18 +34,18 @@ class AttributeValue extends AbstractPositioned implements AttributeValueInterfa
      * @var Node|null
      * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Node", inversedBy="attributeValues")
      * @ORM\JoinColumn(name="node_id", onDelete="CASCADE")
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "node": "exact",
-     *     "node.id": "exact",
-     *     "node.nodeName": "exact"
-     * })
-     * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
-     *     "node.visible"
-     * })
      * @Serializer\Groups({"attribute_node"})
      * @SymfonySerializer\Groups({"attribute_node"})
      * @SymfonySerializer\MaxDepth(1)
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "node" => "exact",
+        "node.id" => "exact",
+        "node.nodeName" => "exact"
+    ])]
+    #[ApiFilter(BaseFilter\BooleanFilter::class, properties: [
+        "node.visible"
+    ])]
     protected ?Node $node = null;
 
     public function __construct()

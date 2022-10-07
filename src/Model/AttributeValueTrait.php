@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Model;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
@@ -19,18 +19,18 @@ trait AttributeValueTrait
      * @ORM\JoinColumn(name="attribute_id", onDelete="CASCADE", referencedColumnName="id")
      * @Serializer\Groups({"attribute", "node", "nodes_sources"})
      * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Attribute")
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "attribute.id": "exact",
-     *     "attribute.code": "exact",
-     *     "attribute.type": "exact",
-     *     "attribute.group": "exact",
-     *     "attribute.group.canonicalName": "exact",
-     * })
-     * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
-     *     "attribute.visible",
-     *     "attribute.searchable"
-     * })
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "attribute.id" => "exact",
+        "attribute.code" => "exact",
+        "attribute.type" => "exact",
+        "attribute.group" => "exact",
+        "attribute.group.canonicalName" => "exact",
+    ])]
+    #[ApiFilter(BaseFilter\BooleanFilter::class, properties: [
+        "attribute.visible",
+        "attribute.searchable"
+    ])]
     protected ?AttributeInterface $attribute = null;
 
     /**

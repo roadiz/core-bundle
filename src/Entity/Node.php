@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -53,9 +53,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  * })
  * @ORM\HasLifecycleCallbacks
  * @Gedmo\Loggable(logEntryClass="RZ\Roadiz\CoreBundle\Entity\UserLogEntry")
- * @ApiFilter(PropertyFilter::class)
  * @UniqueEntity(fields={"nodeName"})
  */
+#[ApiFilter(PropertyFilter::class)]
 class Node extends AbstractDateTimedPositioned implements LeafInterface, AttributableInterface, Loggable
 {
     use LeafTrait;

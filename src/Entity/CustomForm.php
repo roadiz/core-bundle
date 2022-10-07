@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -94,9 +94,9 @@ class CustomForm extends AbstractDateTimed
      * @var DateTime|null
      * @Serializer\Groups({"custom_form", "nodes_sources"})
      * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
-     * @ApiFilter(RoadizFilter\ArchiveFilter::class)
      * @SymfonySerializer\Ignore()
      */
+    #[ApiFilter(RoadizFilter\ArchiveFilter::class)]
     private ?DateTime $closeDate = null;
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomFormField", mappedBy="customForm", cascade={"ALL"})

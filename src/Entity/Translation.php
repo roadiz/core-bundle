@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -31,26 +32,26 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     @ORM\Index(columns={"available", "locale"}),
  *     @ORM\Index(columns={"available", "override_locale"})
  * })
- * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
- * @ApiFilter(BaseFilter\OrderFilter::class, properties={
- *     "createdAt",
- *     "updatedAt",
- *     "locale",
- *     "available",
- *     "defaultTranslation"
- * })
- * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
- *     "available",
- *     "defaultTranslation"
- * })
- * @ApiFilter(BaseFilter\SearchFilter::class, properties={
- *     "locale": "exact",
- *     "name": "exact"
- * })
  * @UniqueEntity(fields={"name"})
  * @UniqueEntity(fields={"locale"})
  * @UniqueEntity(fields={"overrideLocale"})
  */
+#[ApiFilter(PropertyFilter::class)]
+#[ApiFilter(BaseFilter\OrderFilter::class, properties: [
+    "createdAt",
+    "updatedAt",
+    "locale",
+    "available",
+    "defaultTranslation"
+])]
+#[ApiFilter(BaseFilter\BooleanFilter::class, properties: [
+    "available",
+    "defaultTranslation"
+])]
+#[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+    "locale" => "exact",
+    "name" => "exact"
+])]
 class Translation extends AbstractDateTimed implements TranslationInterface
 {
     /**

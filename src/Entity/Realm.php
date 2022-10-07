@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -29,14 +30,14 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     @ORM\Index(columns={"type"}, name="realms_type"),
  *     @ORM\Index(columns={"behaviour"}, name="realms_behaviour"),
  * })
- * @ApiFilter(ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
- * @ApiFilter(BaseFilter\SearchFilter::class, properties={
- *     "type": "exact",
- *     "behaviour": "exact",
- *     "name": "exact"
- * })
  * @UniqueEntity(fields={"name"})
  */
+#[ApiFilter(PropertyFilter::class)]
+#[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+    "type" => "exact",
+    "behaviour" => "exact",
+    "name" => "exact"
+])]
 class Realm extends AbstractEntity implements RealmInterface
 {
     /**

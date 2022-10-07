@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -36,14 +37,14 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     @ORM\Index(columns={"parent_tag_id", "visible"}, name="tag_parent_visible"),
  *     @ORM\Index(columns={"parent_tag_id", "visible", "position"}, name="tag_parent_visible_position")
  * })
- * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
- * @ApiFilter(BaseFilter\OrderFilter::class, properties={
- *     "position",
- *     "createdAt",
- *     "updatedAt"
- * })
  * @UniqueEntity(fields={"tagName"})
  */
+#[ApiFilter(PropertyFilter::class)]
+#[ApiFilter(BaseFilter\OrderFilter::class, properties: [
+    "position",
+    "createdAt",
+    "updatedAt"
+])]
 class Tag extends AbstractDateTimedPositioned implements LeafInterface
 {
     use LeafTrait;
@@ -63,11 +64,11 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @Serializer\Exclude
      * @SymfonySerializer\MaxDepth(2)
      * @SymfonySerializer\Groups({"tag_parent"})
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "parent.id": "exact",
-     *     "parent.tagName": "exact"
-     * })
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "parent.id" => "exact",
+        "parent.tagName" => "exact"
+    ])]
     protected ?LeafInterface $parent = null;
     /**
      * @ORM\OneToMany(targetEntity="Tag", mappedBy="parent", orphanRemoval=true, cascade={"persist", "merge"})
@@ -101,11 +102,11 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @SymfonySerializer\Ignore
      * @Serializer\Type("string")
      * @Serializer\Accessor(getter="getTagName", setter="setTagName")
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
      * @Assert\NotNull()
      * @Assert\NotBlank()
      * @Assert\Length(max=250)
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
     private string $tagName = '';
     /**
      * @var string
@@ -118,8 +119,8 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @Serializer\Groups({"tag", "tag_base", "node", "nodes_sources"})
      * @SymfonySerializer\Groups({"tag", "tag_base", "node", "nodes_sources"})
      * @Serializer\Type("bool")
-     * @ApiFilter(BaseFilter\BooleanFilter::class)
      */
+    #[ApiFilter(BaseFilter\BooleanFilter::class)]
     private bool $visible = true;
 
     /**
@@ -142,8 +143,8 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @Serializer\Groups({"tag"})
      * @SymfonySerializer\Ignore
      * @Serializer\Type("bool")
-     * @ApiFilter(BaseFilter\BooleanFilter::class)
      */
+    #[ApiFilter(BaseFilter\BooleanFilter::class)]
     private bool $locked = false;
     /**
      * @ORM\ManyToMany(targetEntity="Node", mappedBy="tags")
@@ -151,18 +152,18 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @var Collection<Node>
      * @Serializer\Exclude
      * @SymfonySerializer\Ignore
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "nodes.id": "exact",
-     *     "nodes.nodeName": "exact",
-     *     "nodes.parent": "exact",
-     *     "nodes.parent.nodeName": "exact",
-     *     "nodes.tags": "exact",
-     *     "nodes.tags.tagName": "exact",
-     *     "nodes.nodeType": "exact",
-     *     "nodes.nodeType.name": "exact",
-     *     "nodes.parent.nodeType.name": "exact"
-     * })
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "nodes.id" => "exact",
+        "nodes.nodeName" => "exact",
+        "nodes.parent" => "exact",
+        "nodes.parent.nodeName" => "exact",
+        "nodes.tags" => "exact",
+        "nodes.tags.tagName" => "exact",
+        "nodes.nodeType" => "exact",
+        "nodes.nodeType.name" => "exact",
+        "nodes.parent.nodeType.name" => "exact"
+    ])]
     private Collection $nodes;
 
     /**

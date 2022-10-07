@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -38,14 +39,14 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     @ORM\Index(columns={"parent_id", "visible"}, name="folder_parent_visible"),
  *     @ORM\Index(columns={"parent_id", "visible", "position"}, name="folder_parent_visible_position")
  * })
- * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
- * @ApiFilter(BaseFilter\OrderFilter::class, properties={
- *     "position",
- *     "createdAt",
- *     "updatedAt"
- * })
  * @UniqueEntity(fields={"folderName"})
  */
+#[ApiFilter(PropertyFilter::class)]
+#[ApiFilter(BaseFilter\OrderFilter::class, properties: [
+    "position",
+    "createdAt",
+    "updatedAt"
+])]
 class Folder extends AbstractDateTimedPositioned implements FolderInterface
 {
     use LeafTrait;
@@ -57,11 +58,11 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @Serializer\Groups({"folder_parent"})
      * @SymfonySerializer\Groups({"folder_parent"})
      * @SymfonySerializer\MaxDepth(1)
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "parent.id": "exact",
-     *     "parent.folderName": "exact"
-     * })
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "parent.id" => "exact",
+        "parent.folderName" => "exact"
+    ])]
     protected ?LeafInterface $parent = null;
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Folder", mappedBy="parent", orphanRemoval=true)
@@ -78,15 +79,15 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @var Collection<Document>
      * @Serializer\Groups({"folder"})
      * @SymfonySerializer\Ignore
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "documents.id": "exact",
-     *     "documents.mimeType": "exact",
-     *     "documents.filename": "exact",
-     *     "documents.embedPlatform": "exact",
-     *     "documents.folders": "exact",
-     *     "documents.folders.folderName": "exact",
-     * })
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "documents.id" => "exact",
+        "documents.mimeType" => "exact",
+        "documents.filename" => "exact",
+        "documents.embedPlatform" => "exact",
+        "documents.folders" => "exact",
+        "documents.folders.folderName" => "exact",
+    ])]
     protected Collection $documents;
     /**
      * @ORM\Column(name="folder_name", type="string", unique=true, nullable=false)
@@ -94,11 +95,11 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @Serializer\Groups({"folder", "document_folders"})
      * @SymfonySerializer\Groups({"folder", "document_folders"})
      * @SymfonySerializer\SerializedName("slug")
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
      * @Assert\NotBlank()
      * @Assert\NotNull()
      * @Assert\Length(max=250)
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
     private string $folderName = '';
     /**
      * @var string
@@ -111,16 +112,16 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @var bool
      * @Serializer\Groups({"folder", "document_folders"})
      * @SymfonySerializer\Groups({"folder", "document_folders"})
-     * @ApiFilter(BaseFilter\BooleanFilter::class)
      */
+    #[ApiFilter(BaseFilter\BooleanFilter::class)]
     private bool $visible = true;
     /**
      * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
      * @Serializer\Groups({"folder"})
      * @SymfonySerializer\Groups({"folder"})
      * @Serializer\Type("bool")
-     * @ApiFilter(BaseFilter\BooleanFilter::class)
      */
+    #[ApiFilter(BaseFilter\BooleanFilter::class)]
     private bool $locked = false;
     /**
      * @var string

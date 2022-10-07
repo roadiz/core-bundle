@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -49,21 +50,21 @@ use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
  *     @ORM\Index(columns={"imageHeight"}, name="document_image_height"),
  *     @ORM\Index(columns={"mime_type"})
  * })
- * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
- * @ApiFilter(BaseFilter\OrderFilter::class, properties={
- *     "createdAt",
- *     "updatedAt",
- *     "copyrightValidSince",
- *     "copyrightValidUntil",
- *     "filesize"
- * })
- * @ApiFilter(BaseFilter\DateFilter::class, properties={
- *     "createdAt",
- *     "updatedAt",
- *     "copyrightValidSince": "include_null_before",
- *     "copyrightValidUntil": "include_null_after"
- * })
  */
+#[ApiFilter(PropertyFilter::class)]
+#[ApiFilter(BaseFilter\OrderFilter::class, properties: [
+    "createdAt",
+    "updatedAt",
+    "copyrightValidSince",
+    "copyrightValidUntil",
+    "filesize"
+])]
+#[ApiFilter(BaseFilter\DateFilter::class, properties: [
+    "createdAt",
+    "updatedAt",
+    "copyrightValidSince" => "include_null_before",
+    "copyrightValidUntil" => "include_null_after"
+])]
 class Document extends AbstractDocument implements AdvancedDocumentInterface, HasThumbnailInterface, SizeableInterface, TimeableInterface, DisplayableInterface, FileHashInterface
 {
     /**
@@ -122,9 +123,9 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("string")
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="exact")
-     * @ApiFilter(RoadizFilter\NotFilter::class)
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "exact")]
+    #[ApiFilter(RoadizFilter\NotFilter::class)]
     protected ?string $embedPlatform = null;
     /**
      * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments", mappedBy="document")
@@ -157,27 +158,27 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Folder", mappedBy="documents")
      * @ORM\JoinTable(name="documents_folders")
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "folders.id": "exact",
-     *     "folders.folderName": "exact",
-     * })
-     * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
-     *     "folders.visible",
-     *     "folders.locked"
-     * })
-     * @ApiFilter(RoadizFilter\NotFilter::class, properties={
-     *     "folders.id",
-     *     "folders.folderName"
-     * })
-     * Use IntersectionFilter after SearchFilter!
-     * @ApiFilter(RoadizFilter\IntersectionFilter::class, properties={
-     *     "folders.id",
-     *     "folders.folderName"
-     * })
      * @var Collection<Folder>
      * @SymfonySerializer\Groups({"document_folders"})
      * @SymfonySerializer\MaxDepth(1)
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "folders.id" => "exact",
+        "folders.folderName" => "exact",
+    ])]
+    #[ApiFilter(BaseFilter\BooleanFilter::class, properties: [
+        "folders.visible",
+        "folders.locked"
+    ])]
+    #[ApiFilter(RoadizFilter\NotFilter::class, properties: [
+        "folders.id",
+        "folders.folderName"
+    ])]
+    # Use IntersectionFilter after SearchFilter!
+    #[ApiFilter(RoadizFilter\IntersectionFilter::class, properties: [
+        "folders.id",
+        "folders.folderName"
+    ])]
     protected Collection $folders;
     /**
      * @ORM\OneToMany(targetEntity="DocumentTranslation", mappedBy="document", orphanRemoval=true, fetch="EAGER")
@@ -193,8 +194,8 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @SymfonySerializer\Ignore()
      * @Serializer\Type("string")
      * @var string|null
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
     private ?string $filename = null;
     /**
      * @ORM\Column(name="mime_type", type="string", nullable=true)
@@ -202,9 +203,9 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
      * @Serializer\Type("string")
      * @var string|null
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="exact")
-     * @ApiFilter(RoadizFilter\NotFilter::class)
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "exact")]
+    #[ApiFilter(RoadizFilter\NotFilter::class)]
     private ?string $mimeType = null;
     /**
      * @ORM\OneToMany(targetEntity="Document", mappedBy="rawDocument", fetch="EXTRA_LAZY")
