@@ -46,7 +46,7 @@
         "roadiz/entity-generator": "~2.0.3",
         "roadiz/jwt": "~2.0.0",
         "roadiz/markdown": "~2.0.0",
-        "roadiz/models": "~2.0.0",
+        "roadiz/models": "~2.1.0 || dev-develop",
         "roadiz/nodetype-contracts": "~1.1.2",
         "roadiz/random": "~2.0.0",
         "rollerworks/password-common-list": "^0.2.0",
