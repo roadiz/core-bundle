@@ -18,6 +18,7 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\Validator\Constraints as Assert;
+use RZ\Roadiz\CoreBundle\Form\Constraint\ValidFacebookName;
 
 /**
  * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\UserRepository")
@@ -64,6 +65,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @ORM\Column(type="string", name="facebook_name", unique=false, nullable=true)
      * @Serializer\Groups({"user_social"})
      * @SymfonySerializer\Groups({"user_social"})
+     * @ValidFacebookName
      */
     protected ?string $facebookName = null;
     /**
@@ -71,6 +73,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @ORM\Column(type="text", name="picture_url", nullable=true)
      * @Serializer\Groups({"user"})
      * @SymfonySerializer\Groups({"user"})
+     * @Assert\Length(max=250)
      */
     protected ?string $pictureUrl = null;
     /**
