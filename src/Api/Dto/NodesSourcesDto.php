@@ -16,44 +16,44 @@ abstract class NodesSourcesDto
 {
     /**
      * @var string
-     * @Groups({"nodes_sources", "nodes_sources_base"})
      */
+    #[Groups(['nodes_sources', 'nodes_sources_base'])]
     public ?string $title = '';
     /**
      * @var string
-     * @Groups({"nodes_sources", "nodes_sources_base"})
      */
+    #[Groups(['nodes_sources', 'nodes_sources_base'])]
     public string $metaTitle = '';
     /**
      * @var string
-     * @Groups({"nodes_sources", "nodes_sources_base"})
      */
+    #[Groups(['nodes_sources', 'nodes_sources_base'])]
     public string $metaDescription = '';
     /**
      * @var string
-     * @Groups({"nodes_sources", "nodes_sources_base"})
      */
+    #[Groups(['nodes_sources', 'nodes_sources_base'])]
     public string $slug = '';
     /**
      * @var \DateTime|null
-     * @Groups({"nodes_sources", "nodes_sources_base"})
      */
+    #[Groups(['nodes_sources', 'nodes_sources_base'])]
     public ?\DateTime $publishedAt = null;
     /**
      * @var Node|null
-     * @Groups({"nodes_sources", "nodes_sources_base"})
      */
+    #[Groups(['nodes_sources', 'nodes_sources_base'])]
     public ?Node $node = null;
     /**
      * @var TranslationInterface|null
-     * @Groups({"nodes_sources", "nodes_sources_base", "translation_base"})
      */
+    #[Groups(['nodes_sources', 'nodes_sources_base', 'translation_base'])]
     public ?TranslationInterface $translation = null;
     /**
      * @var string|null
-     * @Serializer\MaxDepth(4)
-     * @Groups({"nodes_sources", "nodes_sources_base", "urls"})
      * @deprecated NodesSources url is exposed via RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer
      */
+    #[Serializer\MaxDepth(4)]
+    #[Groups(['nodes_sources', 'nodes_sources_base', 'urls'])]
     public ?string $url = null;
 }

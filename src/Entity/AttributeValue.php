@@ -15,37 +15,38 @@ use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueTrait;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueTranslationInterface;
+use RZ\Roadiz\CoreBundle\Repository\AttributeValueRepository;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
-/**
- * @package RZ\Roadiz\CoreBundle\Entity
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\AttributeValueRepository")
- * @ORM\Table(name="attribute_values", indexes={
- *     @ORM\Index(columns={"attribute_id", "node_id"})
- * })
- * @ORM\HasLifecycleCallbacks
- */
-#[ApiFilter(PropertyFilter::class)]
+#[
+    ORM\Entity(repositoryClass: AttributeValueRepository::class),
+    ORM\Table(name: "attribute_values"),
+    ORM\Index(columns: ["attribute_id", "node_id"]),
+    ORM\HasLifecycleCallbacks,
+    ApiFilter(PropertyFilter::class)
+]
 class AttributeValue extends AbstractPositioned implements AttributeValueInterface
 {
     use AttributeValueTrait;
 
     /**
      * @var Node|null
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Node", inversedBy="attributeValues")
-     * @ORM\JoinColumn(name="node_id", onDelete="CASCADE")
-     * @Serializer\Groups({"attribute_node"})
-     * @SymfonySerializer\Groups({"attribute_node"})
-     * @SymfonySerializer\MaxDepth(1)
      */
-    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
-        "node" => "exact",
-        "node.id" => "exact",
-        "node.nodeName" => "exact"
-    ])]
-    #[ApiFilter(BaseFilter\BooleanFilter::class, properties: [
-        "node.visible"
-    ])]
+    #[
+        ORM\ManyToOne(targetEntity: Node::class, inversedBy: "attributeValues"),
+        ORM\JoinColumn(name: "node_id", onDelete: "CASCADE"),
+        Serializer\Groups(["attribute_node"]),
+        SymfonySerializer\Groups(["attribute_node"]),
+        SymfonySerializer\MaxDepth(1),
+        ApiFilter(BaseFilter\SearchFilter::class, properties: [
+            "node" => "exact",
+            "node.id" => "exact",
+            "node.nodeName" => "exact"
+        ]),
+        ApiFilter(BaseFilter\BooleanFilter::class, properties: [
+            "node.visible"
+        ])
+    ]
     protected ?Node $node = null;
 
     public function __construct()

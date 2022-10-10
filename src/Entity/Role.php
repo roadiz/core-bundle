@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
+use RZ\Roadiz\CoreBundle\Repository\RoleRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\String\UnicodeString;
@@ -16,22 +17,23 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Roles are persisted version of string Symfony's roles.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\RoleRepository")
- * @ORM\Table(name="roles")
- * @UniqueEntity(fields={"name"})
  */
+#[
+    ORM\Entity(repositoryClass: RoleRepository::class),
+    ORM\Table(name: "roles"),
+    UniqueEntity(fields: ["name"])
+]
 class Role implements PersistableInterface
 {
     public const ROLE_DEFAULT = 'ROLE_USER';
     public const ROLE_SUPERADMIN = 'ROLE_SUPERADMIN';
     public const ROLE_BACKEND_USER = 'ROLE_BACKEND_USER';
 
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue
-     */
+    #[
+        ORM\Id,
+        ORM\Column(type: "integer"),
+        ORM\GeneratedValue(strategy: "AUTO")
+    ]
     protected $id;
 
     /**
@@ -53,16 +55,16 @@ class Role implements PersistableInterface
     }
 
     /**
-     * @ORM\Column(type="string", unique=true)
      * @Serializer\Groups({"user", "role", "group"})
-     * @SymfonySerializer\Groups({"user", "role", "group"})
      * @Serializer\Type("string")
-     * @Assert\NotNull()
-     * @Assert\NotBlank()
-     * @Assert\Regex(pattern="#^ROLE_([A-Z0-9\_]+)$#", message="role.name.must_comply_with_standard")
-     * @Assert\Length(max=250)
      * @var string
      */
+    #[ORM\Column(type: 'string', unique: true)]
+    #[SymfonySerializer\Groups(['user', 'role', 'group'])]
+    #[Assert\NotNull]
+    #[Assert\NotBlank]
+    #[Assert\Regex(pattern: '#^ROLE_([A-Z0-9\_]+)$#', message: 'role.name.must_comply_with_standard')]
+    #[Assert\Length(max: 250)]
     private string $name = '';
 
     /**
@@ -123,17 +125,13 @@ class Role implements PersistableInterface
     }
 
     /**
-     * @ORM\ManyToMany(
-     *     targetEntity="RZ\Roadiz\CoreBundle\Entity\Group",
-     *     mappedBy="roleEntities",
-     *     cascade={"persist", "merge"}
-     * )
      * @Serializer\Groups({"role"})
-     * @SymfonySerializer\Groups({"role"})
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Group>")
      * @Serializer\Accessor(getter="getGroups", setter="setGroups")
      * @var Collection<Group>
      */
+    #[ORM\ManyToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Group', mappedBy: 'roleEntities', cascade: ['persist', 'merge'])]
+    #[SymfonySerializer\Groups(['role'])]
     private Collection $groups;
 
     /**
@@ -192,8 +190,8 @@ class Role implements PersistableInterface
      *
      * @return string
      * @Serializer\Groups({"role"})
-     * @SymfonySerializer\Groups({"role"})
      */
+    #[SymfonySerializer\Groups(['role'])]
     public function getClassName(): string
     {
         return str_replace('_', '-', strtolower($this->getRole()));

@@ -19,43 +19,43 @@ use RuntimeException;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
+use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 /**
  * NodesSources store Node content according to a translation and a NodeType.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository")
- * @ORM\Table(name="nodes_sources", uniqueConstraints={
- *     @ORM\UniqueConstraint(columns={"node_id", "translation_id"})
- * }, indexes={
- *     @ORM\Index(columns={"discr"}),
- *     @ORM\Index(columns={"title"}),
- *     @ORM\Index(columns={"published_at"}),
- *     @ORM\Index(columns={"node_id", "translation_id", "published_at"}, name="ns_node_translation_published"),
- *     @ORM\Index(columns={"node_id", "discr", "translation_id"}, name="ns_node_discr_translation"),
- *     @ORM\Index(columns={"node_id", "discr", "translation_id", "published_at"}, name="ns_node_discr_translation_published"),
- *     @ORM\Index(columns={"translation_id", "published_at"}, name="ns_translation_published"),
- *     @ORM\Index(columns={"discr", "translation_id"}, name="ns_discr_translation"),
- *     @ORM\Index(columns={"discr", "translation_id", "published_at"}, name="ns_discr_translation_published"),
- *     @ORM\Index(columns={"title", "published_at"}, name="ns_title_published"),
- *     @ORM\Index(columns={"title", "translation_id", "published_at"}, name="ns_title_translation_published")
- * })
- * @ORM\InheritanceType("JOINED")
- * @ORM\DiscriminatorColumn(name="discr", type="string")
- * @ORM\HasLifecycleCallbacks
- * @Gedmo\Loggable(logEntryClass="RZ\Roadiz\CoreBundle\Entity\UserLogEntry")
- * @UniqueEntity(fields={"node", "translation"})
  */
-#[ApiFilter(PropertyFilter::class)]
-#[ApiFilter(RoadizFilter\LocaleFilter::class)]
+#[
+    ORM\Entity(repositoryClass: NodesSourcesRepository::class),
+    ORM\Table(name: "nodes_sources"),
+    ORM\Index(columns: ["discr"]),
+    ORM\Index(columns: ["title"]),
+    ORM\Index(columns: ["published_at"]),
+    ORM\Index(columns: ["node_id", "translation_id", "published_at"], name: "ns_node_translation_published"),
+    ORM\Index(columns: ["node_id", "discr", "translation_id"], name: "ns_node_discr_translation"),
+    ORM\Index(columns: ["node_id", "discr", "translation_id", "published_at"], name: "ns_node_discr_translation_published"),
+    ORM\Index(columns: ["translation_id", "published_at"], name: "ns_translation_published"),
+    ORM\Index(columns: ["discr", "translation_id"], name: "ns_discr_translation"),
+    ORM\Index(columns: ["discr", "translation_id", "published_at"], name: "ns_discr_translation_published"),
+    ORM\Index(columns: ["title", "published_at"], name: "ns_title_published"),
+    ORM\Index(columns: ["title", "translation_id", "published_at"], name: "ns_title_translation_published"),
+    ORM\UniqueConstraint(columns: ["node_id", "translation_id"]),
+    ORM\InheritanceType("JOINED"),
+    ORM\DiscriminatorColumn(name: "discr", type: "string"),
+    ORM\HasLifecycleCallbacks,
+    Gedmo\Loggable(logEntryClass: UserLogEntry::class),
+    UniqueEntity(fields: ["node", "translation"]),
+    ApiFilter(PropertyFilter::class),
+    ApiFilter(RoadizFilter\LocaleFilter::class)
+]
 class NodesSources extends AbstractEntity implements Loggable
 {
     /**
      * @var ObjectManager|null
      * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[SymfonySerializer\Ignore]
     protected ?ObjectManager $objectManager = null;
 
     /**
@@ -69,10 +69,7 @@ class NodesSources extends AbstractEntity implements Loggable
 
     /**
      * @var Node|null
-     * @ORM\ManyToOne(targetEntity="Node", inversedBy="nodeSources", fetch="EAGER", cascade={"persist"})
-     * @ORM\JoinColumn(name="node_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
-     * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
      */
     #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
         "node.id" => "exact",
@@ -109,6 +106,9 @@ class NodesSources extends AbstractEntity implements Loggable
         "node.tags",
         "node.tags.tagName"
     ])]
+    #[ORM\ManyToOne(targetEntity: 'Node', inversedBy: 'nodeSources', fetch: 'EAGER', cascade: ['persist'])]
+    #[ORM\JoinColumn(name: 'node_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'log_sources'])]
     private ?Node $node = null;
 
     /**
@@ -134,9 +134,7 @@ class NodesSources extends AbstractEntity implements Loggable
         return $this;
     }
 
-    /**
-     * @ORM\PreUpdate
-     */
+    #[ORM\PreUpdate]
     public function preUpdate()
     {
         if (null !== $this->getNode()) {
@@ -146,16 +144,16 @@ class NodesSources extends AbstractEntity implements Loggable
 
     /**
      * @var TranslationInterface|null
-     * @ORM\ManyToOne(targetEntity="Translation", inversedBy="nodeSources")
-     * @ORM\JoinColumn(name="translation_id", referencedColumnName="id", onDelete="CASCADE")
      * @Serializer\Groups({"nodes_sources", "log_sources"})
      * @Serializer\Exclude(if="!object.isReachable()")
-     * @SymfonySerializer\Groups({"translation_base"})
      */
     #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
         "translation.id" => "exact",
         "translation.locale" => "exact",
     ])]
+    #[ORM\ManyToOne(targetEntity: 'Translation', inversedBy: 'nodeSources')]
+    #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[SymfonySerializer\Groups(['translation_base'])]
     private ?TranslationInterface $translation = null;
 
     /**
@@ -180,13 +178,13 @@ class NodesSources extends AbstractEntity implements Loggable
     }
 
     /**
-     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\UrlAlias", mappedBy="nodeSource", cascade={"all"})
      * @var Collection<UrlAlias>
      * @Serializer\Groups({"nodes_sources"})
-     * @SymfonySerializer\Groups({"nodes_sources"})
      * @Serializer\Exclude(if="!object.isReachable()")
-     * @SymfonySerializer\Ignore
      */
+    #[ORM\OneToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\UrlAlias', mappedBy: 'nodeSource', cascade: ['all'])]
+    #[SymfonySerializer\Groups(['nodes_sources'])]
+    #[SymfonySerializer\Ignore]
     private Collection $urlAliases;
 
     /**
@@ -212,17 +210,11 @@ class NodesSources extends AbstractEntity implements Loggable
     }
 
     /**
-     * @ORM\OneToMany(
-     *     targetEntity="RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments",
-     *     mappedBy="nodeSource",
-     *     orphanRemoval=true,
-     *     cascade={"persist"},
-     *     fetch="LAZY"
-     * )
      * @var Collection<NodesSourcesDocuments>
      * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[ORM\OneToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments', mappedBy: 'nodeSource', orphanRemoval: true, cascade: ['persist'], fetch: 'LAZY')]
+    #[SymfonySerializer\Ignore]
     private Collection $documentsByFields;
 
     /**
@@ -272,8 +264,8 @@ class NodesSources extends AbstractEntity implements Loggable
     /**
      * @param NodesSourcesDocuments $nodesSourcesDocuments
      * @return bool
-     * @SymfonySerializer\Ignore
      */
+    #[SymfonySerializer\Ignore]
     public function hasNodesSourcesDocuments(NodesSourcesDocuments $nodesSourcesDocuments): bool
     {
         return $this->getDocumentsByFields()->exists(
@@ -347,20 +339,20 @@ class NodesSources extends AbstractEntity implements Loggable
     }
 
     /**
-     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Log", mappedBy="nodeSource")
-     * @ORM\OrderBy({"datetime" = "DESC"})
      * @var Collection<Log>
      * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[ORM\OneToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Log', mappedBy: 'nodeSource')]
+    #[ORM\OrderBy(['datetime' => 'DESC'])]
+    #[SymfonySerializer\Ignore]
     protected Collection $logs;
 
     /**
-     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Redirection", mappedBy="redirectNodeSource")
      * @var Collection<Redirection>
      * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[ORM\OneToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Redirection', mappedBy: 'redirectNodeSource')]
+    #[SymfonySerializer\Ignore]
     protected Collection $redirections;
 
     /**
@@ -403,12 +395,12 @@ class NodesSources extends AbstractEntity implements Loggable
     }
 
     /**
-     * @ORM\Column(type="string", name="title", unique=false, nullable=true)
      * @Serializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
-     * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
      * @Gedmo\Versioned
      */
     #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
+    #[ORM\Column(type: 'string', name: 'title', unique: false, nullable: true)]
+    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'log_sources'])]
     protected ?string $title = null;
 
     /**
@@ -431,15 +423,15 @@ class NodesSources extends AbstractEntity implements Loggable
 
     /**
      * @var \DateTime|null
-     * @ORM\Column(type="datetime", name="published_at", unique=false, nullable=true)
      * @Serializer\Groups({"nodes_sources", "nodes_sources_base"})
-     * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base"})
      * @Gedmo\Versioned
      * @Serializer\Exclude(if="!object.isPublishable()")
      */
     #[ApiFilter(BaseFilter\DateFilter::class)]
     #[ApiFilter(BaseFilter\OrderFilter::class)]
     #[ApiFilter(RoadizFilter\ArchiveFilter::class)]
+    #[ORM\Column(type: 'datetime', name: 'published_at', unique: false, nullable: true)]
+    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base'])]
     protected ?\DateTime $publishedAt = null;
 
     /**
@@ -461,13 +453,13 @@ class NodesSources extends AbstractEntity implements Loggable
     }
 
     /**
-     * @ORM\Column(type="string", name="meta_title", unique=false)
      * @Serializer\Groups({"nodes_sources"})
-     * @SymfonySerializer\Groups({"nodes_sources"})
      * @Gedmo\Versioned
      * @Serializer\Exclude(if="!object.isReachable()")
      */
     #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
+    #[ORM\Column(type: 'string', name: 'meta_title', unique: false)]
+    #[SymfonySerializer\Groups(['nodes_sources'])]
     protected string $metaTitle = '';
 
     /**
@@ -490,12 +482,12 @@ class NodesSources extends AbstractEntity implements Loggable
         return $this;
     }
     /**
-     * @ORM\Column(type="text", name="meta_keywords")
      * @Serializer\Groups({"nodes_sources"})
-     * @SymfonySerializer\Groups({"nodes_sources"})
      * @Serializer\Exclude(if="!object.isReachable()")
      * @Gedmo\Versioned
      */
+    #[ORM\Column(type: 'text', name: 'meta_keywords')]
+    #[SymfonySerializer\Groups(['nodes_sources'])]
     protected string $metaKeywords = '';
 
     /**
@@ -518,13 +510,13 @@ class NodesSources extends AbstractEntity implements Loggable
         return $this;
     }
     /**
-     * @ORM\Column(type="text", name="meta_description")
      * @Serializer\Groups({"nodes_sources"})
-     * @SymfonySerializer\Groups({"nodes_sources"})
      * @Serializer\Exclude(if="!object.isReachable()")
      * @Gedmo\Versioned
      */
     #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
+    #[ORM\Column(type: 'text', name: 'meta_description')]
+    #[SymfonySerializer\Groups(['nodes_sources'])]
     protected string $metaDescription = '';
 
     /**
@@ -567,10 +559,10 @@ class NodesSources extends AbstractEntity implements Loggable
      * @return string
      * @Serializer\VirtualProperty
      * @Serializer\SerializedName("slug")
-     * @SymfonySerializer\SerializedName("slug")
      * @Serializer\Groups({"nodes_sources", "nodes_sources_base"})
-     * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_base"})
      */
+    #[SymfonySerializer\SerializedName('slug')]
+    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base'])]
     public function getIdentifier(): string
     {
         $urlAlias = $this->getUrlAliases()->first();
@@ -586,8 +578,8 @@ class NodesSources extends AbstractEntity implements Loggable
      *
      * @return NodesSources|null
      * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[SymfonySerializer\Ignore]
     public function getParent(): ?NodesSources
     {
         /** @var Node|null $parent */
@@ -605,10 +597,10 @@ class NodesSources extends AbstractEntity implements Loggable
      * @return string
      * @Serializer\VirtualProperty
      * @Serializer\Groups({"nodes_sources", "nodes_sources_default"})
-     * @SymfonySerializer\Groups({"nodes_sources", "nodes_sources_default"})
      * @Serializer\SerializedName("@type")
-     * @SymfonySerializer\SerializedName("@type")
      */
+    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_default'])]
+    #[SymfonySerializer\SerializedName('@type')]
     public function getNodeTypeName(): string
     {
         return 'NodesSources';

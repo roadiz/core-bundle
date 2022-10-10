@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
+use RZ\Roadiz\CoreBundle\Repository\FontRepository;
 use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -14,13 +15,13 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * Fonts are entities which store each webfont file for a
  * font-family and a font-variant.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\FontRepository")
- * @ORM\Table(name="fonts",uniqueConstraints={
- *     @ORM\UniqueConstraint(columns={"name", "variant"})
- * })
- * @UniqueEntity(fields={"name", "variant"})
  */
+#[
+    ORM\Entity(repositoryClass: FontRepository::class),
+    ORM\Table(name: "fonts"),
+    ORM\UniqueConstraint(columns: ["name", "variant"]),
+    UniqueEntity(fields: ["name", "variant"])
+]
 class Font extends AbstractDateTimed
 {
     public const REGULAR = 0;
@@ -76,9 +77,9 @@ class Font extends AbstractDateTimed
         Font::BLACK_ITALIC => 'font_variant.black.italic',      // 900
     ];
     /**
-     * @ORM\Column(type="integer", name="variant", unique=false, nullable=false)
      * @var int
      */
+    #[ORM\Column(type: 'integer', name: 'variant', unique: false, nullable: false)]
     protected $variant = Font::REGULAR;
     /**
      * @var UploadedFile|null
@@ -101,52 +102,52 @@ class Font extends AbstractDateTimed
      */
     protected $svgFile = null;
     /**
-     * @ORM\Column(type="string", nullable=true, name="eot_filename")
      * @var string|null
      */
+    #[ORM\Column(type: 'string', nullable: true, name: 'eot_filename')]
     private $eotFilename = null;
     /**
-     * @ORM\Column(type="string", nullable=true, name="woff_filename")
      * @var string|null
      */
+    #[ORM\Column(type: 'string', nullable: true, name: 'woff_filename')]
     private $woffFilename = null;
     /**
-     * @ORM\Column(type="string", nullable=true, name="woff2_filename")
      * @var string|null
      */
+    #[ORM\Column(type: 'string', nullable: true, name: 'woff2_filename')]
     private $woff2Filename = null;
     /**
-     * @ORM\Column(type="string", nullable=true, name="otf_filename")
      * @var string|null
      */
+    #[ORM\Column(type: 'string', nullable: true, name: 'otf_filename')]
     private $otfFilename = null;
     /**
-     * @ORM\Column(type="string", nullable=true, name="svg_filename")
      * @var string|null
      */
+    #[ORM\Column(type: 'string', nullable: true, name: 'svg_filename')]
     private $svgFilename = null;
     /**
-     * @ORM\Column(type="string", nullable=false, unique=false)
-     * @Assert\NotNull()
-     * @Assert\NotBlank()
-     * @Assert\Length(max=100)
      * @var string
      */
+    #[ORM\Column(type: 'string', nullable: false, unique: false)]
+    #[Assert\NotNull]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 100)]
     private $name = '';
     /**
-     * @ORM\Column(type="string", nullable=false, unique=false)
      * @var string
      */
+    #[ORM\Column(type: 'string', nullable: false, unique: false)]
     private $hash = '';
     /**
-     * @ORM\Column(type="string", nullable=false)
      * @var string
      */
+    #[ORM\Column(type: 'string', nullable: false)]
     private $folder;
     /**
-     * @ORM\Column(type="text", nullable=true)
      * @var string|null
      */
+    #[ORM\Column(type: 'text', nullable: true)]
     private $description = null;
 
     /**

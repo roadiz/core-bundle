@@ -10,30 +10,27 @@ use JMS\Serializer\Annotation as Serializer;
 
 trait AttributeValueTranslationTrait
 {
-    /**
-     * @var TranslationInterface|null
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\Core\AbstractEntities\TranslationInterface")
-     * @ORM\JoinColumn(name="translation_id", onDelete="CASCADE", referencedColumnName="id")
-     * @Serializer\Groups({"attribute", "node", "nodes_sources"})
-     * @Serializer\Type("RZ\Roadiz\Core\AbstractEntities\TranslationInterface")
-     * @Serializer\Accessor(getter="getTranslation", setter="setTranslation")
-     */
+    #[
+        ORM\ManyToOne(targetEntity: TranslationInterface::class),
+        ORM\JoinColumn(name: "translation_id", referencedColumnName: "id", onDelete: "CASCADE"),
+        Serializer\Groups(["attribute", "node", "nodes_sources"]),
+        Serializer\Type("RZ\Roadiz\Core\AbstractEntities\TranslationInterface"),
+        Serializer\Accessor(getter: "getTranslation", setter: "setTranslation")
+    ]
     protected ?TranslationInterface $translation = null;
 
-    /**
-     * @var string|null
-     * @ORM\Column(type="string", nullable=true, unique=false, length=255)
-     * @Serializer\Groups({"attribute", "node", "nodes_sources"})
-     * @Serializer\Type("string")
-     */
+    #[
+        ORM\Column(type: "string", length: 255, unique: false, nullable: true),
+        Serializer\Groups(["attribute", "node", "nodes_sources"]),
+        Serializer\Type("string")
+    ]
     protected ?string $value = null;
 
-    /**
-     * @var AttributeValueInterface|null
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Model\AttributeValueInterface", inversedBy="attributeValueTranslations", cascade={"persist"})
-     * @ORM\JoinColumn(name="attribute_value", onDelete="CASCADE", referencedColumnName="id")
-     * @Serializer\Exclude
-     */
+    #[
+        ORM\ManyToOne(targetEntity: AttributeValueInterface::class, cascade: ["persist"], inversedBy: "attributeValueTranslations"),
+        ORM\JoinColumn(name: "attribute_value", referencedColumnName: "id", onDelete: "CASCADE"),
+        Serializer\Exclude
+    ]
     protected ?AttributeValueInterface $attributeValue = null;
 
     /**

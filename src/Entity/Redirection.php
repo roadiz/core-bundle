@@ -6,46 +6,48 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
+use RZ\Roadiz\CoreBundle\Repository\RedirectionRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Http redirection which are editable by BO users.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\RedirectionRepository")
- * @ORM\Table(name="redirections")
- * @ORM\HasLifecycleCallbacks
- * @UniqueEntity(fields={"query"})
  */
+#[
+    ORM\Entity(repositoryClass: RedirectionRepository::class),
+    ORM\Table(name: "redirections"),
+    ORM\HasLifecycleCallbacks,
+    UniqueEntity(fields: ["query"])
+]
 class Redirection extends AbstractDateTimed
 {
     /**
-     * @ORM\Column(type="string", unique=true, length=255)
-     * @Assert\NotBlank()
-     * @Assert\Length(max=255)
      * @var string
      */
+    #[ORM\Column(type: 'string', unique: true, length: 255)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
     private string $query = "";
 
     /**
-     * @ORM\Column(name="redirectUri", type="text", nullable=true, length=2048)
-     * @Assert\Length(max=2048)
      * @var string|null
      */
+    #[ORM\Column(name: 'redirectUri', type: 'text', nullable: true, length: 2048)]
+    #[Assert\Length(max: 2048)]
     private ?string $redirectUri = null;
 
     /**
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\NodesSources", cascade={"persist"}, inversedBy="redirections")
-     * @ORM\JoinColumn(name="ns_id", referencedColumnName="id", onDelete="CASCADE")
      * @var NodesSources|null
      */
+    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\NodesSources', cascade: ['persist'], inversedBy: 'redirections')]
+    #[ORM\JoinColumn(name: 'ns_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     private ?NodesSources $redirectNodeSource = null;
 
     /**
-     * @ORM\Column(type="integer")
      * @var int
      */
+    #[ORM\Column(type: 'integer')]
     private int $type = 301;
 
     /**

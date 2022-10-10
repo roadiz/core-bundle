@@ -110,8 +110,8 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
 
     /**
      * @return array
-     * @Serializer\Ignore
      */
+    #[Serializer\Ignore]
     protected function getDefaultSeo(): array
     {
         if (null !== $this->nodesSource) {

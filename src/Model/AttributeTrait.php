@@ -14,87 +14,86 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 trait AttributeTrait
 {
-    /**
-     * @var string
-     * @ORM\Column(type="string", nullable=false, unique=true)
-     * @Serializer\Groups({"attribute", "node", "nodes_sources"})
-     * @SymfonySerializer\Groups({"attribute", "node", "nodes_sources"})
-     * @Serializer\Type("string")
-     * @Assert\NotNull()
-     * @Assert\NotBlank()
-     */
+    #[
+        ORM\Column(type: "string", unique: true, nullable: false),
+        Serializer\Groups(["attribute", "node", "nodes_sources"]),
+        SymfonySerializer\Groups(["attribute", "node", "nodes_sources"]),
+        Serializer\Type("string"),
+        Assert\NotNull(),
+        Assert\NotBlank()
+    ]
     protected string $code = '';
 
-    /**
-     * @var bool
-     * @ORM\Column(type="boolean", nullable=false, unique=false, options={"default" = false})
-     * @Serializer\Groups({"attribute"})
-     * @SymfonySerializer\Groups({"attribute"})
-     * @Serializer\Type("boolean")
-     */
+    #[
+        ORM\Column(type: "boolean", unique: false, nullable: false, options: ["default" => false]),
+        Serializer\Groups(["attribute"]),
+        SymfonySerializer\Groups(["attribute"]),
+        Serializer\Type("boolean")
+    ]
     protected bool $searchable = false;
 
-    /**
-     * @var int
-     * @ORM\Column(type="integer", nullable=false, unique=false)
-     * @Serializer\Groups({"attribute"})
-     * @SymfonySerializer\Groups({"attribute"})
-     * @Serializer\Type("integer")
-     */
+    #[
+        ORM\Column(type: "integer", unique: false, nullable: false),
+        Serializer\Groups(["attribute"]),
+        SymfonySerializer\Groups(["attribute"]),
+        Serializer\Type("integer")
+    ]
     protected int $type = AttributeInterface::STRING_T;
 
-    /**
-     * @var string|null
-     * @ORM\Column(type="string", length=7, nullable=true, unique=false)
-     * @Serializer\Groups({"attribute", "node", "nodes_sources"})
-     * @SymfonySerializer\Groups({"attribute", "node", "nodes_sources"})
-     * @Serializer\Type("string")
-     */
+    #[
+        ORM\Column(type: "string", length: 7, unique: false, nullable: true),
+        Serializer\Groups(["attribute", "node", "nodes_sources"]),
+        SymfonySerializer\Groups(["attribute", "node", "nodes_sources"]),
+        Serializer\Type("string")
+    ]
     protected ?string $color = null;
 
-    /**
-     * @var AttributeGroupInterface|null
-     * @ORM\ManyToOne(
-     *     targetEntity="RZ\Roadiz\CoreBundle\Model\AttributeGroupInterface",
-     *     inversedBy="attributes",
-     *     fetch="EAGER",
-     *     cascade={"persist", "merge"}
-     * )
-     * @ORM\JoinColumn(name="group_id", onDelete="SET NULL")
-     * @Serializer\Groups({"attribute", "node", "nodes_sources"})
-     * @SymfonySerializer\Groups({"attribute", "node", "nodes_sources"})
-     * @Serializer\Type("RZ\Roadiz\CoreBundle\Model\AttributeGroupInterface")
-     */
+    #[
+        ORM\ManyToOne(
+            targetEntity: AttributeGroupInterface::class,
+            cascade: ["persist", "merge"],
+            fetch: "EAGER",
+            inversedBy: "attributes"
+        ),
+        ORM\JoinColumn(name: "group_id", onDelete: "SET NULL"),
+        Serializer\Groups(["attribute", "node", "nodes_sources"]),
+        SymfonySerializer\Groups(["attribute", "node", "nodes_sources"]),
+        Serializer\Type("RZ\Roadiz\CoreBundle\Model\AttributeGroupInterface")
+    ]
     protected ?AttributeGroupInterface $group = null;
 
     /**
      * @var Collection<AttributeTranslationInterface>
-     * @ORM\OneToMany(
-     *     targetEntity="RZ\Roadiz\CoreBundle\Model\AttributeTranslationInterface",
-     *     mappedBy="attribute",
-     *     fetch="EAGER",
-     *     cascade={"all"},
-     *     orphanRemoval=true
-     * )
-     * @Serializer\Groups({"attribute", "node", "nodes_sources"})
-     * @SymfonySerializer\Groups({"attribute", "node", "nodes_sources"})
-     * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Model\AttributeTranslationInterface>")
-     * @Serializer\Accessor(getter="getAttributeTranslations",setter="setAttributeTranslations")
      */
+    #[
+        ORM\OneToMany(
+            mappedBy: "attribute",
+            targetEntity: AttributeTranslationInterface::class,
+            cascade: ["all"],
+            fetch: "EAGER",
+            orphanRemoval: true
+        ),
+        Serializer\Groups(["attribute", "node", "nodes_sources"]),
+        SymfonySerializer\Groups(["attribute", "node", "nodes_sources"]),
+        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Model\AttributeTranslationInterface>"),
+        Serializer\Accessor(getter: "getAttributeTranslations", setter: "setAttributeTranslations")
+    ]
     protected Collection $attributeTranslations;
 
     /**
      * @var Collection<AttributeValueInterface>
-     * @ORM\OneToMany(
-     *     targetEntity="RZ\Roadiz\CoreBundle\Model\AttributeValueInterface",
-     *     mappedBy="attribute",
-     *     fetch="EXTRA_LAZY",
-     *     cascade={"persist", "remove"},
-     *     orphanRemoval=true
-     * )
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[
+        ORM\OneToMany(
+            mappedBy: "attribute",
+            targetEntity: AttributeValueInterface::class,
+            cascade: ["persist", "remove"],
+            fetch: "EXTRA_LAZY",
+            orphanRemoval: true
+        ),
+        Serializer\Exclude,
+        SymfonySerializer\Ignore
+    ]
     protected Collection $attributeValues;
 
     /**
@@ -108,7 +107,7 @@ trait AttributeTrait
     /**
      * @param string|null $code
      *
-     * @return mixed
+     * @return $this
      */
     public function setCode(?string $code)
     {
@@ -146,7 +145,7 @@ trait AttributeTrait
     /**
      * @param string|null $color
      *
-     * @return mixed
+     * @return $this
      */
     public function setColor(?string $color)
     {
@@ -165,7 +164,7 @@ trait AttributeTrait
     /**
      * @param AttributeGroupInterface|null $group
      *
-     * @return mixed
+     * @return $this
      */
     public function setGroup(?AttributeGroupInterface $group)
     {

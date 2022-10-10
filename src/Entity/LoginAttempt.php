@@ -5,48 +5,40 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use RZ\Roadiz\CoreBundle\Repository\LoginAttemptRepository;
 
-/**
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\LoginAttemptRepository")
- * @ORM\Table(name="login_attempts", indexes={
- *     @ORM\Index(columns={"username"}),
- *     @ORM\Index(columns={"blocks_login_until", "username"}),
- *     @ORM\Index(columns={"blocks_login_until", "username", "ip_address"})
- * })
- */
+#[
+    ORM\Entity(repositoryClass: LoginAttemptRepository::class),
+    ORM\Table(name: "login_attempts"),
+    ORM\Index(columns: ["username"]),
+    ORM\Index(columns: ["blocks_login_until", "username"]),
+    ORM\Index(columns: ["blocks_login_until", "username", "ip_address"])
+]
 class LoginAttempt
 {
-    /**
-     * @ORM\Id
-     * @ORM\Column(type="integer")
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
+    #[
+        ORM\Id,
+        ORM\Column(type: "integer"),
+        ORM\GeneratedValue(strategy: "AUTO")
+    ]
     private $id;
 
-    /**
-     * @ORM\Column(type="string", length=50, nullable=true, name="ip_address")
-     */
+    #[ORM\Column(type: 'string', length: 50, nullable: true, name: 'ip_address')]
     private $ipAddress;
 
-    /**
-     * @ORM\Column(type="datetime_immutable")
-     */
+    #[ORM\Column(type: 'datetime_immutable')]
     private $date;
 
     /**
      * @var \DateTime|null
-     * @ORM\Column(type="datetime", nullable=true, name="blocks_login_until")
      */
+    #[ORM\Column(type: 'datetime', nullable: true, name: 'blocks_login_until')]
     private $blocksLoginUntil;
 
-    /**
-     * @ORM\Column(type="string", nullable=false, name="username", unique=false)
-     */
+    #[ORM\Column(type: 'string', nullable: false, name: 'username', unique: false)]
     private $username;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true, name="attempt_count")
-     */
+    #[ORM\Column(type: 'integer', nullable: true, name: 'attempt_count')]
     private $attemptCount;
 
     public function __construct(?string $ipAddress, ?string $username)

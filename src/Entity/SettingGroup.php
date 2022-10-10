@@ -9,29 +9,31 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\CoreBundle\Repository\SettingGroupRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Settings entity are a simple key-value configuration system.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\SettingGroupRepository")
- * @ORM\Table(name="settings_groups")
- * @UniqueEntity(fields={"name"})
  */
+#[
+    ORM\Entity(repositoryClass: SettingGroupRepository::class),
+    ORM\Table(name: "settings_groups"),
+    UniqueEntity(fields: ["name"])
+]
 class SettingGroup extends AbstractEntity
 {
     /**
-     * @ORM\Column(type="string", unique=true)
      * @Serializer\Groups({"setting", "setting_group"})
-     * @SymfonySerializer\Groups({"setting", "setting_group"})
      * @Serializer\Type("string")
-     * @Assert\NotNull()
-     * @Assert\NotBlank()
-     * @Assert\Length(max=250)
      * @var string
      */
+    #[ORM\Column(type: 'string', unique: true)]
+    #[SymfonySerializer\Groups(['setting', 'setting_group'])]
+    #[Assert\NotNull]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 250)]
     private string $name = '';
 
     /**
@@ -53,11 +55,11 @@ class SettingGroup extends AbstractEntity
     }
 
     /**
-     * @ORM\Column(type="boolean", name="in_menu", nullable=false, options={"default" = false})
      * @Serializer\Groups({"setting", "setting_group"})
-     * @SymfonySerializer\Groups({"setting", "setting_group"})
      * @Serializer\Type("bool")
      */
+    #[ORM\Column(type: 'boolean', name: 'in_menu', nullable: false, options: ['default' => false])]
+    #[SymfonySerializer\Groups(['setting', 'setting_group'])]
     protected bool $inMenu = false;
 
     /**
@@ -80,11 +82,11 @@ class SettingGroup extends AbstractEntity
     }
 
     /**
-     * @ORM\OneToMany(targetEntity="Setting", mappedBy="settingGroup")
      * @var Collection<Setting>
      * @Serializer\Groups({"setting_group"})
-     * @SymfonySerializer\Groups({"setting_group"})
      */
+    #[ORM\OneToMany(targetEntity: 'Setting', mappedBy: 'settingGroup')]
+    #[SymfonySerializer\Groups(['setting_group'])]
     private Collection $settings;
 
     public function __construct()

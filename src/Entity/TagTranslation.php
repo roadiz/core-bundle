@@ -11,6 +11,7 @@ use Gedmo\Mapping\Annotation as Gedmo;
 use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Repository\TagTranslationRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -19,63 +20,58 @@ use Symfony\Component\Validator\Constraints as Assert;
  * Translated representation of Tags.
  *
  * It stores their name and description.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\TagTranslationRepository")
- * @ORM\Table(name="tags_translations", uniqueConstraints={
- *      @ORM\UniqueConstraint(columns={"tag_id", "translation_id"})
- * })
- * @Gedmo\Loggable(logEntryClass="RZ\Roadiz\CoreBundle\Entity\UserLogEntry")
- * @UniqueEntity(fields={"tag", "translation"})
  */
+#[
+    ORM\Entity(repositoryClass: TagTranslationRepository::class),
+    ORM\Table(name: "tags_translations"),
+    ORM\UniqueConstraint(columns: ["tag_id", "translation_id"]),
+    Gedmo\Loggable(logEntryClass: UserLogEntry::class),
+    UniqueEntity(fields: ["tag", "translation"])
+]
 class TagTranslation extends AbstractEntity
 {
     /**
-     * @ORM\Column(type="string")
      * @Serializer\Groups({"tag", "node", "nodes_sources"})
-     * @SymfonySerializer\Groups({"tag", "node", "nodes_sources"})
      * @Serializer\Type("string")
-     * @Assert\NotBlank()
-     * @Assert\Length(max=250)
      * @Gedmo\Versioned
      */
+    #[ORM\Column(type: 'string')]
+    #[SymfonySerializer\Groups(['tag', 'node', 'nodes_sources'])]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 250)]
     protected string $name = '';
     /**
-     * @ORM\Column(type="text", nullable=true)
      * @Serializer\Groups({"tag", "node", "nodes_sources"})
-     * @SymfonySerializer\Groups({"tag", "node", "nodes_sources"})
      * @Serializer\Type("string")
      * @Gedmo\Versioned
      */
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[SymfonySerializer\Groups(['tag', 'node', 'nodes_sources'])]
     protected ?string $description = null;
     /**
-     * @ORM\ManyToOne(targetEntity="Tag", inversedBy="translatedTags")
-     * @ORM\JoinColumn(name="tag_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Tag|null
      * @Serializer\Exclude()
-     * @SymfonySerializer\Ignore
      */
+    #[ORM\ManyToOne(targetEntity: 'Tag', inversedBy: 'translatedTags')]
+    #[ORM\JoinColumn(name: 'tag_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[SymfonySerializer\Ignore]
     protected ?Tag $tag = null;
     /**
-     * @ORM\ManyToOne(targetEntity="Translation", inversedBy="tagTranslations", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="translation_id", referencedColumnName="id", onDelete="CASCADE")
      * @var TranslationInterface|null
      * @Serializer\Groups({"tag", "node", "nodes_sources"})
-     * @SymfonySerializer\Groups({"tag", "node", "nodes_sources"})
      * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Translation")
      */
+    #[ORM\ManyToOne(targetEntity: 'Translation', inversedBy: 'tagTranslations', fetch: 'EXTRA_LAZY')]
+    #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[SymfonySerializer\Groups(['tag', 'node', 'nodes_sources'])]
     protected ?TranslationInterface $translation = null;
     /**
-     * @ORM\OneToMany(
-     *     targetEntity="RZ\Roadiz\CoreBundle\Entity\TagTranslationDocuments",
-     *     mappedBy="tagTranslation",
-     *     orphanRemoval=true,
-     *     cascade={"persist", "merge"}
-     * )
-     * @ORM\OrderBy({"position" = "ASC"})
      * @var Collection<TagTranslationDocuments>
      * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[ORM\OneToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\TagTranslationDocuments', mappedBy: 'tagTranslation', orphanRemoval: true, cascade: ['persist', 'merge'])]
+    #[ORM\OrderBy(['position' => 'ASC'])]
+    #[SymfonySerializer\Ignore]
     protected Collection $tagTranslationDocuments;
 
     /**
@@ -210,10 +206,10 @@ class TagTranslation extends AbstractEntity
      * @return array
      *
      * @Serializer\Groups({"tag"})
-     * @SymfonySerializer\Groups({"tag"})
      * @Serializer\VirtualProperty
      * @Serializer\Type("array<RZ\Roadiz\CoreBundle\Entity\Document>")
      */
+    #[SymfonySerializer\Groups(['tag'])]
     public function getDocuments(): array
     {
         return array_map(function (TagTranslationDocuments $tagTranslationDocument) {

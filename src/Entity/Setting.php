@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\CoreBundle\Repository\SettingRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
@@ -15,15 +16,15 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Settings entity are a simple key-value configuration system.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\SettingRepository")
- * @ORM\Table(name="settings", indexes={
- *     @ORM\Index(columns={"type"}),
- *     @ORM\Index(columns={"name"}),
- *     @ORM\Index(columns={"visible"})
- * })
- * @UniqueEntity(fields={"name"})
  */
+#[
+    ORM\Entity(repositoryClass: SettingRepository::class),
+    ORM\Table(name: "settings"),
+    ORM\Index(columns: ["type"]),
+    ORM\Index(columns: ["name"]),
+    ORM\Index(columns: ["visible"]),
+    UniqueEntity(fields: ["name"])
+]
 class Setting extends AbstractEntity
 {
     /**
@@ -33,8 +34,8 @@ class Setting extends AbstractEntity
      *
      * @var array<int, string>
      * @Serializer\Exclude()
-     * @SymfonySerializer\Ignore()
      */
+    #[SymfonySerializer\Ignore]
     public static array $typeToHuman = [
         AbstractField::STRING_T => 'string.type',
         AbstractField::DATETIME_T => 'date-time.type',
@@ -54,13 +55,13 @@ class Setting extends AbstractEntity
     ];
 
     /**
-     * @ORM\Column(type="string", unique=true)
      * @Serializer\Groups({"setting", "nodes_sources"})
-     * @SymfonySerializer\Groups({"setting", "nodes_sources"})
      * @Serializer\Type("string")
-     * @Assert\NotBlank()
-     * @Assert\Length(max=250)
      */
+    #[ORM\Column(type: 'string', unique: true)]
+    #[SymfonySerializer\Groups(['setting', 'nodes_sources'])]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 250)]
     private string $name = '';
 
     /**
@@ -89,11 +90,11 @@ class Setting extends AbstractEntity
 
     /**
      * @var string|null
-     * @ORM\Column(type="text", unique=false, nullable=true)
      * @Serializer\Groups({"setting"})
-     * @SymfonySerializer\Groups({"setting"})
      * @Serializer\Type("string")
      */
+    #[ORM\Column(type: 'text', unique: false, nullable: true)]
+    #[SymfonySerializer\Groups(['setting'])]
     private ?string $description = null;
 
     /**
@@ -117,11 +118,11 @@ class Setting extends AbstractEntity
     }
 
     /**
-     * @ORM\Column(type="text", nullable=true)
      * @Serializer\Groups({"setting", "nodes_sources"})
-     * @SymfonySerializer\Groups({"setting", "nodes_sources"})
      * @Serializer\Type("string")
      */
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[SymfonySerializer\Groups(['setting', 'nodes_sources'])]
     private ?string $value = null;
 
     /**
@@ -131,8 +132,8 @@ class Setting extends AbstractEntity
      *
      * @var string|null
      * @Serializer\Exclude()
-     * @SymfonySerializer\Ignore
      */
+    #[SymfonySerializer\Ignore]
     private ?string $clearValue = null;
 
     /**
@@ -147,9 +148,9 @@ class Setting extends AbstractEntity
      * Getter for setting value OR clear value, if encrypted.
      *
      * @return string|bool|\DateTime|int|null
-     * @SymfonySerializer\Ignore
      * @throws \Exception
      */
+    #[SymfonySerializer\Ignore]
     public function getValue()
     {
         if ($this->isEncrypted()) {
@@ -209,11 +210,11 @@ class Setting extends AbstractEntity
     }
 
     /**
-     * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
      * @Serializer\Groups({"setting"})
-     * @SymfonySerializer\Groups({"setting"})
      * @Serializer\Type("bool")
      */
+    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => true])]
+    #[SymfonySerializer\Groups(['setting'])]
     private bool $visible = true;
 
     /**
@@ -236,11 +237,11 @@ class Setting extends AbstractEntity
     }
 
     /**
-     * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
      * @Serializer\Groups({"setting"})
-     * @SymfonySerializer\Groups({"setting"})
      * @Serializer\Type("bool")
      */
+    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
+    #[SymfonySerializer\Groups(['setting'])]
     private bool $encrypted = false;
 
     /**
@@ -264,20 +265,15 @@ class Setting extends AbstractEntity
     }
 
     /**
-     * @ORM\ManyToOne(
-     *     targetEntity="RZ\Roadiz\CoreBundle\Entity\SettingGroup",
-     *     inversedBy="settings",
-     *     cascade={"persist", "merge"},
-     *     fetch="EAGER"
-     * )
-     * @ORM\JoinColumn(name="setting_group_id", referencedColumnName="id", onDelete="SET NULL")
      * @Serializer\Groups({"setting"})
-     * @SymfonySerializer\Groups({"setting"})
      * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\SettingGroup")
      * @Serializer\Accessor(getter="getSettingGroup", setter="setSettingGroup")
      * @Serializer\AccessType("public_method")
      * @var SettingGroup|null
      */
+    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\SettingGroup', inversedBy: 'settings', cascade: ['persist', 'merge'], fetch: 'EAGER')]
+    #[ORM\JoinColumn(name: 'setting_group_id', referencedColumnName: 'id', onDelete: 'SET NULL')]
+    #[SymfonySerializer\Groups(['setting'])]
     private ?SettingGroup $settingGroup;
 
     /**
@@ -303,11 +299,11 @@ class Setting extends AbstractEntity
      * Value types.
      * Use NodeTypeField types constants.
      *
-     * @ORM\Column(type="integer")
      * @Serializer\Groups({"setting"})
-     * @SymfonySerializer\Groups({"setting"})
      * @Serializer\Type("int")
      */
+    #[ORM\Column(type: 'integer')]
+    #[SymfonySerializer\Groups(['setting'])]
     private int $type = AbstractField::STRING_T;
 
     /**
@@ -334,11 +330,11 @@ class Setting extends AbstractEntity
      * Available values for ENUM and MULTIPLE setting types.
      *
      * @var string|null
-     * @ORM\Column(name="defaultValues", type="text", nullable=true)
      * @Serializer\Groups({"setting"})
-     * @SymfonySerializer\Groups({"setting"})
      * @Serializer\Type("string")
      */
+    #[ORM\Column(name: 'defaultValues', type: 'text', nullable: true)]
+    #[SymfonySerializer\Groups(['setting'])]
     private ?string $defaultValues;
 
     /**

@@ -10,29 +10,27 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 
 trait AttributeGroupTranslationTrait
 {
-    /**
-     * @var TranslationInterface|null
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\Core\AbstractEntities\TranslationInterface")
-     * @ORM\JoinColumn(onDelete="CASCADE", name="translation_id")
-     * @Serializer\Groups({"attribute_group", "attribute", "node", "nodes_sources"})
-     * @Serializer\Type("RZ\Roadiz\Core\AbstractEntities\TranslationInterface")
-     * @Serializer\Accessor(getter="getTranslation", setter="setTranslation")
-     */
+    #[
+        ORM\ManyToOne(targetEntity: "RZ\Roadiz\Core\AbstractEntities\TranslationInterface"),
+        ORM\JoinColumn(name: "translation_id", onDelete: "CASCADE"),
+        Serializer\Groups(["attribute_group", "attribute", "node", "nodes_sources"]),
+        Serializer\Type("RZ\Roadiz\Core\AbstractEntities\TranslationInterface"),
+        Serializer\Accessor(getter: "getTranslation", setter: "setTranslation")
+    ]
     protected ?TranslationInterface $translation = null;
 
-    /**
-     * @var string
-     * @ORM\Column(type="string", nullable=false, unique=false)
-     * @Serializer\Groups({"attribute_group", "attribute", "node", "nodes_sources"})
-     * @Serializer\Type("string")
-     */
+    #[
+        ORM\Column(type: "string", unique: false, nullable: false),
+        Serializer\Groups(["attribute_group", "attribute", "node", "nodes_sources"]),
+        Serializer\Type("string")
+    ]
     protected string $name = '';
 
-    /**
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Model\AttributeGroupInterface", inversedBy="attributeGroupTranslations", cascade={"persist"})
-     * @ORM\JoinColumn(onDelete="CASCADE", referencedColumnName="id", name="attribute_group_id", nullable=true)
-     * @Serializer\Exclude
-     */
+    #[
+        ORM\ManyToOne(targetEntity: AttributeGroupInterface::class, cascade: ["persist"], inversedBy: "attributeGroupTranslations"),
+        ORM\JoinColumn(name: "attribute_group_id", referencedColumnName: "id", nullable: true, onDelete: "CASCADE"),
+        Serializer\Exclude
+    ]
     protected ?AttributeGroupInterface $attributeGroup = null;
 
     /**

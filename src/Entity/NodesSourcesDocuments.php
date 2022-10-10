@@ -6,49 +6,40 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
+use RZ\Roadiz\CoreBundle\Repository\NodesSourcesDocumentsRepository;
 
 /**
  * Describes a complex ManyToMany relation
  * between NodesSources, Documents and NodeTypeFields.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\NodesSourcesDocumentsRepository")
- * @ORM\Table(name="nodes_sources_documents", indexes={
- *     @ORM\Index(columns={"position"}),
- *     @ORM\Index(columns={"ns_id", "node_type_field_id"}, name="nsdoc_field"),
- *     @ORM\Index(columns={"ns_id", "node_type_field_id", "position"}, name="nsdoc_field_position")
- * })
  */
+#[
+    ORM\Entity(repositoryClass: NodesSourcesDocumentsRepository::class),
+    ORM\Table(name: "nodes_sources_documents"),
+    ORM\Index(columns: ["position"]),
+    ORM\Index(columns: ["ns_id", "node_type_field_id"], name: "nsdoc_field"),
+    ORM\Index(columns: ["ns_id", "node_type_field_id", "position"], name: "nsdoc_field_position")
+]
 class NodesSourcesDocuments extends AbstractPositioned
 {
     /**
-     * @ORM\ManyToOne(
-     *     targetEntity="RZ\Roadiz\CoreBundle\Entity\NodesSources",
-     *     inversedBy="documentsByFields",
-     *     fetch="EAGER",
-     *     cascade={"persist"}
-     * )
-     * @ORM\JoinColumn(name="ns_id", referencedColumnName="id", onDelete="CASCADE")
      * @var NodesSources|null
      */
+    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\NodesSources', inversedBy: 'documentsByFields', fetch: 'EAGER', cascade: ['persist'])]
+    #[ORM\JoinColumn(name: 'ns_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     protected ?NodesSources $nodeSource;
 
     /**
-     * @ORM\ManyToOne(
-     *     targetEntity="RZ\Roadiz\CoreBundle\Entity\Document",
-     *     inversedBy="nodesSourcesByFields",
-     *      fetch="EAGER",
-     *     cascade={"persist"}
-     * )
-     * @ORM\JoinColumn(name="document_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Document|null
      */
+    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Document', inversedBy: 'nodesSourcesByFields', fetch: 'EAGER', cascade: ['persist'])]
+    #[ORM\JoinColumn(name: 'document_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     protected ?Document $document;
 
     /**
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\NodeTypeField")
-     * @ORM\JoinColumn(name="node_type_field_id", referencedColumnName="id", onDelete="CASCADE")
      * @var NodeTypeField|null
      */
+    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\NodeTypeField')]
+    #[ORM\JoinColumn(name: 'node_type_field_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     protected ?NodeTypeField $field;
 
     /**

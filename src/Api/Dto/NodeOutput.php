@@ -13,22 +13,22 @@ final class NodeOutput
 {
     /**
      * @var string|null
-     * @Groups({"tag", "attribute", "node"})
      */
+    #[Groups(['tag', 'attribute', 'node'])]
     public ?string $nodeName = null;
     /**
      * @var bool
-     * @Groups({"nodes_sources", "nodes_sources_base", "node"})
      */
+    #[Groups(['nodes_sources', 'nodes_sources_base', 'node'])]
     public bool $visible = false;
     /**
      * @var float|null
-     * @Groups({"position", "node"})
      */
+    #[Groups(['position', 'node'])]
     public ?float $position = null;
     /**
      * @var array
-     * @Groups({"nodes_sources", "nodes_sources_base", "node"})
      */
+    #[Groups(['nodes_sources', 'nodes_sources_base', 'node'])]
     public array $tags = [];
 }

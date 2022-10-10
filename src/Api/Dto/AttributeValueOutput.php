@@ -15,27 +15,27 @@ final class AttributeValueOutput
 {
     /**
      * @var AttributeInterface|null
-     * @Groups({"attribute"})
      */
+    #[Groups(['attribute'])]
     public ?AttributeInterface $attribute = null;
     /**
      * @var AttributableInterface|null
-     * @Groups({"attribute"})
      */
+    #[Groups(['attribute'])]
     public ?AttributableInterface $attributable = null;
     /**
      * @var int|null
-     * @Groups({"attribute"})
      */
+    #[Groups(['attribute'])]
     public ?int $type = null;
     /**
      * @var mixed|null
-     * @Groups({"attribute"})
      */
+    #[Groups(['attribute'])]
     public $value = null;
     /**
      * @var string|null
-     * @Groups({"attribute"})
      */
+    #[Groups(['attribute'])]
     public ?string $label = null;
 }

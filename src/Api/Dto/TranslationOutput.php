@@ -13,22 +13,22 @@ final class TranslationOutput
 {
     /**
      * @var string
-     * @Groups({"translation", "translation_base"})
      */
+    #[Groups(['translation', 'translation_base'])]
     public string $name = '';
     /**
      * @var string
-     * @Groups({"translation", "translation_base"})
      */
+    #[Groups(['translation', 'translation_base'])]
     public string $locale = '';
     /**
      * @var bool
-     * @Groups({"translation"})
      */
+    #[Groups(['translation'])]
     public bool $available = false;
     /**
      * @var bool
-     * @Groups({"translation"})
      */
+    #[Groups(['translation'])]
     public bool $defaultTranslation = false;
 }

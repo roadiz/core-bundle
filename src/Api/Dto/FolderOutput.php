@@ -13,17 +13,17 @@ final class FolderOutput
 {
     /**
      * @var string|null
-     * @Groups({"folder", "document", "document_display"})
      */
+    #[Groups(['folder', 'document', 'document_display'])]
     public ?string $slug = null;
     /**
      * @var string|null
-     * @Groups({"folder", "document", "document_display"})
      */
+    #[Groups(['folder', 'document', 'document_display'])]
     public ?string $name = null;
     /**
      * @var bool
-     * @Groups({"folder", "document", "document_display"})
      */
+    #[Groups(['folder', 'document', 'document_display'])]
     public bool $visible = false;
 }

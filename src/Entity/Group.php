@@ -9,55 +9,56 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\CoreBundle\Repository\GroupRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * A group gather User and Roles.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\GroupRepository")
- * @ORM\Table(name="usergroups")
- * @UniqueEntity(fields={"name"})
  */
+#[
+    ORM\Entity(repositoryClass: GroupRepository::class),
+    ORM\Table(name: "usergroups"),
+    UniqueEntity(fields: ["name"])
+]
 class Group extends AbstractEntity
 {
     /**
-     * @ORM\Column(type="string", unique=true)
      * @Serializer\Groups({"user", "role", "group"})
-     * @SymfonySerializer\Groups({"user", "role", "group"})
      * @Serializer\Type("string")
-     * @Assert\NotBlank()
-     * @Assert\Length(max=250)
      * @var string
      */
+    #[ORM\Column(type: 'string', unique: true)]
+    #[SymfonySerializer\Groups(['user', 'role', 'group'])]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 250)]
     private string $name = '';
     /**
-     * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\User", mappedBy="groups")
      * @Serializer\Groups({"group_user"})
-     * @SymfonySerializer\Groups({"group_user"})
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\User>")
      * @var Collection<User>
      */
+    #[ORM\ManyToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\User', mappedBy: 'groups')]
+    #[SymfonySerializer\Groups(['group_user'])]
     private Collection $users;
     /**
-     * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Role", inversedBy="groups", cascade={"persist", "merge"})
-     * @ORM\JoinTable(name="groups_roles",
-     *      joinColumns={@ORM\JoinColumn(name="group_id", referencedColumnName="id")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="role_id", referencedColumnName="id")}
-     * )
      * @var Collection<Role>
      * @Serializer\Groups({"group"})
-     * @SymfonySerializer\Groups({"group"})
      * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Role>")
      */
+    #[ORM\JoinTable(name: 'groups_roles')]
+    #[ORM\JoinColumn(name: 'group_id', referencedColumnName: 'id')]
+    #[ORM\InverseJoinColumn(name: 'role_id', referencedColumnName: 'id')]
+    #[ORM\ManyToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Role', inversedBy: 'groups', cascade: ['persist', 'merge'])]
+    #[SymfonySerializer\Groups(['group'])]
     private Collection $roleEntities;
     /**
      * @var array|null
      * @Serializer\Groups({"group", "user"})
-     * @SymfonySerializer\Groups({"group", "user"})
      * @Serializer\Type("array<string>")
      */
+    #[SymfonySerializer\Groups(['group', 'user'])]
     private ?array $roles = null;
 
     /**
