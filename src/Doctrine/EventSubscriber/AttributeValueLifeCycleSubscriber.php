@@ -12,7 +12,7 @@ use Doctrine\ORM\Events;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueInterface;
 use RZ\Roadiz\CoreBundle\Entity\AttributeValue;
 
-class AttributeValueLifeCycleSubscriber implements EventSubscriber
+final class AttributeValueLifeCycleSubscriber implements EventSubscriber
 {
     /**
      * {@inheritdoc}

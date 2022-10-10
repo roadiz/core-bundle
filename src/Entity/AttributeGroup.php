@@ -10,17 +10,16 @@ use RZ\Roadiz\CoreBundle\Model\AttributeGroupInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeGroupTrait;
 use RZ\Roadiz\CoreBundle\Model\AttributeGroupTranslationInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\CoreBundle\Repository\AttributeGroupRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
-/**
- * @package RZ\Roadiz\CoreBundle\Entity
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\AttributeGroupRepository")
- * @ORM\Table(name="attribute_groups", indexes={
- *     @ORM\Index(columns={"canonical_name"})
- * })
- * @ORM\HasLifecycleCallbacks
- * @UniqueEntity(fields={"canonicalName"})
- */
+#[
+    ORM\Entity(repositoryClass: AttributeGroupRepository::class),
+    ORM\Table(name: "attribute_groups"),
+    ORM\Index(columns: ["canonical_name"]),
+    ORM\HasLifecycleCallbacks,
+    UniqueEntity(fields: ["canonicalName"])
+]
 class AttributeGroup extends AbstractEntity implements AttributeGroupInterface
 {
     use AttributeGroupTrait;

@@ -23,7 +23,7 @@ use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-class UserLifeCycleSubscriber implements EventSubscriber
+final class UserLifeCycleSubscriber implements EventSubscriber
 {
     private UserViewer $userViewer;
     private EventDispatcherInterface $dispatcher;

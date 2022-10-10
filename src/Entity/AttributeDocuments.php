@@ -7,37 +7,54 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\CoreBundle\Repository\AttributeDocumentsRepository;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 /**
  * Describes a complex ManyToMany relation
  * between Attribute and Documents.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\AttributeDocumentsRepository")
- * @ORM\Table(name="attributes_documents", indexes={
- *     @ORM\Index(columns={"position"}),
- *     @ORM\Index(columns={"attribute_id", "position"})
- * })
  */
+#[
+    ORM\Entity(repositoryClass: AttributeDocumentsRepository::class),
+    ORM\Table(name: "attributes_documents"),
+    ORM\Index(columns: ["position"]),
+    ORM\Index(columns: ["attribute_id", "position"])
+]
 class AttributeDocuments extends AbstractPositioned
 {
-    /**
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Attribute", inversedBy="attributeDocuments", fetch="EAGER", cascade={"persist", "merge"})
-     * @ORM\JoinColumn(name="attribute_id", referencedColumnName="id", onDelete="CASCADE")
-     * @var Attribute|null
-     * @Serializer\Exclude()
-     * @SymfonySerializer\Ignore()
-     */
+    #[
+        ORM\ManyToOne(
+            targetEntity: Attribute::class,
+            cascade: ["persist", "merge"],
+            fetch: "EAGER",
+            inversedBy: "attributeDocuments"
+        ),
+        ORM\JoinColumn(
+            name: "attribute_id",
+            referencedColumnName: "id",
+            onDelete: "CASCADE"
+        ),
+        Serializer\Exclude(),
+        SymfonySerializer\Ignore()
+    ]
     protected ?Attribute $attribute = null;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Document", inversedBy="attributeDocuments", fetch="EAGER", cascade={"persist", "merge"})
-     * @ORM\JoinColumn(name="document_id", referencedColumnName="id", onDelete="CASCADE")
-     * @var Document|null
-     * @Serializer\Groups({"attribute"})
-     * @SymfonySerializer\Groups({"attribute"})
-     * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Document")
-     */
+    #[
+        ORM\ManyToOne(
+            targetEntity: Document::class,
+            cascade: ["persist", "merge"],
+            fetch: "EAGER",
+            inversedBy: "attributeDocuments"
+        ),
+        ORM\JoinColumn(
+            name: "document_id",
+            referencedColumnName: "id",
+            onDelete: "CASCADE"
+        ),
+        Serializer\Groups(["attribute"]),
+        SymfonySerializer\Groups(["attribute"]),
+        Serializer\Type(Document::class)
+    ]
     protected ?Document $document = null;
 
     /**
@@ -86,7 +103,7 @@ class AttributeDocuments extends AbstractPositioned
     }
 
     /**
-     * @return Attribute
+     * @return Attribute|null
      */
     public function getAttribute(): ?Attribute
     {
