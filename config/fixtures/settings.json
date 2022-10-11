@@ -110,6 +110,18 @@
         "type": 0
     },
     {
+        "name": "support_email_address",
+        "visible": true,
+        "encrypted": false,
+        "description": "Support email address, used in every system emails footer",
+        "setting_group": {
+            "name": "Emailings",
+            "in_menu": true
+        },
+        "type": 8,
+        "default_values": ""
+    },
+    {
         "name": "email_sender",
         "visible": true,
         "encrypted": false,
