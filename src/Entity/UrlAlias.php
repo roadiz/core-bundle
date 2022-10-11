@@ -30,6 +30,22 @@ class UrlAlias extends AbstractEntity
     #[RoadizAssert\UniqueNodeName]
     private string $alias = '';
 
+    #[ORM\ManyToOne(targetEntity: NodesSources::class, inversedBy: 'urlAliases')]
+    #[ORM\JoinColumn(name: 'ns_id', referencedColumnName: 'id')]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    private ?NodesSources $nodeSource = null;
+
+    /**
+     * Create a new UrlAlias linked to a NodeSource.
+     *
+     * @param NodesSources|null $nodeSource
+     */
+    public function __construct(?NodesSources $nodeSource = null)
+    {
+        $this->setNodeSource($nodeSource);
+    }
+
     /**
      * @return string
      */
@@ -37,6 +53,7 @@ class UrlAlias extends AbstractEntity
     {
         return $this->alias;
     }
+
     /**
      * @param string $alias
      *
@@ -49,21 +66,13 @@ class UrlAlias extends AbstractEntity
     }
 
     /**
-     * @var NodesSources|null
-     * @Serializer\Exclude
-     */
-    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\NodesSources', inversedBy: 'urlAliases')]
-    #[ORM\JoinColumn(name: 'ns_id', referencedColumnName: 'id')]
-    #[SymfonySerializer\Ignore]
-    private ?NodesSources $nodeSource = null;
-
-    /**
      * @return NodesSources|null
      */
     public function getNodeSource(): ?NodesSources
     {
         return $this->nodeSource;
     }
+
     /**
      * @param NodesSources|null $nodeSource
      * @return $this
@@ -72,14 +81,5 @@ class UrlAlias extends AbstractEntity
     {
         $this->nodeSource = $nodeSource;
         return $this;
-    }
-    /**
-     * Create a new UrlAlias linked to a NodeSource.
-     *
-     * @param NodesSources|null $nodeSource
-     */
-    public function __construct(?NodesSources $nodeSource = null)
-    {
-        $this->setNodeSource($nodeSource);
     }
 }

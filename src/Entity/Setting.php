@@ -90,12 +90,6 @@ class Setting extends AbstractEntity
     #[Serializer\Groups(['setting'])]
     private bool $encrypted = false;
 
-    /**
-     * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\SettingGroup")
-     * @Serializer\Accessor(getter="getSettingGroup", setter="setSettingGroup")
-     * @Serializer\AccessType("public_method")
-     * @var SettingGroup|null
-     */
     #[ORM\ManyToOne(
         targetEntity: SettingGroup::class,
         cascade: ['persist', 'merge'],
@@ -105,6 +99,8 @@ class Setting extends AbstractEntity
     #[ORM\JoinColumn(name: 'setting_group_id', referencedColumnName: 'id', onDelete: 'SET NULL')]
     #[SymfonySerializer\Groups(['setting'])]
     #[Serializer\Groups(['setting'])]
+    #[Serializer\AccessType(type: 'public_method')]
+    #[Serializer\Accessor(getter: "getSettingGroup", setter: "setSettingGroup")]
     private ?SettingGroup $settingGroup;
 
     /**

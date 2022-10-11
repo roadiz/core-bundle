@@ -6,12 +6,11 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
-use RZ\Roadiz\CoreBundle\Repository\WebhookRepository;
-use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
+use RZ\Roadiz\CoreBundle\Repository\WebhookRepository;
 use RZ\Roadiz\CoreBundle\Webhook\WebhookInterface;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Validator\Constraints\Length;
 
 #[
     ORM\Entity(repositoryClass: WebhookRepository::class),
@@ -51,7 +50,7 @@ class Webhook extends AbstractDateTimed implements WebhookInterface
     /**
      * @var string|null
      */
-    #[ORM\Column(type: 'string', length: 255, nullable: true, name: 'message_type')]
+    #[ORM\Column(name: 'message_type', type: 'string', length: 255, nullable: true)]
     #[Serializer\Type('string')]
     protected ?string $messageType = null;
 
@@ -74,7 +73,7 @@ class Webhook extends AbstractDateTimed implements WebhookInterface
     /**
      * @var int Wait between webhook call and webhook triggering request.
      */
-    #[ORM\Column(type: 'integer', nullable: false, name: 'throttleseconds')]
+    #[ORM\Column(name: 'throttleseconds', type: 'integer', nullable: false)]
     #[Assert\NotNull]
     #[Assert\GreaterThan(value: 0)]
     #[Serializer\Type('int')]
@@ -83,14 +82,14 @@ class Webhook extends AbstractDateTimed implements WebhookInterface
     /**
      * @var \DateTime|null
      */
-    #[ORM\Column(type: 'datetime', nullable: true, name: 'last_triggered_at')]
+    #[ORM\Column(name: 'last_triggered_at', type: 'datetime', nullable: true)]
     #[Serializer\Type('\DateTime')]
     protected ?\DateTime $lastTriggeredAt = null;
 
     /**
      * @var bool
      */
-    #[ORM\Column(type: 'boolean', nullable: false, name: 'automatic', options: ['default' => false])]
+    #[ORM\Column(name: 'automatic', type: 'boolean', nullable: false, options: ['default' => false])]
     #[Serializer\Type('boolean')]
     protected bool $automatic = false;
 

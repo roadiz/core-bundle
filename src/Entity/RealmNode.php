@@ -25,13 +25,25 @@ use RZ\Roadiz\CoreBundle\Model\RealmInterface;
 class RealmNode extends AbstractEntity
 {
     #[ORM\ManyToOne(targetEntity: 'Node')]
-    #[ORM\JoinColumn(name: 'node_id', referencedColumnName: 'id', unique: false, nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(
+        name: 'node_id',
+        referencedColumnName: 'id',
+        unique: false,
+        nullable: false,
+        onDelete: 'CASCADE'
+    )]
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]
     private Node $node;
 
     #[ORM\ManyToOne(targetEntity: Realm::class, inversedBy: 'realmNodes')]
-    #[ORM\JoinColumn(name: 'realm_id', referencedColumnName: 'id', unique: false, nullable: true, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(
+        name: 'realm_id',
+        referencedColumnName: 'id',
+        unique: false,
+        nullable: true,
+        onDelete: 'CASCADE'
+    )]
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]
     private ?Realm $realm = null;

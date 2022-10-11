@@ -99,7 +99,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[ORM\Column(name: 'password_requested_at', type: 'datetime', nullable: true)]
     #[SymfonySerializer\Groups(['user_security'])]
     protected ?\DateTime $passwordRequestedAt = null;
-    
+
     /**
      * @Serializer\Groups({"user_personal", "log_user"})
      * @var string
@@ -112,23 +112,19 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     private string $username = '';
 
     /**
-     * The salt to use for hashing
-     *
-     * @Serializer\Exclude()
-     * @var string
+     * The salt to use for hashing.
      */
     #[ORM\Column(name: 'salt', type: 'string')]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private string $salt = '';
 
     /**
      * Encrypted password.
-     *
-     * @var string
-     * @Serializer\Exclude()
      */
     #[ORM\Column(type: 'string', nullable: false)]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private string $password = '';
 
     /**
@@ -153,13 +149,13 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
 
     /**
      * @var Collection<Role>
-     * @Serializer\Exclude()
      */
     #[ORM\JoinTable(name: 'users_roles')]
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[ORM\InverseJoinColumn(name: 'role_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[ORM\ManyToMany(targetEntity: Role::class)]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private Collection $roleEntities;
 
     /**
@@ -167,9 +163,9 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * to be compatible with symfony security scheme
      *
      * @var array<string>|null
-     * @Serializer\Exclude()
      */
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private ?array $roles = null;
 
     /**

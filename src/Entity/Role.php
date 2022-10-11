@@ -34,7 +34,7 @@ class Role implements PersistableInterface
         ORM\Column(type: "integer"),
         ORM\GeneratedValue(strategy: "AUTO")
     ]
-    protected $id;
+    protected ?int $id = null;
 
     #[ORM\Column(type: 'string', unique: true)]
     #[SymfonySerializer\Groups(['user', 'role', 'group'])]
@@ -67,18 +67,18 @@ class Role implements PersistableInterface
     }
 
     /**
-     * @return int
+     * @return int|null
      */
-    public function getId()
+    public function getId(): ?int
     {
         return $this->id;
     }
 
     /**
-     * @param int $id
+     * @param int|null $id
      * @return Role
      */
-    public function setId($id): Role
+    public function setId(?int $id): Role
     {
         $this->id = $id;
         return $this;

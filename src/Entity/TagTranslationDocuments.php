@@ -22,10 +22,6 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 ]
 class TagTranslationDocuments extends AbstractPositioned
 {
-    /**
-     * @var TagTranslation|null
-     * @Serializer\Exclude()
-     */
     #[ORM\ManyToOne(
         targetEntity: TagTranslation::class,
         cascade: ['persist', 'merge'],
@@ -34,13 +30,9 @@ class TagTranslationDocuments extends AbstractPositioned
     )]
     #[ORM\JoinColumn(name: 'tag_translation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     protected ?TagTranslation $tagTranslation = null;
 
-    /**
-     * @var Document|null
-     * @Serializer\Groups({"tag"})
-     * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Document")
-     */
     #[ORM\ManyToOne(
         targetEntity: Document::class,
         cascade: ['persist', 'merge'],
@@ -49,6 +41,7 @@ class TagTranslationDocuments extends AbstractPositioned
     )]
     #[ORM\JoinColumn(name: 'document_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[SymfonySerializer\Groups(['tag'])]
+    #[Serializer\Groups(['tag'])]
     protected ?Document $document = null;
 
     /**
@@ -74,7 +67,7 @@ class TagTranslationDocuments extends AbstractPositioned
     /**
      * Gets the value of document.
      *
-     * @return Document
+     * @return Document|null
      */
     public function getDocument(): ?Document
     {
