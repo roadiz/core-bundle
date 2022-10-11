@@ -51,26 +51,63 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 ]
 class NodesSources extends AbstractEntity implements Loggable
 {
-    /**
-     * @var ObjectManager|null
-     * @Serializer\Exclude
-     */
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     protected ?ObjectManager $objectManager = null;
 
     /**
-     * @inheritDoc
-     * @Serializer\Exclude
+     * @var Collection<Log>
      */
-    public function injectObjectManager(ObjectManager $objectManager): void
-    {
-        $this->objectManager = $objectManager;
-    }
+    #[ORM\OneToMany(mappedBy: 'nodeSource', targetEntity: Log::class)]
+    #[ORM\OrderBy(['datetime' => 'DESC'])]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    protected Collection $logs;
 
     /**
-     * @var Node|null
-     * @Serializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
+     * @var Collection<Redirection>
      */
+    #[ORM\OneToMany(mappedBy: 'redirectNodeSource', targetEntity: Redirection::class)]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    protected Collection $redirections;
+
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
+    #[ORM\Column(name: 'title', type: 'string', unique: false, nullable: true)]
+    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'log_sources'])]
+    #[Serializer\Groups(['nodes_sources', 'nodes_sources_base', 'log_sources'])]
+    #[Gedmo\Versioned]
+    protected ?string $title = null;
+
+    #[ApiFilter(BaseFilter\DateFilter::class)]
+    #[ApiFilter(BaseFilter\OrderFilter::class)]
+    #[ApiFilter(RoadizFilter\ArchiveFilter::class)]
+    #[ORM\Column(name: 'published_at', type: 'datetime', unique: false, nullable: true)]
+    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base'])]
+    #[Serializer\Groups(['nodes_sources', 'nodes_sources_base'])]
+    #[Gedmo\Versioned]
+    protected ?\DateTime $publishedAt = null;
+
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
+    #[ORM\Column(name: 'meta_title', type: 'string', unique: false)]
+    #[SymfonySerializer\Groups(['nodes_sources'])]
+    #[Serializer\Groups(['nodes_sources'])]
+    #[Gedmo\Versioned]
+    protected string $metaTitle = '';
+
+    #[ORM\Column(name: 'meta_keywords', type: 'text')]
+    #[SymfonySerializer\Groups(['nodes_sources'])]
+    #[Serializer\Groups(['nodes_sources'])]
+    #[Gedmo\Versioned]
+    protected string $metaKeywords = '';
+
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
+    #[ORM\Column(name: 'meta_description', type: 'text')]
+    #[SymfonySerializer\Groups(['nodes_sources'])]
+    #[Serializer\Groups(['nodes_sources'])]
+    #[Gedmo\Versioned]
+    protected string $metaDescription = '';
+
     #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
         "node.id" => "exact",
         "node.nodeName" => "exact",
@@ -106,10 +143,79 @@ class NodesSources extends AbstractEntity implements Loggable
         "node.tags",
         "node.tags.tagName"
     ])]
-    #[ORM\ManyToOne(targetEntity: 'Node', inversedBy: 'nodeSources', fetch: 'EAGER', cascade: ['persist'])]
+    #[ORM\ManyToOne(targetEntity: Node::class, cascade: ['persist'], fetch: 'EAGER', inversedBy: 'nodeSources')]
     #[ORM\JoinColumn(name: 'node_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'log_sources'])]
+    #[Serializer\Groups(['nodes_sources', 'nodes_sources_base', 'log_sources'])]
     private ?Node $node = null;
+
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "translation.id" => "exact",
+        "translation.locale" => "exact",
+    ])]
+    #[ORM\ManyToOne(targetEntity: Translation::class, inversedBy: 'nodeSources')]
+    #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[SymfonySerializer\Groups(['translation_base'])]
+    #[Serializer\Groups(['translation_base'])]
+    private ?TranslationInterface $translation = null;
+
+    /**
+     * @var Collection<UrlAlias>
+     */
+    #[ORM\OneToMany(
+        mappedBy: 'nodeSource',
+        targetEntity: UrlAlias::class,
+        cascade: ['all']
+    )]
+    #[SymfonySerializer\Ignore]
+    private Collection $urlAliases;
+
+    /**
+     * @var Collection<NodesSourcesDocuments>
+     */
+    #[ORM\OneToMany(
+        mappedBy: 'nodeSource',
+        targetEntity: NodesSourcesDocuments::class,
+        cascade: ['persist'],
+        fetch: 'LAZY',
+        orphanRemoval: true
+    )]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    private Collection $documentsByFields;
+
+    /**
+     * Create a new NodeSource with its Node and Translation.
+     *
+     * @param Node $node
+     * @param TranslationInterface $translation
+     */
+    public function __construct(Node $node, TranslationInterface $translation)
+    {
+        $this->setNode($node);
+        $this->translation = $translation;
+        $this->urlAliases = new ArrayCollection();
+        $this->documentsByFields = new ArrayCollection();
+        $this->logs = new ArrayCollection();
+        $this->redirections = new ArrayCollection();
+    }
+
+    /**
+     * @inheritDoc
+     * @Serializer\Exclude
+     */
+    public function injectObjectManager(ObjectManager $objectManager): void
+    {
+        $this->objectManager = $objectManager;
+    }
+
+    #[ORM\PreUpdate]
+    public function preUpdate()
+    {
+        if (null !== $this->getNode()) {
+            $this->getNode()->setUpdatedAt(new \DateTime("now"));
+        }
+    }
 
     /**
      * @return Node|null
@@ -134,67 +240,6 @@ class NodesSources extends AbstractEntity implements Loggable
         return $this;
     }
 
-    #[ORM\PreUpdate]
-    public function preUpdate()
-    {
-        if (null !== $this->getNode()) {
-            $this->getNode()->setUpdatedAt(new \DateTime("now"));
-        }
-    }
-
-    /**
-     * @var TranslationInterface|null
-     * @Serializer\Groups({"nodes_sources", "log_sources"})
-     * @Serializer\Exclude(if="!object.isReachable()")
-     */
-    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
-        "translation.id" => "exact",
-        "translation.locale" => "exact",
-    ])]
-    #[ORM\ManyToOne(targetEntity: 'Translation', inversedBy: 'nodeSources')]
-    #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
-    #[SymfonySerializer\Groups(['translation_base'])]
-    private ?TranslationInterface $translation = null;
-
-    /**
-     * @return TranslationInterface
-     */
-    public function getTranslation(): TranslationInterface
-    {
-        if (null === $this->translation) {
-            throw new RuntimeException('Node source translation cannot be null.');
-        }
-        return $this->translation;
-    }
-    /**
-     * @param TranslationInterface $translation
-     *
-     * @return $this
-     */
-    public function setTranslation(TranslationInterface $translation): NodesSources
-    {
-        $this->translation = $translation;
-        return $this;
-    }
-
-    /**
-     * @var Collection<UrlAlias>
-     * @Serializer\Groups({"nodes_sources"})
-     * @Serializer\Exclude(if="!object.isReachable()")
-     */
-    #[ORM\OneToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\UrlAlias', mappedBy: 'nodeSource', cascade: ['all'])]
-    #[SymfonySerializer\Groups(['nodes_sources'])]
-    #[SymfonySerializer\Ignore]
-    private Collection $urlAliases;
-
-    /**
-     * @return Collection<UrlAlias>
-     */
-    public function getUrlAliases(): Collection
-    {
-        return $this->urlAliases;
-    }
-
     /**
      * @param UrlAlias $urlAlias
      * @return $this
@@ -209,13 +254,19 @@ class NodesSources extends AbstractEntity implements Loggable
         return $this;
     }
 
-    /**
-     * @var Collection<NodesSourcesDocuments>
-     * @Serializer\Exclude
-     */
-    #[ORM\OneToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments', mappedBy: 'nodeSource', orphanRemoval: true, cascade: ['persist'], fetch: 'LAZY')]
-    #[SymfonySerializer\Ignore]
-    private Collection $documentsByFields;
+    public function clearDocumentsByFields(NodeTypeField $nodeTypeField)
+    {
+        $toRemoveCollection = $this->getDocumentsByFields()->filter(
+            function (NodesSourcesDocuments $element) use ($nodeTypeField) {
+                return $element->getField()->getId() === $nodeTypeField->getId();
+            }
+        );
+        /** @var NodesSourcesDocuments $toRemove */
+        foreach ($toRemoveCollection as $toRemove) {
+            $this->getDocumentsByFields()->removeElement($toRemove);
+            $toRemove->setNodeSource(null);
+        }
+    }
 
     /**
      * @return Collection<NodesSourcesDocuments>
@@ -246,22 +297,6 @@ class NodesSources extends AbstractEntity implements Loggable
     }
 
     /**
-     * Used by any NSClass to add directly new documents to source.
-     *
-     * @param NodesSourcesDocuments $nodesSourcesDocuments
-     *
-     * @return $this
-     */
-    public function addDocumentsByFields(NodesSourcesDocuments $nodesSourcesDocuments): NodesSources
-    {
-        if (!$this->getDocumentsByFields()->contains($nodesSourcesDocuments)) {
-            $this->getDocumentsByFields()->add($nodesSourcesDocuments);
-            $nodesSourcesDocuments->setNodeSource($this);
-        }
-        return $this;
-    }
-
-    /**
      * @param NodesSourcesDocuments $nodesSourcesDocuments
      * @return bool
      */
@@ -277,18 +312,20 @@ class NodesSources extends AbstractEntity implements Loggable
         );
     }
 
-    public function clearDocumentsByFields(NodeTypeField $nodeTypeField)
+    /**
+     * Used by any NSClass to add directly new documents to source.
+     *
+     * @param NodesSourcesDocuments $nodesSourcesDocuments
+     *
+     * @return $this
+     */
+    public function addDocumentsByFields(NodesSourcesDocuments $nodesSourcesDocuments): NodesSources
     {
-        $toRemoveCollection = $this->getDocumentsByFields()->filter(
-            function (NodesSourcesDocuments $element) use ($nodeTypeField) {
-                return $element->getField()->getId() === $nodeTypeField->getId();
-            }
-        );
-        /** @var NodesSourcesDocuments $toRemove */
-        foreach ($toRemoveCollection as $toRemove) {
-            $this->getDocumentsByFields()->removeElement($toRemove);
-            $toRemove->setNodeSource(null);
+        if (!$this->getDocumentsByFields()->contains($nodesSourcesDocuments)) {
+            $this->getDocumentsByFields()->add($nodesSourcesDocuments);
+            $nodesSourcesDocuments->setNodeSource($this);
         }
+        return $this;
     }
 
     /**
@@ -339,23 +376,6 @@ class NodesSources extends AbstractEntity implements Loggable
     }
 
     /**
-     * @var Collection<Log>
-     * @Serializer\Exclude
-     */
-    #[ORM\OneToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Log', mappedBy: 'nodeSource')]
-    #[ORM\OrderBy(['datetime' => 'DESC'])]
-    #[SymfonySerializer\Ignore]
-    protected Collection $logs;
-
-    /**
-     * @var Collection<Redirection>
-     * @Serializer\Exclude
-     */
-    #[ORM\OneToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Redirection', mappedBy: 'redirectNodeSource')]
-    #[SymfonySerializer\Ignore]
-    protected Collection $redirections;
-
-    /**
      * Logs related to this node-source.
      *
      * @return Collection<Log>
@@ -395,46 +415,6 @@ class NodesSources extends AbstractEntity implements Loggable
     }
 
     /**
-     * @Serializer\Groups({"nodes_sources", "nodes_sources_base", "log_sources"})
-     * @Gedmo\Versioned
-     */
-    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
-    #[ORM\Column(type: 'string', name: 'title', unique: false, nullable: true)]
-    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'log_sources'])]
-    protected ?string $title = null;
-
-    /**
-     * @return string|null
-     */
-    public function getTitle(): ?string
-    {
-        return $this->title;
-    }
-
-    /**
-     * @param string|null $title
-     * @return $this
-     */
-    public function setTitle(?string $title): NodesSources
-    {
-        $this->title = null !== $title ? trim($title) : null;
-        return $this;
-    }
-
-    /**
-     * @var \DateTime|null
-     * @Serializer\Groups({"nodes_sources", "nodes_sources_base"})
-     * @Gedmo\Versioned
-     * @Serializer\Exclude(if="!object.isPublishable()")
-     */
-    #[ApiFilter(BaseFilter\DateFilter::class)]
-    #[ApiFilter(BaseFilter\OrderFilter::class)]
-    #[ApiFilter(RoadizFilter\ArchiveFilter::class)]
-    #[ORM\Column(type: 'datetime', name: 'published_at', unique: false, nullable: true)]
-    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base'])]
-    protected ?\DateTime $publishedAt = null;
-
-    /**
      * @return \DateTime|null
      */
     public function getPublishedAt(): ?\DateTime
@@ -451,16 +431,6 @@ class NodesSources extends AbstractEntity implements Loggable
         $this->publishedAt = $publishedAt;
         return $this;
     }
-
-    /**
-     * @Serializer\Groups({"nodes_sources"})
-     * @Gedmo\Versioned
-     * @Serializer\Exclude(if="!object.isReachable()")
-     */
-    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
-    #[ORM\Column(type: 'string', name: 'meta_title', unique: false)]
-    #[SymfonySerializer\Groups(['nodes_sources'])]
-    protected string $metaTitle = '';
 
     /**
      * @return string
@@ -481,14 +451,6 @@ class NodesSources extends AbstractEntity implements Loggable
 
         return $this;
     }
-    /**
-     * @Serializer\Groups({"nodes_sources"})
-     * @Serializer\Exclude(if="!object.isReachable()")
-     * @Gedmo\Versioned
-     */
-    #[ORM\Column(type: 'text', name: 'meta_keywords')]
-    #[SymfonySerializer\Groups(['nodes_sources'])]
-    protected string $metaKeywords = '';
 
     /**
      * @return string
@@ -509,15 +471,6 @@ class NodesSources extends AbstractEntity implements Loggable
 
         return $this;
     }
-    /**
-     * @Serializer\Groups({"nodes_sources"})
-     * @Serializer\Exclude(if="!object.isReachable()")
-     * @Gedmo\Versioned
-     */
-    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
-    #[ORM\Column(type: 'text', name: 'meta_description')]
-    #[SymfonySerializer\Groups(['nodes_sources'])]
-    protected string $metaDescription = '';
 
     /**
      * @return string
@@ -540,22 +493,6 @@ class NodesSources extends AbstractEntity implements Loggable
     }
 
     /**
-     * Create a new NodeSource with its Node and Translation.
-     *
-     * @param Node $node
-     * @param TranslationInterface $translation
-     */
-    public function __construct(Node $node, TranslationInterface $translation)
-    {
-        $this->setNode($node);
-        $this->translation = $translation;
-        $this->urlAliases = new ArrayCollection();
-        $this->documentsByFields = new ArrayCollection();
-        $this->logs = new ArrayCollection();
-        $this->redirections = new ArrayCollection();
-    }
-
-    /**
      * @return string
      * @Serializer\VirtualProperty
      * @Serializer\SerializedName("slug")
@@ -571,6 +508,14 @@ class NodesSources extends AbstractEntity implements Loggable
         }
 
         return $this->getNode()->getNodeName();
+    }
+
+    /**
+     * @return Collection<UrlAlias>
+     */
+    public function getUrlAliases(): Collection
+    {
+        return $this->urlAliases;
     }
 
     /**
@@ -595,6 +540,56 @@ class NodesSources extends AbstractEntity implements Loggable
 
     /**
      * @return string
+     */
+    public function __toString()
+    {
+        return '#' . $this->getId() .
+        ' <' . $this->getTitle() . '>[' . $this->getTranslation()->getLocale() .
+        '], type="' . $this->getNodeTypeName() . '"';
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getTitle(): ?string
+    {
+        return $this->title;
+    }
+
+    /**
+     * @param string|null $title
+     * @return $this
+     */
+    public function setTitle(?string $title): NodesSources
+    {
+        $this->title = null !== $title ? trim($title) : null;
+        return $this;
+    }
+
+    /**
+     * @return TranslationInterface
+     */
+    public function getTranslation(): TranslationInterface
+    {
+        if (null === $this->translation) {
+            throw new RuntimeException('Node source translation cannot be null.');
+        }
+        return $this->translation;
+    }
+
+    /**
+     * @param TranslationInterface $translation
+     *
+     * @return $this
+     */
+    public function setTranslation(TranslationInterface $translation): NodesSources
+    {
+        $this->translation = $translation;
+        return $this;
+    }
+
+    /**
+     * @return string
      * @Serializer\VirtualProperty
      * @Serializer\Groups({"nodes_sources", "nodes_sources_default"})
      * @Serializer\SerializedName("@type")
@@ -604,16 +599,6 @@ class NodesSources extends AbstractEntity implements Loggable
     public function getNodeTypeName(): string
     {
         return 'NodesSources';
-    }
-
-    /**
-     * @return string
-     */
-    public function __toString()
-    {
-        return '#' . $this->getId() .
-        ' <' . $this->getTitle() . '>[' . $this->getTranslation()->getLocale() .
-        '], type="' . $this->getNodeTypeName() . '"';
     }
 
     /**

@@ -24,17 +24,31 @@ use Symfony\Component\Validator\Constraints as Assert;
 ]
 class SettingGroup extends AbstractEntity
 {
-    /**
-     * @Serializer\Groups({"setting", "setting_group"})
-     * @Serializer\Type("string")
-     * @var string
-     */
+    #[ORM\Column(name: 'in_menu', type: 'boolean', nullable: false, options: ['default' => false])]
+    #[SymfonySerializer\Groups(['setting', 'setting_group'])]
+    #[Serializer\Groups(['setting', 'setting_group'])]
+    protected bool $inMenu = false;
+
     #[ORM\Column(type: 'string', unique: true)]
     #[SymfonySerializer\Groups(['setting', 'setting_group'])]
+    #[Serializer\Groups(['setting', 'setting_group'])]
     #[Assert\NotNull]
     #[Assert\NotBlank]
     #[Assert\Length(max: 250)]
     private string $name = '';
+
+    /**
+     * @var Collection<Setting>
+     */
+    #[ORM\OneToMany(mappedBy: 'settingGroup', targetEntity: Setting::class)]
+    #[SymfonySerializer\Groups(['setting_group'])]
+    #[Serializer\Groups(['setting_group'])]
+    private Collection $settings;
+
+    public function __construct()
+    {
+        $this->settings = new ArrayCollection();
+    }
 
     /**
      * @return string
@@ -43,6 +57,7 @@ class SettingGroup extends AbstractEntity
     {
         return $this->name;
     }
+
     /**
      * @param string $name
      *
@@ -53,14 +68,6 @@ class SettingGroup extends AbstractEntity
         $this->name = $name;
         return $this;
     }
-
-    /**
-     * @Serializer\Groups({"setting", "setting_group"})
-     * @Serializer\Type("bool")
-     */
-    #[ORM\Column(type: 'boolean', name: 'in_menu', nullable: false, options: ['default' => false])]
-    #[SymfonySerializer\Groups(['setting', 'setting_group'])]
-    protected bool $inMenu = false;
 
     /**
      * @return bool
@@ -82,26 +89,6 @@ class SettingGroup extends AbstractEntity
     }
 
     /**
-     * @var Collection<Setting>
-     * @Serializer\Groups({"setting_group"})
-     */
-    #[ORM\OneToMany(targetEntity: 'Setting', mappedBy: 'settingGroup')]
-    #[SymfonySerializer\Groups(['setting_group'])]
-    private Collection $settings;
-
-    public function __construct()
-    {
-        $this->settings = new ArrayCollection();
-    }
-
-    /**
-     * @return Collection<Setting>
-     */
-    public function getSettings()
-    {
-        return $this->settings;
-    }
-    /**
      * @param Setting $setting
      * @return SettingGroup
      */
@@ -111,6 +98,14 @@ class SettingGroup extends AbstractEntity
             $this->settings->add($setting);
         }
         return $this;
+    }
+
+    /**
+     * @return Collection<Setting>
+     */
+    public function getSettings()
+    {
+        return $this->settings;
     }
 
     /**

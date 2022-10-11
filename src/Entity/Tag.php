@@ -49,104 +49,104 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
 {
     use LeafTrait;
 
-    /**
-     * @var string
-     * @Serializer\Groups({"tag", "tag_base", "color"})
-     * @Serializer\Type("string")
-     */
-    #[ORM\Column(type: 'string', name: 'color', length: 7, unique: false, nullable: false, options: ['default' => '#000000'])]
+    #[ORM\Column(
+        name: 'color',
+        type: 'string',
+        length: 7,
+        unique: false,
+        nullable: false,
+        options: ['default' => '#000000']
+    )]
     #[SymfonySerializer\Groups(['tag', 'tag_base', 'color'])]
+    #[Serializer\Groups(['tag', 'tag_base', 'color'])]
     protected string $color = '#000000';
+
     /**
      * @var Tag|null
-     * @Serializer\Exclude
      */
     #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
         "parent.id" => "exact",
         "parent.tagName" => "exact"
     ])]
-    #[ORM\ManyToOne(targetEntity: 'Tag', inversedBy: 'children', fetch: 'EXTRA_LAZY')]
+    #[ORM\ManyToOne(targetEntity: Tag::class, fetch: 'EXTRA_LAZY', inversedBy: 'children')]
     #[ORM\JoinColumn(name: 'parent_tag_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[Serializer\Exclude]
     #[SymfonySerializer\MaxDepth(2)]
     #[SymfonySerializer\Groups(['tag_parent'])]
     protected ?LeafInterface $parent = null;
+
     /**
      * @var Collection<Tag>
-     * @Serializer\Groups({"tag_children"})
-     * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Tag>")
-     * @Serializer\Accessor(setter="setChildren", getter="getChildren")
      */
-    #[ORM\OneToMany(targetEntity: 'Tag', mappedBy: 'parent', orphanRemoval: true, cascade: ['persist', 'merge'])]
+    #[ORM\OneToMany(
+        mappedBy: 'parent',
+        targetEntity: Tag::class,
+        cascade: ['persist', 'merge'],
+        orphanRemoval: true
+    )]
     #[ORM\OrderBy(['position' => 'ASC'])]
     #[SymfonySerializer\Groups(['tag_children'])]
+    #[Serializer\Groups(['tag_children'])]
+    #[Serializer\AccessType(type: "public_method")]
     protected Collection $children;
+
     /**
      * @var Collection<TagTranslation>
-     * @Serializer\Groups({"translated_tag"})
-     * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\TagTranslation>")
-     * @Serializer\Accessor(setter="setTranslatedTags", getter="getTranslatedTags")
      */
-    #[ORM\OneToMany(targetEntity: 'TagTranslation', mappedBy: 'tag', fetch: 'EAGER', orphanRemoval: true, cascade: ['all'])]
+    #[ORM\OneToMany(
+        mappedBy: 'tag',
+        targetEntity: TagTranslation::class,
+        cascade: ['all'],
+        fetch: 'EAGER',
+        orphanRemoval: true
+    )]
     #[SymfonySerializer\Groups(['translated_tag'])]
+    #[Serializer\Groups(['translated_tag'])]
     protected Collection $translatedTags;
-    /**
-     * @var string
-     * @Serializer\Groups({"tag", "tag_base", "node", "nodes_sources"})
-     * @Serializer\Type("string")
-     * @Serializer\Accessor(getter="getTagName", setter="setTagName")
-     */
+
     #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
-    #[ORM\Column(type: 'string', name: 'tag_name', unique: true)]
+    #[ORM\Column(name: 'tag_name', type: 'string', unique: true)]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Groups(['tag'])]
+    #[Serializer\Accessor(getter: "getTagName", setter: "setTagName")]
     #[Assert\NotNull]
     #[Assert\NotBlank]
     #[Assert\Length(max: 250)]
     private string $tagName = '';
-    /**
-     * @var string
-     * @Serializer\Exclude
-     */
+
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private string $dirtyTagName = '';
-    /**
-     * @Serializer\Groups({"tag", "tag_base", "node", "nodes_sources"})
-     * @Serializer\Type("bool")
-     */
+
     #[ApiFilter(BaseFilter\BooleanFilter::class)]
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => true])]
     #[SymfonySerializer\Groups(['tag', 'tag_base', 'node', 'nodes_sources'])]
+    #[Serializer\Groups(['tag', 'tag_base', 'node', 'nodes_sources'])]
     private bool $visible = true;
 
-    /**
-     * @Serializer\Groups({"tag"})
-     * @Serializer\Type("string")
-     */
-    #[ORM\Column(type: 'string', name: 'children_order', options: ['default' => 'position'])]
+    #[ORM\Column(name: 'children_order', type: 'string', options: ['default' => 'position'])]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Groups(["tag"])]
     private string $childrenOrder = 'position';
 
-    /**
-     * @Serializer\Groups({"tag"})
-     * @Serializer\Type("string")
-     */
-    #[ORM\Column(type: 'string', name: 'children_order_direction', length: 4, options: ['default' => 'ASC'])]
+    #[ORM\Column(name: 'children_order_direction', type: 'string', length: 4, options: ['default' => 'ASC'])]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Groups(["tag"])]
     private string $childrenOrderDirection = 'ASC';
-    /**
-     * @Serializer\Groups({"tag"})
-     * @Serializer\Type("bool")
-     */
+
     #[ApiFilter(BaseFilter\BooleanFilter::class)]
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Groups(["tag"])]
     private bool $locked = false;
+
     /**
      * @var Collection<Node>
-     * @Serializer\Exclude
      */
     #[ORM\JoinTable(name: 'nodes_tags')]
-    #[ORM\ManyToMany(targetEntity: 'Node', mappedBy: 'tags')]
+    #[ORM\ManyToMany(targetEntity: Node::class, mappedBy: 'tags')]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private Collection $nodes;
 
     /**
@@ -168,17 +168,6 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     public function getDirtyTagName(): string
     {
         return $this->dirtyTagName;
-    }
-
-    /**
-     * @param boolean $visible
-     *
-     * @return $this
-     */
-    public function setVisible(bool $visible)
-    {
-        $this->visible = $visible;
-        return $this;
     }
 
     /**
@@ -251,28 +240,6 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     }
 
     /**
-     * @return Collection<TagTranslation>
-     */
-    public function getTranslatedTags(): Collection
-    {
-        return $this->translatedTags;
-    }
-
-    /**
-     * @param Collection<TagTranslation> $translatedTags
-     * @return Tag
-     */
-    public function setTranslatedTags(Collection $translatedTags): self
-    {
-        $this->translatedTags = $translatedTags;
-        /** @var TagTranslation $translatedTag */
-        foreach ($this->translatedTags as $translatedTag) {
-            $translatedTag->setTag($this);
-        }
-        return $this;
-    }
-
-    /**
      * @param TranslationInterface $translation
      * @return Collection<TagTranslation>
      */
@@ -299,6 +266,17 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     public function isVisible(): bool
     {
         return $this->visible;
+    }
+
+    /**
+     * @param boolean $visible
+     *
+     * @return $this
+     */
+    public function setVisible(bool $visible)
+    {
+        $this->visible = $visible;
+        return $this;
     }
 
     /**
@@ -394,6 +372,28 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
         return $this->getTranslatedTags()->first() ?
             $this->getTranslatedTags()->first()->getName() :
             $this->getTagName();
+    }
+
+    /**
+     * @return Collection<TagTranslation>
+     */
+    public function getTranslatedTags(): Collection
+    {
+        return $this->translatedTags;
+    }
+
+    /**
+     * @param Collection<TagTranslation> $translatedTags
+     * @return Tag
+     */
+    public function setTranslatedTags(Collection $translatedTags): self
+    {
+        $this->translatedTags = $translatedTags;
+        /** @var TagTranslation $translatedTag */
+        foreach ($this->translatedTags as $translatedTag) {
+            $translatedTag->setTag($this);
+        }
+        return $this;
     }
 
     /**

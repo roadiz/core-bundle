@@ -24,35 +24,34 @@ use Symfony\Component\Validator\Constraints as Assert;
 ]
 class Group extends AbstractEntity
 {
-    /**
-     * @Serializer\Groups({"user", "role", "group"})
-     * @Serializer\Type("string")
-     * @var string
-     */
     #[ORM\Column(type: 'string', unique: true)]
     #[SymfonySerializer\Groups(['user', 'role', 'group'])]
+    #[Serializer\Groups(['user', 'role', 'group'])]
     #[Assert\NotBlank]
     #[Assert\Length(max: 250)]
     private string $name = '';
+
     /**
-     * @Serializer\Groups({"group_user"})
-     * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\User>")
      * @var Collection<User>
      */
-    #[ORM\ManyToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\User', mappedBy: 'groups')]
+    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'groups')]
     #[SymfonySerializer\Groups(['group_user'])]
+    #[Serializer\Groups(['group_user'])]
+    #[Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\User>")]
     private Collection $users;
+
     /**
      * @var Collection<Role>
-     * @Serializer\Groups({"group"})
-     * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Role>")
      */
     #[ORM\JoinTable(name: 'groups_roles')]
     #[ORM\JoinColumn(name: 'group_id', referencedColumnName: 'id')]
     #[ORM\InverseJoinColumn(name: 'role_id', referencedColumnName: 'id')]
-    #[ORM\ManyToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Role', inversedBy: 'groups', cascade: ['persist', 'merge'])]
+    #[ORM\ManyToMany(targetEntity: Role::class, inversedBy: 'groups', cascade: ['persist', 'merge'])]
     #[SymfonySerializer\Groups(['group'])]
+    #[Serializer\Groups(['group'])]
+    #[Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Role>")]
     private Collection $roleEntities;
+
     /**
      * @var array|null
      * @Serializer\Groups({"group", "user"})
@@ -61,9 +60,6 @@ class Group extends AbstractEntity
     #[SymfonySerializer\Groups(['group', 'user'])]
     private ?array $roles = null;
 
-    /**
-     * Create a new Group.
-     */
     public function __construct()
     {
         $this->roleEntities = new ArrayCollection();
@@ -143,6 +139,16 @@ class Group extends AbstractEntity
 
     /**
      * @param Role $role
+     * @return $this
+     * @deprecated Use addRoleEntity
+     */
+    public function addRole(Role $role): Group
+    {
+        return $this->addRoleEntity($role);
+    }
+
+    /**
+     * @param Role $role
      *
      * @return $this
      */
@@ -158,11 +164,11 @@ class Group extends AbstractEntity
     /**
      * @param Role $role
      * @return $this
-     * @deprecated Use addRoleEntity
+     * @deprecated Use removeRoleEntity
      */
-    public function addRole(Role $role): Group
+    public function removeRole(Role $role): Group
     {
-        return $this->addRoleEntity($role);
+        return $this->removeRoleEntity($role);
     }
 
     /**
@@ -177,15 +183,5 @@ class Group extends AbstractEntity
         }
 
         return $this;
-    }
-
-    /**
-     * @param Role $role
-     * @return $this
-     * @deprecated Use removeRoleEntity
-     */
-    public function removeRole(Role $role): Group
-    {
-        return $this->removeRoleEntity($role);
     }
 }

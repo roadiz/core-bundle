@@ -41,57 +41,57 @@ class Webhook extends AbstractDateTimed implements WebhookInterface
 
     /**
      * @var string|null
-     * @Serializer\Type("string")
      */
     #[ORM\Column(type: 'text', nullable: true)]
     #[Assert\NotBlank]
     #[Assert\Length(min: 1, max: 250)]
+    #[Serializer\Type('string')]
     protected ?string $description = null;
 
     /**
      * @var string|null
-     * @Serializer\Type("string")
      */
     #[ORM\Column(type: 'string', length: 255, nullable: true, name: 'message_type')]
+    #[Serializer\Type('string')]
     protected ?string $messageType = null;
 
     /**
      * @var string|null
-     * @Serializer\Type("string")
      */
     #[ORM\Column(type: 'text', nullable: true)]
     #[Assert\NotBlank]
     #[Assert\Url]
+    #[Serializer\Type('string')]
     protected ?string $uri = null;
 
     /**
      * @var array|null
-     * @Serializer\Type("array")
      */
     #[ORM\Column(type: 'json', nullable: true)]
+    #[Serializer\Type('array')]
     protected ?array $payload = null;
 
     /**
      * @var int Wait between webhook call and webhook triggering request.
-     * @Serializer\Type("int")
      */
     #[ORM\Column(type: 'integer', nullable: false, name: 'throttleseconds')]
     #[Assert\NotNull]
     #[Assert\GreaterThan(value: 0)]
+    #[Serializer\Type('int')]
     protected int $throttleSeconds = 60;
 
     /**
      * @var \DateTime|null
-     * @Serializer\Type("\DateTime")
      */
     #[ORM\Column(type: 'datetime', nullable: true, name: 'last_triggered_at')]
+    #[Serializer\Type('\DateTime')]
     protected ?\DateTime $lastTriggeredAt = null;
 
     /**
      * @var bool
-     * @Serializer\Type("boolean")
      */
     #[ORM\Column(type: 'boolean', nullable: false, name: 'automatic', options: ['default' => false])]
+    #[Serializer\Type('boolean')]
     protected bool $automatic = false;
 
     /**

@@ -68,11 +68,8 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     public const ARCHIVED = 40;
     public const DELETED = 50;
 
-    /**
-     * @var array
-     * @Serializer\Exclude
-     */
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     public static array $orderingFields = [
         'position' => 'position',
         'nodeName' => 'nodeName',
@@ -80,6 +77,205 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
         'updatedAt' => 'updatedAt',
         'publishedAt' => 'ns.publishedAt',
     ];
+
+    #[ORM\Column(name: 'node_name', type: 'string', unique: true)]
+    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'node', 'log_sources'])]
+    #[Serializer\Groups(['nodes_sources', 'nodes_sources_base', 'node', 'log_sources'])]
+    #[Serializer\Accessor(getter: "getNodeName", setter: "setNodeName")]
+    #[Assert\NotNull]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 255)]
+    private string $nodeName = '';
+
+    #[ORM\Column(name: 'dynamic_node_name', type: 'boolean', nullable: false, options: ['default' => true])]
+    #[SymfonySerializer\Ignore]
+    #[Gedmo\Versioned]
+    private bool $dynamicNodeName = true;
+
+    #[ORM\Column(name: 'home', type: 'boolean', nullable: false, options: ['default' => false])]
+    #[SymfonySerializer\Ignore]
+    private bool $home = false;
+
+    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => true])]
+    #[SymfonySerializer\Groups(['nodes_sources_base', 'nodes_sources', 'node'])]
+    #[Serializer\Groups(['nodes_sources_base', 'nodes_sources', 'node'])]
+    #[Gedmo\Versioned]
+    private bool $visible = true;
+
+    /**
+     * @internal You should use node Workflow to perform change on status.
+     */
+    #[ORM\Column(type: 'integer')]
+    #[Serializer\Exclude]
+    #[SymfonySerializer\Ignore]
+    private int $status = Node::DRAFT;
+
+    #[ORM\Column(type: 'integer', nullable: false, options: ['default' => 0])]
+    #[Assert\GreaterThanOrEqual(value: 0)]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    #[Gedmo\Versioned]
+    private int $ttl = 0;
+
+    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
+    #[SymfonySerializer\Groups(['node'])]
+    #[Serializer\Groups(['node'])]
+    #[Gedmo\Versioned]
+    private bool $locked = false;
+
+    /**
+     * @var float|string
+     */
+    #[ORM\Column(type: 'decimal', precision: 2, scale: 1)]
+    #[SymfonySerializer\Groups(['node'])]
+    #[Serializer\Groups(['node'])]
+    #[Gedmo\Versioned]
+    private $priority = 0.8;
+
+    #[ORM\Column(name: 'hide_children', type: 'boolean', nullable: false, options: ['default' => false])]
+    #[SymfonySerializer\Groups(['node'])]
+    #[Serializer\Groups(['node'])]
+    #[Gedmo\Versioned]
+    private bool $hideChildren = false;
+
+    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
+    #[SymfonySerializer\Groups(['node'])]
+    #[Serializer\Groups(['node'])]
+    #[Gedmo\Versioned]
+    private bool $sterile = false;
+
+    #[ORM\Column(name: 'children_order', type: 'string')]
+    #[SymfonySerializer\Groups(['node'])]
+    #[Serializer\Groups(['node'])]
+    #[Gedmo\Versioned]
+    private string $childrenOrder = 'position';
+
+    #[ORM\Column(name: 'children_order_direction', type: 'string', length: 4)]
+    #[SymfonySerializer\Groups(['node'])]
+    #[Serializer\Groups(['node'])]
+    #[Gedmo\Versioned]
+    private string $childrenOrderDirection = 'ASC';
+
+    /**
+     * @var NodeTypeInterface|null
+     */
+    #[ORM\ManyToOne(targetEntity: NodeTypeInterface::class)]
+    #[ORM\JoinColumn(name: 'nodeType_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[SymfonySerializer\Groups(['node'])]
+    #[Serializer\Groups(['node'])]
+    #[SymfonySerializer\Ignore]
+    private ?NodeTypeInterface $nodeType = null;
+
+    /**
+     * @var Node|null
+     */
+    #[ORM\ManyToOne(targetEntity: Node::class, fetch: 'EAGER', inversedBy: 'children')]
+    #[ORM\JoinColumn(name: 'parent_node_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    private ?LeafInterface $parent = null;
+
+    /**
+     * @var Collection<Node>
+     */
+    #[ORM\OneToMany(mappedBy: 'parent', targetEntity: Node::class, orphanRemoval: true)]
+    #[ORM\OrderBy(['position' => 'ASC'])]
+    #[SymfonySerializer\Groups(['node_children'])]
+    #[Serializer\Groups(['node_children'])]
+    private Collection $children;
+
+    /**
+     * @var Collection<Tag>
+     */
+    #[ORM\JoinTable(name: 'nodes_tags')]
+    #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'nodes')]
+    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'node'])]
+    #[Serializer\Groups(['nodes_sources', 'nodes_sources_base', 'node'])]
+    private Collection $tags;
+
+    /**
+     * @var Collection<NodesCustomForms>
+     */
+    #[ORM\OneToMany(mappedBy: 'node', targetEntity: NodesCustomForms::class, fetch: 'EXTRA_LAZY')]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    private Collection $customForms;
+
+    /**
+     * @var Collection<NodeType>
+     */
+    #[ORM\JoinTable(name: 'stack_types')]
+    #[ORM\InverseJoinColumn(name: 'nodetype_id', onDelete: 'CASCADE')]
+    #[ORM\ManyToMany(targetEntity: NodeType::class)]
+    #[Serializer\Groups(['node'])]
+    #[SymfonySerializer\Groups(['node'])]
+    #[SymfonySerializer\Ignore]
+    private Collection $stackTypes;
+
+    /**
+     * @var Collection<NodesSources>
+     */
+    #[ORM\OneToMany(
+        mappedBy: 'node',
+        targetEntity: NodesSources::class,
+        fetch: 'EXTRA_LAZY',
+        orphanRemoval: true
+    )]
+    #[Serializer\Groups(['node'])]
+    #[SymfonySerializer\Groups(['node'])]
+    #[SymfonySerializer\Ignore]
+    private Collection $nodeSources;
+
+    /**
+     * @var Collection<NodesToNodes>
+     */
+    #[ORM\OneToMany(
+        mappedBy: 'nodeA',
+        targetEntity: NodesToNodes::class,
+        cascade: ['persist'],
+        fetch: 'LAZY',
+        orphanRemoval: true
+    )]
+    #[ORM\OrderBy(['position' => 'ASC'])]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    private Collection $bNodes;
+
+    /**
+     * @var Collection<NodesToNodes>
+     */
+    #[ORM\OneToMany(mappedBy: 'nodeB', targetEntity: NodesToNodes::class)]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    private Collection $aNodes;
+
+    /**
+     * @var Collection<AttributeValue>
+     */
+    #[ORM\OneToMany(mappedBy: 'node', targetEntity: AttributeValue::class, orphanRemoval: true)]
+    #[ORM\OrderBy(['position' => 'ASC'])]
+    #[Serializer\Groups(['node_attributes'])]
+    #[SymfonySerializer\Groups(['node_attributes'])]
+    #[SymfonySerializer\MaxDepth(1)]
+    private Collection $attributeValues;
+
+    /**
+     * Create a new empty Node according to given node-type.
+     */
+    public function __construct(NodeTypeInterface $nodeType = null)
+    {
+        $this->tags = new ArrayCollection();
+        $this->children = new ArrayCollection();
+        $this->nodeSources = new ArrayCollection();
+        $this->stackTypes = new ArrayCollection();
+        $this->customForms = new ArrayCollection();
+        $this->aNodes = new ArrayCollection();
+        $this->bNodes = new ArrayCollection();
+        $this->attributeValues = new ArrayCollection();
+
+        $this->setNodeType($nodeType);
+        $this->initAbstractDateTimed();
+    }
 
     /**
      * @param int $status
@@ -101,42 +297,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
 
         throw new \InvalidArgumentException('Status does not exist.');
     }
-
-    /**
-     * @Serializer\Groups({"nodes_sources", "nodes_sources_base", "node", "log_sources"})
-     * @Serializer\Accessor(getter="getNodeName", setter="setNodeName")
-     */
-    #[ORM\Column(type: 'string', name: 'node_name', unique: true)]
-    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'node', 'log_sources'])]
-    #[Assert\NotNull]
-    #[Assert\NotBlank]
-    #[Assert\Length(max: 255)]
-    private string $nodeName = '';
-
-    /**
-     * @return string
-     */
-    public function getNodeName(): string
-    {
-        return $this->nodeName;
-    }
-
-    /**
-     * @param string $nodeName
-     * @return $this
-     */
-    public function setNodeName(string $nodeName): Node
-    {
-        $this->nodeName = StringHandler::slugify($nodeName);
-        return $this;
-    }
-
-    /**
-     * @Gedmo\Versioned
-     */
-    #[ORM\Column(type: 'boolean', name: 'dynamic_node_name', nullable: false, options: ['default' => true])]
-    #[SymfonySerializer\Ignore]
-    private bool $dynamicNodeName = true;
 
     /**
      * Dynamic node name will be updated against default
@@ -163,14 +323,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
-     * @Serializer\Groups({"nodes_sources_base", "nodes_sources", "node"})
-     * @Serializer\Exclude(if="!object.getNodeType().isReachable()")
-     */
-    #[ORM\Column(type: 'boolean', name: 'home', nullable: false, options: ['default' => false])]
-    #[SymfonySerializer\Ignore]
-    private bool $home = false;
-
-    /**
      * @return bool
      */
     public function isHome(): bool
@@ -187,41 +339,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
         $this->home = $home;
         return $this;
     }
-
-    /**
-     * @Gedmo\Versioned
-     * @Serializer\Groups({"nodes_sources_base", "nodes_sources", "node"})
-     */
-    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => true])]
-    #[SymfonySerializer\Groups(['nodes_sources_base', 'nodes_sources', 'node'])]
-    private bool $visible = true;
-
-    /**
-     * @return bool
-     */
-    public function isVisible(): bool
-    {
-        return $this->visible;
-    }
-
-    /**
-     * @param bool $visible
-     * @return $this
-     */
-    public function setVisible(bool $visible): Node
-    {
-        $this->visible = $visible;
-        return $this;
-    }
-
-    /**
-     * @Serializer\Groups({"node"})
-     * @internal You should use node Workflow to perform change on status.
-     */
-    #[ORM\Column(type: 'integer')]
-    #[SymfonySerializer\Groups(['node'])]
-    #[SymfonySerializer\Ignore]
-    private int $status = Node::DRAFT;
 
     /**
      * @return int
@@ -241,16 +358,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
         $this->status = $status;
         return $this;
     }
-
-    /**
-     * @var int
-     * @Gedmo\Versioned
-     * @Serializer\Exclude()
-     */
-    #[ORM\Column(type: 'integer', nullable: false, options: ['default' => 0])]
-    #[Assert\GreaterThanOrEqual(value: 0)]
-    #[SymfonySerializer\Ignore]
-    private int $ttl = 0;
 
     /**
      * @return int
@@ -304,16 +411,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
-     * @var bool
-     * @Gedmo\Versioned
-     * @Serializer\Groups({"node"})
-     */
-    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
-    #[SymfonySerializer\Groups(['node'])]
-    #[SymfonySerializer\Ignore]
-    private bool $locked = false;
-
-    /**
      * @return bool
      */
     public function isLocked(): bool
@@ -330,16 +427,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
         $this->locked = $locked;
         return $this;
     }
-
-    /**
-     * @var float|string
-     * @Gedmo\Versioned
-     * @Serializer\Groups({"node"})
-     */
-    #[ORM\Column(type: 'decimal', precision: 2, scale: 1)]
-    #[SymfonySerializer\Groups(['node'])]
-    #[SymfonySerializer\Ignore]
-    private $priority = 0.8;
 
     /**
      * @return float|string
@@ -360,16 +447,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
-     * @var bool
-     * @Gedmo\Versioned
-     * @Serializer\Groups({"node"})
-     */
-    #[ORM\Column(type: 'boolean', name: 'hide_children', nullable: false, options: ['default' => false])]
-    #[SymfonySerializer\Groups(['node'])]
-    #[SymfonySerializer\Ignore]
-    private bool $hideChildren = false;
-
-    /**
      * @return bool
      */
     public function getHideChildren(): bool
@@ -386,7 +463,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
         $this->hideChildren = $hideChildren;
         return $this;
     }
-
 
     /**
      * @return bool
@@ -416,16 +492,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
-     * @var bool
-     * @Gedmo\Versioned
-     * @Serializer\Groups({"node"})
-     */
-    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
-    #[SymfonySerializer\Groups(['node'])]
-    #[SymfonySerializer\Ignore]
-    private bool $sterile = false;
-
-    /**
      * @return bool
      */
     public function isSterile(): bool
@@ -442,16 +508,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
         $this->sterile = $sterile;
         return $this;
     }
-
-    /**
-     * @var string
-     * @Gedmo\Versioned
-     * @Serializer\Groups({"node"})
-     */
-    #[ORM\Column(type: 'string', name: 'children_order')]
-    #[SymfonySerializer\Groups(['node'])]
-    #[SymfonySerializer\Ignore]
-    private string $childrenOrder = 'position';
 
     /**
      * @return string
@@ -472,16 +528,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
-     * @var string
-     * @Gedmo\Versioned
-     * @Serializer\Groups({"node"})
-     */
-    #[ORM\Column(type: 'string', name: 'children_order_direction', length: 4)]
-    #[SymfonySerializer\Groups(['node'])]
-    #[SymfonySerializer\Ignore]
-    private string $childrenOrderDirection = 'ASC';
-
-    /**
      * @return string
      */
     public function getChildrenOrderDirection(): string
@@ -500,59 +546,18 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
-     * @Serializer\Groups({"node"})
-     * @var NodeTypeInterface|null
-     */
-    #[ORM\ManyToOne(targetEntity: 'NodeType')]
-    #[ORM\JoinColumn(name: 'nodeType_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
-    #[SymfonySerializer\Groups(['node'])]
-    #[SymfonySerializer\Ignore]
-    private ?NodeTypeInterface $nodeType = null;
-
-    /**
-     * @return NodeTypeInterface|null
-     */
-    public function getNodeType(): ?NodeTypeInterface
-    {
-        return $this->nodeType;
-    }
-
-    /**
-     * @param NodeTypeInterface|null $nodeType
+     * @param Tag $tag
+     *
      * @return $this
      */
-    public function setNodeType(?NodeTypeInterface $nodeType = null): Node
+    public function removeTag(Tag $tag): Node
     {
-        $this->nodeType = $nodeType;
+        if ($this->getTags()->contains($tag)) {
+            $this->getTags()->removeElement($tag);
+        }
+
         return $this;
     }
-
-    /**
-     * @var Node|null
-     * @Serializer\Exclude
-     */
-    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Node', inversedBy: 'children', fetch: 'EAGER')]
-    #[ORM\JoinColumn(name: 'parent_node_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
-    #[SymfonySerializer\Ignore]
-    private ?LeafInterface $parent = null;
-
-    /**
-     * @var Collection<Node>
-     * @Serializer\Groups({"node_children"})
-     */
-    #[ORM\OneToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Node', mappedBy: 'parent', orphanRemoval: true)]
-    #[ORM\OrderBy(['position' => 'ASC'])]
-    #[SymfonySerializer\Groups(['node_children'])]
-    private Collection $children;
-
-    /**
-     * @var Collection<Tag>
-     * @Serializer\Groups({"nodes_sources", "nodes_sources_base", "node"})
-     */
-    #[ORM\JoinTable(name: 'nodes_tags')]
-    #[ORM\ManyToMany(targetEntity: 'Tag', inversedBy: 'nodes')]
-    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'node'])]
-    private Collection $tags;
 
     /**
      * @return Collection<Tag>
@@ -578,20 +583,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function removeTag(Tag $tag): Node
-    {
-        if ($this->getTags()->contains($tag)) {
-            $this->getTags()->removeElement($tag);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param Tag $tag
-     *
-     * @return $this
-     */
     public function addTag(Tag $tag): Node
     {
         if (!$this->getTags()->contains($tag)) {
@@ -600,14 +591,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
 
         return $this;
     }
-
-    /**
-     * @var Collection<NodesCustomForms>
-     * @Serializer\Exclude()
-     */
-    #[ORM\OneToMany(targetEntity: 'NodesCustomForms', mappedBy: 'node', fetch: 'EXTRA_LAZY')]
-    #[SymfonySerializer\Ignore]
-    private Collection $customForms;
 
     /**
      * @return Collection<NodesCustomForms>
@@ -642,25 +625,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
-     * @var Collection<NodeType>
-     * @Serializer\Groups({"node"})
-     */
-    #[ORM\JoinTable(name: 'stack_types')]
-    #[ORM\InverseJoinColumn(name: 'nodetype_id', onDelete: 'CASCADE')]
-    #[ORM\ManyToMany(targetEntity: 'NodeType')]
-    #[SymfonySerializer\Groups(['node'])]
-    #[SymfonySerializer\Ignore]
-    private Collection $stackTypes;
-
-    /**
-     * @return Collection<NodeType>
-     */
-    public function getStackTypes(): Collection
-    {
-        return $this->stackTypes;
-    }
-
-    /**
      * @param NodeType $stackType
      *
      * @return $this
@@ -675,6 +639,14 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
+     * @return Collection<NodeType>
+     */
+    public function getStackTypes(): Collection
+    {
+        return $this->stackTypes;
+    }
+
+    /**
      * @param NodeType $stackType
      *
      * @return $this
@@ -686,23 +658,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
         }
 
         return $this;
-    }
-
-    /**
-     * @Serializer\Groups({"node"})
-     * @var Collection<NodesSources>
-     */
-    #[ORM\OneToMany(targetEntity: 'NodesSources', mappedBy: 'node', orphanRemoval: true, fetch: 'EXTRA_LAZY')]
-    #[SymfonySerializer\Groups(['node'])]
-    #[SymfonySerializer\Ignore]
-    private Collection $nodeSources;
-
-    /**
-     * @return Collection<NodesSources>
-     */
-    public function getNodeSources(): Collection
-    {
-        return $this->nodeSources;
     }
 
     /**
@@ -734,6 +689,14 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
+     * @return Collection<NodesSources>
+     */
+    public function getNodeSources(): Collection
+    {
+        return $this->nodeSources;
+    }
+
+    /**
      * @param NodesSources $ns
      *
      * @return $this
@@ -748,25 +711,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
-     * @var Collection<NodesToNodes>
-     * @Serializer\Exclude()
-     */
-    #[ORM\OneToMany(targetEntity: 'NodesToNodes', mappedBy: 'nodeA', orphanRemoval: true, cascade: ['persist'], fetch: 'LAZY')]
-    #[ORM\OrderBy(['position' => 'ASC'])]
-    #[SymfonySerializer\Ignore]
-    private Collection $bNodes;
-
-    /**
-     * Return nodes related to this (B nodes).
-     *
-     * @return Collection<NodesToNodes>
-     */
-    public function getBNodes(): Collection
-    {
-        return $this->bNodes;
-    }
-
-    /**
      * @param NodeTypeField $field
      *
      * @return Collection<NodesToNodes>
@@ -778,6 +722,16 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
         $criteria->andWhere(Criteria::expr()->eq('field', $field));
         $criteria->orderBy(['position' => 'ASC']);
         return $this->getBNodes()->matching($criteria);
+    }
+
+    /**
+     * Return nodes related to this (B nodes).
+     *
+     * @return Collection<NodesToNodes>
+     */
+    public function getBNodes(): Collection
+    {
+        return $this->bNodes;
     }
 
     /**
@@ -798,6 +752,15 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
         return $this;
     }
 
+    public function hasBNode(NodesToNodes $bNode): bool
+    {
+        return $this->getBNodes()->exists(function ($key, NodesToNodes $element) use ($bNode) {
+            return $bNode->getNodeB()->getId() !== null &&
+                $element->getNodeB()->getId() === $bNode->getNodeB()->getId() &&
+                $element->getField()->getId() === $bNode->getField()->getId();
+        });
+    }
+
     /**
      * @param NodesToNodes $bNode
      * @return $this
@@ -809,15 +772,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
             $bNode->setNodeA($this);
         }
         return $this;
-    }
-
-    public function hasBNode(NodesToNodes $bNode): bool
-    {
-        return $this->getBNodes()->exists(function ($key, NodesToNodes $element) use ($bNode) {
-            return $bNode->getNodeB()->getId() !== null &&
-                $element->getNodeB()->getId() === $bNode->getNodeB()->getId() &&
-                $element->getField()->getId() === $bNode->getField()->getId();
-        });
     }
 
     public function clearBNodesForField(NodeTypeField $nodeTypeField)
@@ -833,14 +787,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
-     * @var Collection<NodesToNodes>
-     * @Serializer\Exclude()
-     */
-    #[ORM\OneToMany(targetEntity: 'NodesToNodes', mappedBy: 'nodeB')]
-    #[SymfonySerializer\Ignore]
-    private Collection $aNodes;
-
-    /**
      * Return nodes which own a relation with this (A nodes).
      *
      * @return Collection<NodesToNodes>
@@ -851,34 +797,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
-     * @var Collection<AttributeValue>
-     * @Serializer\Groups({"node_attributes"})
-     */
-    #[ORM\OneToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\AttributeValue', mappedBy: 'node', orphanRemoval: true)]
-    #[ORM\OrderBy(['position' => 'ASC'])]
-    #[SymfonySerializer\Groups(['node_attributes'])]
-    #[SymfonySerializer\MaxDepth(1)]
-    private Collection $attributeValues;
-
-    /**
-     * Create a new empty Node according to given node-type.
-     */
-    public function __construct(NodeTypeInterface $nodeType = null)
-    {
-        $this->tags = new ArrayCollection();
-        $this->children = new ArrayCollection();
-        $this->nodeSources = new ArrayCollection();
-        $this->stackTypes = new ArrayCollection();
-        $this->customForms = new ArrayCollection();
-        $this->aNodes = new ArrayCollection();
-        $this->bNodes = new ArrayCollection();
-        $this->attributeValues = new ArrayCollection();
-
-        $this->setNodeType($nodeType);
-        $this->initAbstractDateTimed();
-    }
-
-    /**
      * @return string
      */
     #[SymfonySerializer\Ignore]
@@ -886,6 +804,60 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     {
         return $this->getId() . " — " . $this->getNodeName() . " — " . $this->getNodeType()->getName() .
         " — Visible : " . ($this->isVisible() ? 'true' : 'false') . PHP_EOL;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNodeName(): string
+    {
+        return $this->nodeName;
+    }
+
+    /**
+     * @param string $nodeName
+     * @return $this
+     */
+    public function setNodeName(string $nodeName): Node
+    {
+        $this->nodeName = StringHandler::slugify($nodeName);
+        return $this;
+    }
+
+    /**
+     * @return NodeTypeInterface|null
+     */
+    public function getNodeType(): ?NodeTypeInterface
+    {
+        return $this->nodeType;
+    }
+
+    /**
+     * @param NodeTypeInterface|null $nodeType
+     * @return $this
+     */
+    public function setNodeType(?NodeTypeInterface $nodeType = null): Node
+    {
+        $this->nodeType = $nodeType;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isVisible(): bool
+    {
+        return $this->visible;
+    }
+
+    /**
+     * @param bool $visible
+     * @return $this
+     */
+    public function setVisible(bool $visible): Node
+    {
+        $this->visible = $visible;
+        return $this;
     }
 
     /**

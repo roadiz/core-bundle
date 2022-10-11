@@ -191,7 +191,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
      * @param string|null $description
      * @return $this
      */
-    public function setDescription(?string $description = null)
+    public function setDescription(?string $description = null): NodeType
     {
         $this->description = $description;
         return $this;

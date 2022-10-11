@@ -26,48 +26,22 @@ use Symfony\Component\Validator\Constraints as Assert;
 ]
 class FolderTranslation extends AbstractEntity
 {
-    /**
-     * @Serializer\Groups({"folder", "document"})
-     * @var string
-     */
     #[ORM\Column(type: 'string')]
     #[SymfonySerializer\Groups(['folder', 'document'])]
+    #[Serializer\Groups(['folder', 'document'])]
     #[Assert\Length(max: 250)]
     protected string $name = '';
 
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name ?? '';
-    }
-    /**
-     * @param string $name
-     * @return $this
-     */
-    public function setName(string $name)
-    {
-        $this->name = $name;
-        return $this;
-    }
-
-    /**
-     * @Serializer\Exclude
-     * @var Folder|null
-     */
     #[ORM\ManyToOne(targetEntity: 'Folder', inversedBy: 'translatedFolders')]
     #[ORM\JoinColumn(name: 'folder_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     protected ?Folder $folder = null;
 
-    /**
-     * @Serializer\Groups({"folder", "document"})
-     * @var TranslationInterface|null
-     */
-    #[ORM\ManyToOne(targetEntity: 'Translation', inversedBy: 'folderTranslations', fetch: 'EXTRA_LAZY')]
+    #[ORM\ManyToOne(targetEntity: Translation::class, fetch: 'EXTRA_LAZY', inversedBy: 'folderTranslations')]
     #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[SymfonySerializer\Groups(['folder', 'document'])]
+    #[Serializer\Groups(['folder', 'document'])]
     protected ?TranslationInterface $translation = null;
 
     /**
@@ -79,6 +53,24 @@ class FolderTranslation extends AbstractEntity
         $this->setFolder($original);
         $this->setTranslation($translation);
         $this->name = $original->getDirtyFolderName() != '' ? $original->getDirtyFolderName() : $original->getFolderName();
+    }
+
+    /**
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name ?? '';
+    }
+
+    /**
+     * @param string $name
+     * @return $this
+     */
+    public function setName(string $name)
+    {
+        $this->name = $name;
+        return $this;
     }
 
     /**

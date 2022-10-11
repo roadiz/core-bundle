@@ -25,7 +25,7 @@ class Redirection extends AbstractDateTimed
     /**
      * @var string
      */
-    #[ORM\Column(type: 'string', unique: true, length: 255)]
+    #[ORM\Column(type: 'string', length: 255, unique: true)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
     private string $query = "";
@@ -33,14 +33,14 @@ class Redirection extends AbstractDateTimed
     /**
      * @var string|null
      */
-    #[ORM\Column(name: 'redirectUri', type: 'text', nullable: true, length: 2048)]
+    #[ORM\Column(name: 'redirectUri', type: 'text', length: 2048, nullable: true)]
     #[Assert\Length(max: 2048)]
     private ?string $redirectUri = null;
 
     /**
      * @var NodesSources|null
      */
-    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\NodesSources', cascade: ['persist'], inversedBy: 'redirections')]
+    #[ORM\ManyToOne(targetEntity: NodesSources::class, cascade: ['persist'], inversedBy: 'redirections')]
     #[ORM\JoinColumn(name: 'ns_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     private ?NodesSources $redirectNodeSource = null;
 
@@ -122,7 +122,7 @@ class Redirection extends AbstractDateTimed
             Response::HTTP_FOUND => 'redirection.moved_temporarily',
         ];
 
-        return isset($types[$this->type]) ? $types[$this->type] : '';
+        return $types[$this->type] ?? '';
     }
 
     /**

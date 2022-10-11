@@ -26,21 +26,21 @@ class NodesToNodes extends AbstractPositioned
     /**
      * @var Node|null
      */
-    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Node', inversedBy: 'bNodes', fetch: 'EAGER', cascade: ['persist'])]
+    #[ORM\ManyToOne(targetEntity: Node::class, cascade: ['persist'], fetch: 'EAGER', inversedBy: 'bNodes')]
     #[ORM\JoinColumn(name: 'node_a_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     protected ?Node $nodeA;
 
     /**
      * @var Node|null
      */
-    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Node', inversedBy: 'aNodes', fetch: 'EAGER', cascade: ['persist'])]
+    #[ORM\ManyToOne(targetEntity: Node::class, cascade: ['persist'], fetch: 'EAGER', inversedBy: 'aNodes')]
     #[ORM\JoinColumn(name: 'node_b_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     protected ?Node $nodeB;
 
     /**
      * @var NodeTypeField|null
      */
-    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\NodeTypeField')]
+    #[ORM\ManyToOne(targetEntity: NodeTypeField::class)]
     #[ORM\JoinColumn(name: 'node_type_field_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     protected ?NodeTypeField $field;
 

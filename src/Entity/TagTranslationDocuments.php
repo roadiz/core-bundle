@@ -26,7 +26,12 @@ class TagTranslationDocuments extends AbstractPositioned
      * @var TagTranslation|null
      * @Serializer\Exclude()
      */
-    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\TagTranslation', inversedBy: 'tagTranslationDocuments', fetch: 'EAGER', cascade: ['persist', 'merge'])]
+    #[ORM\ManyToOne(
+        targetEntity: TagTranslation::class,
+        cascade: ['persist', 'merge'],
+        fetch: 'EAGER',
+        inversedBy: 'tagTranslationDocuments'
+    )]
     #[ORM\JoinColumn(name: 'tag_translation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[SymfonySerializer\Ignore]
     protected ?TagTranslation $tagTranslation = null;
@@ -36,7 +41,12 @@ class TagTranslationDocuments extends AbstractPositioned
      * @Serializer\Groups({"tag"})
      * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Document")
      */
-    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Document', inversedBy: 'tagTranslations', fetch: 'EAGER', cascade: ['persist', 'merge'])]
+    #[ORM\ManyToOne(
+        targetEntity: Document::class,
+        cascade: ['persist', 'merge'],
+        fetch: 'EAGER',
+        inversedBy: 'tagTranslations'
+    )]
     #[ORM\JoinColumn(name: 'document_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[SymfonySerializer\Groups(['tag'])]
     protected ?Document $document = null;
@@ -85,9 +95,6 @@ class TagTranslationDocuments extends AbstractPositioned
         return $this;
     }
 
-    /**
-     * @return TagTranslation
-     */
     public function getTagTranslation(): ?TagTranslation
     {
         return $this->tagTranslation;

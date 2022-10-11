@@ -60,22 +60,22 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      */
     #[SymfonySerializer\Ignore]
     protected bool $sendCreationConfirmationEmail = false;
-    /**
-     * @var string|null
-     * @Serializer\Groups({"user_social"})
-     * @ValidFacebookName
-     */
-    #[ORM\Column(type: 'string', name: 'facebook_name', unique: false, nullable: true)]
+
+    #[ORM\Column(name: 'facebook_name', type: 'string', unique: false, nullable: true)]
     #[SymfonySerializer\Groups(['user_social'])]
+    #[Serializer\Groups(['user_social'])]
+    #[ValidFacebookName]
     protected ?string $facebookName = null;
+
     /**
      * @var string|null
      * @Serializer\Groups({"user"})
      */
-    #[ORM\Column(type: 'text', name: 'picture_url', nullable: true)]
+    #[ORM\Column(name: 'picture_url', type: 'text', nullable: true)]
     #[SymfonySerializer\Groups(['user'])]
     #[Assert\Length(max: 250)]
     protected ?string $pictureUrl = null;
+
     /**
      * @var boolean
      * @Serializer\Groups({"user_security"})
@@ -83,6 +83,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => true])]
     #[SymfonySerializer\Groups(['user_security'])]
     protected bool $enabled = true;
+
     /**
      * @Serializer\Groups({"user_security"})
      * @var string|null
@@ -90,6 +91,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[ORM\Column(name: 'confirmation_token', type: 'string', unique: true, nullable: true)]
     #[SymfonySerializer\Groups(['user_security'])]
     protected ?string $confirmationToken = null;
+
     /**
      * @Serializer\Groups({"user_security"})
      * @var \DateTime|null
@@ -97,6 +99,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[ORM\Column(name: 'password_requested_at', type: 'datetime', nullable: true)]
     #[SymfonySerializer\Groups(['user_security'])]
     protected ?\DateTime $passwordRequestedAt = null;
+    
     /**
      * @Serializer\Groups({"user_personal", "log_user"})
      * @var string
@@ -107,6 +110,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[Assert\NotBlank]
     #[Assert\Length(max: 200)]
     private string $username = '';
+
     /**
      * The salt to use for hashing
      *
@@ -116,6 +120,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[ORM\Column(name: 'salt', type: 'string')]
     #[SymfonySerializer\Ignore]
     private string $salt = '';
+
     /**
      * Encrypted password.
      *
@@ -125,6 +130,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[ORM\Column(type: 'string', nullable: false)]
     #[SymfonySerializer\Ignore]
     private string $password = '';
+
     /**
      * Plain password. Used for model validation.
      * **Must not be persisted.**
@@ -136,6 +142,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[SymfonySerializer\Groups(['user:write'])]
     #[Assert\NotBlank(groups: ['no_empty_password'])]
     private ?string $plainPassword = null;
+
     /**
      * @var \DateTime|null
      * @Serializer\Groups({"user_security"})
@@ -143,6 +150,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[ORM\Column(name: 'last_login', type: 'datetime', nullable: true)]
     #[SymfonySerializer\Groups(['user_security'])]
     private ?\DateTime $lastLogin = null;
+
     /**
      * @var Collection<Role>
      * @Serializer\Exclude()
@@ -150,9 +158,10 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[ORM\JoinTable(name: 'users_roles')]
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[ORM\InverseJoinColumn(name: 'role_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
-    #[ORM\ManyToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Role')]
+    #[ORM\ManyToMany(targetEntity: Role::class)]
     #[SymfonySerializer\Ignore]
     private Collection $roleEntities;
+
     /**
      * Names of current User roles
      * to be compatible with symfony security scheme
@@ -162,6 +171,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      */
     #[SymfonySerializer\Ignore]
     private ?array $roles = null;
+
     /**
      * @var Collection<Group>
      * @Serializer\Groups({"user_group"})
@@ -169,9 +179,10 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[ORM\JoinTable(name: 'users_groups')]
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id')]
     #[ORM\InverseJoinColumn(name: 'group_id', referencedColumnName: 'id')]
-    #[ORM\ManyToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Group', inversedBy: 'users')]
+    #[ORM\ManyToMany(targetEntity: Group::class, inversedBy: 'users')]
     #[SymfonySerializer\Groups(['user_group'])]
     private Collection $groups;
+
     /**
      * @var boolean
      * @Serializer\Groups({"user_security"})
@@ -179,6 +190,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
     #[SymfonySerializer\Groups(['user_security'])]
     private bool $expired = false;
+
     /**
      * @var boolean
      * @Serializer\Groups({"user_security"})
@@ -186,6 +198,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
     #[SymfonySerializer\Groups(['user_security'])]
     private bool $locked = false;
+
     /**
      * @Serializer\Groups({"user_security"})
      * @var \DateTime|null
@@ -193,13 +206,15 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[ORM\Column(name: 'credentials_expires_at', type: 'datetime', nullable: true)]
     #[SymfonySerializer\Groups(['user_security'])]
     private ?\DateTime $credentialsExpiresAt = null;
+
     /**
      * @var boolean
      * @Serializer\Groups({"user_security"})
      */
-    #[ORM\Column(type: 'boolean', name: 'credentials_expired', nullable: false, options: ['default' => false])]
+    #[ORM\Column(name: 'credentials_expired', type: 'boolean', nullable: false, options: ['default' => false])]
     #[SymfonySerializer\Groups(['user_security'])]
     private bool $credentialsExpired = false;
+
     /**
      * @Serializer\Groups({"user_security"})
      * @var \DateTime|null
@@ -207,11 +222,12 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[ORM\Column(name: 'expires_at', type: 'datetime', nullable: true)]
     #[SymfonySerializer\Groups(['user_security'])]
     private ?\DateTime $expiresAt = null;
+
     /**
      * @Serializer\Groups({"user_chroot"})
      * @var Node|null
      */
-    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Node')]
+    #[ORM\ManyToOne(targetEntity: Node::class)]
     #[ORM\JoinColumn(name: 'chroot_id', referencedColumnName: 'id', onDelete: 'SET NULL')]
     #[SymfonySerializer\Groups(['user_chroot'])]
     private ?Node $chroot = null;
@@ -220,7 +236,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @var null|string
      * @Serializer\Groups({"user"})
      */
-    #[ORM\Column(name: 'locale', type: 'string', nullable: true, length: 7)]
+    #[ORM\Column(name: 'locale', type: 'string', length: 7, nullable: true)]
     #[SymfonySerializer\Groups(['user'])]
     private ?string $locale = null;
 

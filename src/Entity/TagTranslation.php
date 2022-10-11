@@ -30,46 +30,42 @@ use Symfony\Component\Validator\Constraints as Assert;
 ]
 class TagTranslation extends AbstractEntity
 {
-    /**
-     * @Serializer\Groups({"tag", "node", "nodes_sources"})
-     * @Serializer\Type("string")
-     * @Gedmo\Versioned
-     */
     #[ORM\Column(type: 'string')]
     #[SymfonySerializer\Groups(['tag', 'node', 'nodes_sources'])]
+    #[Serializer\Groups(['tag', 'node', 'nodes_sources'])]
     #[Assert\NotBlank]
     #[Assert\Length(max: 250)]
+    #[Gedmo\Versioned]
     protected string $name = '';
-    /**
-     * @Serializer\Groups({"tag", "node", "nodes_sources"})
-     * @Serializer\Type("string")
-     * @Gedmo\Versioned
-     */
+
     #[ORM\Column(type: 'text', nullable: true)]
     #[SymfonySerializer\Groups(['tag', 'node', 'nodes_sources'])]
+    #[Serializer\Groups(['tag', 'node', 'nodes_sources'])]
+    #[Gedmo\Versioned]
     protected ?string $description = null;
-    /**
-     * @var Tag|null
-     * @Serializer\Exclude()
-     */
-    #[ORM\ManyToOne(targetEntity: 'Tag', inversedBy: 'translatedTags')]
+
+    #[ORM\ManyToOne(targetEntity: Tag::class, inversedBy: 'translatedTags')]
     #[ORM\JoinColumn(name: 'tag_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     protected ?Tag $tag = null;
-    /**
-     * @var TranslationInterface|null
-     * @Serializer\Groups({"tag", "node", "nodes_sources"})
-     * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Translation")
-     */
-    #[ORM\ManyToOne(targetEntity: 'Translation', inversedBy: 'tagTranslations', fetch: 'EXTRA_LAZY')]
+
+    #[ORM\ManyToOne(targetEntity: Translation::class, fetch: 'EXTRA_LAZY', inversedBy: 'tagTranslations')]
     #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[SymfonySerializer\Groups(['tag', 'node', 'nodes_sources'])]
+    #[Serializer\Groups(['tag', 'node', 'nodes_sources'])]
     protected ?TranslationInterface $translation = null;
+
     /**
      * @var Collection<TagTranslationDocuments>
      * @Serializer\Exclude
      */
-    #[ORM\OneToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\TagTranslationDocuments', mappedBy: 'tagTranslation', orphanRemoval: true, cascade: ['persist', 'merge'])]
+    #[ORM\OneToMany(
+        mappedBy: 'tagTranslation',
+        targetEntity: TagTranslationDocuments::class,
+        cascade: ['persist', 'merge'],
+        orphanRemoval: true
+    )]
     #[ORM\OrderBy(['position' => 'ASC'])]
     #[SymfonySerializer\Ignore]
     protected Collection $tagTranslationDocuments;

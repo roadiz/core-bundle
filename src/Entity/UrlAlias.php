@@ -22,15 +22,12 @@ use RZ\Roadiz\CoreBundle\Form\Constraint as RoadizAssert;
 ]
 class UrlAlias extends AbstractEntity
 {
-    /**
-     * @var string
-     * @Serializer\Groups({"url_alias"})
-     * @RoadizAssert\UniqueNodeName()
-     */
     #[ORM\Column(type: 'string', unique: true)]
     #[SymfonySerializer\Groups(['url_alias'])]
+    #[Serializer\Groups(['url_alias'])]
     #[Assert\NotNull]
     #[Assert\NotBlank]
+    #[RoadizAssert\UniqueNodeName]
     private string $alias = '';
 
     /**

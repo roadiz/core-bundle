@@ -24,23 +24,23 @@ class NodesCustomForms extends AbstractPositioned
     /**
      * @var Node|null
      */
-    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Node', inversedBy: 'customForms', fetch: 'EAGER')]
+    #[ORM\ManyToOne(targetEntity: Node::class, fetch: 'EAGER', inversedBy: 'customForms')]
     #[ORM\JoinColumn(name: 'node_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
-    protected $node;
+    protected ?Node $node = null;
 
     /**
      * @var CustomForm|null
      */
-    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\CustomForm', inversedBy: 'nodes', fetch: 'EAGER')]
+    #[ORM\ManyToOne(targetEntity: CustomForm::class, fetch: 'EAGER', inversedBy: 'nodes')]
     #[ORM\JoinColumn(name: 'custom_form_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
-    protected $customForm;
+    protected ?CustomForm $customForm = null;
 
     /**
      * @var NodeTypeField|null
      */
-    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\NodeTypeField')]
+    #[ORM\ManyToOne(targetEntity: NodeTypeField::class)]
     #[ORM\JoinColumn(name: 'node_type_field_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
-    protected $field;
+    protected ?NodeTypeField $field = null;
 
     /**
      * Create a new relation between a Node, a CustomForm and a NodeTypeField.

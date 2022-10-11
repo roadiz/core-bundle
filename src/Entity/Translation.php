@@ -57,11 +57,9 @@ class Translation extends AbstractDateTimed implements TranslationInterface
 {
     /**
      * Associates locales to pretty languages names.
-     *
-     * @var array
-     * @Serializer\Exclude
      */
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     public static array $availableLocales = [
         'af_NA' => "Afrikaans (Namibia)",
         'af_ZA' => "Afrikaans (South Africa)",
@@ -498,11 +496,9 @@ class Translation extends AbstractDateTimed implements TranslationInterface
         'zu_ZA' => "Zulu (South Africa)",
         'zu' => "Zulu",
     ];
-    /**
-     * @var array
-     * @Serializer\Exclude
-     */
+
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     public static array $rtlLanguages = [
         'ar_DZ' => "Arabic (Algeria)",
         'ar_BH' => "Arabic (Bahrain)",
@@ -532,18 +528,20 @@ class Translation extends AbstractDateTimed implements TranslationInterface
     ];
     /**
      * @var Collection<DocumentTranslation>
-     * @Serializer\Exclude
      */
-    #[ORM\OneToMany(targetEntity: 'DocumentTranslation', mappedBy: 'translation', orphanRemoval: true, fetch: 'EXTRA_LAZY')]
+    #[ORM\OneToMany(mappedBy: 'translation', targetEntity: DocumentTranslation::class, fetch: 'EXTRA_LAZY', orphanRemoval: true)]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     protected Collection $documentTranslations;
+
     /**
      * @var Collection<FolderTranslation>
-     * @Serializer\Exclude
      */
-    #[ORM\OneToMany(targetEntity: 'FolderTranslation', mappedBy: 'translation', orphanRemoval: true, fetch: 'EXTRA_LAZY')]
+    #[ORM\OneToMany(mappedBy: 'translation', targetEntity: FolderTranslation::class, fetch: 'EXTRA_LAZY', orphanRemoval: true)]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     protected Collection $folderTranslations;
+
     /**
      * Language locale
      *
@@ -553,21 +551,23 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      * @Serializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder", "log_sources"})
      * @Serializer\Type("string")
      */
-    #[ORM\Column(type: 'string', unique: true, length: 10)]
+    #[ORM\Column(type: 'string', length: 10, unique: true)]
     #[SymfonySerializer\Ignore]
     #[Assert\NotBlank]
     #[Assert\NotNull]
     #[Assert\Length(max: 10)]
     private string $locale = '';
+
     /**
      * @var string|null
      * @Serializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder"})
      * @Serializer\Type("string")
      */
-    #[ORM\Column(type: 'string', name: 'override_locale', length: 10, unique: true, nullable: true)]
+    #[ORM\Column(name: 'override_locale', type: 'string', length: 10, unique: true, nullable: true)]
     #[SymfonySerializer\Ignore]
     #[Assert\Length(max: 10)]
     private ?string $overrideLocale = null;
+
     /**
      * @var string
      * @Serializer\Groups({"translation", "translation_base"})
@@ -579,6 +579,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
     #[Assert\NotBlank]
     #[Assert\Length(max: 250)]
     private string $name = '';
+
     /**
      * @var bool
      * @Serializer\Groups({"translation", "translation_base"})
@@ -587,6 +588,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
     #[ORM\Column(name: 'default_translation', type: 'boolean', nullable: false, options: ['default' => false])]
     #[SymfonySerializer\Groups(['translation', 'translation_base'])]
     private bool $defaultTranslation = false;
+
     /**
      * @var bool
      * @Serializer\Groups({"translation", "translation_base"})
@@ -595,19 +597,31 @@ class Translation extends AbstractDateTimed implements TranslationInterface
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => true])]
     #[SymfonySerializer\Groups(['translation', 'translation_base'])]
     private bool $available = true;
+
     /**
      * @var Collection<NodesSources>
-     * @Serializer\Exclude
      */
-    #[ORM\OneToMany(targetEntity: 'NodesSources', mappedBy: 'translation', orphanRemoval: true, fetch: 'EXTRA_LAZY')]
+    #[ORM\OneToMany(
+        mappedBy: 'translation',
+        targetEntity: NodesSources::class,
+        fetch: 'EXTRA_LAZY',
+        orphanRemoval: true
+    )]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private Collection $nodeSources;
+
     /**
      * @var Collection<TagTranslation>
-     * @Serializer\Exclude
      */
-    #[ORM\OneToMany(targetEntity: 'TagTranslation', mappedBy: 'translation', orphanRemoval: true, fetch: 'EXTRA_LAZY')]
+    #[ORM\OneToMany(
+        mappedBy: 'translation',
+        targetEntity: TagTranslation::class,
+        fetch: 'EXTRA_LAZY',
+        orphanRemoval: true
+    )]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private Collection $tagTranslations;
 
     public function __construct()

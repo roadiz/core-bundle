@@ -36,6 +36,36 @@ class Role implements PersistableInterface
     ]
     protected $id;
 
+    #[ORM\Column(type: 'string', unique: true)]
+    #[SymfonySerializer\Groups(['user', 'role', 'group'])]
+    #[Serializer\Groups(['user', 'role', 'group'])]
+    #[Assert\NotNull]
+    #[Assert\NotBlank]
+    #[Assert\Regex(pattern: '#^ROLE_([A-Z0-9\_]+)$#', message: 'role.name.must_comply_with_standard')]
+    #[Assert\Length(max: 250)]
+    private string $name = '';
+
+    /**
+     * @var Collection<Group>
+     */
+    #[ORM\ManyToMany(targetEntity: Group::class, mappedBy: 'roleEntities', cascade: ['persist', 'merge'])]
+    #[SymfonySerializer\Groups(['role'])]
+    #[Serializer\Groups(['role'])]
+    #[Serializer\Accessor(getter: "getGroups", setter: "setGroups")]
+    #[Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Group>")]
+    private Collection $groups;
+
+    /**
+     * Create a new Role with its string representation.
+     *
+     * @param string $name Role name
+     */
+    public function __construct(string $name)
+    {
+        $this->setRole($name);
+        $this->groups = new ArrayCollection();
+    }
+
     /**
      * @return int
      */
@@ -55,37 +85,6 @@ class Role implements PersistableInterface
     }
 
     /**
-     * @Serializer\Groups({"user", "role", "group"})
-     * @Serializer\Type("string")
-     * @var string
-     */
-    #[ORM\Column(type: 'string', unique: true)]
-    #[SymfonySerializer\Groups(['user', 'role', 'group'])]
-    #[Assert\NotNull]
-    #[Assert\NotBlank]
-    #[Assert\Regex(pattern: '#^ROLE_([A-Z0-9\_]+)$#', message: 'role.name.must_comply_with_standard')]
-    #[Assert\Length(max: 250)]
-    private string $name = '';
-
-    /**
-     * @param string $role
-     * @return Role
-     */
-    public function setRole(string $role): Role
-    {
-        $this->name = static::cleanName($role);
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getRole(): string
-    {
-        return $this->name;
-    }
-
-    /**
      * @return string
      * @deprecated Use getRole method
      */
@@ -102,6 +101,16 @@ class Role implements PersistableInterface
     public function setName(string $name): Role
     {
         return $this->setRole($name);
+    }
+
+    /**
+     * @param string $role
+     * @return Role
+     */
+    public function setRole(string $role): Role
+    {
+        $this->name = static::cleanName($role);
+        return $this;
     }
 
     /**
@@ -125,24 +134,6 @@ class Role implements PersistableInterface
     }
 
     /**
-     * @Serializer\Groups({"role"})
-     * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Group>")
-     * @Serializer\Accessor(getter="getGroups", setter="setGroups")
-     * @var Collection<Group>
-     */
-    #[ORM\ManyToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Group', mappedBy: 'roleEntities', cascade: ['persist', 'merge'])]
-    #[SymfonySerializer\Groups(['role'])]
-    private Collection $groups;
-
-    /**
-     * @return Collection
-     */
-    public function getGroups(): Collection
-    {
-        return $this->groups;
-    }
-
-    /**
      * @param Group $group
      * @return $this
      */
@@ -153,6 +144,14 @@ class Role implements PersistableInterface
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection
+     */
+    public function getGroups(): Collection
+    {
+        return $this->groups;
     }
 
     /**
@@ -198,6 +197,14 @@ class Role implements PersistableInterface
     }
 
     /**
+     * @return string
+     */
+    public function getRole(): string
+    {
+        return $this->name;
+    }
+
+    /**
      * @return bool
      */
     public function required(): bool
@@ -211,17 +218,6 @@ class Role implements PersistableInterface
         }
 
         return false;
-    }
-
-    /**
-     * Create a new Role with its string representation.
-     *
-     * @param string $name Role name
-     */
-    public function __construct(string $name)
-    {
-        $this->setRole($name);
-        $this->groups = new ArrayCollection();
     }
 
     /**

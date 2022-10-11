@@ -24,27 +24,21 @@ use RZ\Roadiz\CoreBundle\Model\RealmInterface;
 ]
 class RealmNode extends AbstractEntity
 {
-    /**
-     * @var Node
-     * @Serializer\Exclude()
-     */
     #[ORM\ManyToOne(targetEntity: 'Node')]
     #[ORM\JoinColumn(name: 'node_id', referencedColumnName: 'id', unique: false, nullable: false, onDelete: 'CASCADE')]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private Node $node;
-    /**
-     * @var Realm|null
-     * @Serializer\Exclude()
-     */
-    #[ORM\ManyToOne(targetEntity: 'Realm', inversedBy: 'realmNodes')]
+
+    #[ORM\ManyToOne(targetEntity: Realm::class, inversedBy: 'realmNodes')]
     #[ORM\JoinColumn(name: 'realm_id', referencedColumnName: 'id', unique: false, nullable: true, onDelete: 'CASCADE')]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private ?Realm $realm = null;
-    /**
-     * @Serializer\Exclude()
-     */
+
     #[ORM\Column(name: 'inheritance_type', type: 'string', length: 10, nullable: false)]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private string $inheritanceType = RealmInterface::INHERITANCE_AUTO;
 
     /**

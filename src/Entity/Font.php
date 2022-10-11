@@ -79,7 +79,7 @@ class Font extends AbstractDateTimed
     /**
      * @var int
      */
-    #[ORM\Column(type: 'integer', name: 'variant', unique: false, nullable: false)]
+    #[ORM\Column(name: 'variant', type: 'integer', unique: false, nullable: false)]
     protected $variant = Font::REGULAR;
     /**
      * @var UploadedFile|null
@@ -104,32 +104,32 @@ class Font extends AbstractDateTimed
     /**
      * @var string|null
      */
-    #[ORM\Column(type: 'string', nullable: true, name: 'eot_filename')]
+    #[ORM\Column(name: 'eot_filename', type: 'string', nullable: true)]
     private $eotFilename = null;
     /**
      * @var string|null
      */
-    #[ORM\Column(type: 'string', nullable: true, name: 'woff_filename')]
+    #[ORM\Column(name: 'woff_filename', type: 'string', nullable: true)]
     private $woffFilename = null;
     /**
      * @var string|null
      */
-    #[ORM\Column(type: 'string', nullable: true, name: 'woff2_filename')]
+    #[ORM\Column(name: 'woff2_filename', type: 'string', nullable: true)]
     private $woff2Filename = null;
     /**
      * @var string|null
      */
-    #[ORM\Column(type: 'string', nullable: true, name: 'otf_filename')]
+    #[ORM\Column(name: 'otf_filename', type: 'string', nullable: true)]
     private $otfFilename = null;
     /**
      * @var string|null
      */
-    #[ORM\Column(type: 'string', nullable: true, name: 'svg_filename')]
+    #[ORM\Column(name: 'svg_filename', type: 'string', nullable: true)]
     private $svgFilename = null;
     /**
      * @var string
      */
-    #[ORM\Column(type: 'string', nullable: false, unique: false)]
+    #[ORM\Column(type: 'string', unique: false, nullable: false)]
     #[Assert\NotNull]
     #[Assert\NotBlank]
     #[Assert\Length(max: 100)]
@@ -137,7 +137,7 @@ class Font extends AbstractDateTimed
     /**
      * @var string
      */
-    #[ORM\Column(type: 'string', nullable: false, unique: false)]
+    #[ORM\Column(type: 'string', unique: false, nullable: false)]
     private $hash = '';
     /**
      * @var string
