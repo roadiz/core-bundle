@@ -52,6 +52,13 @@ Be careful if you are using a reverse-proxy cache, YOU MUST vary on Accept-Langu
 @see https://varnish-cache.org/docs/6.3/users-guide/increasing-your-hitrate.html#http-vary
 EOT)
             ->end()
+            ->booleanNode('useTypedNodeNames')
+                ->defaultValue(true)
+                ->info(<<<EOT
+When enabled, this option will suffix each name for unreachable nodes (blocks) with
+their node-type to avoid name conflicts with reachable nodes (pages).
+EOT)
+            ->end()
             ->arrayNode('security')
                 ->addDefaultsIfNotSet()
                 ->children()

@@ -70,6 +70,7 @@ class RoadizCoreExtension extends Extension
         );
         $container->setParameter('roadiz_core.default_node_source_controller', $config['defaultNodeSourceController']);
         $container->setParameter('roadiz_core.use_native_json_column_type', $config['useNativeJsonColumnType']);
+        $container->setParameter('roadiz_core.use_typed_node_names', $config['useTypedNodeNames']);
         $container->setParameter('roadiz_core.hide_roadiz_version', $config['hideRoadizVersion']);
         $container->setParameter('roadiz_core.use_accept_language_header', $config['useAcceptLanguageHeader']);
 

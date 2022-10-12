@@ -12,19 +12,6 @@
         "default_values": ""
     },
     {
-        "name": "use_typed_node_names",
-        "value": "1",
-        "visible": true,
-        "encrypted": false,
-        "description": "use_typed_node_names.help",
-        "setting_group": {
-            "name": "Development",
-            "in_menu": true
-        },
-        "type": 5,
-        "default_values": ""
-    },
-    {
         "name": "force_locale_with_urlaliases",
         "description": "force_locale_with_urlaliases.help",
         "visible": true,
@@ -72,18 +59,6 @@
             "in_menu": true
         },
         "type": 23,
-        "default_values": ""
-    },
-    {
-        "name": "use_cdn",
-        "value": "1",
-        "encrypted": false,
-        "visible": true,
-        "setting_group": {
-            "name": "Development",
-            "in_menu": true
-        },
-        "type": 5,
         "default_values": ""
     },
     {
