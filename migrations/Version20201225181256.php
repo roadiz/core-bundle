@@ -41,7 +41,6 @@ final class Version20201225181256 extends AbstractMigration
         $this->addSql('CREATE SEQUENCE documents_translations_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('CREATE SEQUENCE folders_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('CREATE SEQUENCE folders_translations_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
-        $this->addSql('CREATE SEQUENCE fonts_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('CREATE SEQUENCE log_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('CREATE SEQUENCE login_attempts_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
         $this->addSql('CREATE SEQUENCE node_type_fields_id_seq INCREMENT BY 1 MINVALUE 1 START 1');
@@ -143,10 +142,6 @@ final class Version20201225181256 extends AbstractMigration
         $this->addSql('CREATE INDEX IDX_9F6A68B2162CB942 ON folders_translations (folder_id)');
         $this->addSql('CREATE INDEX IDX_9F6A68B29CAA2B25 ON folders_translations (translation_id)');
         $this->addSql('CREATE UNIQUE INDEX UNIQ_9F6A68B2162CB9429CAA2B25 ON folders_translations (folder_id, translation_id)');
-        $this->addSql('CREATE TABLE fonts (id INT NOT NULL, variant INT NOT NULL, eot_filename VARCHAR(255) DEFAULT NULL, woff_filename VARCHAR(255) DEFAULT NULL, woff2_filename VARCHAR(255) DEFAULT NULL, otf_filename VARCHAR(255) DEFAULT NULL, svg_filename VARCHAR(255) DEFAULT NULL, name VARCHAR(255) NOT NULL, hash VARCHAR(255) NOT NULL, folder VARCHAR(255) NOT NULL, description TEXT DEFAULT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, PRIMARY KEY(id))');
-        $this->addSql('CREATE INDEX IDX_7303E8FB8B8E8428 ON fonts (created_at)');
-        $this->addSql('CREATE INDEX IDX_7303E8FB43625D9F ON fonts (updated_at)');
-        $this->addSql('CREATE UNIQUE INDEX UNIQ_7303E8FB5E237E06F143BFAD ON fonts (name, variant)');
         $this->addSql('CREATE TABLE log (id INT NOT NULL, user_id INT DEFAULT NULL, node_source_id INT DEFAULT NULL, username VARCHAR(255) DEFAULT NULL, message TEXT NOT NULL, level INT NOT NULL, datetime TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, client_ip VARCHAR(255) DEFAULT NULL, channel VARCHAR(255) DEFAULT NULL, additional_data JSON DEFAULT NULL, PRIMARY KEY(id))');
         $this->addSql('CREATE INDEX IDX_8F3F68C5A76ED395 ON log (user_id)');
         $this->addSql('CREATE INDEX IDX_8F3F68C58E831402 ON log (node_source_id)');

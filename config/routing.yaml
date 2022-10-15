@@ -1,18 +1,4 @@
 #
-# Fonts serving
-#
-FontFile:
-    path:     /fonts/files/{filename}_{variant}.{extension}
-    controller: RZ\Roadiz\CoreBundle\Controller\FontFaceController::fontFileAction
-    requirements:
-        filename: "[a-zA-Z0-9\\-_]+"
-        variant: "[0-9]+"
-        extension: "[a-z0-9]+"
-FontFaceCSS:
-    path:     /font-faces.css
-    controller: RZ\Roadiz\CoreBundle\Controller\FontFaceController::fontFacesAction
-
-#
 # Custom forms
 #
 api_custom_forms_item_definition:

@@ -58,7 +58,6 @@ doctrine:
             RZ\Roadiz\Core\Entities\DocumentTranslation: RZ\Roadiz\CoreBundle\Entity\DocumentTranslation
             RZ\Roadiz\Core\Entities\Folder: RZ\Roadiz\CoreBundle\Entity\Folder
             RZ\Roadiz\Core\Entities\FolderTranslation: RZ\Roadiz\CoreBundle\Entity\FolderTranslation
-            RZ\Roadiz\Core\Entities\Font: RZ\Roadiz\CoreBundle\Entity\Font
             RZ\Roadiz\Core\Entities\Group: RZ\Roadiz\CoreBundle\Entity\Group
             RZ\Roadiz\Core\Entities\Log: RZ\Roadiz\CoreBundle\Entity\Log
             RZ\Roadiz\Core\Entities\LoginAttempt: RZ\Roadiz\CoreBundle\Entity\LoginAttempt

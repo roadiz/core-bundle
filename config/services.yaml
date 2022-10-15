@@ -61,10 +61,12 @@ services:
         resource: '../src/Api/DataTransformer/'
         autowire: false
         autoconfigure: false
+
     RZ\Roadiz\CoreBundle\Api\Dto\:
         resource: '../src/Api/Dto/'
         autowire: false
         autoconfigure: false
+
     # Except for WebResponse
     RZ\Roadiz\CoreBundle\Api\DataTransformer\WebResponseOutputDataTransformer:
         autowire: true
