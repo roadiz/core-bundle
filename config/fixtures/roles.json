@@ -80,6 +80,14 @@
         ]
     },
     {
+        "name": "ROLE_ACCESS_DOCUMENTS_CREATION_DATE",
+        "groups": [
+            {
+                "name": "Admin"
+            }
+        ]
+    },
+    {
         "name": "ROLE_ACCESS_GROUPS",
         "groups": []
     },
