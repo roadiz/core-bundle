@@ -113,8 +113,8 @@ class NodesSources extends AbstractEntity implements Loggable
         "node.nodeName" => "exact",
         "node.parent" => "exact",
         "node.parent.nodeName" => "exact",
-        "node.tags" => "exact",
-        "node.tags.tagName" => "exact",
+        "node.nodesTags.tag" => "exact",
+        "node.nodesTags.tag.tagName" => "exact",
         "node.nodeType" => "exact",
         "node.nodeType.name" => "exact"
     ])]
@@ -136,12 +136,12 @@ class NodesSources extends AbstractEntity implements Loggable
     #[ApiFilter(RoadizFilter\NotFilter::class, properties: [
         "node.nodeType.name",
         "node.id",
-        "node.tags.tagName"
+        "node.nodesTags.tag.tagName",
     ])]
     # Use IntersectionFilter after SearchFilter!
     #[ApiFilter(RoadizFilter\IntersectionFilter::class, properties: [
-        "node.tags",
-        "node.tags.tagName"
+        "node.nodesTags.tag",
+        "node.nodesTags.tag.tagName",
     ])]
     #[ORM\ManyToOne(targetEntity: Node::class, cascade: ['persist'], fetch: 'EAGER', inversedBy: 'nodeSources')]
     #[ORM\JoinColumn(name: 'node_id', referencedColumnName: 'id', onDelete: 'CASCADE')]

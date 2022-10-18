@@ -40,8 +40,8 @@ class NodeClearTagCommand extends Command
     protected function getNodeQueryBuilder(Tag $tag): QueryBuilder
     {
         $qb = $this->managerRegistry->getRepository(Node::class)->createQueryBuilder('n');
-        return $qb->innerJoin('n.tags', 't')
-            ->andWhere($qb->expr()->eq('t.id', ':tagId'))
+        return $qb->innerJoin('n.nodesTags', 'ntg')
+            ->andWhere($qb->expr()->eq('ntg.tag', ':tagId'))
             ->setParameter(':tagId', $tag);
     }
 

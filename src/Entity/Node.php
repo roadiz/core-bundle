@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -18,6 +19,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimedPositioned;
 use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
 use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
 use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributableTrait;
 use RZ\Roadiz\CoreBundle\Repository\NodeRepository;
@@ -185,13 +187,30 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     private Collection $children;
 
     /**
-     * @var Collection<Tag>
+     * @var Collection<NodesTags>
      */
-    #[ORM\JoinTable(name: 'nodes_tags')]
-    #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'nodes')]
-    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'node'])]
-    #[Serializer\Groups(['nodes_sources', 'nodes_sources_base', 'node'])]
-    private Collection $tags;
+    #[ORM\OneToMany(
+        mappedBy: 'node',
+        targetEntity: NodesTags::class,
+        cascade: ['persist', 'remove'],
+        orphanRemoval: true
+    )]
+    #[ORM\OrderBy(['position' => 'ASC'])]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "nodesTags.tag" => "exact",
+        "nodesTags.tag.tagName" => "exact",
+    ])]
+    #[ApiFilter(RoadizFilter\NotFilter::class, properties: [
+        "nodesTags.tag.tagName",
+    ])]
+    # Use IntersectionFilter after SearchFilter!
+    #[ApiFilter(RoadizFilter\IntersectionFilter::class, properties: [
+        "nodesTags.tag",
+        "nodesTags.tag.tagName",
+    ])]
+    private Collection $nodesTags;
 
     /**
      * @var Collection<NodesCustomForms>
@@ -264,7 +283,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      */
     public function __construct(NodeTypeInterface $nodeType = null)
     {
-        $this->tags = new ArrayCollection();
+        $this->nodesTags = new ArrayCollection();
         $this->children = new ArrayCollection();
         $this->nodeSources = new ArrayCollection();
         $this->stackTypes = new ArrayCollection();
@@ -546,47 +565,68 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
+     * @return Collection<Tag>
+     */
+    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'node'])]
+    #[Serializer\Groups(['nodes_sources', 'nodes_sources_base', 'node'])]
+    #[Serializer\VirtualProperty]
+    public function getTags(): Collection
+    {
+        return $this->nodesTags->map(function (NodesTags $nodesTags) {
+            return $nodesTags->getTag();
+        });
+    }
+
+    /**
+     * @param iterable<Tag> $tags
+     *
+     * @return $this
+     */
+    public function setTags(iterable $tags): static
+    {
+        $this->nodesTags->clear();
+        $i = 0;
+        foreach ($tags as $tag) {
+            $this->nodesTags->add(
+                (new NodesTags())->setNode($this)->setTag($tag)->setPosition(++$i)
+            );
+        }
+        return $this;
+    }
+
+    /**
      * @param Tag $tag
      *
      * @return $this
      */
-    public function removeTag(Tag $tag): Node
+    public function addTag(Tag $tag): static
     {
-        if ($this->getTags()->contains($tag)) {
-            $this->getTags()->removeElement($tag);
+        if (
+            !$this->getTags()->exists(function ($key, Tag $existingTag) use ($tag) {
+                return $tag->getId() === $existingTag->getId();
+            })
+        ) {
+            $last = $this->nodesTags->last();
+            if (false !== $last) {
+                $i = $last->getPosition();
+            } else {
+                $i = 0;
+            }
+            $this->nodesTags->add(
+                (new NodesTags())->setNode($this)->setTag($tag)->setPosition(++$i)
+            );
         }
 
         return $this;
     }
 
-    /**
-     * @return Collection<Tag>
-     */
-    public function getTags(): Collection
+    public function removeTag(Tag $tag): static
     {
-        return $this->tags;
-    }
-
-    /**
-     * @param Collection<Tag> $tags
-     *
-     * @return Node
-     */
-    public function setTags(Collection $tags): Node
-    {
-        $this->tags = $tags;
-        return $this;
-    }
-
-    /**
-     * @param Tag $tag
-     *
-     * @return $this
-     */
-    public function addTag(Tag $tag): Node
-    {
-        if (!$this->getTags()->contains($tag)) {
-            $this->getTags()->add($tag);
+        $nodeTags = $this->nodesTags->filter(function (NodesTags $existingNodesTags) use ($tag) {
+            return $existingNodesTags->getTag()->getId() === $tag->getId();
+        });
+        foreach ($nodeTags as $singleNodeTags) {
+            $this->nodesTags->removeElement($singleNodeTags);
         }
 
         return $this;
@@ -595,7 +635,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @return Collection<NodesCustomForms>
      */
-    public function getCustomForms()
+    public function getCustomForms(): Collection
     {
         return $this->customForms;
     }
@@ -892,6 +932,14 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
                 foreach ($children as $child) {
                     $cloneChild = clone $child;
                     $this->addChild($cloneChild);
+                }
+            }
+            /** @var NodesTags[] $nodesTags */
+            $nodesTags = $this->nodesTags->toArray();
+            if ($nodesTags !== null) {
+                $this->nodesTags = new ArrayCollection();
+                foreach ($nodesTags as $nodesTag) {
+                    $this->addTag($nodesTag->getTag());
                 }
             }
             $nodeSources = $this->getNodeSources();
