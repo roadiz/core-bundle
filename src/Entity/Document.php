@@ -181,7 +181,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @var string|null
      */
     #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
-    #[ORM\Column(type: 'string', name: 'filename', nullable: true)]
+    #[ORM\Column(name: 'filename', type: 'string', nullable: true)]
     #[SymfonySerializer\Ignore]
     #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Type('string')]
@@ -199,7 +199,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @var Collection<DocumentInterface>
      */
-    #[ORM\OneToMany(targetEntity: 'Document', mappedBy: 'rawDocument', fetch: 'EXTRA_LAZY')]
+    #[ORM\OneToMany(mappedBy: 'rawDocument', targetEntity: 'Document', fetch: 'EXTRA_LAZY')]
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]
     private Collection $downscaledDocuments;
@@ -216,7 +216,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      */
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
     #[SymfonySerializer\Ignore]
-    #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Groups(['document', 'document_private', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Type('bool')]
     private bool $private = false;
     /**
@@ -238,7 +238,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @var integer
      */
-    #[ORM\Column(type: 'integer', name: 'duration', nullable: false, options: ['default' => 0])]
+    #[ORM\Column(name: 'duration', type: 'integer', nullable: false, options: ['default' => 0])]
     #[SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Type('int')]
@@ -246,7 +246,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @var string|null
      */
-    #[ORM\Column(type: 'string', name: 'average_color', length: 7, unique: false, nullable: true)]
+    #[ORM\Column(name: 'average_color', type: 'string', length: 7, unique: false, nullable: true)]
     #[SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Type('string')]
@@ -254,7 +254,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @var int|null The filesize in bytes.
      */
-    #[ORM\Column(type: 'integer', name: 'filesize', nullable: true, unique: false)]
+    #[ORM\Column(name: 'filesize', type: 'integer', unique: false, nullable: true)]
     #[SymfonySerializer\Groups(['document_filesize'])]
     #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Type('int')]
@@ -263,7 +263,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @var Collection<Document>
      */
-    #[ORM\OneToMany(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Document', mappedBy: 'original', fetch: 'EXTRA_LAZY')]
+    #[ORM\OneToMany(mappedBy: 'original', targetEntity: Document::class, fetch: 'EXTRA_LAZY')]
     #[SymfonySerializer\Ignore]
     #[Serializer\Groups(['document_thumbnails'])]
     #[Serializer\Type('ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Document>')]
@@ -272,7 +272,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @var Document|null
      */
-    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Document', inversedBy: 'thumbnails', fetch: 'EXTRA_LAZY')]
+    #[ORM\ManyToOne(targetEntity: Document::class, fetch: 'EXTRA_LAZY', inversedBy: 'thumbnails')]
     #[ORM\JoinColumn(name: 'original', nullable: true, onDelete: 'SET NULL')]
     #[SymfonySerializer\Groups(['document_original'])]
     #[SymfonySerializer\MaxDepth(1)]
