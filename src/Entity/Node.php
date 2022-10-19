@@ -441,7 +441,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param bool $locked
      * @return $this
      */
-    public function setLocked(bool $locked): self
+    public function setLocked(bool $locked): static
     {
         $this->locked = $locked;
         return $this;
@@ -459,7 +459,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param float|string $priority
      * @return $this
      */
-    public function setPriority($priority): Node
+    public function setPriority($priority): static
     {
         $this->priority = $priority;
         return $this;
@@ -475,9 +475,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
 
     /**
      * @param bool $hideChildren
-     * @return Node
+     * @return $this
      */
-    public function setHideChildren(bool $hideChildren): Node
+    public function setHideChildren(bool $hideChildren): static
     {
         $this->hideChildren = $hideChildren;
         return $this;
@@ -496,7 +496,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function setHidingChildren(bool $hideChildren): Node
+    public function setHidingChildren(bool $hideChildren): static
     {
         $this->hideChildren = $hideChildren;
         return $this;
@@ -522,7 +522,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param bool $sterile
      * @return $this
      */
-    public function setSterile(bool $sterile): Node
+    public function setSterile(bool $sterile): static
     {
         $this->sterile = $sterile;
         return $this;
@@ -540,7 +540,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param string $childrenOrder
      * @return $this
      */
-    public function setChildrenOrder(string $childrenOrder): Node
+    public function setChildrenOrder(string $childrenOrder): static
     {
         $this->childrenOrder = $childrenOrder;
         return $this;
@@ -558,7 +558,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param string $childrenOrderDirection
      * @return $this
      */
-    public function setChildrenOrderDirection(string $childrenOrderDirection): Node
+    public function setChildrenOrderDirection(string $childrenOrderDirection): static
     {
         $this->childrenOrderDirection = $childrenOrderDirection;
         return $this;
@@ -642,9 +642,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
 
     /**
      * @param Collection<NodesCustomForms> $customForms
-     * @return Node
+     * @return $this
      */
-    public function setCustomForms(Collection $customForms): Node
+    public function setCustomForms(Collection $customForms): static
     {
         $this->customForms = $customForms;
         return $this;
@@ -654,9 +654,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * Used by generated nodes-sources.
      *
      * @param NodesCustomForms $nodesCustomForms
-     * @return Node
+     * @return $this
      */
-    public function addCustomForm(NodesCustomForms $nodesCustomForms): Node
+    public function addCustomForm(NodesCustomForms $nodesCustomForms): static
     {
         if (!$this->customForms->contains($nodesCustomForms)) {
             $this->customForms->add($nodesCustomForms);
@@ -669,7 +669,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function removeStackType(NodeType $stackType): Node
+    public function removeStackType(NodeType $stackType): static
     {
         if ($this->getStackTypes()->contains($stackType)) {
             $this->getStackTypes()->removeElement($stackType);
@@ -691,7 +691,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function addStackType(NodeType $stackType): Node
+    public function addStackType(NodeType $stackType): static
     {
         if (!$this->getStackTypes()->contains($stackType)) {
             $this->getStackTypes()->add($stackType);
@@ -719,7 +719,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function removeNodeSources(NodesSources $ns): Node
+    public function removeNodeSources(NodesSources $ns): static
     {
         if ($this->getNodeSources()->contains($ns)) {
             $this->getNodeSources()->removeElement($ns);
@@ -741,7 +741,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function addNodeSources(NodesSources $ns): Node
+    public function addNodeSources(NodesSources $ns): static
     {
         if (!$this->getNodeSources()->contains($ns)) {
             $this->getNodeSources()->add($ns);
@@ -776,9 +776,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
 
     /**
      * @param ArrayCollection<NodesToNodes> $bNodes
-     * @return Node
+     * @return $this
      */
-    public function setBNodes(ArrayCollection $bNodes): Node
+    public function setBNodes(ArrayCollection $bNodes): static
     {
         foreach ($this->bNodes as $bNode) {
             $bNode->setNodeA(null);
@@ -805,7 +805,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param NodesToNodes $bNode
      * @return $this
      */
-    public function addBNode(NodesToNodes $bNode): Node
+    public function addBNode(NodesToNodes $bNode): static
     {
         if (!$this->getBNodes()->contains($bNode)) {
             $this->getBNodes()->add($bNode);
@@ -858,7 +858,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param string $nodeName
      * @return $this
      */
-    public function setNodeName(string $nodeName): Node
+    public function setNodeName(string $nodeName): static
     {
         $this->nodeName = StringHandler::slugify($nodeName);
         return $this;
@@ -876,7 +876,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param NodeTypeInterface|null $nodeType
      * @return $this
      */
-    public function setNodeType(?NodeTypeInterface $nodeType = null): Node
+    public function setNodeType(?NodeTypeInterface $nodeType = null): static
     {
         $this->nodeType = $nodeType;
         return $this;
