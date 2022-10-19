@@ -565,6 +565,28 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
+     * @return Collection<NodesTags>
+     */
+    public function getNodesTags(): Collection
+    {
+        return $this->nodesTags;
+    }
+
+    /**
+     * @param Collection<NodesTags> $nodesTags
+     * @return $this
+     */
+    public function setNodesTags(Collection $nodesTags): static
+    {
+        foreach ($nodesTags as $singleNodesTags) {
+            $singleNodesTags->setNode($this);
+        }
+        $this->nodesTags = $nodesTags;
+
+        return $this;
+    }
+
+    /**
      * @return Collection<Tag>
      */
     #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'node'])]

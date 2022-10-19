@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
@@ -603,20 +604,23 @@ class NodesSourcesRepository extends StatusAwareRepository
 
     /**
      * @param Node $node
-     * @param TranslationInterface $translation
+     * @param TranslationInterface|null $translation
      * @return mixed|null
      */
-    public function findOneByNodeAndTranslation(Node $node, TranslationInterface $translation)
+    public function findOneByNodeAndTranslation(Node $node, ?TranslationInterface $translation)
     {
         $qb = $this->createQueryBuilder(static::NODESSOURCES_ALIAS);
 
         $qb->select(static::NODESSOURCES_ALIAS)
             ->andWhere($qb->expr()->eq(static::NODESSOURCES_ALIAS . '.node', ':node'))
-            ->andWhere($qb->expr()->eq(static::NODESSOURCES_ALIAS . '.translation', ':translation'))
             ->setMaxResults(1)
             ->setParameter('node', $node)
-            ->setParameter('translation', $translation)
             ->setCacheable(true);
+
+        if (null !== $translation) {
+            $qb->andWhere($qb->expr()->eq(static::NODESSOURCES_ALIAS . '.translation', ':translation'))
+                ->setParameter('translation', $translation);
+        }
 
         return $qb->getQuery()->getOneOrNullResult();
     }
