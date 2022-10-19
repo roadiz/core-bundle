@@ -32,21 +32,21 @@ interface AttributableInterface extends PersistableInterface
     /**
      * @param Collection $attributes
      *
-     * @return mixed
+     * @return $this
      */
-    public function setAttributeValues(Collection $attributes);
+    public function setAttributeValues(Collection $attributes): static;
 
     /**
      * @param AttributeValueInterface $attribute
      *
-     * @return mixed
+     * @return $this
      */
-    public function addAttributeValue(AttributeValueInterface $attribute);
+    public function addAttributeValue(AttributeValueInterface $attribute): static;
 
     /**
      * @param AttributeValueInterface $attribute
      *
-     * @return mixed
+     * @return $this
      */
-    public function removeAttributeValue(AttributeValueInterface $attribute);
+    public function removeAttributeValue(AttributeValueInterface $attribute): static;
 }

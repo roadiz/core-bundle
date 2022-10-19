@@ -412,28 +412,28 @@ abstract class EntityRepository extends ServiceEntityRepository
                      * @var Tag|null $tag Tag can be null if not found
                      */
                     foreach ($criteria['tags'] as $index => $tag) {
-                        if (null !== $tag && $tag instanceof Tag) {
-                            $alias = static::TAG_ALIAS . $index;
-                            $qb->innerJoin($nodeAlias . '.tags', $alias);
-                            $qb->andWhere($qb->expr()->eq($alias . '.id', $tag->getId()));
+                        if ($tag instanceof Tag) {
+                            $alias = 'ntg_' . $index;
+                            $qb->innerJoin($nodeAlias . '.nodesTags', $alias);
+                            $qb->andWhere($qb->expr()->eq($alias . '.tag', $tag->getId()));
                         }
                     }
                     unset($criteria["tagExclusive"]);
                     unset($criteria['tags']);
                 } else {
                     $qb->innerJoin(
-                        $nodeAlias . '.tags',
-                        static::TAG_ALIAS,
+                        $nodeAlias . '.nodesTags',
+                        'ntg_0',
                         'WITH',
-                        'tg.id IN (:tags)'
+                        'ntg_0.tag IN (:tags)'
                     );
                 }
             } else {
                 $qb->innerJoin(
-                    $nodeAlias . '.tags',
-                    static::TAG_ALIAS,
+                    $nodeAlias . '.nodesTags',
+                    'ntg_0',
                     'WITH',
-                    'tg.id = :tags'
+                    'ntg_0.tag = :tags'
                 );
             }
         }

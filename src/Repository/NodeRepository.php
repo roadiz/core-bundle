@@ -1017,24 +1017,24 @@ final class NodeRepository extends StatusAwareRepository
         if (isset($criteria['tags'])) {
             if ($criteria['tags'] instanceof PersistableInterface) {
                 $qb->innerJoin(
-                    $alias . '.tags',
-                    static::TAG_ALIAS,
+                    $alias . '.nodesTags',
+                    'ntg',
                     Expr\Join::WITH,
-                    $qb->expr()->eq('tg.id', (int) $criteria['tags']->getId())
+                    $qb->expr()->eq('ntg.tag', (int) $criteria['tags']->getId())
                 );
             } elseif (is_array($criteria['tags'])) {
                 $qb->innerJoin(
-                    $alias . '.tags',
-                    static::TAG_ALIAS,
+                    $alias . '.nodesTags',
+                    'ntg',
                     Expr\Join::WITH,
-                    $qb->expr()->in('tg.id', $criteria['tags'])
+                    $qb->expr()->in('ntg.tag', $criteria['tags'])
                 );
             } elseif (is_integer($criteria['tags'])) {
                 $qb->innerJoin(
-                    $alias . '.tags',
-                    static::TAG_ALIAS,
+                    $alias . '.nodesTags',
+                    'ntg',
                     Expr\Join::WITH,
-                    $qb->expr()->eq('tg.id', (int) $criteria['tags'])
+                    $qb->expr()->eq('ntg.tag', (int) $criteria['tags'])
                 );
             }
             unset($criteria['tags']);

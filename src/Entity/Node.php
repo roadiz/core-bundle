@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -18,6 +19,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimedPositioned;
 use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
 use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
 use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributableTrait;
 use RZ\Roadiz\CoreBundle\Repository\NodeRepository;
@@ -185,13 +187,30 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     private Collection $children;
 
     /**
-     * @var Collection<Tag>
+     * @var Collection<NodesTags>
      */
-    #[ORM\JoinTable(name: 'nodes_tags')]
-    #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'nodes')]
-    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'node'])]
-    #[Serializer\Groups(['nodes_sources', 'nodes_sources_base', 'node'])]
-    private Collection $tags;
+    #[ORM\OneToMany(
+        mappedBy: 'node',
+        targetEntity: NodesTags::class,
+        cascade: ['persist', 'remove'],
+        orphanRemoval: true
+    )]
+    #[ORM\OrderBy(['position' => 'ASC'])]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "nodesTags.tag" => "exact",
+        "nodesTags.tag.tagName" => "exact",
+    ])]
+    #[ApiFilter(RoadizFilter\NotFilter::class, properties: [
+        "nodesTags.tag.tagName",
+    ])]
+    # Use IntersectionFilter after SearchFilter!
+    #[ApiFilter(RoadizFilter\IntersectionFilter::class, properties: [
+        "nodesTags.tag",
+        "nodesTags.tag.tagName",
+    ])]
+    private Collection $nodesTags;
 
     /**
      * @var Collection<NodesCustomForms>
@@ -264,7 +283,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      */
     public function __construct(NodeTypeInterface $nodeType = null)
     {
-        $this->tags = new ArrayCollection();
+        $this->nodesTags = new ArrayCollection();
         $this->children = new ArrayCollection();
         $this->nodeSources = new ArrayCollection();
         $this->stackTypes = new ArrayCollection();
@@ -422,7 +441,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param bool $locked
      * @return $this
      */
-    public function setLocked(bool $locked): self
+    public function setLocked(bool $locked): static
     {
         $this->locked = $locked;
         return $this;
@@ -440,7 +459,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param float|string $priority
      * @return $this
      */
-    public function setPriority($priority): Node
+    public function setPriority($priority): static
     {
         $this->priority = $priority;
         return $this;
@@ -456,9 +475,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
 
     /**
      * @param bool $hideChildren
-     * @return Node
+     * @return $this
      */
-    public function setHideChildren(bool $hideChildren): Node
+    public function setHideChildren(bool $hideChildren): static
     {
         $this->hideChildren = $hideChildren;
         return $this;
@@ -477,7 +496,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function setHidingChildren(bool $hideChildren): Node
+    public function setHidingChildren(bool $hideChildren): static
     {
         $this->hideChildren = $hideChildren;
         return $this;
@@ -503,7 +522,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param bool $sterile
      * @return $this
      */
-    public function setSterile(bool $sterile): Node
+    public function setSterile(bool $sterile): static
     {
         $this->sterile = $sterile;
         return $this;
@@ -521,7 +540,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param string $childrenOrder
      * @return $this
      */
-    public function setChildrenOrder(string $childrenOrder): Node
+    public function setChildrenOrder(string $childrenOrder): static
     {
         $this->childrenOrder = $childrenOrder;
         return $this;
@@ -539,22 +558,30 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param string $childrenOrderDirection
      * @return $this
      */
-    public function setChildrenOrderDirection(string $childrenOrderDirection): Node
+    public function setChildrenOrderDirection(string $childrenOrderDirection): static
     {
         $this->childrenOrderDirection = $childrenOrderDirection;
         return $this;
     }
 
     /**
-     * @param Tag $tag
-     *
+     * @return Collection<NodesTags>
+     */
+    public function getNodesTags(): Collection
+    {
+        return $this->nodesTags;
+    }
+
+    /**
+     * @param Collection<NodesTags> $nodesTags
      * @return $this
      */
-    public function removeTag(Tag $tag): Node
+    public function setNodesTags(Collection $nodesTags): static
     {
-        if ($this->getTags()->contains($tag)) {
-            $this->getTags()->removeElement($tag);
+        foreach ($nodesTags as $singleNodesTags) {
+            $singleNodesTags->setNode($this);
         }
+        $this->nodesTags = $nodesTags;
 
         return $this;
     }
@@ -562,19 +589,30 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @return Collection<Tag>
      */
+    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'node'])]
+    #[Serializer\Groups(['nodes_sources', 'nodes_sources_base', 'node'])]
+    #[Serializer\VirtualProperty]
     public function getTags(): Collection
     {
-        return $this->tags;
+        return $this->nodesTags->map(function (NodesTags $nodesTags) {
+            return $nodesTags->getTag();
+        });
     }
 
     /**
-     * @param Collection<Tag> $tags
+     * @param iterable<Tag> $tags
      *
-     * @return Node
+     * @return $this
      */
-    public function setTags(Collection $tags): Node
+    public function setTags(iterable $tags): static
     {
-        $this->tags = $tags;
+        $this->nodesTags->clear();
+        $i = 0;
+        foreach ($tags as $tag) {
+            $this->nodesTags->add(
+                (new NodesTags())->setNode($this)->setTag($tag)->setPosition(++$i)
+            );
+        }
         return $this;
     }
 
@@ -583,10 +621,34 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function addTag(Tag $tag): Node
+    public function addTag(Tag $tag): static
     {
-        if (!$this->getTags()->contains($tag)) {
-            $this->getTags()->add($tag);
+        if (
+            !$this->getTags()->exists(function ($key, Tag $existingTag) use ($tag) {
+                return $tag->getId() === $existingTag->getId();
+            })
+        ) {
+            $last = $this->nodesTags->last();
+            if (false !== $last) {
+                $i = $last->getPosition();
+            } else {
+                $i = 0;
+            }
+            $this->nodesTags->add(
+                (new NodesTags())->setNode($this)->setTag($tag)->setPosition(++$i)
+            );
+        }
+
+        return $this;
+    }
+
+    public function removeTag(Tag $tag): static
+    {
+        $nodeTags = $this->nodesTags->filter(function (NodesTags $existingNodesTags) use ($tag) {
+            return $existingNodesTags->getTag()->getId() === $tag->getId();
+        });
+        foreach ($nodeTags as $singleNodeTags) {
+            $this->nodesTags->removeElement($singleNodeTags);
         }
 
         return $this;
@@ -595,16 +657,16 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @return Collection<NodesCustomForms>
      */
-    public function getCustomForms()
+    public function getCustomForms(): Collection
     {
         return $this->customForms;
     }
 
     /**
      * @param Collection<NodesCustomForms> $customForms
-     * @return Node
+     * @return $this
      */
-    public function setCustomForms(Collection $customForms): Node
+    public function setCustomForms(Collection $customForms): static
     {
         $this->customForms = $customForms;
         return $this;
@@ -614,9 +676,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * Used by generated nodes-sources.
      *
      * @param NodesCustomForms $nodesCustomForms
-     * @return Node
+     * @return $this
      */
-    public function addCustomForm(NodesCustomForms $nodesCustomForms): Node
+    public function addCustomForm(NodesCustomForms $nodesCustomForms): static
     {
         if (!$this->customForms->contains($nodesCustomForms)) {
             $this->customForms->add($nodesCustomForms);
@@ -629,7 +691,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function removeStackType(NodeType $stackType): Node
+    public function removeStackType(NodeType $stackType): static
     {
         if ($this->getStackTypes()->contains($stackType)) {
             $this->getStackTypes()->removeElement($stackType);
@@ -651,7 +713,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function addStackType(NodeType $stackType): Node
+    public function addStackType(NodeType $stackType): static
     {
         if (!$this->getStackTypes()->contains($stackType)) {
             $this->getStackTypes()->add($stackType);
@@ -679,7 +741,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function removeNodeSources(NodesSources $ns): Node
+    public function removeNodeSources(NodesSources $ns): static
     {
         if ($this->getNodeSources()->contains($ns)) {
             $this->getNodeSources()->removeElement($ns);
@@ -701,7 +763,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      *
      * @return $this
      */
-    public function addNodeSources(NodesSources $ns): Node
+    public function addNodeSources(NodesSources $ns): static
     {
         if (!$this->getNodeSources()->contains($ns)) {
             $this->getNodeSources()->add($ns);
@@ -736,9 +798,9 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
 
     /**
      * @param ArrayCollection<NodesToNodes> $bNodes
-     * @return Node
+     * @return $this
      */
-    public function setBNodes(ArrayCollection $bNodes): Node
+    public function setBNodes(ArrayCollection $bNodes): static
     {
         foreach ($this->bNodes as $bNode) {
             $bNode->setNodeA(null);
@@ -765,7 +827,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param NodesToNodes $bNode
      * @return $this
      */
-    public function addBNode(NodesToNodes $bNode): Node
+    public function addBNode(NodesToNodes $bNode): static
     {
         if (!$this->getBNodes()->contains($bNode)) {
             $this->getBNodes()->add($bNode);
@@ -818,7 +880,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param string $nodeName
      * @return $this
      */
-    public function setNodeName(string $nodeName): Node
+    public function setNodeName(string $nodeName): static
     {
         $this->nodeName = StringHandler::slugify($nodeName);
         return $this;
@@ -836,7 +898,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      * @param NodeTypeInterface|null $nodeType
      * @return $this
      */
-    public function setNodeType(?NodeTypeInterface $nodeType = null): Node
+    public function setNodeType(?NodeTypeInterface $nodeType = null): static
     {
         $this->nodeType = $nodeType;
         return $this;
@@ -892,6 +954,14 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
                 foreach ($children as $child) {
                     $cloneChild = clone $child;
                     $this->addChild($cloneChild);
+                }
+            }
+            /** @var NodesTags[] $nodesTags */
+            $nodesTags = $this->nodesTags->toArray();
+            if ($nodesTags !== null) {
+                $this->nodesTags = new ArrayCollection();
+                foreach ($nodesTags as $nodesTag) {
+                    $this->addTag($nodesTag->getTag());
                 }
             }
             $nodeSources = $this->getNodeSources();

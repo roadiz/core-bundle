@@ -41,17 +41,17 @@ final class TagRepository extends EntityRepository
         if (key_exists('nodes', $criteria)) {
             if (is_array($criteria['nodes']) || $criteria['nodes'] instanceof Collection) {
                 $qb->innerJoin(
-                    'tg.nodes',
-                    static::NODE_ALIAS,
+                    'tg.nodesTags',
+                    'ntg',
                     'WITH',
-                    'n.id IN (:nodes)'
+                    'ntg.node IN (:nodes)'
                 );
             } else {
                 $qb->innerJoin(
-                    'tg.nodes',
-                    static::NODE_ALIAS,
+                    'tg.nodesTags',
+                    'ntg',
                     'WITH',
-                    'n.id = :nodes'
+                    'ntg.node = :nodes'
                 );
             }
         }
@@ -425,7 +425,8 @@ final class TagRepository extends EntityRepository
         $qb->select('t')
             ->addSelect('tt')
             ->addSelect('tr')
-            ->innerJoin('t.nodes', 'n')
+            ->innerJoin('t.nodesTags', 'ntg')
+            ->innerJoin('ntg.node', 'n')
             ->innerJoin('n.parent', 'pn')
             ->leftJoin('t.translatedTags', 'tt')
             ->leftJoin('tt.translation', 'tr')

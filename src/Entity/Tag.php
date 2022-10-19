@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
 use ApiPlatform\Metadata\ApiFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -141,20 +141,35 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     private bool $locked = false;
 
     /**
-     * @var Collection<Node>
+     * @var Collection<NodesTags>
      */
-    #[ORM\JoinTable(name: 'nodes_tags')]
-    #[ORM\ManyToMany(targetEntity: Node::class, mappedBy: 'tags')]
+    #[ORM\OneToMany(
+        mappedBy: 'tag',
+        targetEntity: NodesTags::class,
+        cascade: ['persist'],
+        orphanRemoval: true
+    )]
+    #[ORM\OrderBy(['position' => 'ASC'])]
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]
-    private Collection $nodes;
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "nodesTags.node" => "exact",
+        "nodesTags.node.nodeName" => "exact",
+        "nodesTags.node.nodeType" => "exact",
+        "nodesTags.node.nodeType.name" => "exact",
+    ])]
+    #[ApiFilter(BaseFilter\BooleanFilter::class, properties: [
+        "nodesTags.node.visible",
+        "nodesTags.node.nodeType.reachable",
+    ])]
+    private Collection $nodesTags;
 
     /**
      * Create a new Tag.
      */
     public function __construct()
     {
-        $this->nodes = new ArrayCollection();
+        $this->nodesTags = new ArrayCollection();
         $this->translatedTags = new ArrayCollection();
         $this->children = new ArrayCollection();
         $this->initAbstractDateTimed();
@@ -183,7 +198,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      *
      * @return $this
      */
-    public function setLocked(bool $locked)
+    public function setLocked(bool $locked): static
     {
         $this->locked = $locked;
 
@@ -193,9 +208,11 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     /**
      * @return Collection<Node>
      */
-    public function getNodes()
+    public function getNodes(): Collection
     {
-        return $this->nodes;
+        return $this->nodesTags->map(function (NodesTags $nodesTags) {
+            return $nodesTags->getNode();
+        });
     }
 
     /**
@@ -208,7 +225,6 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
         $parents = $this->getParents();
         $path = [];
 
-        /** @var Tag $parent */
         foreach ($parents as $parent) {
             $path[] = $parent->getTagName();
         }
@@ -231,7 +247,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      *
      * @return $this
      */
-    public function setTagName(string $tagName)
+    public function setTagName(string $tagName): static
     {
         $this->dirtyTagName = $tagName;
         $this->tagName = StringHandler::slugify($tagName);
@@ -273,7 +289,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      *
      * @return $this
      */
-    public function setVisible(bool $visible)
+    public function setVisible(bool $visible): static
     {
         $this->visible = $visible;
         return $this;
@@ -294,9 +310,9 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      *
      * @param string|null $color the color
      *
-     * @return self
+     * @return static
      */
-    public function setColor(?string $color)
+    public function setColor(?string $color): static
     {
         $this->color = $color ?? '';
 
@@ -318,9 +334,9 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      *
      * @param string $childrenOrder the children order
      *
-     * @return self
+     * @return static
      */
-    public function setChildrenOrder(string $childrenOrder)
+    public function setChildrenOrder(string $childrenOrder): static
     {
         $this->childrenOrder = $childrenOrder;
 
@@ -342,9 +358,9 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      *
      * @param string $childrenOrderDirection the children order direction
      *
-     * @return self
+     * @return static
      */
-    public function setChildrenOrderDirection(string $childrenOrderDirection)
+    public function setChildrenOrderDirection(string $childrenOrderDirection): static
     {
         $this->childrenOrderDirection = $childrenOrderDirection;
 
@@ -354,7 +370,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return '[' . ($this->getId() > 0 ? $this->getId() : 'NULL') . '] ' . $this->getTagName();
     }
@@ -384,9 +400,9 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
 
     /**
      * @param Collection<TagTranslation> $translatedTags
-     * @return Tag
+     * @return $this
      */
-    public function setTranslatedTags(Collection $translatedTags): self
+    public function setTranslatedTags(Collection $translatedTags): static
     {
         $this->translatedTags = $translatedTags;
         /** @var TagTranslation $translatedTag */

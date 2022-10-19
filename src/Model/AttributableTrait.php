@@ -63,9 +63,9 @@ trait AttributableTrait
     /**
      * @param Collection $attributes
      *
-     * @return mixed
+     * @return $this
      */
-    public function setAttributeValues(Collection $attributes)
+    public function setAttributeValues(Collection $attributes): static
     {
         $this->attributeValues = $attributes;
         return $this;
@@ -74,9 +74,9 @@ trait AttributableTrait
     /**
      * @param AttributeValueInterface $attribute
      *
-     * @return mixed
+     * @return $this
      */
-    public function addAttributeValue(AttributeValueInterface $attribute)
+    public function addAttributeValue(AttributeValueInterface $attribute): static
     {
         if (!$this->getAttributeValues()->contains($attribute)) {
             $this->getAttributeValues()->add($attribute);
@@ -88,9 +88,9 @@ trait AttributableTrait
     /**
      * @param AttributeValueInterface $attribute
      *
-     * @return mixed
+     * @return $this
      */
-    public function removeAttributeValue(AttributeValueInterface $attribute)
+    public function removeAttributeValue(AttributeValueInterface $attribute): static
     {
         if ($this->getAttributeValues()->contains($attribute)) {
             $this->getAttributeValues()->removeElement($attribute);
