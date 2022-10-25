@@ -56,19 +56,6 @@ class NodeTypeHandler extends AbstractHandler
         return $this;
     }
 
-    /**
-     * Create a new node-type handler with node-type to handle.
-     *
-     * @param ObjectManager $objectManager
-     * @param EntityGeneratorFactory $entityGeneratorFactory
-     * @param HandlerFactory $handlerFactory
-     * @param SchemaUpdater $schemaUpdater
-     * @param SerializerInterface $serializer
-     * @param string $generatedEntitiesDir
-     * @param string $serializedNodeTypesDir
-     * @param string $importFilesConfigPath
-     * @param string $kernelProjectDir
-     */
     public function __construct(
         ObjectManager $objectManager,
         EntityGeneratorFactory $entityGeneratorFactory,
@@ -293,11 +280,8 @@ class NodeTypeHandler extends AbstractHandler
      */
     public function updateSchema(): NodeTypeHandler
     {
-        $this->clearCaches(false);
         $this->regenerateEntityClass();
         $this->exportNodeTypeJsonFile();
-        // Clear cache only after generating NSEntity class.
-        $this->clearCaches();
 
         return $this;
     }
@@ -322,17 +306,8 @@ class NodeTypeHandler extends AbstractHandler
     {
         $this->removeSourceEntityClass();
         $this->removeNodeTypeJsonFile();
-        $this->clearCaches();
 
         return $this;
-    }
-
-    /**
-     * @param bool $recreateProxies
-     */
-    protected function clearCaches(bool $recreateProxies = true)
-    {
-        $this->schemaUpdater->clearMetadata();
     }
 
     /**

@@ -26,6 +26,7 @@ services:
             $inheritanceType: '%roadiz_core.inheritance_type%'
             $maxPixelSize: '%rz_intervention_request.max_pixel_size%'
             $appNamespace: '%roadiz_core.app_namespace%'
+            $projectDir: '%kernel.project_dir%'
             $exportDir: '%kernel.project_dir%/var/export'
             $privateKeyName: '%roadiz_core.private_key_name%'
             $generatedEntitiesDir: '%roadiz_core.generated_entities_dir%'
