@@ -265,6 +265,9 @@ class NodeTypeHandler extends AbstractHandler
                 apcu_clear_cache();
             }
 
+            \clearstatcache(true, $file);
+            \clearstatcache(true, $repositoryFile);
+
             return true;
         }
         return false;

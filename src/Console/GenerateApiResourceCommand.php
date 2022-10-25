@@ -77,6 +77,7 @@ class GenerateApiResourceCommand extends Command
                         Yaml::dump($this->getApiResourceDefinition($nt), 6)
                     );
                     $io->writeln("* API resource <info>" . $resourcePath . "</info> has been generated.");
+                    \clearstatcache(true, $resourcePath);
                 } else {
                     $io->writeln("* API resource <info>" . $resourcePath . "</info> already exists, left untouched.");
                 }
