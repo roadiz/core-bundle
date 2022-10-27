@@ -29,7 +29,6 @@ class NodeTypeHandler extends AbstractHandler
     private EntityGeneratorFactory $entityGeneratorFactory;
     private HandlerFactory $handlerFactory;
     private string $generatedEntitiesDir;
-    private SchemaUpdater $schemaUpdater;
     private SerializerInterface $serializer;
     private string $serializedNodeTypesDir;
     private string $importFilesConfigPath;
@@ -60,7 +59,6 @@ class NodeTypeHandler extends AbstractHandler
         ObjectManager $objectManager,
         EntityGeneratorFactory $entityGeneratorFactory,
         HandlerFactory $handlerFactory,
-        SchemaUpdater $schemaUpdater,
         SerializerInterface $serializer,
         string $generatedEntitiesDir,
         string $serializedNodeTypesDir,
@@ -71,14 +69,12 @@ class NodeTypeHandler extends AbstractHandler
         $this->entityGeneratorFactory = $entityGeneratorFactory;
         $this->handlerFactory = $handlerFactory;
         $this->generatedEntitiesDir = $generatedEntitiesDir;
-        $this->schemaUpdater = $schemaUpdater;
         $this->serializer = $serializer;
         $this->serializedNodeTypesDir = $serializedNodeTypesDir;
         $this->importFilesConfigPath = $importFilesConfigPath;
         $this->kernelProjectDir = $kernelProjectDir;
     }
-
-
+    
     public function getGeneratedEntitiesFolder(): string
     {
         return $this->generatedEntitiesDir;

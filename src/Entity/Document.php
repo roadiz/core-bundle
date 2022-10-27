@@ -20,6 +20,7 @@ use RZ\Roadiz\Core\Models\FolderInterface;
 use RZ\Roadiz\Core\Models\HasThumbnailInterface;
 use RZ\Roadiz\Core\Models\SizeableInterface;
 use RZ\Roadiz\Core\Models\TimeableInterface;
+use RZ\Roadiz\CoreBundle\Api\Filter\CopyrightValidFilter;
 use RZ\Roadiz\CoreBundle\Repository\DocumentRepository;
 use RZ\Roadiz\Utils\StringHandler;
 use JMS\Serializer\Annotation as Serializer;
@@ -64,7 +65,8 @@ use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
         "updatedAt",
         "copyrightValidSince" => "include_null_before",
         "copyrightValidUntil" => "include_null_after"
-    ])
+    ]),
+    ApiFilter(CopyrightValidFilter::class)
 ]
 class Document extends AbstractDocument implements AdvancedDocumentInterface, HasThumbnailInterface, SizeableInterface, TimeableInterface, DisplayableInterface, FileHashInterface
 {
