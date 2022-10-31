@@ -38,6 +38,17 @@ final class SchemaUpdater
         } else {
             throw new \RuntimeException('Cannot clear Doctrine metadata cache. ' . $process->getErrorOutput());
         }
+
+        $process = $this->runCommand(
+            'messenger:stop-workers',
+        );
+        $process->run();
+
+        if ($process->wait() === 0) {
+            $this->logger->info('Stop any running messenger worker to force them to restart');
+        } else {
+            throw new \RuntimeException('Cannot stop messenger workers. ' . $process->getErrorOutput());
+        }
     }
 
     public function clearAllCaches(): void
