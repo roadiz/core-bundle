@@ -74,7 +74,7 @@ class NodeTypeHandler extends AbstractHandler
         $this->importFilesConfigPath = $importFilesConfigPath;
         $this->kernelProjectDir = $kernelProjectDir;
     }
-    
+
     public function getGeneratedEntitiesFolder(): string
     {
         return $this->generatedEntitiesDir;
