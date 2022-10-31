@@ -31,7 +31,7 @@ final class RealmVoter extends Voter
         return $attribute === self::READ;
     }
 
-    protected function supports(string $attribute, $subject)
+    protected function supports(string $attribute, $subject): bool
     {
         return $this->supportsAttribute($attribute) && $subject instanceof RealmInterface;
     }
