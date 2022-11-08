@@ -242,7 +242,8 @@ class NodeTypeField extends AbstractField implements NodeTypeFieldInterface, Ser
      */
     public function isIndexed(): bool
     {
-        return $this->indexed;
+        // JSON types cannot be indexed
+        return $this->indexed && $this->getDoctrineType() !== 'json';
     }
 
     /**
