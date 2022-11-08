@@ -15,6 +15,7 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimedPositioned;
 use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
 use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Api\Filter\NotFilter;
 use RZ\Roadiz\CoreBundle\Repository\TagRepository;
 use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -67,6 +68,10 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
         "parent.id" => "exact",
         "parent.tagName" => "exact"
+    ])]
+    #[ApiFilter(NotFilter::class, properties: [
+        "parent.id",
+        "parent.tagName"
     ])]
     #[ORM\ManyToOne(targetEntity: Tag::class, fetch: 'EXTRA_LAZY', inversedBy: 'children')]
     #[ORM\JoinColumn(name: 'parent_tag_id', referencedColumnName: 'id', onDelete: 'CASCADE')]

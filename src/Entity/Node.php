@@ -126,13 +126,13 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     private bool $locked = false;
 
     /**
-     * @var float|string
+     * @var float|string|int
      */
     #[ORM\Column(type: 'decimal', precision: 2, scale: 1)]
     #[SymfonySerializer\Groups(['node'])]
     #[Serializer\Groups(['node'])]
     #[Gedmo\Versioned]
-    private $priority = 0.8;
+    private string|float|int $priority = 0.8;
 
     #[ORM\Column(name: 'hide_children', type: 'boolean', nullable: false, options: ['default' => false])]
     #[SymfonySerializer\Groups(['node'])]
