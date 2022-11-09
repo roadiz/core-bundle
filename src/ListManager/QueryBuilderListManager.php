@@ -30,7 +30,6 @@ class QueryBuilderListManager extends AbstractEntityListManager
         parent::__construct($request);
         $this->queryBuilder = $queryBuilder;
         $this->identifier = $identifier;
-        $this->request = $request;
         $this->debug = $debug;
     }
 
@@ -42,13 +41,11 @@ class QueryBuilderListManager extends AbstractEntityListManager
         // Implement your custom logic
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function handle($disabled = false)
+    public function handle(bool $disabled = false)
     {
         if (false === $disabled && null !== $this->request) {
             if (
+                $this->allowRequestSorting &&
                 $this->request->query->get('field') &&
                 $this->request->query->get('ordering')
             ) {
@@ -60,7 +57,7 @@ class QueryBuilderListManager extends AbstractEntityListManager
                 $this->queryArray['ordering'] = $this->request->query->get('ordering');
             }
 
-            if ($this->request->query->get('search') != "") {
+            if ($this->allowRequestSearching && $this->request->query->get('search') != "") {
                 $this->handleSearchParam($this->request->query->get('search'));
                 $this->queryArray['search'] = $this->request->query->get('search');
             }

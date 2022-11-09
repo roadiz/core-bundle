@@ -28,10 +28,7 @@ final class SolrSearchListManager extends AbstractEntityListManager
         $this->searchInTags = $searchInTags;
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function handle($disabled = false)
+    public function handle(bool $disabled = false)
     {
         if ($this->request === null) {
             throw new \InvalidArgumentException('Cannot handle a NULL request.');
