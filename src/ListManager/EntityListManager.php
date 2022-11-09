@@ -76,10 +76,10 @@ class EntityListManager extends AbstractEntityListManager
     /**
      * Handle request to find filter to apply to entity listing.
      *
-     * @param boolean $disabled Disable pagination and filtering over GET params
+     * @param bool $disabled Disable pagination and filtering over GET params
      * @return void
      */
-    public function handle($disabled = false)
+    public function handle(bool $disabled = false)
     {
         // transform the key chroot in parent
         if (array_key_exists('chroot', $this->filteringArray)) {
@@ -121,6 +121,7 @@ class EntityListManager extends AbstractEntityListManager
 
         if (false === $disabled && null !== $this->request) {
             if (
+                $this->allowRequestSorting &&
                 $this->request->query->get('field') &&
                 $this->request->query->get('ordering')
             ) {
@@ -131,7 +132,7 @@ class EntityListManager extends AbstractEntityListManager
                 $this->queryArray['ordering'] = $this->request->query->get('ordering');
             }
 
-            if ($this->request->query->get('search') != "") {
+            if ($this->allowRequestSearching && $this->request->query->get('search') != "") {
                 $this->searchPattern = $this->request->query->get('search');
                 $this->queryArray['search'] = $this->request->query->get('search');
             }
