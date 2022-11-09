@@ -1,3 +1,9 @@
+## 2.0.39 (2022-11-09)
+
+### Bug Fixes
+
+* Missing allowRequestSearching condition on EntityListManager ([6e0f606](https://github.com/roadiz/core-bundle/commit/6e0f606803ab36a79e8f9384bfc970bdd53a7c1b))
+
 ## 2.0.38 (2022-11-09)
 
 ### Bug Fixes
