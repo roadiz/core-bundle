@@ -1,3 +1,9 @@
+## 2.0.38 (2022-11-09)
+
+### Bug Fixes
+
+* Make EntityListManager request sorting and searching optional for security purposes ([5103cf6](https://github.com/roadiz/core-bundle/commit/5103cf6d5bbc1e64b7a7685339cdf04ac37ffd4f))
+
 ## 2.0.37 (2022-10-03)
 
 ### Bug Fixes
