@@ -113,6 +113,7 @@ class GenerateApiResourceCommand extends Command
                 "tag_base",
                 "translation_base",
                 "document_display",
+                "document_thumbnails",
                 "document_display_sources",
                 ...$this->getGroupedFieldsSerializationGroups($nodeType)
             ];
@@ -137,6 +138,7 @@ class GenerateApiResourceCommand extends Command
             "tag_base",
             "translation_base",
             "document_display",
+            "document_thumbnails",
             "document_display_sources",
             ...$this->getGroupedFieldsSerializationGroups($nodeType)
         ];
