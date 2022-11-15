@@ -20,6 +20,7 @@ class RoadizExtension extends AbstractExtension implements GlobalsInterface
     protected string $cmsVersion;
     protected string $cmsVersionPrefix;
     protected bool $hideRoadizVersion;
+    protected int $maxVersionsShowed;
 
     public function __construct(
         Settings $settingsBag,
@@ -28,7 +29,8 @@ class RoadizExtension extends AbstractExtension implements GlobalsInterface
         NodeChrootResolver $chrootResolver,
         string $cmsVersion,
         string $cmsVersionPrefix,
-        bool $hideRoadizVersion
+        bool $hideRoadizVersion,
+        int $maxVersionsShowed
     ) {
         $this->settingsBag = $settingsBag;
         $this->nodeTypesBag = $nodeTypesBag;
@@ -37,6 +39,7 @@ class RoadizExtension extends AbstractExtension implements GlobalsInterface
         $this->cmsVersion = $cmsVersion;
         $this->cmsVersionPrefix = $cmsVersionPrefix;
         $this->hideRoadizVersion = $hideRoadizVersion;
+        $this->maxVersionsShowed = $maxVersionsShowed;
     }
 
     /**
@@ -47,6 +50,7 @@ class RoadizExtension extends AbstractExtension implements GlobalsInterface
         return [
             'cms_version' => !$this->hideRoadizVersion ? $this->cmsVersion : null,
             'cms_prefix' => !$this->hideRoadizVersion ? $this->cmsVersionPrefix : null,
+            'max_versions_showed' => $this->maxVersionsShowed,
             'help_external_url' => 'http://docs.roadiz.io',
             'is_preview' => $this->previewResolver->isPreview(),
             'bags' => [

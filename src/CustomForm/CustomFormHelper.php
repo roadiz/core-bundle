@@ -79,8 +79,6 @@ class CustomFormHelper
             $name = '';
         }
         return $this->formFactory->createNamed($name, CustomFormsType::class, $defaults, [
-            'recaptcha_public_key' => $this->settingsBag->get('recaptcha_public_key'),
-            'recaptcha_private_key' => $this->settingsBag->get('recaptcha_private_key'),
             'customForm' => $this->customForm,
             'forceExpanded' => $forceExpanded,
         ]);

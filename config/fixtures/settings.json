@@ -36,19 +36,6 @@
         "default_values": ""
     },
     {
-        "name": "maps_style",
-        "value": "[{\"featureType\":\"administrative.country\",\"elementType\":\"geometry\",\"stylers\":[{\"visibility\":\"on\"},{\"color\":\"#949494\"}]},{\"featureType\":\"water\",\"elementType\":\"all\",\"stylers\":[{\"color\":\"#636363\"}]},{\"featureType\":\"landscape.natural\",\"elementType\":\"all\",\"stylers\":[{\"color\":\"#f8f8f8\"}]},{\"featureType\":\"administrative.land_parcel\",\"elementType\":\"all\",\"stylers\":[{\"visibility\":\"off\"}]},{\"featureType\":\"road\",\"elementType\":\"geometry.fill\",\"stylers\":[{\"color\":\"#c7c7c7\"}]},{\"featureType\":\"road\",\"elementType\":\"geometry.stroke\",\"stylers\":[{\"visibility\":\"off\"},{\"color\":\"#cfcfcf\"}]},{\"featureType\":\"road\",\"elementType\":\"labels.text.stroke\",\"stylers\":[{\"visibility\":\"simplified\"},{\"color\":\"#ffffff\"},{\"weight\":3.04}]},{\"featureType\":\"poi\",\"elementType\":\"all\",\"stylers\":[{\"visibility\":\"simplified\"},{\"saturation\":-100},{\"lightness\":28}]},{\"featureType\":\"landscape.man_made\",\"elementType\":\"all\",\"stylers\":[{\"visibility\":\"simplified\"},{\"color\":\"#f8f8f8\"}]},{\"featureType\":\"transit\",\"elementType\":\"all\",\"stylers\":[{\"saturation\":-100}]},{\"featureType\":\"road.highway.controlled_access\",\"elementType\":\"labels\",\"stylers\":[{\"saturation\":-100}]},{\"featureType\":\"road.arterial\",\"elementType\":\"all\",\"stylers\":[{\"saturation\":-100}]},{\"featureType\":\"road\",\"elementType\":\"all\",\"stylers\":[{\"saturation\":-100},{\"lightness\":-11}]}]",
-        "description": "Default maps tiles layout when using *Google Maps*.",
-        "encrypted": false,
-        "visible": true,
-        "setting_group": {
-            "name": "Development",
-            "in_menu": true
-        },
-        "type": 23,
-        "default_values": ""
-    },
-    {
         "name": "maps_default_location",
         "value": "{\"lat\":45.769785, \"lng\":4.833967, \"zoom\":14}",
         "encrypted": false,
@@ -60,18 +47,6 @@
         },
         "type": 23,
         "default_values": ""
-    },
-    {
-        "name": "max_versions_showed",
-        "description": "Maximum versions count showed in actions menu.",
-        "encrypted": false,
-        "value": "10",
-        "visible": true,
-        "setting_group": {
-            "name": "Development",
-            "in_menu": true
-        },
-        "type": 6
     },
     {
         "name": "openid_button_label",
@@ -120,105 +95,6 @@
         "default_values": ""
     },
     {
-        "name": "soundcloud_client_id",
-        "visible": true,
-        "encrypted": false,
-        "setting_group": {
-            "name": "APIs",
-            "in_menu": true
-        },
-        "type": 0,
-        "default_values": ""
-    },
-    {
-        "name": "google_client_id",
-        "visible": true,
-        "encrypted": false,
-        "setting_group": {
-            "name": "APIs",
-            "in_menu": true
-        },
-        "type": 0,
-        "default_values": ""
-    },
-    {
-        "name": "google_server_id",
-        "visible": true,
-        "encrypted": true,
-        "setting_group": {
-            "name": "APIs",
-            "in_menu": true
-        },
-        "type": 0,
-        "default_values": ""
-    },
-    {
-        "name": "twitter_client_id",
-        "visible": true,
-        "encrypted": false,
-        "setting_group": {
-            "name": "APIs",
-            "in_menu": true
-        },
-        "type": 0,
-        "default_values": ""
-    },
-    {
-        "name": "twitter_consumer_key",
-        "visible": true,
-        "encrypted": false,
-        "setting_group": {
-            "name": "APIs",
-            "in_menu": true
-        },
-        "type": 0,
-        "default_values": ""
-    },
-    {
-        "name": "twitter_consumer_secret",
-        "visible": true,
-        "encrypted": true,
-        "setting_group": {
-            "name": "APIs",
-            "in_menu": true
-        },
-        "type": 0,
-        "default_values": ""
-    },
-    {
-        "name": "twitter_access_token",
-        "visible": true,
-        "encrypted": false,
-        "setting_group": {
-            "name": "APIs",
-            "in_menu": true
-        },
-        "type": 0,
-        "default_values": ""
-    },
-    {
-        "name": "twitter_access_token_secret",
-        "visible": true,
-        "encrypted": true,
-        "setting_group": {
-            "name": "APIs",
-            "in_menu": true
-        },
-        "type": 0,
-        "default_values": ""
-    },
-    {
-        "name": "facebook_client_id",
-        "visible": true,
-        "encrypted": true,
-        "setting_group": {
-            "name": "APIs",
-            "in_menu": true
-        },
-        "type": 0,
-        "default_values": ""
-    },
-    {
         "name": "universal_analytics_id",
         "visible": true,
         "encrypted": false,
@@ -233,28 +109,6 @@
         "name": "google_tag_manager_id",
         "visible": true,
         "encrypted": false,
-        "setting_group": {
-            "name": "APIs",
-            "in_menu": true
-        },
-        "type": 0,
-        "default_values": ""
-    },
-    {
-        "name": "recaptcha_public_key",
-        "visible": true,
-        "encrypted": false,
-        "setting_group": {
-            "name": "APIs",
-            "in_menu": true
-        },
-        "type": 0,
-        "default_values": ""
-    },
-    {
-        "name": "recaptcha_private_key",
-        "visible": true,
-        "encrypted": true,
         "setting_group": {
             "name": "APIs",
             "in_menu": true
@@ -420,17 +274,6 @@
     },
     {
         "name": "youtube_url",
-        "visible": true,
-        "encrypted": false,
-        "setting_group": {
-            "name": "Social networks",
-            "in_menu": true
-        },
-        "type": 0,
-        "default_values": ""
-    },
-    {
-        "name": "twitter_account",
         "visible": true,
         "encrypted": false,
         "setting_group": {

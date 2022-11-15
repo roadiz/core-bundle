@@ -61,6 +61,7 @@ class RoadizCoreExtension extends Extension
         $container->setParameter('roadiz_core.app_version', $config['appVersion']);
         $container->setParameter('roadiz_core.health_check_token', $config['healthCheckToken']);
         $container->setParameter('roadiz_core.inheritance_type', $config['inheritance']['type']);
+        $container->setParameter('roadiz_core.max_versions_showed', $config['maxVersionsShowed']);
         $container->setParameter('roadiz_core.static_domain_name', $config['staticDomainName'] ?? '');
         $container->setParameter('roadiz_core.private_key_name', $config['security']['private_key_name']);
         $container->setParameter('roadiz_core.private_key_dir', $config['security']['private_key_dir']);
@@ -94,6 +95,22 @@ class RoadizCoreExtension extends Extension
         $container->setParameter(
             'roadiz_core.medias.unsplash_client_id',
             $config['medias']['unsplash_client_id'] ?? ''
+        );
+        $container->setParameter(
+            'roadiz_core.medias.google_server_id',
+            $config['medias']['google_server_id'] ?? null
+        );
+        $container->setParameter(
+            'roadiz_core.medias.soundcloud_client_id',
+            $config['medias']['soundcloud_client_id'] ?? null
+        );
+        $container->setParameter(
+            'roadiz_core.medias.recaptcha_private_key',
+            $config['medias']['recaptcha_private_key'] ?? null
+        );
+        $container->setParameter(
+            'roadiz_core.medias.recaptcha_public_key',
+            $config['medias']['recaptcha_public_key'] ?? null
         );
         $container->setParameter('roadiz_core.medias.supported_platforms', [
             'youtube' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\YoutubeEmbedFinder::class,

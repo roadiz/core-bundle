@@ -34,6 +34,15 @@ use Symfony\Component\Validator\Constraints\NotBlank;
  */
 class CustomFormsType extends AbstractType
 {
+    protected ?string $recaptchaPrivateKey;
+    protected ?string $recaptchaPublicKey;
+
+    public function __construct(?string $recaptchaPrivateKey, ?string $recaptchaPublicKey)
+    {
+        $this->recaptchaPrivateKey = $recaptchaPrivateKey;
+        $this->recaptchaPublicKey = $recaptchaPublicKey;
+    }
+
     /**
      * @param  FormBuilderInterface $builder
      * @param  array $options
@@ -67,17 +76,17 @@ class CustomFormsType extends AbstractType
          * Add Google Recaptcha if setting optional options.
          */
         if (
-            !empty($options['recaptcha_public_key']) &&
-            !empty($options['recaptcha_private_key'])
+            !empty($this->recaptchaPublicKey) &&
+            !empty($this->recaptchaPrivateKey)
         ) {
             $builder->add($options['recaptcha_name'], RecaptchaType::class, [
                 'label' => false,
                 'configs' => [
-                    'publicKey' => $options['recaptcha_public_key'],
+                    'publicKey' => $this->recaptchaPublicKey,
                 ],
                 'constraints' => [
                     new Recaptcha([
-                        'privateKey' => $options['recaptcha_private_key'],
+                        'privateKey' => $this->recaptchaPrivateKey,
                         'fieldName' => $options['recaptcha_name']
                     ]),
                 ],
@@ -287,9 +296,7 @@ class CustomFormsType extends AbstractType
     {
         $choices = explode(',', $field->getDefaultValues() ?? '');
         $choices = array_map('trim', $choices);
-        $choices = array_combine(array_values($choices), array_values($choices));
-
-        return $choices;
+        return array_combine(array_values($choices), array_values($choices));
     }
 
     /**
@@ -298,8 +305,6 @@ class CustomFormsType extends AbstractType
     public function configureOptions(OptionsResolver $resolver)
     {
         $resolver->setDefaults([
-            'recaptcha_public_key' => null,
-            'recaptcha_private_key' => null,
             'recaptcha_name' => Recaptcha::FORM_NAME,
             'forceExpanded' => false,
             'csrf_protection' => false,
@@ -309,8 +314,6 @@ class CustomFormsType extends AbstractType
 
         $resolver->setAllowedTypes('customForm', [CustomForm::class]);
         $resolver->setAllowedTypes('forceExpanded', ['boolean']);
-        $resolver->setAllowedTypes('recaptcha_public_key', ['string', 'null', 'boolean']);
-        $resolver->setAllowedTypes('recaptcha_private_key', ['string', 'null', 'boolean']);
         $resolver->setAllowedTypes('recaptcha_name', ['string']);
     }
 

@@ -34,6 +34,9 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('staticDomainName')
                 ->defaultNull()
             ->end()
+            ->scalarNode('maxVersionsShowed')
+                ->defaultValue(10)
+            ->end()
             ->scalarNode('defaultNodeSourceController')
                 ->defaultValue(DefaultNodeSourceController::class)
             ->end()
@@ -120,6 +123,10 @@ EOD
         $node->addDefaultsIfNotSet()
             ->children()
             ->scalarNode('unsplash_client_id')->defaultNull()->end()
+            ->scalarNode('google_server_id')->defaultNull()->end()
+            ->scalarNode('soundcloud_client_id')->defaultNull()->end()
+            ->scalarNode('recaptcha_private_key')->defaultNull()->end()
+            ->scalarNode('recaptcha_public_key')->defaultNull()->end()
             ->scalarNode('ffmpeg_path')->defaultNull()->end()
             ->end();
 
