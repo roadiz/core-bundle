@@ -117,17 +117,6 @@
         "default_values": ""
     },
     {
-        "name": "instagram_user_id",
-        "visible": true,
-        "encrypted": false,
-        "setting_group": {
-            "name": "APIs",
-            "in_menu": true
-        },
-        "type": 0,
-        "default_values": ""
-    },
-    {
         "name": "instagram_access_token",
         "visible": true,
         "encrypted": true,
