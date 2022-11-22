@@ -47,4 +47,8 @@ final class TagOutput
      * @MaxDepth(1)
      */
     public ?Tag $parent = null;
+    /**
+     * @Groups({"tag", "tag_base"})
+     */
+    public ?float $position = null;
 }

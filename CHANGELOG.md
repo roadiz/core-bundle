@@ -1,3 +1,9 @@
+## 2.0.40 (2022-11-22)
+
+### Features
+
+* Added tags and folders position field to serialization ([4a92a02](https://github.com/roadiz/core-bundle/commit/4a92a0209a92313482d57131a303e582a38fb716))
+
 ## 2.0.39 (2022-11-09)
 
 ### Bug Fixes
