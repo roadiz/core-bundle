@@ -28,6 +28,7 @@ class FolderOutputDataTransformer implements DataTransformerInterface
         $output->name = $data->getName();
         $output->slug = $data->getFolderName();
         $output->visible = $data->getVisible();
+        $output->position = $data->getPosition();
 
         if (isset($context['translation']) && $context['translation'] instanceof TranslationInterface) {
             $translatedData = $data->getTranslatedFoldersByTranslation($context['translation'])->first() ?: null;

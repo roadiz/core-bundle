@@ -7,5 +7,5 @@ RZ\Roadiz\CoreBundle\Entity\Folder:
         get:
             method: "GET"
             normalization_context:
-                groups: [ "folder" ]
+                groups: [ "folder", "position" ]
                 enable_max_depth: true

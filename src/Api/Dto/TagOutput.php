@@ -50,4 +50,8 @@ final class TagOutput
     #[Groups(['tag', 'tag_base'])]
     #[MaxDepth(1)]
     public ?Tag $parent = null;
+    /**
+     * @Groups({"tag", "tag_base"})
+     */
+    public ?float $position = null;
 }

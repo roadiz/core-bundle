@@ -27,6 +27,7 @@ class TagOutputDataTransformer implements DataTransformerInterface
         $output->slug = $data->getTagName();
         $output->color = $data->getColor();
         $output->visible = $data->isVisible();
+        $output->position = $data->getPosition();
         if ($data->getParent() instanceof Tag) {
             $output->parent = $data->getParent();
         }
