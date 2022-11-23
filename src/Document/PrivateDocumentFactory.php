@@ -6,11 +6,10 @@ namespace RZ\Roadiz\CoreBundle\Document;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
-use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Core\Models\DocumentInterface;
+use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Utils\Asset\Packages;
 use RZ\Roadiz\Utils\Document\AbstractDocumentFactory;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Create private documents from UploadedFile.
@@ -25,11 +24,10 @@ class PrivateDocumentFactory extends AbstractDocumentFactory
 
     public function __construct(
         ManagerRegistry $managerRegistry,
-        EventDispatcherInterface $dispatcher,
         Packages $packages,
         ?LoggerInterface $logger = null
     ) {
-        parent::__construct($dispatcher, $packages, $logger);
+        parent::__construct($packages, $logger);
         $this->managerRegistry = $managerRegistry;
     }
 
