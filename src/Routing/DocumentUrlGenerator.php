@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Routing;
 
 use Psr\Cache\CacheItemPoolInterface;
+use Psr\Cache\InvalidArgumentException;
 use RZ\Roadiz\Utils\Asset\Packages;
 use RZ\Roadiz\Utils\UrlGenerators\AbstractDocumentUrlGenerator;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-/**
- * @package RZ\Roadiz\Utils\UrlGenerators
- */
 final class DocumentUrlGenerator extends AbstractDocumentUrlGenerator
 {
     private UrlGeneratorInterface $urlGenerator;
@@ -20,6 +18,7 @@ final class DocumentUrlGenerator extends AbstractDocumentUrlGenerator
      * @param Packages $packages
      * @param UrlGeneratorInterface $urlGenerator
      * @param CacheItemPoolInterface $optionsCacheAdapter
+     * @throws InvalidArgumentException
      */
     public function __construct(
         Packages $packages,
