@@ -48,7 +48,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         "updatedAt"
     ])
 ]
-class Folder extends AbstractDateTimedPositioned implements FolderInterface
+class Folder extends AbstractDateTimedPositioned implements FolderInterface, LeafInterface
 {
     use LeafTrait;
 
@@ -151,7 +151,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @param DocumentInterface $document
      * @return $this
      */
-    public function addDocument(DocumentInterface $document)
+    public function addDocument(DocumentInterface $document): static
     {
         if (!$this->getDocuments()->contains($document)) {
             $this->documents->add($document);
@@ -172,7 +172,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @param DocumentInterface $document
      * @return $this
      */
-    public function removeDocument(DocumentInterface $document)
+    public function removeDocument(DocumentInterface $document): static
     {
         if ($this->getDocuments()->contains($document)) {
             $this->documents->removeElement($document);
@@ -199,11 +199,11 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
 
     /**
      * @param bool $visible
-     * @return Folder
+     * @return $this
      */
-    public function setVisible($visible)
+    public function setVisible(bool $visible): static
     {
-        $this->visible = (bool) $visible;
+        $this->visible = $visible;
         return $this;
     }
 
@@ -243,9 +243,9 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
 
     /**
      * @param Collection<FolderTranslation> $translatedFolders
-     * @return Folder
+     * @return $this
      */
-    public function setTranslatedFolders(Collection $translatedFolders)
+    public function setTranslatedFolders(Collection $translatedFolders): static
     {
         $this->translatedFolders = $translatedFolders;
         return $this;
@@ -254,35 +254,35 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
     /**
      * @return string
      */
-    public function getFolderName()
+    public function getFolderName(): string
     {
-        return $this->folderName;
+        return $this->folderName ?? '';
     }
 
     /**
-     * @param string|null $folderName
-     * @return Folder
+     * @param string $folderName
+     * @return $this
      */
-    public function setFolderName($folderName)
+    public function setFolderName(string $folderName): static
     {
         $this->dirtyFolderName = $folderName;
-        $this->folderName = StringHandler::slugify($folderName ?? '');
+        $this->folderName = StringHandler::slugify($folderName);
         return $this;
     }
 
     /**
      * @return string
      */
-    public function getDirtyFolderName()
+    public function getDirtyFolderName(): string
     {
         return $this->dirtyFolderName;
     }
 
     /**
      * @param string $dirtyFolderName
-     * @return Folder
+     * @return $this
      */
-    public function setDirtyFolderName($dirtyFolderName)
+    public function setDirtyFolderName(string $dirtyFolderName): static
     {
         $this->dirtyFolderName = $dirtyFolderName;
         return $this;
@@ -335,7 +335,6 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
         $parents = $this->getParents();
         $path = [];
 
-        /** @var Folder $parent */
         foreach ($parents as $parent) {
             $path[] = $parent->getFolderName();
         }

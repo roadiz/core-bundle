@@ -305,15 +305,9 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->mimeType;
     }
 
-    /**
-     * @param string|null $mimeType
-     *
-     * @return $this
-     */
-    public function setMimeType($mimeType)
+    public function setMimeType(?string $mimeType): static
     {
         $this->mimeType = $mimeType;
-
         return $this;
     }
 
@@ -325,31 +319,18 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->folder;
     }
 
-    /**
-     * Set folder name.
-     *
-     * @param string $folder
-     * @return $this
-     */
-    public function setFolder(string $folder)
+    public function setFolder(string $folder): static
     {
         $this->folder = $folder;
         return $this;
     }
 
-    /**
-     * @return bool
-     */
     public function isPrivate(): bool
     {
         return $this->private;
     }
 
-    /**
-     * @param boolean $private
-     * @return $this
-     */
-    public function setPrivate(bool $private)
+    public function setPrivate(bool $private): static
     {
         $this->private = $private;
         if (null !== $raw = $this->getRawDocument()) {
@@ -359,30 +340,17 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this;
     }
 
-    /**
-     * Gets the value of rawDocument.
-     *
-     * @return DocumentInterface|null
-     */
     #[SymfonySerializer\Ignore]
     public function getRawDocument(): ?DocumentInterface
     {
         return $this->rawDocument;
     }
 
-    /**
-     * Sets the value of rawDocument.
-     *
-     * @param DocumentInterface|null $rawDocument the raw document
-     *
-     * @return self
-     */
-    public function setRawDocument(DocumentInterface $rawDocument = null)
+    public function setRawDocument(DocumentInterface $rawDocument = null): static
     {
         if (null === $rawDocument || $rawDocument instanceof Document) {
             $this->rawDocument = $rawDocument;
         }
-
         return $this;
     }
 
@@ -390,7 +358,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @return Collection<NodesSourcesDocuments>
      */
     #[SymfonySerializer\Ignore]
-    public function getNodesSourcesByFields()
+    public function getNodesSourcesByFields(): Collection
     {
         return $this->nodesSourcesByFields;
     }
@@ -399,7 +367,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @return Collection<TagTranslationDocuments>
      */
     #[SymfonySerializer\Ignore]
-    public function getTagTranslations()
+    public function getTagTranslations(): Collection
     {
         return $this->tagTranslations;
     }
@@ -413,11 +381,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->attributeDocuments;
     }
 
-    /**
-     * @param FolderInterface $folder
-     * @return $this
-     */
-    public function addFolder(FolderInterface $folder)
+    public function addFolder(FolderInterface $folder): static
     {
         if (!$this->getFolders()->contains($folder)) {
             $this->folders->add($folder);
@@ -435,22 +399,14 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->folders;
     }
 
-    /**
-     * @param Collection<Folder> $folders
-     * @return $this
-     */
-    public function setFolders(Collection $folders)
+    public function setFolders(Collection $folders): static
     {
         $this->folders = $folders;
 
         return $this;
     }
 
-    /**
-     * @param FolderInterface $folder
-     * @return $this
-     */
-    public function removeFolder(FolderInterface $folder)
+    public function removeFolder(FolderInterface $folder): static
     {
         if ($this->getFolders()->contains($folder)) {
             $this->folders->removeElement($folder);
@@ -465,7 +421,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @return Collection<DocumentTranslation>
      */
     #[SymfonySerializer\Ignore]
-    public function getDocumentTranslationsByTranslation(TranslationInterface $translation)
+    public function getDocumentTranslationsByTranslation(TranslationInterface $translation): Collection
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('translation', $translation));
@@ -477,7 +433,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @param DocumentTranslation $documentTranslation
      * @return $this
      */
-    public function addDocumentTranslation(DocumentTranslation $documentTranslation)
+    public function addDocumentTranslation(DocumentTranslation $documentTranslation): static
     {
         if (!$this->getDocumentTranslations()->contains($documentTranslation)) {
             $this->documentTranslations->add($documentTranslation);
@@ -489,7 +445,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @return Collection<DocumentTranslation>
      */
-    public function getDocumentTranslations()
+    public function getDocumentTranslations(): Collection
     {
         return $this->documentTranslations;
     }
@@ -513,14 +469,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->raw;
     }
 
-    /**
-     * Sets the value of raw.
-     *
-     * @param bool $raw the raw
-     *
-     * @return self
-     */
-    public function setRaw(bool $raw)
+    public function setRaw(bool $raw): static
     {
         $this->raw = $raw;
         return $this;
@@ -557,12 +506,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->imageWidth;
     }
 
-    /**
-     * @param int $imageWidth
-     *
-     * @return Document
-     */
-    public function setImageWidth(int $imageWidth)
+    public function setImageWidth(int $imageWidth): static
     {
         $this->imageWidth = $imageWidth;
 
@@ -577,12 +521,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->imageHeight;
     }
 
-    /**
-     * @param int $imageHeight
-     *
-     * @return Document
-     */
-    public function setImageHeight(int $imageHeight)
+    public function setImageHeight(int $imageHeight): static
     {
         $this->imageHeight = $imageHeight;
 
@@ -597,13 +536,9 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->mediaDuration;
     }
 
-    /**
-     * @param int $mediaDuration
-     * @return Document
-     */
-    public function setMediaDuration(int $mediaDuration): Document
+    public function setMediaDuration(int $duration): static
     {
-        $this->mediaDuration = $mediaDuration;
+        $this->mediaDuration = $duration;
         return $this;
     }
 
@@ -615,12 +550,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->imageAverageColor;
     }
 
-    /**
-     * @param string|null $imageAverageColor
-     *
-     * @return Document
-     */
-    public function setImageAverageColor(?string $imageAverageColor)
+    public function setImageAverageColor(?string $imageAverageColor): static
     {
         $this->imageAverageColor = $imageAverageColor;
         return $this;
@@ -634,11 +564,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->filesize;
     }
 
-    /**
-     * @param int|null $filesize
-     * @return Document
-     */
-    public function setFilesize(?int $filesize)
+    public function setFilesize(?int $filesize): static
     {
         $this->filesize = $filesize;
         return $this;
@@ -680,12 +606,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->original;
     }
 
-    /**
-     * @param HasThumbnailInterface|null $original
-     *
-     * @return Document
-     */
-    public function setOriginal(?HasThumbnailInterface $original): Document
+    public function setOriginal(?HasThumbnailInterface $original): static
     {
         if (null === $original || ($original !== $this && $original instanceof Document)) {
             $this->original = $original;
@@ -713,12 +634,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->thumbnails;
     }
 
-    /**
-     * @param Collection $thumbnails
-     *
-     * @return Document
-     */
-    public function setThumbnails(Collection $thumbnails): Document
+    public function setThumbnails(Collection $thumbnails): static
     {
         if ($this->thumbnails->count()) {
             /** @var HasThumbnailInterface $thumbnail */
@@ -768,11 +684,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->fileHash;
     }
 
-    /**
-     * @param string|null $hash
-     * @return Document
-     */
-    public function setFileHash(?string $hash): Document
+    public function setFileHash(?string $hash): static
     {
         $this->fileHash = $hash;
         return $this;
@@ -786,11 +698,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->fileHashAlgorithm;
     }
 
-    /**
-     * @param string|null $algorithm
-     * @return Document
-     */
-    public function setFileHashAlgorithm(?string $algorithm): Document
+    public function setFileHashAlgorithm(?string $algorithm): static
     {
         $this->fileHashAlgorithm = $algorithm;
         return $this;
@@ -804,11 +712,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->copyrightValidSince;
     }
 
-    /**
-     * @param \DateTime|null $copyrightValidSince
-     * @return Document
-     */
-    public function setCopyrightValidSince(?\DateTime $copyrightValidSince): Document
+    public function setCopyrightValidSince(?\DateTime $copyrightValidSince): static
     {
         $this->copyrightValidSince = $copyrightValidSince;
         return $this;
@@ -822,11 +726,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->copyrightValidUntil;
     }
 
-    /**
-     * @param \DateTime|null $copyrightValidUntil
-     * @return Document
-     */
-    public function setCopyrightValidUntil(?\DateTime $copyrightValidUntil): Document
+    public function setCopyrightValidUntil(?\DateTime $copyrightValidUntil): static
     {
         $this->copyrightValidUntil = $copyrightValidUntil;
         return $this;
@@ -835,7 +735,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         if (!empty($this->getFilename())) {
             return $this->getFilename();
@@ -858,49 +758,31 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->filename ?? '';
     }
 
-    /**
-     * @param string $filename
-     * @return $this
-     */
-    public function setFilename(string $filename)
+    public function setFilename(string $filename): static
     {
         $this->filename = StringHandler::cleanForFilename($filename);
 
         return $this;
     }
 
-    /**
-     * @return string
-     */
+
     public function getEmbedPlatform(): ?string
     {
         return $this->embedPlatform;
     }
 
-    /**
-     * @param string|null $embedPlatform
-     * @return $this
-     */
-    public function setEmbedPlatform(?string $embedPlatform)
+    public function setEmbedPlatform(?string $embedPlatform): static
     {
         $this->embedPlatform = $embedPlatform;
-
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getEmbedId(): ?string
     {
         return $this->embedId;
     }
 
-    /**
-     * @param string|null $embedId
-     * @return $this
-     */
-    public function setEmbedId(?string $embedId)
+    public function setEmbedId(?string $embedId): static
     {
         $this->embedId = $embedId;
         return $this;
