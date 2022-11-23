@@ -85,6 +85,10 @@ class RoadizCoreExtension extends Extension
             $container->setParameter('roadiz_core.assets_processing.supports_webp', false);
         }
 
+        $container->setParameter(
+            'roadiz_core.documents_lib_dir',
+            $container->getParameter('kernel.project_dir') . DIRECTORY_SEPARATOR . trim($config['documentsLibDir'], "/ \t\n\r\0\x0B")
+        );
         /*
          * Media config
          */

@@ -515,7 +515,7 @@ services:
     roadiz_core.twig_loader:
         class: Twig\Loader\FilesystemLoader
         calls:
-            - prependPath: ['%kernel.project_dir%/vendor/roadiz/documents/src/Roadiz/Resources/views']
+            - prependPath: ['%roadiz_core.documents_lib_dir%/Roadiz/Resources/views']
         tags: ['twig.loader']
     #
     # Twig extensions

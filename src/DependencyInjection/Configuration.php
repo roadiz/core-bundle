@@ -46,6 +46,9 @@ class Configuration implements ConfigurationInterface
             ->booleanNode('hideRoadizVersion')
                 ->defaultValue(false)
             ->end()
+            ->scalarNode('documentsLibDir')->defaultValue(
+                'vendor/roadiz/documents/src'
+            )->info('Relative path to Roadiz Documents lib sources from project directory.')->end()
             ->booleanNode('useAcceptLanguageHeader')
                 ->defaultValue(false)
                 ->info(<<<EOT
