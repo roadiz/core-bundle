@@ -6,13 +6,13 @@ namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
 use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\Core\Handlers\AbstractHandler;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Repository\FolderRepository;
-use RZ\Roadiz\Utils\Asset\Packages;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Packages;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -141,9 +141,9 @@ class DocumentHandler extends AbstractHandler
      * Get a Response object to force download document.
      * This method works for both private and public documents.
      *
-     * @return Response
+     * @return BinaryFileResponse
      */
-    public function getDownloadResponse()
+    public function getDownloadResponse(): BinaryFileResponse
     {
         $fs = new Filesystem();
         if ($this->document->isLocal()) {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use RZ\Roadiz\Core\Models\FileAwareInterface;
+use RZ\Roadiz\Documents\Models\FileAwareInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -23,11 +23,6 @@ class FilesImportCommand extends Command
     protected string $exportDir;
     protected string $appNamespace;
 
-    /**
-     * @param FileAwareInterface $fileAware
-     * @param string $exportDir
-     * @param string $appNamespace
-     */
     public function __construct(FileAwareInterface $fileAware, string $exportDir, string $appNamespace)
     {
         parent::__construct();

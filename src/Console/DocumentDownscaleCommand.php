@@ -8,7 +8,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Intervention\Image\Exception\NotReadableException;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Event\Cache\CachePurgeAssetsRequestEvent;
-use RZ\Roadiz\Utils\Document\DownscaleImageManager;
+use RZ\Roadiz\Documents\DownscaleImageManager;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;

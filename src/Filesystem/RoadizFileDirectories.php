@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Filesystem;
 
-use RZ\Roadiz\Core\Models\FileAwareInterface;
+use RZ\Roadiz\Documents\Models\FileAwareInterface;
 
 final class RoadizFileDirectories implements FileAwareInterface
 {

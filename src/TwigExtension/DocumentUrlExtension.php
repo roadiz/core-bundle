@@ -6,7 +6,7 @@ namespace RZ\Roadiz\CoreBundle\TwigExtension;
 
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
-use RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface;
+use RZ\Roadiz\Documents\UrlGenerators\DocumentUrlGeneratorInterface;
 use Symfony\Component\OptionsResolver\Exception\InvalidArgumentException;
 use Twig\Error\RuntimeError;
 use Twig\Extension\AbstractExtension;

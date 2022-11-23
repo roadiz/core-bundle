@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 
 use enshrined\svgSanitize\Sanitizer;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
 use RZ\Roadiz\CoreBundle\Entity\Document;
-use RZ\Roadiz\Utils\Document\SvgSizeResolver;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\SvgSizeResolver;
 
 final class DocumentSvgMessageHandler extends AbstractLockingDocumentMessageHandler
 {

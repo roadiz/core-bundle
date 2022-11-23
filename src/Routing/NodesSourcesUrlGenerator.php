@@ -9,9 +9,7 @@ use RZ\Roadiz\CoreBundle\Entity\Theme;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * Do not extend this class, use NodesSourcesPathGeneratingEvent::class event
- *
- * @package RZ\Roadiz\Utils\UrlGenerators
+ * Do not extend this class, use NodesSourcesPathGeneratingEvent::class event.
  */
 final class NodesSourcesUrlGenerator
 {

@@ -4,29 +4,29 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use RZ\Roadiz\Core\Models\AbstractDocument;
-use RZ\Roadiz\Core\Models\AdvancedDocumentInterface;
-use RZ\Roadiz\Core\Models\DisplayableInterface;
-use RZ\Roadiz\Core\Models\DocumentInterface;
-use RZ\Roadiz\Core\Models\FileHashInterface;
-use RZ\Roadiz\Core\Models\FolderInterface;
-use RZ\Roadiz\Core\Models\HasThumbnailInterface;
-use RZ\Roadiz\Core\Models\SizeableInterface;
-use RZ\Roadiz\Core\Models\TimeableInterface;
+use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
 use RZ\Roadiz\CoreBundle\Api\Filter\CopyrightValidFilter;
 use RZ\Roadiz\CoreBundle\Repository\DocumentRepository;
+use RZ\Roadiz\Documents\Models\AdvancedDocumentInterface;
+use RZ\Roadiz\Documents\Models\DisplayableInterface;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Models\DocumentTrait;
+use RZ\Roadiz\Documents\Models\FileHashInterface;
+use RZ\Roadiz\Documents\Models\FolderInterface;
+use RZ\Roadiz\Documents\Models\HasThumbnailInterface;
+use RZ\Roadiz\Documents\Models\TimeableInterface;
 use RZ\Roadiz\Utils\StringHandler;
-use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
-use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
 
 /**
  * Documents entity represent a file on server with datetime and naming.
@@ -52,6 +52,7 @@ use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
     ORM\Index(columns: ["imageWidth"], name: "document_image_width"),
     ORM\Index(columns: ["imageHeight"], name: "document_image_height"),
     ORM\Index(columns: ["mime_type"]),
+    Serializer\ExclusionPolicy("all"),
     ApiFilter(PropertyFilter::class),
     ApiFilter(BaseFilter\OrderFilter::class, properties: [
         "createdAt",
@@ -68,8 +69,10 @@ use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
     ]),
     ApiFilter(CopyrightValidFilter::class)
 ]
-class Document extends AbstractDocument implements AdvancedDocumentInterface, HasThumbnailInterface, SizeableInterface, TimeableInterface, DisplayableInterface, FileHashInterface
+class Document extends AbstractDateTimed implements AdvancedDocumentInterface, HasThumbnailInterface, TimeableInterface, DisplayableInterface, FileHashInterface
 {
+    use DocumentTrait;
+
     /**
      * @var \DateTime|null Null value is included in before filters
      */
@@ -285,7 +288,8 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
 
     public function __construct()
     {
-        parent::__construct();
+        $this->initAbstractDateTimed();
+        $this->initDocumentTrait();
 
         $this->folders = new ArrayCollection();
         $this->downscaledDocuments = new ArrayCollection();
@@ -570,12 +574,20 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this;
     }
 
+    #[
+        Serializer\Groups(["document", "document_display", "nodes_sources", "tag", "attribute"]),
+        Serializer\Type("string"),
+        Serializer\VirtualProperty,
+        Serializer\SerializedName("alt"),
+        SymfonySerializer\Groups(["document", "document_display", "nodes_sources", "tag", "attribute"]),
+        SymfonySerializer\SerializedName("alt"),
+    ]
     public function getAlternativeText(): string
     {
         $documentTranslation = $this->getDocumentTranslations()->first();
         return $documentTranslation && !empty($documentTranslation->getName()) ?
             $documentTranslation->getName() :
-            parent::getAlternativeText();
+            $this->getFilename();
     }
 
     public function __clone()

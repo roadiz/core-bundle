@@ -8,11 +8,11 @@ use Doctrine\Persistence\ManagerRegistry;
 use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManager;
 use Psr\Log\LoggerInterface;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
 use RZ\Roadiz\CoreBundle\Entity\Document;
-use RZ\Roadiz\Utils\Asset\Packages;
-use RZ\Roadiz\Utils\Document\AverageColorResolver;
+use RZ\Roadiz\Documents\AverageColorResolver;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Packages;
 
 final class DocumentAverageColorMessageHandler extends AbstractLockingDocumentMessageHandler
 {

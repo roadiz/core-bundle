@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Serializer\Normalizer;
 
-use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
-use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
-use RZ\Roadiz\Document\DocumentFinderInterface;
+use RZ\Roadiz\Documents\DocumentFinderInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 

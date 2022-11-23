@@ -17,10 +17,9 @@ use RZ\Roadiz\CoreBundle\Event\User\UserEnabledEvent;
 use RZ\Roadiz\CoreBundle\Event\User\UserPasswordChangedEvent;
 use RZ\Roadiz\CoreBundle\Event\User\UserUpdatedEvent;
 use RZ\Roadiz\CoreBundle\Security\User\UserViewer;
+use RZ\Roadiz\Documents\MediaFinders\FacebookPictureFinder;
 use RZ\Roadiz\Random\TokenGenerator;
-use RZ\Roadiz\Utils\MediaFinders\FacebookPictureFinder;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
-use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class UserLifeCycleSubscriber implements EventSubscriber

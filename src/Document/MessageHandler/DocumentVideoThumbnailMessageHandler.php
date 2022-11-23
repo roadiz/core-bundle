@@ -6,12 +6,12 @@ namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
-use RZ\Roadiz\Core\Events\DocumentCreatedEvent;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Document\DocumentFactory;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
 use RZ\Roadiz\CoreBundle\Entity\Document;
-use RZ\Roadiz\Utils\Asset\Packages;
+use RZ\Roadiz\Documents\Events\DocumentCreatedEvent;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Packages;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 use Symfony\Component\Process\Exception\ProcessFailedException;
@@ -43,7 +43,7 @@ final class DocumentVideoThumbnailMessageHandler extends AbstractLockingDocument
     }
 
     /**
-     * @param  DocumentInterface $document
+     * @param DocumentInterface $document
      * @return bool
      */
     protected function supports(DocumentInterface $document): bool

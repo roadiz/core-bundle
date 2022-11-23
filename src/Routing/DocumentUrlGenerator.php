@@ -6,8 +6,8 @@ namespace RZ\Roadiz\CoreBundle\Routing;
 
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\InvalidArgumentException;
-use RZ\Roadiz\Utils\Asset\Packages;
-use RZ\Roadiz\Utils\UrlGenerators\AbstractDocumentUrlGenerator;
+use RZ\Roadiz\Documents\Packages;
+use RZ\Roadiz\Documents\UrlGenerators\AbstractDocumentUrlGenerator;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 final class DocumentUrlGenerator extends AbstractDocumentUrlGenerator

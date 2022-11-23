@@ -10,9 +10,6 @@ use RZ\Roadiz\CoreBundle\Event\Node\NodeDuplicatedEvent;
 use RZ\Roadiz\CoreBundle\EntityHandler\NodeHandler;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-/**
- * @package Themes\Rozier\Events
- */
 class NodeDuplicationSubscriber implements EventSubscriberInterface
 {
     protected HandlerFactoryInterface $handlerFactory;

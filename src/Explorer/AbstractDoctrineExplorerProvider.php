@@ -11,9 +11,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-/**
- * @package Themes\Rozier\Explorer
- */
 abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
 {
     protected ManagerRegistry $managerRegistry;

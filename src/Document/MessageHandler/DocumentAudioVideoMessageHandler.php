@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
 use RZ\Roadiz\CoreBundle\Entity\Document;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 /**
  * Detect Audio and Video files metadata using https://github.com/JamesHeinrich/getID3 lib

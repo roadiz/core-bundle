@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Document\EventSubscriber;
 
-use RZ\Roadiz\Core\Events\DocumentCreatedEvent;
-use RZ\Roadiz\Core\Events\DocumentFileUpdatedEvent;
-use RZ\Roadiz\Core\Events\FilterDocumentEvent;
 use RZ\Roadiz\CoreBundle\Document\Message\DocumentAudioVideoMessage;
 use RZ\Roadiz\CoreBundle\Document\Message\DocumentAverageColorMessage;
 use RZ\Roadiz\CoreBundle\Document\Message\DocumentExifMessage;
@@ -16,6 +13,9 @@ use RZ\Roadiz\CoreBundle\Document\Message\DocumentSizeMessage;
 use RZ\Roadiz\CoreBundle\Document\Message\DocumentSvgMessage;
 use RZ\Roadiz\CoreBundle\Document\Message\DocumentVideoThumbnailMessage;
 use RZ\Roadiz\CoreBundle\Entity\Document;
+use RZ\Roadiz\Documents\Events\DocumentCreatedEvent;
+use RZ\Roadiz\Documents\Events\DocumentFileUpdatedEvent;
+use RZ\Roadiz\Documents\Events\FilterDocumentEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;

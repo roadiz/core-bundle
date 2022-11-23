@@ -6,8 +6,8 @@ namespace RZ\Roadiz\CoreBundle\Form;
 
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Document;
-use RZ\Roadiz\Utils\Asset\Packages;
-use RZ\Roadiz\Utils\Document\AbstractDocumentFactory;
+use RZ\Roadiz\Documents\AbstractDocumentFactory;
+use RZ\Roadiz\Documents\Packages;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\Extension\Core\Type\FileType;

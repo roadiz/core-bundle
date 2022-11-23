@@ -11,9 +11,6 @@ use Twig\Error\RuntimeError;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 
-/**
- * @package RZ\Roadiz\Utils\TwigExtensions
- */
 final class HandlerExtension extends AbstractExtension
 {
     private HandlerFactory $handlerFactory;

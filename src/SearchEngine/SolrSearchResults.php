@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\SearchEngine;
 
 use Doctrine\Persistence\ObjectManager;
-use RZ\Roadiz\Core\Models\DocumentInterface;
+use JMS\Serializer\Annotation as JMS;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use JMS\Serializer\Annotation as JMS;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 /**
  * Wrapper over Solr search results and metas.

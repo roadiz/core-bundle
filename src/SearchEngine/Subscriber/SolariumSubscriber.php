@@ -4,12 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\SearchEngine\Subscriber;
 
-use RZ\Roadiz\Core\Events\DocumentCreatedEvent;
-use RZ\Roadiz\Core\Events\DocumentDeletedEvent;
-use RZ\Roadiz\Core\Events\DocumentInFolderEvent;
-use RZ\Roadiz\Core\Events\DocumentOutFolderEvent;
-use RZ\Roadiz\Core\Events\DocumentUpdatedEvent;
-use RZ\Roadiz\Core\Events\FilterDocumentEvent;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\CoreBundle\Entity\Node;
@@ -29,6 +23,12 @@ use RZ\Roadiz\CoreBundle\Event\NodesSources\NodesSourcesUpdatedEvent;
 use RZ\Roadiz\CoreBundle\Event\Tag\TagUpdatedEvent;
 use RZ\Roadiz\CoreBundle\SearchEngine\Message\SolrDeleteMessage;
 use RZ\Roadiz\CoreBundle\SearchEngine\Message\SolrReindexMessage;
+use RZ\Roadiz\Documents\Events\DocumentCreatedEvent;
+use RZ\Roadiz\Documents\Events\DocumentDeletedEvent;
+use RZ\Roadiz\Documents\Events\DocumentInFolderEvent;
+use RZ\Roadiz\Documents\Events\DocumentOutFolderEvent;
+use RZ\Roadiz\Documents\Events\DocumentUpdatedEvent;
+use RZ\Roadiz\Documents\Events\FilterDocumentEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;

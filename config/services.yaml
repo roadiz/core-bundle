@@ -286,7 +286,7 @@ services:
             - { name: monolog.logger, channel: doctrine }
             - { name: doctrine.event_subscriber }
 
-    RZ\Roadiz\Core\Events\DocumentLifeCycleSubscriber:
+    RZ\Roadiz\Documents\Events\DocumentLifeCycleSubscriber:
         tags:
             - { name: monolog.logger, channel: doctrine }
             - { name: doctrine.event_subscriber }
@@ -320,8 +320,8 @@ services:
             - '@Symfony\Component\HttpFoundation\RequestStack'
             - 'ROLE_BACKEND_USER'
 
-    RZ\Roadiz\Utils\Asset\Packages: ~
-    RZ\Roadiz\Utils\Document\DownscaleImageManager: ~
+    RZ\Roadiz\Documents\Packages: ~
+    RZ\Roadiz\Documents\DownscaleImageManager: ~
 
     RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry:
         arguments: ['@service_container']
@@ -359,7 +359,7 @@ services:
     Doctrine\Persistence\ObjectManager:
         alias: 'doctrine.orm.default_entity_manager'
 
-    RZ\Roadiz\Core\Models\FileAwareInterface:
+    RZ\Roadiz\Documents\Models\FileAwareInterface:
         alias: RZ\Roadiz\CoreBundle\Filesystem\RoadizFileDirectories
         public: true
 
@@ -454,31 +454,31 @@ services:
     RZ\Roadiz\CoreBundle\Document\MediaFinder\UnsplashPictureFinder:
         arguments:
             - '%roadiz_core.medias.unsplash_client_id%'
-    RZ\Roadiz\Utils\MediaFinders\RandomImageFinder:
+    RZ\Roadiz\Documents\MediaFinders\RandomImageFinder:
         alias: RZ\Roadiz\CoreBundle\Document\MediaFinder\UnsplashPictureFinder
-    RZ\Roadiz\Document\Renderer\ImageRenderer:
+    RZ\Roadiz\Documents\Renderer\ImageRenderer:
         tags: [ 'roadiz_core.document_renderer' ]
-    RZ\Roadiz\Document\Renderer\PictureRenderer:
+    RZ\Roadiz\Documents\Renderer\PictureRenderer:
         tags: [ 'roadiz_core.document_renderer' ]
-    RZ\Roadiz\Document\Renderer\VideoRenderer:
+    RZ\Roadiz\Documents\Renderer\VideoRenderer:
         tags: [ 'roadiz_core.document_renderer' ]
-    RZ\Roadiz\Document\Renderer\AudioRenderer:
+    RZ\Roadiz\Documents\Renderer\AudioRenderer:
         tags: [ 'roadiz_core.document_renderer' ]
-    RZ\Roadiz\Document\Renderer\PdfRenderer:
+    RZ\Roadiz\Documents\Renderer\PdfRenderer:
         tags: [ 'roadiz_core.document_renderer' ]
-    RZ\Roadiz\Document\Renderer\SvgRenderer:
+    RZ\Roadiz\Documents\Renderer\SvgRenderer:
         tags: [ 'roadiz_core.document_renderer' ]
-    RZ\Roadiz\Document\Renderer\InlineSvgRenderer:
+    RZ\Roadiz\Documents\Renderer\InlineSvgRenderer:
         tags: [ 'roadiz_core.document_renderer' ]
-    RZ\Roadiz\Document\Renderer\EmbedRenderer:
+    RZ\Roadiz\Documents\Renderer\EmbedRenderer:
         tags: [ { name: 'roadiz_core.document_renderer', priority: -128 } ]
-    RZ\Roadiz\Document\Renderer\ThumbnailRenderer:
+    RZ\Roadiz\Documents\Renderer\ThumbnailRenderer:
         tags: [ 'roadiz_core.document_renderer' ]
-    RZ\Roadiz\Document\Renderer\RendererInterface:
-        alias: RZ\Roadiz\Document\Renderer\ChainRenderer
+    RZ\Roadiz\Documents\Renderer\RendererInterface:
+        alias: RZ\Roadiz\Documents\Renderer\ChainRenderer
 
     # Default AbstractDocumentFactory is the public one.
-    RZ\Roadiz\Utils\Document\AbstractDocumentFactory:
+    RZ\Roadiz\Documents\AbstractDocumentFactory:
         alias: RZ\Roadiz\CoreBundle\Document\DocumentFactory
 
     #
@@ -491,7 +491,7 @@ services:
         lazy: true
         tags: [ { name: 'router', priority: 0 } ]
 
-    RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface:
+    RZ\Roadiz\Documents\UrlGenerators\DocumentUrlGeneratorInterface:
         alias: RZ\Roadiz\CoreBundle\Routing\DocumentUrlGenerator
 
     RZ\Roadiz\CoreBundle\Routing\PathResolverInterface:
@@ -515,12 +515,12 @@ services:
     roadiz_core.twig_loader:
         class: Twig\Loader\FilesystemLoader
         calls:
-            - prependPath: ['%roadiz_core.documents_lib_dir%/Roadiz/Resources/views']
+            - prependPath: ['%roadiz_core.documents_lib_dir%/Resources/views']
         tags: ['twig.loader']
     #
     # Twig extensions
     #
-    RZ\Roadiz\TwigExtension\DocumentExtension:
+    RZ\Roadiz\Documents\TwigExtension\DocumentExtension:
         tags: ['twig.extension']
     RZ\Roadiz\Markdown\Twig\MarkdownExtension:
         tags: ['twig.extension']
@@ -532,14 +532,14 @@ services:
         arguments:
             - '@.inner'
 
-    RZ\Roadiz\Document\DocumentFinderInterface:
+    RZ\Roadiz\Documents\DocumentFinderInterface:
         alias: RZ\Roadiz\CoreBundle\Document\DocumentFinder
 
-    RZ\Roadiz\Utils\MediaFinders\EmbedFinderFactory:
+    RZ\Roadiz\Documents\MediaFinders\EmbedFinderFactory:
         arguments:
             - '%roadiz_core.medias.supported_platforms%'
 
-    RZ\Roadiz\Document\Renderer\ChainRenderer:
+    RZ\Roadiz\Documents\Renderer\ChainRenderer:
         arguments: [[]]
         lazy: true
 

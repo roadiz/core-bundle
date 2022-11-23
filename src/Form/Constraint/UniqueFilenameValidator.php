@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 
 use RZ\Roadiz\CoreBundle\Entity\Document;
-use RZ\Roadiz\Utils\Asset\Packages;
+use RZ\Roadiz\Documents\Packages;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
@@ -15,10 +15,7 @@ use Symfony\Component\Validator\ConstraintValidator;
  */
 class UniqueFilenameValidator extends ConstraintValidator
 {
-    /**
-     * @var Packages
-     */
-    protected $packages;
+    protected Packages $packages;
 
     /**
      * @param Packages $packages

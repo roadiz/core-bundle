@@ -9,9 +9,6 @@ use RZ\Roadiz\CoreBundle\Event\NodesSources\NodesSourcesUpdatedEvent;
 use RZ\Roadiz\CoreBundle\Node\UniversalDataDuplicator;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-/**
- * @package Themes\Rozier\Events
- */
 class NodesSourcesUniversalSubscriber implements EventSubscriberInterface
 {
     private ManagerRegistry $managerRegistry;

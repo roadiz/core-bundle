@@ -10,7 +10,7 @@ use RZ\Roadiz\CoreBundle\Form\Constraint\Recaptcha;
 use RZ\Roadiz\CoreBundle\Form\Error\FormErrorSerializerInterface;
 use RZ\Roadiz\CoreBundle\Form\HoneypotType;
 use RZ\Roadiz\CoreBundle\Form\RecaptchaType;
-use RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface;
+use RZ\Roadiz\Documents\UrlGenerators\DocumentUrlGeneratorInterface;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
@@ -37,9 +37,6 @@ use Symfony\Component\Validator\Constraints\NotNull;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
 
-/**
- * @package RZ\Roadiz\Utils
- */
 class ContactFormManager extends EmailManager
 {
     protected string $formName = 'contact_form';

@@ -8,8 +8,8 @@ use Doctrine\Persistence\ObjectManager;
 use GuzzleHttp\Exception\ClientException;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
-use RZ\Roadiz\Core\Models\DocumentInterface;
-use RZ\Roadiz\Utils\MediaFinders\AbstractPodcastFinder;
+use RZ\Roadiz\Documents\MediaFinders\AbstractPodcastFinder;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 class PodcastFinder extends AbstractPodcastFinder
 {

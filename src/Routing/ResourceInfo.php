@@ -7,9 +7,6 @@ namespace RZ\Roadiz\CoreBundle\Routing;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 
-/**
- * @package src\Roadiz\Core\Routing
- */
 final class ResourceInfo
 {
     protected ?PersistableInterface $resource = null;

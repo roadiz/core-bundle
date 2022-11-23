@@ -15,8 +15,6 @@ use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Perform basic filtering and search over entity listings.
- *
- * @package RZ\Roadiz\Core\ListManagers
  */
 class EntityListManager extends AbstractEntityListManager
 {

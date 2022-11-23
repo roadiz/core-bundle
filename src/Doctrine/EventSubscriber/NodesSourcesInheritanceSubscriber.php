@@ -15,9 +15,6 @@ use RZ\Roadiz\CoreBundle\DependencyInjection\Configuration;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 
-/**
- * @package RZ\Roadiz\Core\Events
- */
 final class NodesSourcesInheritanceSubscriber implements EventSubscriber
 {
     private NodeTypes $nodeTypes;

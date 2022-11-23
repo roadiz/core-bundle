@@ -8,11 +8,11 @@ use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Loggable\Loggable;
 use Gedmo\Mapping\Annotation as Gedmo;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Repository\DocumentTranslationRepository;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
-use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 
 #[
     ORM\Entity(repositoryClass: DocumentTranslationRepository::class),

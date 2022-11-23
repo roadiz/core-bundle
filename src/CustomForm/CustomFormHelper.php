@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\CustomForm;
 
 use Doctrine\Persistence\ObjectManager;
-use RZ\Roadiz\Core\Events\DocumentCreatedEvent;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Entity\CustomFormAnswer;
@@ -14,7 +12,9 @@ use RZ\Roadiz\CoreBundle\Entity\CustomFormField;
 use RZ\Roadiz\CoreBundle\Entity\CustomFormFieldAttribute;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\CoreBundle\Form\CustomFormsType;
-use RZ\Roadiz\Utils\Document\AbstractDocumentFactory;
+use RZ\Roadiz\Documents\AbstractDocumentFactory;
+use RZ\Roadiz\Documents\Events\DocumentCreatedEvent;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
@@ -23,9 +23,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-/**
- * @package RZ\Roadiz\Utils\CustomForm
- */
 class CustomFormHelper
 {
     public const ARRAY_SEPARATOR = ', ';

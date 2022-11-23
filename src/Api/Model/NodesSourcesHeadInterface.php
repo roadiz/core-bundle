@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Api\Model;
 
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use RZ\Roadiz\Core\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 interface NodesSourcesHeadInterface
 {

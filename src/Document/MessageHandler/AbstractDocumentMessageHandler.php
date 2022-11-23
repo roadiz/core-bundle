@@ -6,10 +6,10 @@ namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
 use RZ\Roadiz\CoreBundle\Entity\Document;
-use RZ\Roadiz\Utils\Asset\Packages;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Packages;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
 abstract class AbstractDocumentMessageHandler implements MessageHandlerInterface

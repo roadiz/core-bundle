@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 
-use RZ\Roadiz\Utils\MediaFinders\FacebookPictureFinder;
+use RZ\Roadiz\Documents\MediaFinders\FacebookPictureFinder;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 

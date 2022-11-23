@@ -6,17 +6,15 @@ namespace RZ\Roadiz\CoreBundle\Document;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
-use RZ\Roadiz\Utils\Asset\Packages;
-use RZ\Roadiz\Utils\Document\AbstractDocumentFactory;
+use RZ\Roadiz\Documents\AbstractDocumentFactory;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Packages;
 
 /**
  * Create documents from UploadedFile.
  *
  * Factory methods do not flush, only persist in order to use it in loops.
- *
- * @package RZ\Roadiz\Utils\Document
  */
 final class DocumentFactory extends AbstractDocumentFactory
 {

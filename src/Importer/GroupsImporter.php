@@ -9,9 +9,6 @@ use JMS\Serializer\SerializerInterface;
 use RZ\Roadiz\CoreBundle\Entity\Group;
 use RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TypedObjectConstructorInterface;
 
-/**
- * @package RZ\Roadiz\CMS\Importers
- */
 class GroupsImporter implements EntityImporterInterface
 {
     protected SerializerInterface $serializer;

@@ -6,11 +6,11 @@ namespace RZ\Roadiz\CoreBundle\Api\DataTransformer;
 
 use ApiPlatform\Core\DataTransformer\DataTransformerInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Api\Dto\DocumentOutput;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
-use RZ\Roadiz\Document\DocumentFinderInterface;
+use RZ\Roadiz\Documents\DocumentFinderInterface;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 /**
  * @deprecated Use DocumentNormalizer
