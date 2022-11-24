@@ -264,14 +264,16 @@ final class CustomFormController extends AbstractController
         $this->emailManager->setSubject($assignation['title']);
         $this->emailManager->setEmailTitle($assignation['title']);
         $this->emailManager->setSender($defaultSender);
-        $files = [];
 
+        /*
+         * File attachment requires local file storage.
+         */
+        $files = [];
         foreach ($answer->getAnswers() as $customFormAnswerAttr) {
             $files = array_merge($files, $customFormAnswerAttr->getDocuments()->map(function (DocumentInterface $document) {
                 return new File($this->packages->getDocumentFilePath($document));
             })->toArray());
         }
-
         $this->emailManager->setFiles($files);
 
         if (empty($receiver)) {

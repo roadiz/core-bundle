@@ -7,7 +7,6 @@ namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
-use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
 use RZ\Roadiz\Documents\Packages;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
@@ -32,13 +31,15 @@ abstract class AbstractDocumentMessageHandler implements MessageHandlerInterface
 
     abstract protected function supports(DocumentInterface $document): bool;
 
-    abstract protected function processMessage(AbstractDocumentMessage $message, Document $document): void;
+    abstract protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void;
 
     public function __invoke(AbstractDocumentMessage $message): void
     {
-        $document = $this->managerRegistry->getRepository(Document::class)->find($message->getDocumentId());
+        $document = $this->managerRegistry
+            ->getRepository(DocumentInterface::class)
+            ->find($message->getDocumentId());
 
-        if ($document instanceof Document && $this->supports($document)) {
+        if ($document instanceof DocumentInterface && $this->supports($document)) {
             $this->processMessage($message, $document);
             $this->managerRegistry->getManager()->flush();
         }

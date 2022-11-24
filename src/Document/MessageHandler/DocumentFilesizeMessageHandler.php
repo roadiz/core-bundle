@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
-use RZ\Roadiz\CoreBundle\Entity\Document;
+use RZ\Roadiz\Documents\Models\AdvancedDocumentInterface;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileNotFoundException;
 use Symfony\Component\HttpFoundation\File\File;
@@ -21,8 +21,11 @@ final class DocumentFilesizeMessageHandler extends AbstractLockingDocumentMessag
         return $document->isLocal() && null !== $document->getRelativePath();
     }
 
-    protected function processMessage(AbstractDocumentMessage $message, Document $document): void
+    protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
+        if (!$document instanceof AdvancedDocumentInterface) {
+            return;
+        }
         $documentPath = $this->packages->getDocumentFilePath($document);
         try {
             $file = new File($documentPath);

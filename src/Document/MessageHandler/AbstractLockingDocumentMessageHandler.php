@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
-use RZ\Roadiz\CoreBundle\Entity\Document;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 use Symfony\Component\Messenger\Exception\RecoverableMessageHandlingException;
 
 /**
@@ -15,9 +15,11 @@ abstract class AbstractLockingDocumentMessageHandler extends AbstractDocumentMes
 {
     public function __invoke(AbstractDocumentMessage $message): void
     {
-        $document = $this->managerRegistry->getRepository(Document::class)->find($message->getDocumentId());
+        $document = $this->managerRegistry
+            ->getRepository(DocumentInterface::class)
+            ->find($message->getDocumentId());
 
-        if ($document instanceof Document && $this->supports($document)) {
+        if ($document instanceof DocumentInterface && $this->supports($document)) {
             $documentPath = $this->packages->getDocumentFilePath($document);
             $resource = \fopen($documentPath, "r+");
 

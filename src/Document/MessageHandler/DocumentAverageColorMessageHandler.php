@@ -9,8 +9,8 @@ use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManager;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
-use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Documents\AverageColorResolver;
+use RZ\Roadiz\Documents\Models\AdvancedDocumentInterface;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
 use RZ\Roadiz\Documents\Packages;
 
@@ -37,8 +37,11 @@ final class DocumentAverageColorMessageHandler extends AbstractLockingDocumentMe
         return $document->isLocal() && $document->isProcessable();
     }
 
-    protected function processMessage(AbstractDocumentMessage $message, Document $document): void
+    protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
+        if (!$document instanceof AdvancedDocumentInterface) {
+            return;
+        }
         $documentPath = $this->packages->getDocumentFilePath($document);
         try {
             $mediumColor = (new AverageColorResolver())->getAverageColor($this->imageManager->make($documentPath));

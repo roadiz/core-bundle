@@ -187,6 +187,9 @@ class EmailManager
             $this->message = $this->createMessage();
         }
 
+        /*
+         * File attachment requires local file storage.
+         */
         foreach ($this->files as $file) {
             $this->message->attachFromPath($file->getRealPath(), $file->getFilename());
         }

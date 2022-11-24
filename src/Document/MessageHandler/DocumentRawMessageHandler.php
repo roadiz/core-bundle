@@ -7,7 +7,6 @@ namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
-use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Documents\DownscaleImageManager;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
 use RZ\Roadiz\Documents\Packages;
@@ -35,7 +34,7 @@ final class DocumentRawMessageHandler extends AbstractLockingDocumentMessageHand
         return $document->isLocal() && null !== $document->getRelativePath() && $document->isProcessable();
     }
 
-    protected function processMessage(AbstractDocumentMessage $message, Document $document): void
+    protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
         $this->downscaleImageManager->processAndOverrideDocument($document);
     }

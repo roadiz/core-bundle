@@ -9,8 +9,8 @@ use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManager;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
-use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Models\SizeableInterface;
 use RZ\Roadiz\Documents\Packages;
 
 final class DocumentSizeMessageHandler extends AbstractLockingDocumentMessageHandler
@@ -36,8 +36,11 @@ final class DocumentSizeMessageHandler extends AbstractLockingDocumentMessageHan
         return $document->isLocal() && $document->isImage();
     }
 
-    protected function processMessage(AbstractDocumentMessage $message, Document $document): void
+    protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
+        if (!$document instanceof SizeableInterface) {
+            return;
+        }
         $documentPath = $this->packages->getDocumentFilePath($document);
         try {
             $imageProcess = $this->imageManager->make($documentPath);

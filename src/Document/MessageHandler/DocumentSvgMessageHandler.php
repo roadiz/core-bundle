@@ -6,8 +6,8 @@ namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 
 use enshrined\svgSanitize\Sanitizer;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
-use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Models\SizeableInterface;
 use RZ\Roadiz\Documents\SvgSizeResolver;
 
 final class DocumentSvgMessageHandler extends AbstractLockingDocumentMessageHandler
@@ -21,8 +21,11 @@ final class DocumentSvgMessageHandler extends AbstractLockingDocumentMessageHand
         return $document->isLocal() && null !== $document->getRelativePath() && $document->isSvg();
     }
 
-    protected function processMessage(AbstractDocumentMessage $message, Document $document): void
+    protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
+        if (!$document instanceof SizeableInterface) {
+            return;
+        }
         $documentPath = $this->packages->getDocumentFilePath($document);
 
         // Create a new sanitizer instance

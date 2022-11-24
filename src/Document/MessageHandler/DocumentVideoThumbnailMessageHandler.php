@@ -8,9 +8,9 @@ use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Document\DocumentFactory;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
-use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Documents\Events\DocumentCreatedEvent;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Models\HasThumbnailInterface;
 use RZ\Roadiz\Documents\Packages;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
@@ -51,8 +51,11 @@ final class DocumentVideoThumbnailMessageHandler extends AbstractLockingDocument
         return $document->isLocal() && $document->isVideo() && is_string($this->ffmpegPath);
     }
 
-    protected function processMessage(AbstractDocumentMessage $message, Document $document): void
+    protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
+        /*
+         * This process requires document files to be locally stored!
+         */
         $documentPath = $this->packages->getDocumentFilePath($document);
         $thumbnailPath = tempnam(sys_get_temp_dir(), 'thumbnail_');
         \rename($thumbnailPath, $thumbnailPath .= '.jpg');
@@ -67,7 +70,7 @@ final class DocumentVideoThumbnailMessageHandler extends AbstractLockingDocument
                 ->setFolder($document->getFolders()->first() ?: null)
                 ->setFile(new File($thumbnailPath))
                 ->getDocument();
-            if ($thumbnailDocument instanceof Document) {
+            if ($thumbnailDocument instanceof HasThumbnailInterface && $document instanceof HasThumbnailInterface) {
                 $thumbnailDocument->setOriginal($document);
                 $document->getThumbnails()->add($thumbnailDocument);
                 $this->managerRegistry->getManager()->flush();

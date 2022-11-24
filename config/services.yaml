@@ -320,9 +320,6 @@ services:
             - '@Symfony\Component\HttpFoundation\RequestStack'
             - 'ROLE_BACKEND_USER'
 
-    RZ\Roadiz\Documents\Packages: ~
-    RZ\Roadiz\Documents\DownscaleImageManager: ~
-
     RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry:
         arguments: ['@service_container']
 
@@ -358,10 +355,6 @@ services:
 
     Doctrine\Persistence\ObjectManager:
         alias: 'doctrine.orm.default_entity_manager'
-
-    RZ\Roadiz\Documents\Models\FileAwareInterface:
-        alias: RZ\Roadiz\CoreBundle\Filesystem\RoadizFileDirectories
-        public: true
 
     RZ\Roadiz\CoreBundle\Filesystem\RoadizFileDirectories:
         arguments: ['%kernel.project_dir%']
@@ -481,6 +474,13 @@ services:
     RZ\Roadiz\Documents\AbstractDocumentFactory:
         alias: RZ\Roadiz\CoreBundle\Document\DocumentFactory
 
+    RZ\Roadiz\Documents\Models\FileAwareInterface:
+        alias: RZ\Roadiz\CoreBundle\Filesystem\RoadizFileDirectories
+        public: true
+
+    RZ\Roadiz\Documents\Packages: ~
+    RZ\Roadiz\Documents\DownscaleImageManager: ~
+    RZ\Roadiz\Documents\DocumentArchiver: ~
     #
     # Console commands
     #

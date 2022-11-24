@@ -33,8 +33,11 @@ final class DocumentExifMessageHandler extends AbstractLockingDocumentMessageHan
         return false;
     }
 
-    protected function processMessage(AbstractDocumentMessage $message, Document $document): void
+    protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
+        if (!$document instanceof Document) {
+            return;
+        }
         if (
             function_exists('exif_read_data') &&
             $document->getDocumentTranslations()->count() === 0
