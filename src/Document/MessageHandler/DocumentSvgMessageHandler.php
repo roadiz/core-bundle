@@ -26,24 +26,25 @@ final class DocumentSvgMessageHandler extends AbstractLockingDocumentMessageHand
         if (!$document instanceof SizeableInterface) {
             return;
         }
-        $documentPath = $this->packages->getDocumentFilePath($document);
 
         // Create a new sanitizer instance
         $sanitizer = new Sanitizer();
         $sanitizer->minify(true);
 
-        // Load the dirty svg
-        $dirtySVG = file_get_contents($documentPath);
-        if (false !== $dirtySVG) {
-            file_put_contents($documentPath, $sanitizer->sanitize($dirtySVG));
-            $this->logger->info('Svg document sanitized.');
+        if (!$this->documentsStorage->fileExists($document->getMountPath())) {
+            return;
         }
+
+        // Load the dirty svg
+        $dirtySVG = $this->documentsStorage->read($document->getMountPath());
+        $this->documentsStorage->write($document->getMountPath(), $sanitizer->sanitize($dirtySVG));
+        $this->logger->info('Svg document sanitized.');
 
         /*
          * Resolve SVG size
          */
         try {
-            $svgSizeResolver = new SvgSizeResolver($document, $this->packages);
+            $svgSizeResolver = new SvgSizeResolver($document, $this->documentsStorage);
             $document->setImageWidth($svgSizeResolver->getWidth());
             $document->setImageHeight($svgSizeResolver->getHeight());
         } catch (\RuntimeException $exception) {

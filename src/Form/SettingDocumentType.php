@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Form;
 
 use Doctrine\Persistence\ManagerRegistry;
+use League\Flysystem\FilesystemOperator;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Documents\AbstractDocumentFactory;
-use RZ\Roadiz\Documents\Packages;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -19,21 +19,21 @@ class SettingDocumentType extends AbstractType
 {
     protected ManagerRegistry $managerRegistry;
     protected AbstractDocumentFactory $documentFactory;
-    protected Packages $packages;
+    protected FilesystemOperator $documentsStorage;
 
     /**
      * @param ManagerRegistry $managerRegistry
      * @param AbstractDocumentFactory $documentFactory
-     * @param Packages $packages
+     * @param FilesystemOperator $documentsStorage
      */
     public function __construct(
         ManagerRegistry $managerRegistry,
         AbstractDocumentFactory $documentFactory,
-        Packages $packages
+        FilesystemOperator $documentsStorage
     ) {
         $this->documentFactory = $documentFactory;
-        $this->packages = $packages;
         $this->managerRegistry = $managerRegistry;
+        $this->documentsStorage = $documentsStorage;
     }
 
     /**
@@ -49,7 +49,7 @@ class SettingDocumentType extends AbstractType
                     $document = $manager->find(Document::class, $value);
                     if (null !== $document) {
                         // transform the array to a string
-                        return new File($this->packages->getDocumentFilePath($document), false);
+                        return new File($this->documentsStorage->publicUrl($document->getMountPath()), false);
                     }
                 }
                 return null;

@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 
+use League\Flysystem\FilesystemException;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
 use RZ\Roadiz\Documents\Models\AdvancedDocumentInterface;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
-use Symfony\Component\HttpFoundation\File\Exception\FileNotFoundException;
-use Symfony\Component\HttpFoundation\File\File;
 
 final class DocumentFilesizeMessageHandler extends AbstractLockingDocumentMessageHandler
 {
@@ -26,17 +25,10 @@ final class DocumentFilesizeMessageHandler extends AbstractLockingDocumentMessag
         if (!$document instanceof AdvancedDocumentInterface) {
             return;
         }
-        $documentPath = $this->packages->getDocumentFilePath($document);
         try {
-            $file = new File($documentPath);
-            $document->setFilesize($file->getSize());
-        } catch (FileNotFoundException $exception) {
-            $this->logger->warning(
-                'Document file not found.',
-                [
-                    'path' => $documentPath,
-                ]
-            );
+            $document->setFilesize($this->documentsStorage->fileSize($document->getMountPath()));
+        } catch (FilesystemException $exception) {
+            $this->logger->warning($exception->getMessage());
         }
     }
 }

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Document;
 
 use Doctrine\Persistence\ManagerRegistry;
+use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Documents\AbstractDocumentFactory;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
-use RZ\Roadiz\Documents\Packages;
 
 /**
  * Create private documents from UploadedFile.
@@ -22,10 +22,10 @@ class PrivateDocumentFactory extends AbstractDocumentFactory
 
     public function __construct(
         ManagerRegistry $managerRegistry,
-        Packages $packages,
+        FilesystemOperator $documentsStorage,
         ?LoggerInterface $logger = null
     ) {
-        parent::__construct($packages, $logger);
+        parent::__construct($documentsStorage, $logger);
         $this->managerRegistry = $managerRegistry;
     }
 

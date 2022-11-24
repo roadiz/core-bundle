@@ -6,6 +6,8 @@ namespace RZ\Roadiz\CoreBundle\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Exception;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
 use Limenius\Liform\LiformInterface;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
@@ -17,11 +19,9 @@ use RZ\Roadiz\CoreBundle\Exception\EntityAlreadyExistsException;
 use RZ\Roadiz\CoreBundle\Form\Error\FormErrorSerializerInterface;
 use RZ\Roadiz\CoreBundle\Mailer\EmailManager;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
-use RZ\Roadiz\Documents\Packages;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormInterface;
-use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -49,7 +49,7 @@ final class CustomFormController extends AbstractController
     private FormErrorSerializerInterface $formErrorSerializer;
     private ManagerRegistry $registry;
     private RateLimiterFactory $customFormLimiter;
-    private Packages $packages;
+    private FilesystemOperator $documentsStorage;
 
     public function __construct(
         EmailManager $emailManager,
@@ -62,7 +62,7 @@ final class CustomFormController extends AbstractController
         FormErrorSerializerInterface $formErrorSerializer,
         ManagerRegistry $registry,
         RateLimiterFactory $customFormLimiter,
-        Packages $packages
+        FilesystemOperator $documentsStorage
     ) {
         $this->emailManager = $emailManager;
         $this->settingsBag = $settingsBag;
@@ -74,7 +74,7 @@ final class CustomFormController extends AbstractController
         $this->formErrorSerializer = $formErrorSerializer;
         $this->registry = $registry;
         $this->customFormLimiter = $customFormLimiter;
-        $this->packages = $packages;
+        $this->documentsStorage = $documentsStorage;
     }
 
     protected function getTranslation(string $_locale = 'fr'): TranslationInterface
@@ -265,16 +265,20 @@ final class CustomFormController extends AbstractController
         $this->emailManager->setEmailTitle($assignation['title']);
         $this->emailManager->setSender($defaultSender);
 
-        /*
-         * File attachment requires local file storage.
-         */
-        $files = [];
-        foreach ($answer->getAnswers() as $customFormAnswerAttr) {
-            $files = array_merge($files, $customFormAnswerAttr->getDocuments()->map(function (DocumentInterface $document) {
-                return new File($this->packages->getDocumentFilePath($document));
-            })->toArray());
+        try {
+            foreach ($answer->getAnswers() as $customFormAnswerAttr) {
+                /** @var DocumentInterface $document */
+                foreach ($customFormAnswerAttr->getDocuments() as $document) {
+                    $this->emailManager->addResource(
+                        $this->documentsStorage->readStream($document->getMountPath()),
+                        $document->getFilename(),
+                        $this->documentsStorage->mimeType($document->getMountPath())
+                    );
+                }
+            }
+        } catch (FilesystemException $exception) {
+            $this->logger->error($exception->getMessage());
         }
-        $this->emailManager->setFiles($files);
 
         if (empty($receiver)) {
             $this->emailManager->setReceiver($defaultSender);

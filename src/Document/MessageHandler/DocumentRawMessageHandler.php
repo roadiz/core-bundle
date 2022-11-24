@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 
 use Doctrine\Persistence\ManagerRegistry;
+use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
 use RZ\Roadiz\Documents\DownscaleImageManager;
@@ -19,9 +20,10 @@ final class DocumentRawMessageHandler extends AbstractLockingDocumentMessageHand
         DownscaleImageManager $downscaleImageManager,
         ManagerRegistry $managerRegistry,
         LoggerInterface $logger,
-        Packages $packages
+        Packages $packages,
+        FilesystemOperator $documentsStorage
     ) {
-        parent::__construct($managerRegistry, $logger, $packages);
+        parent::__construct($managerRegistry, $logger, $packages, $documentsStorage);
         $this->downscaleImageManager = $downscaleImageManager;
     }
 

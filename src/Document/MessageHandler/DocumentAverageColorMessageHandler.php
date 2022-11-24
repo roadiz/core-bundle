@@ -7,6 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 use Doctrine\Persistence\ManagerRegistry;
 use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManager;
+use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
 use RZ\Roadiz\Documents\AverageColorResolver;
@@ -22,9 +23,10 @@ final class DocumentAverageColorMessageHandler extends AbstractLockingDocumentMe
         ManagerRegistry $managerRegistry,
         LoggerInterface $messengerLogger,
         Packages $packages,
+        FilesystemOperator $documentsStorage,
         ImageManager $imageManager
     ) {
-        parent::__construct($managerRegistry, $messengerLogger, $packages);
+        parent::__construct($managerRegistry, $messengerLogger, $packages, $documentsStorage);
         $this->imageManager = $imageManager;
     }
 
@@ -37,20 +39,26 @@ final class DocumentAverageColorMessageHandler extends AbstractLockingDocumentMe
         return $document->isLocal() && $document->isProcessable();
     }
 
+    /**
+     * @param AbstractDocumentMessage $message
+     * @param DocumentInterface $document
+     * @return void
+     * @throws \League\Flysystem\FilesystemException
+     */
     protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
         if (!$document instanceof AdvancedDocumentInterface) {
             return;
         }
-        $documentPath = $this->packages->getDocumentFilePath($document);
+        $documentStream = $this->documentsStorage->readStream($document->getMountPath());
         try {
-            $mediumColor = (new AverageColorResolver())->getAverageColor($this->imageManager->make($documentPath));
+            $mediumColor = (new AverageColorResolver())->getAverageColor($this->imageManager->make($documentStream));
             $document->setImageAverageColor($mediumColor);
         } catch (NotReadableException $exception) {
             $this->logger->warning(
                 'Document file is not a readable image.',
                 [
-                    'path' => $documentPath,
+                    'path' => $document->getMountPath(),
                     'message' => $exception->getMessage()
                 ]
             );

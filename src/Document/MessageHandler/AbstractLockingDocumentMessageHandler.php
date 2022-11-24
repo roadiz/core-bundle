@@ -20,15 +20,8 @@ abstract class AbstractLockingDocumentMessageHandler extends AbstractDocumentMes
             ->find($message->getDocumentId());
 
         if ($document instanceof DocumentInterface && $this->supports($document)) {
-            $documentPath = $this->packages->getDocumentFilePath($document);
-            $resource = \fopen($documentPath, "r+");
-
-            if (false === $resource) {
-                throw new RecoverableMessageHandlingException(sprintf(
-                    '%s file does not exist',
-                    $documentPath
-                ));
-            }
+            $documentPath = $document->getMountPath();
+            $resource = $this->documentsStorage->readStream($documentPath);
 
             if (\flock($resource, \LOCK_EX)) {
                 $this->processMessage($message, $document);

@@ -42,8 +42,8 @@ final class DocumentExifMessageHandler extends AbstractLockingDocumentMessageHan
             function_exists('exif_read_data') &&
             $document->getDocumentTranslations()->count() === 0
         ) {
-            $filePath = $this->packages->getDocumentFilePath($document);
-            $exif = @exif_read_data($filePath, 'FILE,COMPUTED,ANY_TAG,EXIF,COMMENT');
+            $fileStream = $this->documentsStorage->readStream($document->getMountPath());
+            $exif = @\exif_read_data($fileStream, 'FILE,COMPUTED,ANY_TAG,EXIF,COMMENT');
 
             if (false !== $exif) {
                 $copyright = $this->getCopyright($exif);

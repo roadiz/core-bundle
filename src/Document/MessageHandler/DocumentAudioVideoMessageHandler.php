@@ -30,9 +30,21 @@ final class DocumentAudioVideoMessageHandler extends AbstractLockingDocumentMess
             return;
         }
 
-        $documentPath = $this->packages->getDocumentFilePath($document);
+        /*
+         * This process requires document files to be locally stored!
+         */
+        $videoPath = \tempnam(\sys_get_temp_dir(), 'video_');
+        \rename($videoPath, $videoPath .= $document->getFilename());
+
+        /*
+        * Copy AV locally
+        */
+        $videoPathResource = \fopen($videoPath, 'w');
+        \stream_copy_to_stream($this->documentsStorage->readStream($document->getMountPath()), $videoPathResource);
+        \fclose($videoPathResource);
+
         $id3 = new \getID3();
-        $fileInfo = $id3->analyze($documentPath);
+        $fileInfo = $id3->analyze($videoPath);
 
         if ($document instanceof SizeableInterface && isset($fileInfo['video'])) {
             if (isset($fileInfo['video']['resolution_x'])) {
@@ -45,5 +57,7 @@ final class DocumentAudioVideoMessageHandler extends AbstractLockingDocumentMess
         if ($document instanceof TimeableInterface && isset($fileInfo['playtime_seconds'])) {
             $document->setMediaDuration((int) floor($fileInfo['playtime_seconds']));
         }
+
+        \unlink($videoPath);
     }
 }

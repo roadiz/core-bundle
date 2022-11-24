@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 
 use Doctrine\Persistence\ManagerRegistry;
+use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Document\DocumentFactory;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
@@ -34,9 +35,10 @@ final class DocumentVideoThumbnailMessageHandler extends AbstractLockingDocument
         EventDispatcherInterface $eventDispatcher,
         ManagerRegistry $managerRegistry,
         LoggerInterface $messengerLogger,
-        Packages $packages
+        Packages $packages,
+        FilesystemOperator $documentsStorage
     ) {
-        parent::__construct($managerRegistry, $messengerLogger, $packages);
+        parent::__construct($managerRegistry, $messengerLogger, $packages, $documentsStorage);
         $this->ffmpegPath = $ffmpegPath;
         $this->documentFactory = $documentFactory;
         $this->eventDispatcher = $eventDispatcher;
@@ -56,15 +58,26 @@ final class DocumentVideoThumbnailMessageHandler extends AbstractLockingDocument
         /*
          * This process requires document files to be locally stored!
          */
-        $documentPath = $this->packages->getDocumentFilePath($document);
-        $thumbnailPath = tempnam(sys_get_temp_dir(), 'thumbnail_');
+        $videoPath = \tempnam(\sys_get_temp_dir(), 'video_');
+        \rename($videoPath, $videoPath .= $document->getFilename());
+
+        /*
+         * Copy video locally
+         */
+        $videoPathResource = \fopen($videoPath, 'w');
+        \stream_copy_to_stream($this->documentsStorage->readStream($document->getMountPath()), $videoPathResource);
+        \fclose($videoPathResource);
+
+        $thumbnailPath = \tempnam(\sys_get_temp_dir(), 'thumbnail_');
         \rename($thumbnailPath, $thumbnailPath .= '.jpg');
 
-        $process = new Process([$this->ffmpegPath, '-y', '-i', $documentPath, '-vframes', '1', $thumbnailPath]);
+        $process = new Process([$this->ffmpegPath, '-y', '-i', $videoPath, '-vframes', '1', $thumbnailPath]);
 
         try {
             $process->mustRun();
             $process->wait();
+
+            \unlink($videoPath);
 
             $thumbnailDocument = $this->documentFactory
                 ->setFolder($document->getFolders()->first() ?: null)
@@ -80,7 +93,7 @@ final class DocumentVideoThumbnailMessageHandler extends AbstractLockingDocument
             throw new UnrecoverableMessageHandlingException(
                 sprintf(
                     'Cannot extract thumbnail from %s video file : %s',
-                    $documentPath,
+                    $videoPath,
                     $exception->getMessage()
                 ),
             );

@@ -7,6 +7,7 @@ namespace RZ\Roadiz\CoreBundle;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\CommonMarkCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\DoctrineMigrationCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\DocumentRendererCompilerPass;
+use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\FlysystemStorageCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\ImporterCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\NodesSourcesEntitiesPathCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\NodeWorkflowCompilerPass;
@@ -34,5 +35,6 @@ class RoadizCoreBundle extends Bundle
         $container->addCompilerPass(new RateLimitersCompilerPass());
         $container->addCompilerPass(new NodesSourcesEntitiesPathCompilerPass());
         $container->addCompilerPass(new PathResolverCompilerPass());
+        $container->addCompilerPass(new FlysystemStorageCompilerPass());
     }
 }

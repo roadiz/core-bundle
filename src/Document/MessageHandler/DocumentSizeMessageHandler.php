@@ -7,6 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 use Doctrine\Persistence\ManagerRegistry;
 use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManager;
+use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
@@ -21,9 +22,10 @@ final class DocumentSizeMessageHandler extends AbstractLockingDocumentMessageHan
         ManagerRegistry $managerRegistry,
         LoggerInterface $messengerLogger,
         Packages $packages,
+        FilesystemOperator $documentsStorage,
         ImageManager $imageManager
     ) {
-        parent::__construct($managerRegistry, $messengerLogger, $packages);
+        parent::__construct($managerRegistry, $messengerLogger, $packages, $documentsStorage);
         $this->imageManager = $imageManager;
     }
 
@@ -41,16 +43,15 @@ final class DocumentSizeMessageHandler extends AbstractLockingDocumentMessageHan
         if (!$document instanceof SizeableInterface) {
             return;
         }
-        $documentPath = $this->packages->getDocumentFilePath($document);
         try {
-            $imageProcess = $this->imageManager->make($documentPath);
+            $imageProcess = $this->imageManager->make($this->documentsStorage->readStream($document->getMountPath()));
             $document->setImageWidth($imageProcess->width());
             $document->setImageHeight($imageProcess->height());
         } catch (NotReadableException $exception) {
             $this->logger->warning(
                 'Document file is not a readable image.',
                 [
-                    'path' => $documentPath,
+                    'path' => $document->getMountPath(),
                     'message' => $exception->getMessage()
                 ]
             );
