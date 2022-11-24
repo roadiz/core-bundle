@@ -482,6 +482,37 @@ services:
         alias: RZ\Roadiz\CoreBundle\Document\DocumentFactory
 
     #
+    # Console commands
+    #
+    RZ\Roadiz\Documents\Console\DocumentAverageColorCommand:
+        autowire: true
+        autoconfigure: true
+    RZ\Roadiz\Documents\Console\DocumentClearFolderCommand:
+        autowire: true
+        autoconfigure: true
+    RZ\Roadiz\Documents\Console\DocumentDownscaleCommand:
+        autowire: true
+        autoconfigure: true
+    RZ\Roadiz\Documents\Console\DocumentDuplicatesCommand:
+        autowire: true
+        autoconfigure: true
+    RZ\Roadiz\Documents\Console\DocumentFileHashCommand:
+        autowire: true
+        autoconfigure: true
+    RZ\Roadiz\Documents\Console\DocumentFilesizeCommand:
+        autowire: true
+        autoconfigure: true
+    RZ\Roadiz\Documents\Console\DocumentPruneCommand:
+        autowire: true
+        autoconfigure: true
+    RZ\Roadiz\Documents\Console\DocumentPruneOrphansCommand:
+        autowire: true
+        autoconfigure: true
+    RZ\Roadiz\Documents\Console\DocumentSizeCommand:
+        autowire: true
+        autoconfigure: true
+
+    #
     # Routing
     #
     RZ\Roadiz\CoreBundle\Routing\RedirectionRouter:
