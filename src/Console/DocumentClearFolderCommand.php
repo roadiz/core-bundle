@@ -7,8 +7,8 @@ namespace RZ\Roadiz\CoreBundle\Console;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
-use RZ\Roadiz\CoreBundle\Entity\Document;
-use RZ\Roadiz\CoreBundle\Entity\Folder;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Models\FolderInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -38,9 +38,9 @@ class DocumentClearFolderCommand extends Command
         ;
     }
 
-    protected function getDocumentQueryBuilder(ObjectManager $entityManager, Folder $folder): QueryBuilder
+    protected function getDocumentQueryBuilder(ObjectManager $entityManager, FolderInterface $folder): QueryBuilder
     {
-        $qb = $entityManager->getRepository(Document::class)->createQueryBuilder('d');
+        $qb = $this->managerRegistry->getRepository(DocumentInterface::class)->createQueryBuilder('d');
         return $qb->innerJoin('d.folders', 'f')
             ->andWhere($qb->expr()->eq('f.id', ':folderId'))
             ->setParameter(':folderId', $folder);
@@ -54,9 +54,9 @@ class DocumentClearFolderCommand extends Command
         if ($folderId <= 0) {
             throw new \InvalidArgumentException('Folder ID must be a valid ID');
         }
-        $em = $this->managerRegistry->getManagerForClass(Folder::class);
-        /** @var Folder|null $folder */
-        $folder = $em->find(Folder::class, $folderId);
+        $em = $this->managerRegistry->getManagerForClass(DocumentInterface::class);
+        /** @var FolderInterface|null $folder */
+        $folder = $em->find(FolderInterface::class, $folderId);
         if ($folder === null) {
             throw new \InvalidArgumentException(sprintf('Folder #%d does not exist.', $folderId));
         }
@@ -86,7 +86,7 @@ class DocumentClearFolderCommand extends Command
                 ->getResult();
 
             $this->io->progressStart($count);
-            /** @var Document $document */
+            /** @var DocumentInterface $document */
             foreach ($results as $document) {
                 $em->remove($document);
                 if (($i % $batchSize) === 0) {

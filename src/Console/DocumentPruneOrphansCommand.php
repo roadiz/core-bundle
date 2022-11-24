@@ -7,7 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Console;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
-use RZ\Roadiz\CoreBundle\Entity\Document;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 use RZ\Roadiz\Documents\Packages;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -46,12 +46,14 @@ final class DocumentPruneOrphansCommand extends Command
      */
     protected function getDocumentQueryBuilder(): QueryBuilder
     {
-        return $this->managerRegistry->getRepository(Document::class)->createQueryBuilder('d');
+        return $this->managerRegistry
+            ->getRepository(DocumentInterface::class)
+            ->createQueryBuilder('d');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $em = $this->managerRegistry->getManagerForClass(Document::class);
+        $em = $this->managerRegistry->getManagerForClass(DocumentInterface::class);
         $filesystem = new Filesystem();
         $this->io = new SymfonyStyle($input, $output);
         $dryRun = $input->getOption('dry-run');
@@ -76,7 +78,7 @@ final class DocumentPruneOrphansCommand extends Command
 
         $this->io->progressStart($count);
         foreach ($iterableResult as $row) {
-            /** @var Document $document */
+            /** @var DocumentInterface $document */
             $document = $row[0];
             $this->checkDocumentFilesystem($document, $filesystem, $em, $deleteCount, $dryRun);
             if (($i % $batchSize) === 0 && !$dryRun) {
@@ -95,14 +97,14 @@ final class DocumentPruneOrphansCommand extends Command
     }
 
     /**
-     * @param Document $document
+     * @param DocumentInterface $document
      * @param Filesystem $filesystem
      * @param ObjectManager $entityManager
      * @param int $deleteCount
      * @param bool $dryRun
      */
     private function checkDocumentFilesystem(
-        Document $document,
+        DocumentInterface $document,
         Filesystem $filesystem,
         ObjectManager $entityManager,
         int &$deleteCount,
@@ -115,7 +117,11 @@ final class DocumentPruneOrphansCommand extends Command
             $documentPath = $this->packages->getDocumentFilePath($document);
             if (!$filesystem->exists($documentPath)) {
                 if ($this->io->isDebug() && !$this->io->isQuiet()) {
-                    $this->io->writeln(sprintf('%s file does not exist, pruning document %s', $document->getRelativePath(), $document->getId()));
+                    $this->io->writeln(sprintf(
+                        '%s file does not exist, pruning document %s',
+                        $document->getRelativePath(),
+                        (string) $document
+                    ));
                 }
                 if (!$dryRun) {
                     $entityManager->remove($document);

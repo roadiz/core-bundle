@@ -68,7 +68,7 @@ final class UsersCreationCommand extends UsersCommand
      * @param InputInterface  $input
      * @param OutputInterface $output
      *
-     * @return \RZ\Roadiz\CoreBundle\Entity\User
+     * @return User
      */
     private function executeUserCreation(
         string $username,

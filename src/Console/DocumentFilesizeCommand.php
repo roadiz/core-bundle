@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\CoreBundle\Entity\Document;
+use RZ\Roadiz\Documents\Models\AdvancedDocumentInterface;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 use RZ\Roadiz\Documents\Packages;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -40,12 +41,12 @@ class DocumentFilesizeCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $em = $this->managerRegistry->getManagerForClass(Document::class);
+        $em = $this->managerRegistry->getManagerForClass(DocumentInterface::class);
         $this->io = new SymfonyStyle($input, $output);
 
         $batchSize = 20;
         $i = 0;
-        $count = (int) $em->getRepository(Document::class)
+        $count = (int) $this->managerRegistry->getRepository(DocumentInterface::class)
             ->createQueryBuilder('d')
             ->select('count(d)')
             ->getQuery()
@@ -54,29 +55,30 @@ class DocumentFilesizeCommand extends Command
             $this->io->success('No document found');
             return 0;
         }
-        $q = $em->getRepository(Document::class)
+        $q = $em->getRepository(DocumentInterface::class)
             ->createQueryBuilder('d')
             ->getQuery();
         $iterableResult = $q->iterate();
 
         $this->io->progressStart($count);
         foreach ($iterableResult as $row) {
-            /** @var Document $document */
             $document = $row[0];
-            $this->updateDocumentFilesize($document);
-            if (($i % $batchSize) === 0) {
-                $em->flush(); // Executes all updates.
-                $em->clear(); // Detaches all objects from Doctrine!
+            if ($document instanceof AdvancedDocumentInterface) {
+                $this->updateDocumentFilesize($document);
+                if (($i % $batchSize) === 0) {
+                    $em->flush(); // Executes all updates.
+                    $em->clear(); // Detaches all objects from Doctrine!
+                }
+                ++$i;
+                $this->io->progressAdvance();
             }
-            ++$i;
-            $this->io->progressAdvance();
         }
         $em->flush();
         $this->io->progressFinish();
         return 0;
     }
 
-    private function updateDocumentFilesize(Document $document)
+    private function updateDocumentFilesize(AdvancedDocumentInterface $document)
     {
         if (null !== $document->getRelativePath()) {
             $documentPath = $this->packages->getDocumentFilePath($document);

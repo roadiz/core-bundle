@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\CoreBundle\Entity\Document;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -18,9 +18,6 @@ class DocumentPruneCommand extends Command
     protected ManagerRegistry $managerRegistry;
     protected SymfonyStyle $io;
 
-    /**
-     * @param ManagerRegistry $managerRegistry
-     */
     public function __construct(ManagerRegistry $managerRegistry)
     {
         parent::__construct();
@@ -42,8 +39,8 @@ class DocumentPruneCommand extends Command
         $batchSize = 20;
         $i = 0;
 
-        $em = $this->managerRegistry->getManagerForClass(Document::class);
-        $documents = $em->getRepository(Document::class)->findAllUnused();
+        $em = $this->managerRegistry->getManagerForClass(DocumentInterface::class);
+        $documents = $this->managerRegistry->getRepository(DocumentInterface::class)->findAllUnused();
         $count = count($documents);
 
         if ($count <= 0) {
@@ -66,7 +63,7 @@ class DocumentPruneCommand extends Command
             ))
         ) {
             $this->io->progressStart($count);
-            /** @var Document $document */
+            /** @var DocumentInterface $document */
             foreach ($documents as $document) {
                 $em->remove($document);
                 if (($i % $batchSize) === 0) {

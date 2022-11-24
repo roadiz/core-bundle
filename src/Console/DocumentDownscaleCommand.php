@@ -6,9 +6,9 @@ namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Intervention\Image\Exception\NotReadableException;
-use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Event\Cache\CachePurgeAssetsRequestEvent;
 use RZ\Roadiz\Documents\DownscaleImageManager;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -54,7 +54,6 @@ class DocumentDownscaleCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $entityManager = $this->managerRegistry->getManagerForClass(Document::class);
 
         if (null !== $this->maxPixelSize && $this->maxPixelSize > 0) {
             $confirmation = new ConfirmationQuestion(
@@ -66,9 +65,9 @@ class DocumentDownscaleCommand extends Command
                     $confirmation
                 )
             ) {
-                /** @var Document[] $documents */
-                $documents = $entityManager
-                    ->getRepository(Document::class)
+                /** @var DocumentInterface[] $documents */
+                $documents = $this->managerRegistry
+                    ->getRepository(DocumentInterface::class)
                     ->findBy([
                         'mimeType' => [
                             'image/png',

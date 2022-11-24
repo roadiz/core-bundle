@@ -7,7 +7,8 @@ namespace RZ\Roadiz\CoreBundle\Console;
 use Doctrine\Persistence\ManagerRegistry;
 use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManager;
-use RZ\Roadiz\CoreBundle\Entity\Document;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Models\SizeableInterface;
 use RZ\Roadiz\Documents\Packages;
 use RZ\Roadiz\Documents\SvgSizeResolver;
 use Symfony\Component\Console\Command\Command;
@@ -22,11 +23,6 @@ class DocumentSizeCommand extends Command
     private Packages $packages;
     private ImageManager $imageManager;
 
-    /**
-     * @param ManagerRegistry $managerRegistry
-     * @param Packages $packages
-     * @param ImageManager $imageManager
-     */
     public function __construct(ManagerRegistry $managerRegistry, Packages $packages, ImageManager $imageManager)
     {
         parent::__construct();
@@ -46,10 +42,10 @@ class DocumentSizeCommand extends Command
     {
         $this->io = new SymfonyStyle($input, $output);
 
-        $em = $this->managerRegistry->getManagerForClass(Document::class);
+        $em = $this->managerRegistry->getManagerForClass(DocumentInterface::class);
         $batchSize = 20;
         $i = 0;
-        $count = (int) $em->getRepository(Document::class)
+        $count = (int) $this->managerRegistry->getRepository(DocumentInterface::class)
             ->createQueryBuilder('d')
             ->select('count(d)')
             ->getQuery()
@@ -60,30 +56,34 @@ class DocumentSizeCommand extends Command
             return 0;
         }
 
-        $q = $em->getRepository(Document::class)
+        $q = $this->managerRegistry->getRepository(DocumentInterface::class)
             ->createQueryBuilder('d')
             ->getQuery();
         $iterableResult = $q->iterate();
 
         $this->io->progressStart($count);
         foreach ($iterableResult as $row) {
-            /** @var Document $document */
             $document = $row[0];
-            $this->updateDocumentSize($document);
-            if (($i % $batchSize) === 0) {
-                $em->flush(); // Executes all updates.
-                $em->clear(); // Detaches all objects from Doctrine!
+            if ($document instanceof SizeableInterface) {
+                $this->updateDocumentSize($document);
+                if (($i % $batchSize) === 0) {
+                    $em->flush(); // Executes all updates.
+                    $em->clear(); // Detaches all objects from Doctrine!
+                }
+                ++$i;
+                $this->io->progressAdvance();
             }
-            ++$i;
-            $this->io->progressAdvance();
         }
         $em->flush();
         $this->io->progressFinish();
         return 0;
     }
 
-    private function updateDocumentSize(Document $document)
+    private function updateDocumentSize(DocumentInterface $document)
     {
+        if (!($document instanceof SizeableInterface)) {
+            return;
+        }
         if ($document->isImage()) {
             $documentPath = $this->packages->getDocumentFilePath($document);
             try {

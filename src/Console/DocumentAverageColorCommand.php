@@ -7,8 +7,9 @@ namespace RZ\Roadiz\CoreBundle\Console;
 use Doctrine\Persistence\ManagerRegistry;
 use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManager;
-use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Documents\AverageColorResolver;
+use RZ\Roadiz\Documents\Models\AdvancedDocumentInterface;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 use RZ\Roadiz\Documents\Packages;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -50,8 +51,8 @@ class DocumentAverageColorCommand extends Command
 
         $batchSize = 20;
         $i = 0;
-        $manager = $this->managerRegistry->getManagerForClass(Document::class);
-        $count = (int) $manager->getRepository(Document::class)
+        $manager = $this->managerRegistry->getManagerForClass(DocumentInterface::class);
+        $count = (int) $this->managerRegistry->getRepository(DocumentInterface::class)
             ->createQueryBuilder('d')
             ->select('count(d)')
             ->getQuery()
@@ -62,14 +63,14 @@ class DocumentAverageColorCommand extends Command
             return 0;
         }
 
-        $q = $manager->getRepository(Document::class)
+        $q = $this->managerRegistry->getRepository(DocumentInterface::class)
             ->createQueryBuilder('d')
             ->getQuery();
         $iterableResult = $q->iterate();
 
         $this->io->progressStart($count);
         foreach ($iterableResult as $row) {
-            /** @var Document $document */
+            /** @var DocumentInterface $document */
             $document = $row[0];
             $this->updateDocumentColor($document);
             if (($i % $batchSize) === 0) {
@@ -84,9 +85,9 @@ class DocumentAverageColorCommand extends Command
         return 0;
     }
 
-    private function updateDocumentColor(Document $document)
+    private function updateDocumentColor(DocumentInterface $document)
     {
-        if ($document->isImage()) {
+        if ($document->isImage() && $document instanceof AdvancedDocumentInterface) {
             $documentPath = $this->packages->getDocumentFilePath($document);
             try {
                 $mediumColor = $this->colorResolver->getAverageColor($this->imageManager->make($documentPath));

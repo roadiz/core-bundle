@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\CoreBundle\Entity\Document;
+use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Models\FileHashInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -33,8 +35,7 @@ class DocumentDuplicatesCommand extends Command
     {
         $this->io = new SymfonyStyle($input, $output);
 
-        $em = $this->managerRegistry->getManagerForClass(Document::class);
-        $documents = $em->getRepository(Document::class)->findDuplicates();
+        $documents = $this->managerRegistry->getRepository(DocumentInterface::class)->findDuplicates();
         $count = count($documents);
         $rows = [];
 
@@ -43,7 +44,7 @@ class DocumentDuplicatesCommand extends Command
             return 0;
         }
 
-        /** @var Document $document */
+        /** @var DocumentInterface & FileHashInterface & AbstractEntity $document */
         foreach ($documents as $document) {
             $rows[] = [
                 'ID' => $document->getId(),

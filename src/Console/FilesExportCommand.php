@@ -41,7 +41,7 @@ class FilesExportCommand extends Command
      * @param string $appName
      * @return string
      */
-    protected function getArchiveFileName(string $appName = "files_export")
+    protected function getArchiveFileName(string $appName = "files_export"): string
     {
         return $appName . '_' . date('Y-m-d') . '.zip';
     }

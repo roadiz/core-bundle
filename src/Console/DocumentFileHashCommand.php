@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\CoreBundle\Entity\Document;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Models\FileHashInterface;
 use RZ\Roadiz\Documents\Packages;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -54,8 +55,8 @@ class DocumentFileHashCommand extends Command
             ));
         }
 
-        $em = $this->managerRegistry->getManagerForClass(Document::class);
-        $documents = $em->getRepository(Document::class)->findAllWithoutFileHash();
+        $em = $this->managerRegistry->getManagerForClass(DocumentInterface::class);
+        $documents = $this->managerRegistry->getRepository(DocumentInterface::class)->findAllWithoutFileHash();
         $count = count($documents);
 
         if ($count <= 0) {
@@ -64,22 +65,24 @@ class DocumentFileHashCommand extends Command
         }
 
         $this->io->progressStart($count);
-        /** @var Document $document */
+        /** @var DocumentInterface $document */
         foreach ($documents as $document) {
-            $documentPath = $this->packages->getDocumentFilePath($document);
-            $algorithm = $document->getFileHashAlgorithm() ?? $defaultAlgorithm;
-            if (\file_exists($documentPath)) {
-                if (false !== $fileHash = \hash_file($algorithm, $documentPath)) {
-                    $document->setFileHash($fileHash);
-                    $document->setFileHashAlgorithm($algorithm);
+            if ($document instanceof FileHashInterface) {
+                $documentPath = $this->packages->getDocumentFilePath($document);
+                $algorithm = $document->getFileHashAlgorithm() ?? $defaultAlgorithm;
+                if (\file_exists($documentPath)) {
+                    if (false !== $fileHash = \hash_file($algorithm, $documentPath)) {
+                        $document->setFileHash($fileHash);
+                        $document->setFileHashAlgorithm($algorithm);
+                    }
                 }
-            }
 
-            if (($i % $batchSize) === 0) {
-                $em->flush(); // Executes all updates.
+                if (($i % $batchSize) === 0) {
+                    $em->flush(); // Executes all updates.
+                }
+                ++$i;
+                $this->io->progressAdvance();
             }
-            ++$i;
-            $this->io->progressAdvance();
         }
         $em->flush();
         $this->io->progressFinish();
