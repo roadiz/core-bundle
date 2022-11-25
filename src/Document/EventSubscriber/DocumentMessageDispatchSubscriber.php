@@ -11,7 +11,6 @@ use RZ\Roadiz\CoreBundle\Document\Message\DocumentFilesizeMessage;
 use RZ\Roadiz\CoreBundle\Document\Message\DocumentRawMessage;
 use RZ\Roadiz\CoreBundle\Document\Message\DocumentSizeMessage;
 use RZ\Roadiz\CoreBundle\Document\Message\DocumentSvgMessage;
-use RZ\Roadiz\CoreBundle\Document\Message\DocumentVideoThumbnailMessage;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Documents\Events\DocumentCreatedEvent;
 use RZ\Roadiz\Documents\Events\DocumentFileUpdatedEvent;
@@ -60,7 +59,6 @@ final class DocumentMessageDispatchSubscriber implements EventSubscriberInterfac
             $this->bus->dispatch(new Envelope(new DocumentExifMessage($document->getId())));
             $this->bus->dispatch(new Envelope(new DocumentSvgMessage($document->getId())));
             $this->bus->dispatch(new Envelope(new DocumentAudioVideoMessage($document->getId())));
-            $this->bus->dispatch(new Envelope(new DocumentVideoThumbnailMessage($document->getId())));
         }
     }
 }

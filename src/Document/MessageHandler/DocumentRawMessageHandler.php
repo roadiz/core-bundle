@@ -10,7 +10,6 @@ use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
 use RZ\Roadiz\Documents\DownscaleImageManager;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
-use RZ\Roadiz\Documents\Packages;
 
 final class DocumentRawMessageHandler extends AbstractLockingDocumentMessageHandler
 {
@@ -20,10 +19,9 @@ final class DocumentRawMessageHandler extends AbstractLockingDocumentMessageHand
         DownscaleImageManager $downscaleImageManager,
         ManagerRegistry $managerRegistry,
         LoggerInterface $logger,
-        Packages $packages,
         FilesystemOperator $documentsStorage
     ) {
-        parent::__construct($managerRegistry, $logger, $packages, $documentsStorage);
+        parent::__construct($managerRegistry, $logger, $documentsStorage);
         $this->downscaleImageManager = $downscaleImageManager;
     }
 

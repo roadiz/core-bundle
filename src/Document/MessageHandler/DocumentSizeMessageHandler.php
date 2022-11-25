@@ -12,7 +12,6 @@ use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
 use RZ\Roadiz\Documents\Models\SizeableInterface;
-use RZ\Roadiz\Documents\Packages;
 
 final class DocumentSizeMessageHandler extends AbstractLockingDocumentMessageHandler
 {
@@ -21,11 +20,10 @@ final class DocumentSizeMessageHandler extends AbstractLockingDocumentMessageHan
     public function __construct(
         ManagerRegistry $managerRegistry,
         LoggerInterface $messengerLogger,
-        Packages $packages,
         FilesystemOperator $documentsStorage,
         ImageManager $imageManager
     ) {
-        parent::__construct($managerRegistry, $messengerLogger, $packages, $documentsStorage);
+        parent::__construct($managerRegistry, $messengerLogger, $documentsStorage);
         $this->imageManager = $imageManager;
     }
 
