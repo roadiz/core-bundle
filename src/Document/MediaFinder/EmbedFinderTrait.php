@@ -31,7 +31,7 @@ trait EmbedFinderTrait
     /**
      * @inheritDoc
      */
-    protected function injectMetaInDocument(ObjectManager $objectManager, DocumentInterface $document)
+    protected function injectMetaInDocument(ObjectManager $objectManager, DocumentInterface $document): DocumentInterface
     {
         $translations = $objectManager->getRepository(Translation::class)->findAll();
 
