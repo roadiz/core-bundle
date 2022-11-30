@@ -9,6 +9,7 @@ use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Documents\AbstractDocumentFactory;
+use RZ\Roadiz\Documents\DocumentFinderInterface;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 /**
@@ -23,9 +24,10 @@ final class DocumentFactory extends AbstractDocumentFactory
     public function __construct(
         ManagerRegistry $managerRegistry,
         FilesystemOperator $documentsStorage,
+        DocumentFinderInterface $documentFinder,
         ?LoggerInterface $logger = null
     ) {
-        parent::__construct($documentsStorage, $logger);
+        parent::__construct($documentsStorage, $documentFinder, $logger);
         $this->managerRegistry = $managerRegistry;
     }
 
