@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Documents\Repository\DocumentRepositoryInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
@@ -23,8 +24,9 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 /**
  * @package RZ\Roadiz\CoreBundle\Repository
  * @extends EntityRepository<Document>
+ * @implements DocumentRepositoryInterface<Document>
  */
-final class DocumentRepository extends EntityRepository
+final class DocumentRepository extends EntityRepository implements DocumentRepositoryInterface
 {
     public function __construct(
         ManagerRegistry $registry,
@@ -565,9 +567,9 @@ final class DocumentRepository extends EntityRepository
     /**
      * Find all unused document.
      *
-     * @return array
+     * @return array<Document>
      */
-    public function findAllUnused()
+    public function findAllUnused(): array
     {
         return $this->getAllUnusedQueryBuilder()->getQuery()->getResult();
     }
@@ -661,7 +663,7 @@ final class DocumentRepository extends EntityRepository
     }
 
     /**
-     * @return Document[]
+     * @return array<Document>
      */
     public function findDuplicates(): array
     {
