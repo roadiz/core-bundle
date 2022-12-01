@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
-use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
@@ -29,7 +28,9 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 /**
  * EntityRepository that implements search engine query with Solr.
  *
- * @extends StatusAwareRepository<NodesSources>
+ * @template T of NodesSources
+ * @extends StatusAwareRepository<T>
+ * @template-extends StatusAwareRepository<T>
  */
 class NodesSourcesRepository extends StatusAwareRepository
 {

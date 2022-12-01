@@ -31,11 +31,8 @@ final class ApiResourceGenerator
             throw new LogicException($this->apiResourcesDir . ' folder does not exist.');
         }
 
-        $resourcePath = $this->apiResourcesDir . '/' . (new UnicodeString($nodeType->getName()))
-                ->lower()
-                ->prepend('ns')
-                ->append('.yml')
-                ->toString();
+        $resourcePath = $this->getResourcePath($nodeType);
+
         if (!$filesystem->exists($resourcePath)) {
             $filesystem->dumpFile(
                 $resourcePath,
@@ -46,6 +43,31 @@ final class ApiResourceGenerator
         } else {
             return null;
         }
+    }
+
+    public function remove(NodeTypeInterface $nodeType): void
+    {
+        $filesystem = new Filesystem();
+
+        if (!$filesystem->exists($this->apiResourcesDir)) {
+            throw new LogicException($this->apiResourcesDir . ' folder does not exist.');
+        }
+
+        $resourcePath = $this->getResourcePath($nodeType);
+
+        if ($filesystem->exists($resourcePath)) {
+            $filesystem->remove($resourcePath);
+            @\clearstatcache(true, $resourcePath);
+        }
+    }
+
+    protected function getResourcePath(NodeTypeInterface $nodeType): string
+    {
+        return $this->apiResourcesDir . '/' . (new UnicodeString($nodeType->getName()))
+                ->lower()
+                ->prepend('ns')
+                ->append('.yml')
+                ->toString();
     }
 
     protected function getApiResourceDefinition(NodeTypeInterface $nodeType): array

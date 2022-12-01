@@ -13,6 +13,7 @@ use RZ\Roadiz\CoreBundle\Doctrine\SchemaUpdater;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
+use RZ\Roadiz\CoreBundle\NodeType\ApiResourceGenerator;
 use RZ\Roadiz\EntityGenerator\EntityGeneratorFactory;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
@@ -27,6 +28,7 @@ class NodeTypeHandler extends AbstractHandler
 {
     private ?NodeType $nodeType = null;
     private EntityGeneratorFactory $entityGeneratorFactory;
+    private ApiResourceGenerator $apiResourceGenerator;
     private HandlerFactory $handlerFactory;
     private string $generatedEntitiesDir;
     private SerializerInterface $serializer;
@@ -60,6 +62,7 @@ class NodeTypeHandler extends AbstractHandler
         EntityGeneratorFactory $entityGeneratorFactory,
         HandlerFactory $handlerFactory,
         SerializerInterface $serializer,
+        ApiResourceGenerator $apiResourceGenerator,
         string $generatedEntitiesDir,
         string $serializedNodeTypesDir,
         string $importFilesConfigPath,
@@ -73,6 +76,7 @@ class NodeTypeHandler extends AbstractHandler
         $this->serializedNodeTypesDir = $serializedNodeTypesDir;
         $this->importFilesConfigPath = $importFilesConfigPath;
         $this->kernelProjectDir = $kernelProjectDir;
+        $this->apiResourceGenerator = $apiResourceGenerator;
     }
 
     public function getGeneratedEntitiesFolder(): string
@@ -289,6 +293,9 @@ class NodeTypeHandler extends AbstractHandler
     {
         $this->removeSourceEntityClass();
         $this->generateSourceEntityClass();
+        if (null !== $this->nodeType) {
+            $this->apiResourceGenerator->generate($this->nodeType);
+        }
 
         return $this;
     }
@@ -300,6 +307,9 @@ class NodeTypeHandler extends AbstractHandler
      */
     public function deleteSchema(): NodeTypeHandler
     {
+        if (null !== $this->nodeType) {
+            $this->apiResourceGenerator->remove($this->nodeType);
+        }
         $this->removeSourceEntityClass();
         $this->removeNodeTypeJsonFile();
 
