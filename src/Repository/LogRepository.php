@@ -12,7 +12,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @package RZ\Roadiz\CoreBundle\Repository
- * @extends EntityRepository<\RZ\Roadiz\CoreBundle\Entity\Log>
+ * @extends EntityRepository<Log>
  */
 final class LogRepository extends EntityRepository
 {

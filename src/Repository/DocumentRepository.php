@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Repository;
 
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
@@ -40,8 +41,9 @@ final class DocumentRepository extends EntityRepository implements DocumentRepos
      *
      * @param int $id
      * @return mixed|null
+     * @throws NonUniqueResultException
      */
-    public function findOneByDocumentTranslationId($id)
+    public function findOneByDocumentTranslationId($id): ?Document
     {
         $qb = $this->createQueryBuilder('d');
         $qb->select('d, dt')
