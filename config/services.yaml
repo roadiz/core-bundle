@@ -37,6 +37,7 @@ services:
             $serializedNodeTypesDir: '%roadiz_core.serialized_node_types_dir%'
             $importFilesConfigPath: '%roadiz_core.import_files_config_path%'
             $kernelProjectDir: '%kernel.project_dir%'
+            $apiResourcesDir: '%kernel.project_dir%/config/api_resources'
             $debug: '%kernel.debug%'
             $defaultControllerClass: '%roadiz_core.default_node_source_controller%'
             $webhookMessageTypes: '%roadiz_core.webhook.message_types%'
