@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Api\TreeWalker;
 
 use Psr\Cache\CacheItemPoolInterface;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\EntityApi\NodeSourceApi;
@@ -33,17 +34,23 @@ final class TreeWalkerGenerator
 
     /**
      * @param string $nodeType
-     * @param class-string<WalkerInterface> $walkerClass
+     * @param class-string $walkerClass
+     * @param TranslationInterface $translation
      * @param int $maxLevel
      * @return array<string, WalkerInterface>
      */
-    public function getTreeWalkersForTypeAtRoot(string $nodeType, string $walkerClass, int $maxLevel = 3): array
-    {
+    public function getTreeWalkersForTypeAtRoot(
+        string $nodeType,
+        string $walkerClass,
+        TranslationInterface $translation,
+        int $maxLevel = 3
+    ): array {
         $walkers = [];
         /** @var NodesSources[] $roots */
         $roots = $this->nodeSourceApi->getBy([
             'node.nodeType' => $this->nodeTypesBag->get($nodeType),
             'node.parent' => null,
+            'translation' => $translation,
         ]);
 
         foreach ($roots as $root) {

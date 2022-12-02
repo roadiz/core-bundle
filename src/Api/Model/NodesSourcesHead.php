@@ -286,7 +286,7 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
      * @return NodesSources|null
      */
     #[Serializer\Ignore()]
-    private function getHomePage(): ?NodesSources
+    public function getHomePage(): ?NodesSources
     {
         return $this->nodeSourceApi->getOneBy([
             'node.home' => true,
