@@ -41,7 +41,7 @@ final class TreeWalkerGenerator
     {
         $walkers = [];
         /** @var NodesSources[] $roots */
-        $roots = $this->nodeSourceApi->getOneBy([
+        $roots = $this->nodeSourceApi->getBy([
             'node.nodeType' => $this->nodeTypesBag->get($nodeType),
             'node.parent' => null,
         ]);
