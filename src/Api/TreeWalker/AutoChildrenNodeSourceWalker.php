@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\TreeWalker;
 
-use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
+use Psr\Cache\InvalidArgumentException;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\CoreBundle\Api\TreeWalker\Definition\MultiTypeChildrenDefinition;
 use RZ\TreeWalker\AbstractCycleAwareWalker;
@@ -44,61 +44,22 @@ class AutoChildrenNodeSourceWalker extends AbstractCycleAwareWalker
     /**
      * @param NodeTypeInterface $nodeType
      * @return callable
+     * @throws InvalidArgumentException
      */
     protected function createDefinitionForNodeType(NodeTypeInterface $nodeType): callable
     {
-        $childrenNodeTypes = $this->getChildrenNodeTypeList($nodeType);
+        $context = $this->getContext();
+        if (!$context instanceof NodeSourceWalkerContext) {
+            throw new \InvalidArgumentException(
+                'TreeWalker context must be instance of ' .
+                NodeSourceWalkerContext::class
+            );
+        }
+        $childrenNodeTypes = $context->getNodeTypeResolver()->getChildrenNodeTypeList($nodeType);
         if (count($childrenNodeTypes) > 0) {
             return new MultiTypeChildrenDefinition($this->getContext(), $childrenNodeTypes);
         }
 
         return new ZeroChildrenDefinition($this->getContext());
-    }
-
-    /**
-     * @param NodeTypeFieldInterface $field
-     * @return array<string>
-     */
-    protected function getNodeTypeList(NodeTypeFieldInterface $field): array
-    {
-        $nodeTypesNames = array_map('trim', explode(',', $field->getDefaultValues() ?? ''));
-        return array_filter($nodeTypesNames);
-    }
-
-    /**
-     * @param NodeTypeInterface $nodeType
-     * @return array<string>
-     */
-    protected function getChildrenNodeTypeList(NodeTypeInterface $nodeType): array
-    {
-        $context = $this->getContext();
-        $cacheKey = 'autochildren_' . $nodeType->getName();
-
-        if ($context instanceof NodeSourceWalkerContext) {
-            $cacheItem = $context->getCacheAdapter()->getItem($cacheKey);
-            if ($cacheItem->isHit()) {
-                return $cacheItem->get();
-            }
-        }
-
-        $childrenTypes = [];
-        $childrenFields = $nodeType->getFields()->filter(function (NodeTypeFieldInterface $field) {
-            return $field->isChildrenNodes() && null !== $field->getDefaultValues();
-        });
-        if ($childrenFields->count() > 0) {
-            /** @var NodeTypeFieldInterface $field */
-            foreach ($childrenFields as $field) {
-                $childrenTypes = array_merge($childrenTypes, $this->getNodeTypeList($field));
-            }
-            $childrenTypes = array_filter(array_unique($childrenTypes));
-        }
-
-        if ($context instanceof NodeSourceWalkerContext) {
-            $cacheItem = $context->getCacheAdapter()->getItem($cacheKey);
-            $cacheItem->set($childrenTypes);
-            $context->getCacheAdapter()->save($cacheItem);
-        }
-
-        return $childrenTypes;
     }
 }

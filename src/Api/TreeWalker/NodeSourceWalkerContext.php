@@ -9,6 +9,7 @@ use Doctrine\Persistence\ObjectManager;
 use Psr\Cache\CacheItemPoolInterface;
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\EntityApi\NodeSourceApi;
+use RZ\Roadiz\CoreBundle\NodeType\NodeTypeResolver;
 use RZ\TreeWalker\WalkerContextInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -22,6 +23,7 @@ class NodeSourceWalkerContext implements WalkerContextInterface
     private RequestStack $requestStack;
     private ManagerRegistry $managerRegistry;
     private CacheItemPoolInterface $cacheAdapter;
+    private NodeTypeResolver $nodeTypeResolver;
 
     public function __construct(
         Stopwatch $stopwatch,
@@ -29,7 +31,8 @@ class NodeSourceWalkerContext implements WalkerContextInterface
         NodeSourceApi $nodeSourceApi,
         RequestStack $requestStack,
         ManagerRegistry $managerRegistry,
-        CacheItemPoolInterface $cacheAdapter
+        CacheItemPoolInterface $cacheAdapter,
+        NodeTypeResolver $nodeTypeResolver,
     ) {
         $this->stopwatch = $stopwatch;
         $this->nodeTypesBag = $nodeTypesBag;
@@ -37,6 +40,7 @@ class NodeSourceWalkerContext implements WalkerContextInterface
         $this->requestStack = $requestStack;
         $this->managerRegistry = $managerRegistry;
         $this->cacheAdapter = $cacheAdapter;
+        $this->nodeTypeResolver = $nodeTypeResolver;
     }
 
     /**
@@ -110,5 +114,13 @@ class NodeSourceWalkerContext implements WalkerContextInterface
     public function getCacheAdapter(): CacheItemPoolInterface
     {
         return $this->cacheAdapter;
+    }
+
+    /**
+     * @return NodeTypeResolver
+     */
+    public function getNodeTypeResolver(): NodeTypeResolver
+    {
+        return $this->nodeTypeResolver;
     }
 }
