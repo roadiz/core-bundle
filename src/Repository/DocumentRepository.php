@@ -40,7 +40,7 @@ final class DocumentRepository extends EntityRepository implements DocumentRepos
      * Get a document with its translation id.
      *
      * @param int $id
-     * @return mixed|null
+     * @return Document|null
      * @throws NonUniqueResultException
      */
     public function findOneByDocumentTranslationId($id): ?Document
@@ -84,7 +84,7 @@ final class DocumentRepository extends EntityRepository implements DocumentRepos
      * @param QueryBuilder $qb
      * @param string $prefix
      */
-    protected function filterByFolder(array &$criteria, QueryBuilder $qb, $prefix = 'd')
+    protected function filterByFolder(array &$criteria, QueryBuilder $qb, string $prefix = 'd'): void
     {
         if (key_exists('folders', $criteria)) {
             /*
@@ -157,7 +157,7 @@ final class DocumentRepository extends EntityRepository implements DocumentRepos
      * @param array        $criteria
      * @param QueryBuilder $qb
      */
-    protected function filterByCriteria(array &$criteria, QueryBuilder $qb)
+    protected function filterByCriteria(array &$criteria, QueryBuilder $qb): void
     {
         $simpleQB = new SimpleQueryBuilder($qb);
         /*
@@ -197,11 +197,11 @@ final class DocumentRepository extends EntityRepository implements DocumentRepos
     }
 
     /**
-     * Create a Criteria object from a search pattern and additionnal fields.
+     * Create a Criteria object from a search pattern and additional fields.
      *
      * @param string $pattern Search pattern
      * @param QueryBuilder $qb QueryBuilder to pass
-     * @param array $criteria Additionnal criteria
+     * @param array $criteria Additional criteria
      * @param string $alias SQL query table alias
      *
      * @return QueryBuilder
@@ -211,7 +211,7 @@ final class DocumentRepository extends EntityRepository implements DocumentRepos
         QueryBuilder $qb,
         array &$criteria = [],
         $alias = "obj"
-    ) {
+    ):QueryBuilder {
         $this->filterByFolder($criteria, $qb, $alias);
         $this->applyFilterByFolder($criteria, $qb);
         $this->classicLikeComparison($pattern, $qb, $alias);
@@ -246,7 +246,7 @@ final class DocumentRepository extends EntityRepository implements DocumentRepos
      * @param array $criteria
      * @param QueryBuilder $qb
      */
-    protected function applyFilterByCriteria(array &$criteria, QueryBuilder $qb)
+    protected function applyFilterByCriteria(array &$criteria, QueryBuilder $qb): void
     {
         /*
          * Reimplementing findBy features…
@@ -266,7 +266,7 @@ final class DocumentRepository extends EntityRepository implements DocumentRepos
      * @param array $criteria
      * @param QueryBuilder $qb
      */
-    protected function applyFilterByFolder(array &$criteria, QueryBuilder $qb)
+    protected function applyFilterByFolder(array &$criteria, QueryBuilder $qb): void
     {
         if (key_exists('folders', $criteria)) {
             if ($criteria['folders'] instanceof Folder) {
