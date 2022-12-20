@@ -8,6 +8,7 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderNodesSourcesApplyEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderNodesSourcesBuildEvent;
@@ -702,13 +703,13 @@ class NodesSourcesRepository extends StatusAwareRepository
 
     /**
      * @param NodesSources  $nodesSources
-     * @param NodeTypeField $field
+     * @param NodeTypeFieldInterface $field
      *
      * @return array|null
      */
     public function findByNodesSourcesAndFieldAndTranslation(
         NodesSources $nodesSources,
-        NodeTypeField $field
+        NodeTypeFieldInterface $field
     ) {
         $qb = $this->createQueryBuilder(static::NODESSOURCES_ALIAS);
         $qb->select('ns, n, ua')

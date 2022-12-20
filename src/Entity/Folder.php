@@ -59,15 +59,15 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface, Lea
         "parent.id" => "exact",
         "parent.folderName" => "exact"
     ])]
-    #[ORM\ManyToOne(targetEntity: 'RZ\Roadiz\CoreBundle\Entity\Folder', inversedBy: 'children')]
+    #[ORM\ManyToOne(targetEntity: Folder::class, inversedBy: 'children')]
     #[ORM\JoinColumn(name: 'parent_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[Serializer\Groups(['folder_parent'])]
     #[SymfonySerializer\Groups(['folder_parent'])]
     #[SymfonySerializer\MaxDepth(1)]
-    protected ?LeafInterface $parent = null;
+    protected ?Folder $parent = null;
 
     /**
-     * @var Collection<Folder>
+     * @var Collection<int, Folder>
      */
     #[ORM\OneToMany(mappedBy: 'parent', targetEntity: Folder::class, orphanRemoval: true)]
     #[ORM\OrderBy(['position' => 'ASC'])]
@@ -77,7 +77,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface, Lea
     protected Collection $children;
 
     /**
-     * @var Collection<Document>
+     * @var Collection<int, Document>
      */
     #[ORM\JoinTable(name: 'documents_folders')]
     #[ORM\ManyToMany(targetEntity: Document::class, inversedBy: 'folders')]
@@ -148,7 +148,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface, Lea
     }
 
     /**
-     * @param DocumentInterface $document
+     * @param Document $document
      * @return $this
      */
     public function addDocument(DocumentInterface $document): static
@@ -161,7 +161,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface, Lea
     }
 
     /**
-     * @return Collection<Document>
+     * @return Collection<int, Document>
      */
     public function getDocuments(): Collection
     {
@@ -169,7 +169,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface, Lea
     }
 
     /**
-     * @param DocumentInterface $document
+     * @param Document $document
      * @return $this
      */
     public function removeDocument(DocumentInterface $document): static

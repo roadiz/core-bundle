@@ -28,7 +28,11 @@ final class NonReachableNodeSourceBlockDefinition
             $this->context->getStopwatch()->stop(self::class);
 
             if ($children instanceof Paginator) {
-                return $children->getIterator()->getArrayCopy();
+                $iterator = $children->getIterator();
+                if ($iterator instanceof \ArrayIterator) {
+                    return $iterator->getArrayCopy();
+                }
+                throw new \RuntimeException('Cannot get children from paginator iterator');
             }
             return $children;
         }

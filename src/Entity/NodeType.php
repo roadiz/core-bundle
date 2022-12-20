@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\CoreBundle\Form\Constraint as RoadizAssert;
@@ -115,7 +116,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
     ]
     private bool $hidingNonReachableNodes = false;
     /**
-     * @var ArrayCollection<NodeTypeField>
+     * @var Collection<int, NodeTypeField>
      */
     #[
         ORM\OneToMany(mappedBy: "nodeType", targetEntity: NodeTypeField::class, cascade: ["persist", "merge"]),
@@ -356,7 +357,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
     }
 
     /**
-     * @return Collection<NodeTypeField>
+     * @return Collection<int, NodeTypeField>
      */
     public function getFields(): Collection
     {
@@ -364,11 +365,11 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
     }
 
     /**
-     * @param ArrayCollection<NodeTypeField> $fields
+     * @param Collection<int, NodeTypeField> $fields
      *
      * @return NodeType
      */
-    public function setFields(ArrayCollection $fields): NodeType
+    public function setFields(Collection $fields): NodeType
     {
         $this->fields = $fields;
         foreach ($this->fields as $field) {
@@ -484,7 +485,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
      */
     public function __toString(): string
     {
-        return '[#' . $this->getId() . '] ' . $this->getName() . ' (' . $this->getDisplayName() . ')';
+        return (string) $this->getId();
     }
 
     /**

@@ -96,7 +96,7 @@ class Webhook extends AbstractDateTimed implements WebhookInterface
     /**
      * @var Node|null
      */
-    #[ORM\ManyToOne(targetEntity: 'Node')]
+    #[ORM\ManyToOne(targetEntity: Node::class)]
     #[ORM\JoinColumn(name: 'root_node', onDelete: 'SET NULL')]
     #[SymfonySerializer\Ignore]
     protected ?Node $rootNode = null;
@@ -267,8 +267,8 @@ class Webhook extends AbstractDateTimed implements WebhookInterface
         return $this;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
-        return $this->getDescription() ?? $this->getId() ?? substr($this->getUri() ?? '', 0, 30);
+        return (string) $this->getId();
     }
 }

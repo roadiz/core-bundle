@@ -204,7 +204,7 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     /**
      * @var Collection<DocumentInterface>
      */
-    #[ORM\OneToMany(mappedBy: 'rawDocument', targetEntity: 'Document', fetch: 'EXTRA_LAZY')]
+    #[ORM\OneToMany(mappedBy: 'rawDocument', targetEntity: Document::class, fetch: 'EXTRA_LAZY')]
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]
     private Collection $downscaledDocuments;

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
 use RZ\Roadiz\CoreBundle\Repository\NodesCustomFormsRepository;
 
@@ -47,10 +48,13 @@ class NodesCustomForms extends AbstractPositioned
      *
      * @param Node          $node
      * @param CustomForm    $customForm
-     * @param NodeTypeField $field NodeTypeField
+     * @param NodeTypeFieldInterface $field NodeTypeField
      */
-    public function __construct(Node $node, CustomForm $customForm, NodeTypeField $field)
+    public function __construct(Node $node, CustomForm $customForm, NodeTypeFieldInterface $field)
     {
+        if (!$field instanceof NodeTypeField) {
+            throw new \InvalidArgumentException('NodesCustomForms only accept NodeTypeField');
+        }
         $this->node = $node;
         $this->customForm = $customForm;
         $this->field = $field;

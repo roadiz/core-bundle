@@ -567,11 +567,9 @@ class NodesSources extends AbstractEntity implements Loggable
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
-        return '#' . $this->getId() .
-        ' <' . $this->getTitle() . '>[' . $this->getTranslation()->getLocale() .
-        '], type="' . $this->getNodeTypeName() . '"';
+        return (string) $this->getId();
     }
 
     /**

@@ -147,7 +147,7 @@ class CustomFormField extends AbstractField
      */
     public function getOneLineSummary(): string
     {
-        return $this->__toString();
+        return $this->getId() . " — " . $this->getName() . " — " . $this->getLabel() . PHP_EOL;
     }
 
     /**
@@ -155,7 +155,7 @@ class CustomFormField extends AbstractField
      */
     public function __toString(): string
     {
-        return $this->getId() . " — " . $this->getName() . " — " . $this->getLabel() . PHP_EOL;
+        return (string) $this->getId();
     }
 
     public function __clone()

@@ -377,7 +377,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      */
     public function __toString(): string
     {
-        return '[' . ($this->getId() > 0 ? $this->getId() : 'NULL') . '] ' . $this->getTagName();
+        return (string) $this->getId();
     }
 
     /**

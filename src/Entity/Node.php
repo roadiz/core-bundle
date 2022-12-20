@@ -998,8 +998,8 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
-        return '[Node]' . $this->getId() . " — " . $this->getNodeName() . " <" . $this->getNodeType()->getName() . '>';
+        return (string) $this->getId();
     }
 }

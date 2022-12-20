@@ -24,7 +24,7 @@ use RZ\Roadiz\CoreBundle\Model\RealmInterface;
 ]
 class RealmNode extends AbstractEntity
 {
-    #[ORM\ManyToOne(targetEntity: 'Node')]
+    #[ORM\ManyToOne(targetEntity: Node::class)]
     #[ORM\JoinColumn(
         name: 'node_id',
         referencedColumnName: 'id',

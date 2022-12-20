@@ -32,7 +32,7 @@ class FolderTranslation extends AbstractEntity
     #[Assert\Length(max: 250)]
     protected string $name = '';
 
-    #[ORM\ManyToOne(targetEntity: 'Folder', inversedBy: 'translatedFolders')]
+    #[ORM\ManyToOne(targetEntity: Folder::class, inversedBy: 'translatedFolders')]
     #[ORM\JoinColumn(name: 'folder_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]

@@ -188,7 +188,7 @@ class SimpleQueryBuilder
             return $this->queryBuilder;
         }
 
-        throw new \InvalidArgumentException('Value is not supported for binding. (' . get_class($value) . ')');
+        throw new \InvalidArgumentException('Value is not supported for binding.');
     }
 
     /**

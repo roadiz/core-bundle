@@ -830,12 +830,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      */
     public function __toString(): string
     {
-        $text = $this->getUsername() . ' <' . $this->getEmail() . '>' . PHP_EOL;
-        $text .= '— Enabled: ' . ($this->isEnabled() ? 'Yes' : 'No') . PHP_EOL;
-        $text .= '— Expired: ' . ($this->isCredentialsNonExpired() ? 'No' : 'Yes') . PHP_EOL;
-        $text .= "— Roles: " . implode(', ', $this->getRoles());
-
-        return $text;
+        return (string) $this->getId();
     }
 
     /**

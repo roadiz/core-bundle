@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
 use RZ\Roadiz\CoreBundle\Repository\NodesSourcesDocumentsRepository;
 
@@ -57,10 +58,13 @@ class NodesSourcesDocuments extends AbstractPositioned
      *
      * @param NodesSources  $nodeSource NodesSources and inherited types
      * @param Document      $document   Document to link
-     * @param NodeTypeField $field      NodeTypeField
+     * @param NodeTypeFieldInterface $field      NodeTypeField
      */
-    public function __construct(NodesSources $nodeSource, Document $document, NodeTypeField $field)
+    public function __construct(NodesSources $nodeSource, Document $document, NodeTypeFieldInterface $field)
     {
+        if (!$field instanceof NodeTypeField) {
+            throw new \InvalidArgumentException('NodesSourcesDocuments field must be a NodeTypeField instance.');
+        }
         $this->nodeSource = $nodeSource;
         $this->document = $document;
         $this->field = $field;

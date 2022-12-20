@@ -124,8 +124,7 @@ class CustomFormAnswer extends AbstractEntity
      */
     public function __toString(): string
     {
-        return $this->getId() . " — " . $this->getIp() .
-        " — Submitted : " . ($this->getSubmittedAt()->format('Y-m-d H:i:s'));
+        return (string) $this->getId();
     }
 
     /**

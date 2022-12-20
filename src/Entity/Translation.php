@@ -650,7 +650,9 @@ class Translation extends AbstractDateTimed implements TranslationInterface
     #[SymfonySerializer\Ignore]
     public function getOneLineSummary(): string
     {
-        return $this->__toString();
+        return $this->getId() . " — " . $this->getName() . " (" . $this->getLocale() . ')' .
+            " — " . ($this->isAvailable() ? 'Enabled' : 'Disabled') .
+            ($this->isDefaultTranslation() ? ' - Default' : '') .  PHP_EOL;
     }
 
     /**
@@ -658,9 +660,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      */
     public function __toString(): string
     {
-        return $this->getId() . " — " . $this->getName() . " (" . $this->getLocale() . ')' .
-        " — " . ($this->isAvailable() ? 'Enabled' : 'Disabled') .
-        ($this->isDefaultTranslation() ? ' - Default' : '') .  PHP_EOL;
+        return (string) $this->getId();
     }
 
     /**
