@@ -158,7 +158,10 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
     #[Serializer\Groups(["web_response", "nodes_sources_single", "walker"])]
     public function isNoIndex(): bool
     {
-        return $this->nodesSource->isNoIndex();
+        if (null !== $this->nodesSource) {
+            return $this->nodesSource->isNoIndex();
+        }
+        return false;
     }
 
     /**
