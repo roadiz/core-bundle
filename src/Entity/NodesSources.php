@@ -32,6 +32,7 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
     ORM\Index(columns: ["discr"]),
     ORM\Index(columns: ["title"]),
     ORM\Index(columns: ["published_at"]),
+    ORM\Index(columns: ["no_index"]),
     ORM\Index(columns: ["node_id", "translation_id", "published_at"], name: "ns_node_translation_published"),
     ORM\Index(columns: ["node_id", "discr", "translation_id"], name: "ns_node_discr_translation"),
     ORM\Index(columns: ["node_id", "discr", "translation_id", "published_at"], name: "ns_node_discr_translation_published"),
@@ -107,6 +108,13 @@ class NodesSources extends AbstractEntity implements Loggable
     #[Serializer\Groups(['nodes_sources'])]
     #[Gedmo\Versioned]
     protected string $metaDescription = '';
+
+    #[ApiFilter(BaseFilter\BooleanFilter::class)]
+    #[ORM\Column(name: 'no_index', type: 'boolean', options: ['default' => false])]
+    #[SymfonySerializer\Groups(['nodes_sources'])]
+    #[Serializer\Groups(['nodes_sources'])]
+    #[Gedmo\Versioned]
+    protected bool $noIndex = false;
 
     #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
         "node.id" => "exact",
@@ -489,6 +497,24 @@ class NodesSources extends AbstractEntity implements Loggable
     {
         $this->metaDescription = null !== $metaDescription ? trim($metaDescription) : '';
 
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isNoIndex(): bool
+    {
+        return $this->noIndex;
+    }
+
+    /**
+     * @param bool $noIndex
+     * @return NodesSources
+     */
+    public function setNoIndex(bool $noIndex): NodesSources
+    {
+        $this->noIndex = $noIndex;
         return $this;
     }
 
