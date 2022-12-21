@@ -13,9 +13,9 @@ use RZ\Roadiz\CoreBundle\EntityHandler\NodeTypeHandler;
 use RZ\Roadiz\CoreBundle\Message\DeleteNodeTypeMessage;
 use RZ\Roadiz\CoreBundle\Message\UpdateDoctrineSchemaMessage;
 use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\Messenger\Stamp\DispatchAfterCurrentBusStamp;
 
 final class DeleteNodeTypeMessageHandler implements MessageHandlerInterface
 {
@@ -39,7 +39,7 @@ final class DeleteNodeTypeMessageHandler implements MessageHandlerInterface
         $nodeType = $this->managerRegistry->getRepository(NodeType::class)->find($message->getNodeTypeId());
 
         if (!$nodeType instanceof NodeType) {
-            throw new \InvalidArgumentException('NodeType does not exist');
+            throw new UnrecoverableMessageHandlingException('NodeType does not exist');
         }
 
         /** @var NodeTypeHandler $handler */

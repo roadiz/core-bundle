@@ -15,6 +15,7 @@ use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\NoHandlerForMessageException;
+use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -54,8 +55,7 @@ final class PurgeReverseProxyCacheMessageHandler implements MessageHandlerInterf
             ->getRepository(NodesSources::class)
             ->find($message->getNodeSourceId());
         if (null === $nodeSource) {
-            $this->logger->error('NodesSources does not exist anymore.');
-            return;
+            throw new UnrecoverableMessageHandlingException('NodesSources does not exist anymore.');
         }
 
         while (!$nodeSource->isReachable()) {
@@ -108,7 +108,7 @@ final class PurgeReverseProxyCacheMessageHandler implements MessageHandlerInterf
                 'timeout' => 3
             ])));
         } catch (NoHandlerForMessageException $exception) {
-            $this->logger->error($exception->getMessage());
+            throw new UnrecoverableMessageHandlingException($exception->getMessage(), 0, $exception);
         }
     }
 }

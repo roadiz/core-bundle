@@ -9,6 +9,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use RZ\Roadiz\CoreBundle\Message\HttpRequestMessage;
+use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
 final class HttpRequestMessageHandler implements MessageHandlerInterface
@@ -36,7 +37,7 @@ final class HttpRequestMessageHandler implements MessageHandlerInterface
             ));
             $this->client->send($message->getRequest(), $message->getOptions());
         } catch (GuzzleException $exception) {
-            $this->logger->error($exception->getMessage());
+            throw new UnrecoverableMessageHandlingException($exception->getMessage(), 0, $exception);
         }
     }
 }
