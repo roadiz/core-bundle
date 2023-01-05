@@ -8,6 +8,7 @@ use League\Flysystem\FilesystemOperator;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
+use RZ\Roadiz\Documents\MediaFinders\EmbedFinderFactory;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
@@ -17,14 +18,17 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 final class DocumentNormalizer extends AbstractPathNormalizer
 {
     private FilesystemOperator $documentsStorage;
+    private EmbedFinderFactory $embedFinderFactory;
 
     public function __construct(
         FilesystemOperator $documentsStorage,
         NormalizerInterface $decorated,
-        UrlGeneratorInterface $urlGenerator
+        UrlGeneratorInterface $urlGenerator,
+        EmbedFinderFactory $embedFinderFactory
     ) {
         parent::__construct($decorated, $urlGenerator);
         $this->documentsStorage = $documentsStorage;
+        $this->embedFinderFactory = $embedFinderFactory;
     }
 
     /**
@@ -50,6 +54,19 @@ final class DocumentNormalizer extends AbstractPathNormalizer
                 $mountPath = $object->getMountPath();
                 if (null !== $mountPath) {
                     $data['publicUrl'] = $this->documentsStorage->publicUrl($mountPath);
+                }
+            }
+
+            if (
+                $object->getEmbedPlatform() &&
+                $object->getEmbedId()
+            ) {
+                $embedFinder = $this->embedFinderFactory->createForPlatform(
+                    $object->getEmbedPlatform(),
+                    $object->getEmbedId()
+                );
+                if (null !== $embedFinder) {
+                    $data['embedUrl'] = $embedFinder->getSource();
                 }
             }
 
