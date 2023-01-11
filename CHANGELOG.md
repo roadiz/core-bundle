@@ -1,3 +1,9 @@
+## 2.0.41 (2023-01-11)
+
+### Bug Fixes
+
+* Fixed recursive findEmailData to find "email" key in a complex form data ([44a9a89](https://github.com/roadiz/core-bundle/commit/44a9a899a31c5a727eb36d3940bc78ded89a4254))
+
 ## 2.0.40 (2022-11-22)
 
 ### Features
