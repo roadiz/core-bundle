@@ -452,8 +452,8 @@ class ContactFormManager extends EmailManager
                 filter_var($value, FILTER_VALIDATE_EMAIL)
             ) {
                 return $value;
-            } elseif (is_array($value) && count($value) > 0) {
-                return $this->findEmailData($value);
+            } elseif (is_array($value) && null !== $email = $this->findEmailData($value)) {
+                return $email;
             }
         }
         return null;
