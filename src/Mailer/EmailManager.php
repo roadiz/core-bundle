@@ -48,7 +48,7 @@ class EmailManager
     protected array $files = [];
     /** @var array  */
     protected array $resources = [];
-    
+
     public function __construct(
         RequestStack $requestStack,
         TranslatorInterface $translator,

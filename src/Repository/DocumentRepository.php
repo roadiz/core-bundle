@@ -211,7 +211,7 @@ final class DocumentRepository extends EntityRepository implements DocumentRepos
         QueryBuilder $qb,
         array &$criteria = [],
         $alias = "obj"
-    ):QueryBuilder {
+    ): QueryBuilder {
         $this->filterByFolder($criteria, $qb, $alias);
         $this->applyFilterByFolder($criteria, $qb);
         $this->classicLikeComparison($pattern, $qb, $alias);
