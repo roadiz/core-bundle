@@ -1,3 +1,9 @@
+## 2.0.42 (2023-01-16)
+
+### Bug Fixes
+
+* Format CustomFormAttribute value to Date or DateTime string ([86df706](https://github.com/roadiz/core-bundle/commit/86df7063f429fd334022d93b6471fbfefdd1636c))
+
 ## 2.0.41 (2023-01-11)
 
 ### Bug Fixes

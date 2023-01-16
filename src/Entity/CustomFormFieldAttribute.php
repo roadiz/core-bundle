@@ -54,6 +54,36 @@ class CustomFormFieldAttribute extends AbstractEntity
     }
 
     /**
+     * @return string|null $value
+     * @throws \Exception
+     */
+    public function getValue(): ?string
+    {
+        if ($this->getCustomFormField()->isDocuments()) {
+            return implode(', ', $this->getDocuments()->map(function (Document $document) {
+                return $document->getRelativePath();
+            })->toArray());
+        }
+        if ($this->getCustomFormField()->isDate()) {
+            return (new \DateTime($this->value))->format('Y-m-d');
+        }
+        if ($this->getCustomFormField()->isDateTime()) {
+            return (new \DateTime($this->value))->format('Y-m-d H:i:s');
+        }
+        return $this->value;
+    }
+
+    /**
+     * @param string|null $value
+     * @return $this
+     */
+    public function setValue(?string $value): CustomFormFieldAttribute
+    {
+        $this->value = $value;
+        return $this;
+    }
+
+    /**
      * Gets the value of customFormAnswer.
      *
      * @return CustomFormAnswer|null
@@ -79,33 +109,11 @@ class CustomFormFieldAttribute extends AbstractEntity
 
     /**
      * @return string
+     * @throws \Exception
      */
     public function __toString(): string
     {
         return $this->getValue() ?? '';
-    }
-
-    /**
-     * @return string|null $value
-     */
-    public function getValue(): ?string
-    {
-        if ($this->getCustomFormField()->isDocuments()) {
-            return implode(', ', $this->getDocuments()->map(function (Document $document) {
-                return $document->getRelativePath();
-            })->toArray());
-        }
-        return $this->value;
-    }
-
-    /**
-     * @param string|null $value
-     * @return $this
-     */
-    public function setValue(?string $value): CustomFormFieldAttribute
-    {
-        $this->value = $value;
-        return $this;
     }
 
     /**
