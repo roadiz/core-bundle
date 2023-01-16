@@ -58,7 +58,8 @@ class CustomFormFieldAttribute extends AbstractEntity
     }
 
     /**
-     * @return string $value
+     * @return string|null $value
+     * @throws \Exception
      */
     public function getValue(): ?string
     {
@@ -66,6 +67,12 @@ class CustomFormFieldAttribute extends AbstractEntity
             return implode(', ', $this->getDocuments()->map(function (Document $document) {
                 return $document->getRelativePath();
             })->toArray());
+        }
+        if ($this->getCustomFormField()->isDate()) {
+            return (new \DateTime($this->value))->format('Y-m-d');
+        }
+        if ($this->getCustomFormField()->isDateTime()) {
+            return (new \DateTime($this->value))->format('Y-m-d H:i:s');
         }
         return $this->value;
     }
@@ -147,6 +154,7 @@ class CustomFormFieldAttribute extends AbstractEntity
 
     /**
      * @return string
+     * @throws \Exception
      */
     public function __toString(): string
     {
