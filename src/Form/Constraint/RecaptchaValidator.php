@@ -72,13 +72,13 @@ class RecaptchaValidator extends ConstraintValidator implements RecaptchaService
      *
      * @param string $responseValue
      * @param string $verifyUrl
-     * @return true|string|array
+     * @return true|mixed
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function check(
         string $responseValue,
         string $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify'
-    ) {
+    ): mixed {
         if (empty($this->recaptchaPrivateKey)) {
             return true;
         }

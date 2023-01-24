@@ -368,13 +368,13 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     }
 
     /**
-     * @param int $status
+     * @param int|string $status Workflow only use <string> marking places
      * @return $this
      * @internal You should use node Workflow to perform change on status.
      */
-    public function setStatus(int $status): Node
+    public function setStatus(int|string $status): Node
     {
-        $this->status = $status;
+        $this->status = (int) $status;
         return $this;
     }
 

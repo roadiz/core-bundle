@@ -12,10 +12,10 @@ interface RecaptchaServiceInterface
      *
      * @param string $responseValue
      * @param string $verifyUrl
-     * @return true|string|array
+     * @return true|mixed
      */
     public function check(
         string $responseValue,
         string $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify'
-    );
+    ): mixed;
 }

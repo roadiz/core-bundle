@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Message\Handler;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use RZ\Roadiz\CoreBundle\Cache\ReverseProxyCacheLocator;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Message\GuzzleRequestMessage;
@@ -24,7 +22,6 @@ final class PurgeReverseProxyCacheMessageHandler implements MessageHandlerInterf
 {
     private UrlGeneratorInterface $urlGenerator;
     private ReverseProxyCacheLocator $reverseProxyCacheLocator;
-    private LoggerInterface $logger;
     private MessageBusInterface $bus;
     private ManagerRegistry $managerRegistry;
 
@@ -33,18 +30,15 @@ final class PurgeReverseProxyCacheMessageHandler implements MessageHandlerInterf
      * @param UrlGeneratorInterface $urlGenerator
      * @param ReverseProxyCacheLocator $reverseProxyCacheLocator
      * @param ManagerRegistry $managerRegistry
-     * @param LoggerInterface|null $logger
      */
     public function __construct(
         MessageBusInterface $bus,
         UrlGeneratorInterface $urlGenerator,
         ReverseProxyCacheLocator $reverseProxyCacheLocator,
-        ManagerRegistry $managerRegistry,
-        LoggerInterface $logger = null
+        ManagerRegistry $managerRegistry
     ) {
         $this->urlGenerator = $urlGenerator;
         $this->reverseProxyCacheLocator = $reverseProxyCacheLocator;
-        $this->logger = $logger ?? new NullLogger();
         $this->managerRegistry = $managerRegistry;
         $this->bus = $bus;
     }
