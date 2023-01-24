@@ -166,8 +166,7 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
      */
     #[ORM\JoinTable(name: 'documents_folders')]
     #[ORM\ManyToMany(targetEntity: Folder::class, mappedBy: 'documents')]
-    #[SymfonySerializer\Groups(['document_folders'])]
-    #[SymfonySerializer\MaxDepth(1)]
+    #[SymfonySerializer\Ignore]
     protected Collection $folders;
     /**
      * @var Collection<DocumentTranslation>
@@ -398,6 +397,7 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     /**
      * @return Collection<Folder>
      */
+    #[SymfonySerializer\Ignore]
     public function getFolders(): Collection
     {
         return $this->folders;

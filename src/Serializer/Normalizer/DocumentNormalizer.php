@@ -8,7 +8,9 @@ use League\Flysystem\FilesystemOperator;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
+use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\Documents\MediaFinders\EmbedFinderFactory;
+use RZ\Roadiz\Documents\Models\FolderInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
@@ -45,6 +47,8 @@ final class DocumentNormalizer extends AbstractPathNormalizer
             $object instanceof Document &&
             is_array($data)
         ) {
+            /** @var array<string> $serializationGroups */
+            $serializationGroups = isset($context['groups']) && is_array($context['groups']) ? $context['groups'] : [];
             $data['type'] = $object->getShortType();
 
             if (
@@ -55,6 +59,25 @@ final class DocumentNormalizer extends AbstractPathNormalizer
                 if (null !== $mountPath) {
                     $data['publicUrl'] = $this->documentsStorage->publicUrl($mountPath);
                 }
+            }
+
+            if (
+                \in_array('document_folders_all', $serializationGroups, true)
+            ) {
+                $data['folders'] = $object->getFolders()
+                    ->map(function (FolderInterface $folder) use ($format, $context) {
+                        return $this->decorated->normalize($folder, $format, $context);
+                    })
+                    ->getValues()
+                ;
+            } elseif (
+                \in_array('document_folders', $serializationGroups, true)
+            ) {
+                $data['folders'] = $object->getFolders()->filter(function (FolderInterface $folder) {
+                    return $folder->getVisible();
+                })->map(function (FolderInterface $folder) use ($format, $context) {
+                    return $this->decorated->normalize($folder, $format, $context);
+                })->getValues();
             }
 
             if (

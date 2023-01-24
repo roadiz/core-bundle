@@ -32,7 +32,7 @@ final class CustomFormNormalizer extends AbstractPathNormalizer
 
             if (
                 isset($context['groups']) &&
-                in_array('urls', $context['groups'])
+                \in_array('urls', $context['groups'], true)
             ) {
                 $data['definitionUrl'] = $this->urlGenerator->generate('api_custom_forms_item_definition', [
                     'id' => $object->getId()

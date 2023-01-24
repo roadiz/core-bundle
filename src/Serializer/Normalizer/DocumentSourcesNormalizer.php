@@ -36,7 +36,7 @@ final class DocumentSourcesNormalizer extends AbstractPathNormalizer
             /** @var array<string> $serializationGroups */
             $serializationGroups = isset($context['groups']) && is_array($context['groups']) ? $context['groups'] : [];
 
-            if (in_array('document_display_sources', $serializationGroups)) {
+            if (\in_array('document_display_sources', $serializationGroups, true)) {
                 /*
                  * Reduce serialization group to avoid normalization loop.
                  */

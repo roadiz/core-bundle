@@ -40,7 +40,7 @@ final class AttributeValueNormalizer extends AbstractPathNormalizer
                 }
             }
 
-            if (in_array('attribute_documents', $serializationGroups)) {
+            if (\in_array('attribute_documents', $serializationGroups, true)) {
                 $documentsContext = $context;
                 $documentsContext['groups'] = ['document_display'];
                 $data['documents'] = array_map(function (DocumentInterface $document) use ($format, $documentsContext) {
