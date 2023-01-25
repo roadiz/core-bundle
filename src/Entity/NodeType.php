@@ -54,7 +54,8 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
         Assert\NotBlank(),
         RoadizAssert\NonSqlReservedWord(),
         RoadizAssert\SimpleLatinString(),
-        Assert\Length(max: 250)
+        // Limit discriminator column to 30 characters for indexing optimization
+        Assert\Length(max: 30)
     ]
     private string $name = '';
     #[

@@ -43,7 +43,8 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
     ORM\Index(columns: ["title", "translation_id", "published_at"], name: "ns_title_translation_published"),
     ORM\UniqueConstraint(columns: ["node_id", "translation_id"]),
     ORM\InheritanceType("JOINED"),
-    ORM\DiscriminatorColumn(name: "discr", type: "string"),
+    // Limit discriminator column to 30 characters for indexing optimization
+    ORM\DiscriminatorColumn(name: "discr", type: "string", length: 30),
     ORM\HasLifecycleCallbacks,
     Gedmo\Loggable(logEntryClass: UserLogEntry::class),
     UniqueEntity(fields: ["node", "translation"]),
