@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
@@ -52,6 +52,17 @@ class AttributeValue extends AbstractPositioned implements AttributeValueInterfa
     public function __construct()
     {
         $this->attributeValueTranslations = new ArrayCollection();
+    }
+
+    /*
+     * Override method to add serialization groups and
+     * enable RZ\Roadiz\CoreBundle\Serializer\Normalizer\AttributeValueNormalizer
+     * to perform a custom serialization
+     */
+    #[SymfonySerializer\Groups(['position', 'attribute', 'node_attributes'])]
+    public function getPosition(): float
+    {
+        return $this->position;
     }
 
     /**
