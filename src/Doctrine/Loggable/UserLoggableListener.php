@@ -41,9 +41,11 @@ class UserLoggableListener extends LoggableListener
      * before persisting it
      *
      * @param object $logEntry The LogEntry being persisted
-     * @param object $object The object being Logged
+     * @param object $object   The object being Logged
+     *
+     * @return void
      */
-    protected function prePersistLogEntry($logEntry, $object)
+    protected function prePersistLogEntry($logEntry, $object): void
     {
         parent::prePersistLogEntry($logEntry, $object);
 
