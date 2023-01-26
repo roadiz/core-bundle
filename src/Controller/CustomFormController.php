@@ -77,6 +77,16 @@ final class CustomFormController extends AbstractController
         $this->packages = $packages;
     }
 
+    protected function validateCustomForm(?CustomForm $customForm): void
+    {
+        if (null === $customForm) {
+            throw new NotFoundHttpException('Custom form not found');
+        }
+        if (!$customForm->isFormStillOpen()) {
+            throw new NotFoundHttpException('Custom form is closed');
+        }
+    }
+
     protected function getTranslation(string $_locale = 'fr'): TranslationInterface
     {
         if (empty($_locale)) {
@@ -103,9 +113,7 @@ final class CustomFormController extends AbstractController
     {
         /** @var CustomForm|null $customForm */
         $customForm = $this->registry->getRepository(CustomForm::class)->find($id);
-        if (null === $customForm) {
-            throw new NotFoundHttpException();
-        }
+        $this->validateCustomForm($customForm);
 
         $helper = $this->customFormHelperFactory->createHelper($customForm);
         $translation = $this->getTranslation($_locale);
@@ -147,9 +155,7 @@ final class CustomFormController extends AbstractController
 
         /** @var CustomForm|null $customForm */
         $customForm = $this->registry->getRepository(CustomForm::class)->find($id);
-        if (null === $customForm) {
-            throw new NotFoundHttpException();
-        }
+        $this->validateCustomForm($customForm);
 
         $translation = $this->getTranslation($_locale);
         $request->setLocale($translation->getPreferredLocale());
@@ -199,28 +205,25 @@ final class CustomFormController extends AbstractController
     {
         /** @var CustomForm $customForm */
         $customForm = $this->registry->getRepository(CustomForm::class)->find($customFormId);
+        $this->validateCustomForm($customForm);
 
-        if (null !== $customForm && $customForm->isFormStillOpen()) {
-            $mixed = $this->prepareAndHandleCustomFormAssignation(
-                $request,
-                $customForm,
-                new RedirectResponse(
-                    $this->generateUrl(
-                        'customFormSentAction',
-                        ["customFormId" => $customFormId]
-                    )
+        $mixed = $this->prepareAndHandleCustomFormAssignation(
+            $request,
+            $customForm,
+            new RedirectResponse(
+                $this->generateUrl(
+                    'customFormSentAction',
+                    ["customFormId" => $customFormId]
                 )
-            );
+            )
+        );
 
-            if ($mixed instanceof RedirectResponse) {
-                $mixed->prepare($request);
-                return $mixed->send();
-            } else {
-                return $this->render('@RoadizCore/customForm/customForm.html.twig', $mixed);
-            }
+        if ($mixed instanceof RedirectResponse) {
+            $mixed->prepare($request);
+            return $mixed->send();
+        } else {
+            return $this->render('@RoadizCore/customForm/customForm.html.twig', $mixed);
         }
-
-        throw new ResourceNotFoundException();
     }
 
     /**
@@ -233,13 +236,10 @@ final class CustomFormController extends AbstractController
         $assignation = [];
         /** @var CustomForm|null $customForm */
         $customForm = $this->registry->getRepository(CustomForm::class)->find($customFormId);
+        $this->validateCustomForm($customForm);
 
-        if (null !== $customForm) {
-            $assignation['customForm'] = $customForm;
-            return $this->render('@RoadizCore/customForm/customFormSent.html.twig', $assignation);
-        }
-
-        throw new ResourceNotFoundException();
+        $assignation['customForm'] = $customForm;
+        return $this->render('@RoadizCore/customForm/customFormSent.html.twig', $assignation);
     }
 
     /**
