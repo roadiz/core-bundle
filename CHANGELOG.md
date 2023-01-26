@@ -1,3 +1,9 @@
+## 2.0.43 (2023-01-26)
+
+### Bug Fixes
+
+* Enforce custom-form validation for API endpoints ([055201d](https://github.com/roadiz/core-bundle/commit/055201d8697c154f0f3bd631d78711020b9491bb))
+
 ## 2.0.42 (2023-01-16)
 
 ### Bug Fixes
