@@ -38,13 +38,19 @@ trait EmbedFinderTrait
         try {
             /** @var Translation $translation */
             foreach ($translations as $translation) {
-                $documentTr = new DocumentTranslation();
-                $documentTr->setDocument($document);
-                $documentTr->setTranslation($translation);
+                $documentTr = null;
+                if ($document instanceof Document) {
+                    $documentTr = $document->getDocumentTranslationsByTranslation($translation)->first() ?: null;
+                }
+                if (null === $documentTr) {
+                    $documentTr = new DocumentTranslation();
+                    $documentTr->setDocument($document);
+                    $documentTr->setTranslation($translation);
+                    $objectManager->persist($documentTr);
+                }
                 $documentTr->setName($this->getMediaTitle());
                 $documentTr->setDescription($this->getMediaDescription());
                 $documentTr->setCopyright($this->getMediaCopyright());
-                $objectManager->persist($documentTr);
             }
         } catch (APINeedsAuthentificationException $exception) {
             // do no prevent from creating document if credentials are not provided.
