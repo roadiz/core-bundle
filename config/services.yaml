@@ -65,6 +65,27 @@ services:
         shared: false
         public: true
 
+    RZ\Roadiz\CoreBundle\Document\MediaFinder\YoutubeEmbedFinder:
+        tags: [ { name: 'roadiz_core.media_finder', platform: 'youtube' } ]
+    RZ\Roadiz\CoreBundle\Document\MediaFinder\VimeoEmbedFinder:
+        tags: [ { name: 'roadiz_core.media_finder', platform: 'vimeo' } ]
+    RZ\Roadiz\CoreBundle\Document\MediaFinder\DeezerEmbedFinder:
+        tags: [ { name: 'roadiz_core.media_finder', platform: 'deezer' } ]
+    RZ\Roadiz\CoreBundle\Document\MediaFinder\DailymotionEmbedFinder:
+        tags: [ { name: 'roadiz_core.media_finder', platform: 'dailymotion' } ]
+    RZ\Roadiz\CoreBundle\Document\MediaFinder\SoundcloudEmbedFinder:
+        tags: [ { name: 'roadiz_core.media_finder', platform: 'soundcloud' } ]
+    RZ\Roadiz\CoreBundle\Document\MediaFinder\MixcloudEmbedFinder:
+        tags: [ { name: 'roadiz_core.media_finder', platform: 'mixcloud' } ]
+    RZ\Roadiz\CoreBundle\Document\MediaFinder\SpotifyEmbedFinder:
+        tags: [ { name: 'roadiz_core.media_finder', platform: 'spotify' } ]
+    RZ\Roadiz\CoreBundle\Document\MediaFinder\TedEmbedFinder:
+        tags: [ { name: 'roadiz_core.media_finder', platform: 'ted' } ]
+    RZ\Roadiz\CoreBundle\Document\MediaFinder\PodcastFinder:
+        tags: [ { name: 'roadiz_core.media_finder', platform: 'podcast' } ]
+    RZ\Roadiz\CoreBundle\Document\MediaFinder\TwitchEmbedFinder:
+        tags: [ { name: 'roadiz_core.media_finder', platform: 'twitch' } ]
+
     # Removed DataTransformers
     RZ\Roadiz\CoreBundle\Api\DataTransformer\:
         resource: '../src/Api/DataTransformer/'

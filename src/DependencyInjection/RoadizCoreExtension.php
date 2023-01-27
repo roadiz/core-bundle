@@ -26,8 +26,8 @@ use RZ\Roadiz\CoreBundle\Webhook\Message\GitlabPipelineTriggerMessage;
 use RZ\Roadiz\CoreBundle\Webhook\Message\NetlifyBuildHookMessage;
 use RZ\Roadiz\Markdown\CommonMark;
 use RZ\Roadiz\Markdown\MarkdownInterface;
-use Solarium\Core\Client\Client;
 use Solarium\Core\Client\Adapter\Curl;
+use Solarium\Core\Client\Client;
 use Solarium\Core\Client\Endpoint;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -116,18 +116,7 @@ class RoadizCoreExtension extends Extension
             'roadiz_core.medias.recaptcha_public_key',
             $config['medias']['recaptcha_public_key'] ?? null
         );
-        $container->setParameter('roadiz_core.medias.supported_platforms', [
-            'youtube' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\YoutubeEmbedFinder::class,
-            'vimeo' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\VimeoEmbedFinder::class,
-            'deezer' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\DeezerEmbedFinder::class,
-            'dailymotion' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\DailymotionEmbedFinder::class,
-            'soundcloud' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\SoundcloudEmbedFinder::class,
-            'mixcloud' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\MixcloudEmbedFinder::class,
-            'spotify' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\SpotifyEmbedFinder::class,
-            'ted' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\TedEmbedFinder::class,
-            'podcast' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\PodcastFinder::class,
-            'twitch' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\TwitchEmbedFinder::class
-        ]);
+        $container->setParameter('roadiz_core.medias.supported_platforms', []);
 
         $container->setParameter('roadiz_core.webhook.message_types', [
             'webhook.type.generic_json_post' => GenericJsonPostMessage::class,
