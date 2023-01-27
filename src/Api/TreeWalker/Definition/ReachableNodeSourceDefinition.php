@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Api\TreeWalker\Definition;
 
 use Doctrine\ORM\Tools\Pagination\Paginator;
+use Exception;
 use RZ\Roadiz\CoreBundle\Api\TreeWalker\NodeSourceWalkerContext;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\TreeWalker\Definition\ContextualDefinitionTrait;
@@ -13,6 +14,9 @@ final class ReachableNodeSourceDefinition
 {
     use ContextualDefinitionTrait;
 
+    /**
+     * @throws Exception
+     */
     public function __invoke(NodesSources $source): array
     {
         if ($this->context instanceof NodeSourceWalkerContext) {
@@ -29,10 +33,7 @@ final class ReachableNodeSourceDefinition
 
             if ($children instanceof Paginator) {
                 $iterator = $children->getIterator();
-                if ($iterator instanceof \ArrayIterator) {
-                    return $iterator->getArrayCopy();
-                }
-                throw new \RuntimeException('Cannot get children from paginator iterator');
+                return $iterator->getArrayCopy();
             }
             return $children;
         }

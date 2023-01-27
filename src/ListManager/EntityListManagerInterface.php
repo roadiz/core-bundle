@@ -12,13 +12,13 @@ interface EntityListManagerInterface
      * @param bool $allowRequestSorting
      * @return $this
      */
-    public function setAllowRequestSorting(bool $allowRequestSorting): static;
+    public function setAllowRequestSorting(bool $allowRequestSorting);
 
     /**
      * @param bool $allowRequestSearching
      * @return $this
      */
-    public function setAllowRequestSearching(bool $allowRequestSearching): static;
+    public function setAllowRequestSearching(bool $allowRequestSearching);
 
     /**
      * @return bool

@@ -32,12 +32,15 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
-use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Translation\LocaleAwareInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 
 final class CustomFormController extends AbstractController
 {
@@ -82,6 +85,16 @@ final class CustomFormController extends AbstractController
         $this->previewResolver = $previewResolver;
     }
 
+    protected function validateCustomForm(?CustomForm $customForm): void
+    {
+        if (null === $customForm) {
+            throw new NotFoundHttpException('Custom form not found');
+        }
+        if (!$customForm->isFormStillOpen()) {
+            throw new NotFoundHttpException('Custom form is closed');
+        }
+    }
+
     protected function getTranslationFromRequest(?Request $request): TranslationInterface
     {
         $locale = null;
@@ -123,9 +136,7 @@ final class CustomFormController extends AbstractController
     {
         /** @var CustomForm|null $customForm */
         $customForm = $this->registry->getRepository(CustomForm::class)->find($id);
-        if (null === $customForm) {
-            throw new NotFoundHttpException();
-        }
+        $this->validateCustomForm($customForm);
 
         $helper = $this->customFormHelperFactory->createHelper($customForm);
         $translation = $this->getTranslationFromRequest($request);
@@ -166,9 +177,7 @@ final class CustomFormController extends AbstractController
 
         /** @var CustomForm|null $customForm */
         $customForm = $this->registry->getRepository(CustomForm::class)->find($id);
-        if (null === $customForm) {
-            throw new NotFoundHttpException();
-        }
+        $this->validateCustomForm($customForm);
 
         $translation = $this->getTranslationFromRequest($request);
         $request->setLocale($translation->getPreferredLocale());
@@ -212,34 +221,31 @@ final class CustomFormController extends AbstractController
      * @param Request $request
      * @param int $customFormId
      * @return Response
-     * @throws \Twig\Error\RuntimeError
+     * @throws Exception
      */
     public function addAction(Request $request, int $customFormId): Response
     {
         /** @var CustomForm $customForm */
         $customForm = $this->registry->getRepository(CustomForm::class)->find($customFormId);
+        $this->validateCustomForm($customForm);
 
-        if (null !== $customForm && $customForm->isFormStillOpen()) {
-            $mixed = $this->prepareAndHandleCustomFormAssignation(
-                $request,
-                $customForm,
-                new RedirectResponse(
-                    $this->generateUrl(
-                        'customFormSentAction',
-                        ["customFormId" => $customFormId]
-                    )
+        $mixed = $this->prepareAndHandleCustomFormAssignation(
+            $request,
+            $customForm,
+            new RedirectResponse(
+                $this->generateUrl(
+                    'customFormSentAction',
+                    ["customFormId" => $customFormId]
                 )
-            );
+            )
+        );
 
-            if ($mixed instanceof RedirectResponse) {
-                $mixed->prepare($request);
-                return $mixed->send();
-            } else {
-                return $this->render('@RoadizCore/customForm/customForm.html.twig', $mixed);
-            }
+        if ($mixed instanceof RedirectResponse) {
+            $mixed->prepare($request);
+            return $mixed->send();
+        } else {
+            return $this->render('@RoadizCore/customForm/customForm.html.twig', $mixed);
         }
-
-        throw new ResourceNotFoundException();
     }
 
     /**
@@ -252,13 +258,10 @@ final class CustomFormController extends AbstractController
         $assignation = [];
         /** @var CustomForm|null $customForm */
         $customForm = $this->registry->getRepository(CustomForm::class)->find($customFormId);
+        $this->validateCustomForm($customForm);
 
-        if (null !== $customForm) {
-            $assignation['customForm'] = $customForm;
-            return $this->render('@RoadizCore/customForm/customFormSent.html.twig', $assignation);
-        }
-
-        throw new ResourceNotFoundException();
+        $assignation['customForm'] = $customForm;
+        return $this->render('@RoadizCore/customForm/customFormSent.html.twig', $assignation);
     }
 
     /**
@@ -268,7 +271,10 @@ final class CustomFormController extends AbstractController
      * @param array $assignation
      * @param string|array|null $receiver
      * @return bool
-     * @throws Exception
+     * @throws TransportExceptionInterface
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
      */
     public function sendAnswer(
         CustomFormAnswer $answer,
@@ -326,7 +332,10 @@ final class CustomFormController extends AbstractController
      * @param string|null $emailSender
      * @param bool $prefix
      * @return array|Response
-     * @throws Exception
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws TransportExceptionInterface
      */
     public function prepareAndHandleCustomFormAssignation(
         Request $request,
