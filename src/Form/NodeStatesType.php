@@ -17,7 +17,7 @@ class NodeStatesType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $choices = [];
         $choices[Node::getStatusLabel(Node::DRAFT)] = Node::DRAFT;

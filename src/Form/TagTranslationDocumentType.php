@@ -34,7 +34,7 @@ class TagTranslationDocumentType extends AbstractType
      * @param FormBuilderInterface $builder
      * @param array $options
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addEventListener(
             FormEvents::POST_SUBMIT,
@@ -49,7 +49,7 @@ class TagTranslationDocumentType extends AbstractType
     /**
      * @param OptionsResolver $resolver
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'required' => false,
@@ -83,7 +83,7 @@ class TagTranslationDocumentType extends AbstractType
      *
      * @param FormEvent $event
      */
-    public function onPostSubmit(FormEvent $event)
+    public function onPostSubmit(FormEvent $event): void
     {
         if ($event->getForm()->getConfig()->getOption('tagTranslation') instanceof TagTranslation) {
             $qb = $this->managerRegistry

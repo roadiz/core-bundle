@@ -31,7 +31,7 @@ class NodesType extends AbstractType
         $this->managerRegistry = $managerRegistry;
     }
 
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer(new CallbackTransformer(function ($mixedEntities) {
             if ($mixedEntities instanceof Collection) {
@@ -66,7 +66,7 @@ class NodesType extends AbstractType
      *
      * @param OptionsResolver $resolver
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'multiple' => true,
@@ -83,7 +83,7 @@ class NodesType extends AbstractType
      * @param FormInterface $form
      * @param array         $options
      */
-    public function finishView(FormView $view, FormInterface $form, array $options)
+    public function finishView(FormView $view, FormInterface $form, array $options): void
     {
         parent::finishView($view, $form, $options);
 

@@ -10,7 +10,13 @@ use Symfony\Component\Validator\ConstraintValidator;
 
 class ValidFacebookNameValidator extends ConstraintValidator
 {
-    public function validate($value, Constraint $constraint)
+    /**
+     * @param mixed $value
+     * @param ValidFacebookName $constraint
+     * @return void
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if ($value != "") {
             if (0 === preg_match("#^[0-9]*$#", $value)) {

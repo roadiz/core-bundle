@@ -29,7 +29,7 @@ class NodeTypesType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'showInvisible' => false,
@@ -40,15 +40,13 @@ class NodeTypesType extends AbstractType
             if ($options['showInvisible'] === false) {
                 $criteria['visible'] = true;
             }
-            if (null !== $this->managerRegistry) {
-                $nodeTypes = $this->managerRegistry->getRepository(NodeType::class)->findBy($criteria);
+            $nodeTypes = $this->managerRegistry->getRepository(NodeType::class)->findBy($criteria);
 
-                /** @var NodeType $nodeType */
-                foreach ($nodeTypes as $nodeType) {
-                    $choices[$nodeType->getDisplayName()] = $nodeType->getId();
-                }
-                ksort($choices);
+            /** @var NodeType $nodeType */
+            foreach ($nodeTypes as $nodeType) {
+                $choices[$nodeType->getDisplayName()] = $nodeType->getId();
             }
+            ksort($choices);
 
             return $choices;
         });

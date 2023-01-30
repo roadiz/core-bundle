@@ -16,18 +16,12 @@ use Symfony\Component\Form\Exception\TransformationFailedException;
  */
 class EntityCollectionTransformer implements DataTransformerInterface
 {
+    protected bool $asCollection;
+    private ObjectManager $manager;
     /**
-     * @var bool
+     * @var class-string<AbstractEntity>
      */
-    protected $asCollection;
-    /**
-     * @var ObjectManager
-     */
-    private $manager;
-    /**
-     * @var class-string|string
-     */
-    private $classname;
+    private string $classname;
 
     /**
      * @param ObjectManager $manager
@@ -42,17 +36,17 @@ class EntityCollectionTransformer implements DataTransformerInterface
     }
 
     /**
-     * @param ArrayCollection<AbstractEntity>|AbstractEntity[]|null $entities
+     * @param ArrayCollection<AbstractEntity>|AbstractEntity[]|null $value
      * @return string|array
      */
-    public function transform($entities)
+    public function transform(mixed $value): string|array
     {
-        if (null === $entities || empty($entities)) {
+        if (empty($value)) {
             return '';
         }
         $ids = [];
         /** @var PersistableInterface $entity */
-        foreach ($entities as $entity) {
+        foreach ($value as $entity) {
             $ids[] = $entity->getId();
         }
         if ($this->asCollection) {
@@ -62,22 +56,22 @@ class EntityCollectionTransformer implements DataTransformerInterface
     }
 
     /**
-     * @param string|array|null $entityIds
+     * @param string|array|null $value
      * @return array<AbstractEntity>|ArrayCollection<AbstractEntity>
      */
-    public function reverseTransform($entityIds)
+    public function reverseTransform(mixed $value): array|ArrayCollection
     {
-        if (!$entityIds) {
+        if (!$value) {
             if ($this->asCollection) {
                 return new ArrayCollection();
             }
             return [];
         }
 
-        if (is_array($entityIds)) {
-            $ids = $entityIds;
+        if (is_array($value)) {
+            $ids = $value;
         } else {
-            $ids = explode(',', $entityIds);
+            $ids = explode(',', $value);
         }
 
         /** @var array<AbstractEntity> $entities */

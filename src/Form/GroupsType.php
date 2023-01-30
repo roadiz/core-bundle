@@ -38,7 +38,7 @@ class GroupsType extends AbstractType
     /**
      * @inheritDoc
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer(new CallbackTransformer(function ($modelToForm) {
             if (null !== $modelToForm) {
@@ -64,7 +64,7 @@ class GroupsType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([]);
 

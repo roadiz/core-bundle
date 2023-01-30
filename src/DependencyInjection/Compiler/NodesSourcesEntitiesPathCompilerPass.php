@@ -12,7 +12,7 @@ class NodesSourcesEntitiesPathCompilerPass implements CompilerPassInterface
     /**
      * @inheritDoc
      */
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         $projectDir = $container->getParameter('kernel.project_dir');
         $container->setParameter('roadiz_core.generated_entities_dir', $projectDir . '/src/GeneratedEntity');

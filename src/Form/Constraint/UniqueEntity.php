@@ -13,7 +13,7 @@ use Symfony\Component\Validator\Constraint;
  * @Target({"CLASS"})
  * @author Benjamin Eberlei <kontakt@beberlei.de>
  * @see https://github.com/symfony/doctrine-bridge/blob/master/Validator/Constraints/UniqueEntity.php
- * @deprecated Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity
+ * @deprecated Use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity
  */
 class UniqueEntity extends Constraint
 {

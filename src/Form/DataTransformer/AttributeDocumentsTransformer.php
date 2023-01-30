@@ -34,7 +34,7 @@ final class AttributeDocumentsTransformer implements DataTransformerInterface
      * @param AttributeDocuments[]|null $attributeDocuments
      * @return Document[]
      */
-    public function transform($attributeDocuments)
+    public function transform(mixed $attributeDocuments): array
     {
         if (null === $attributeDocuments || empty($attributeDocuments)) {
             return [];
@@ -48,18 +48,18 @@ final class AttributeDocumentsTransformer implements DataTransformerInterface
     }
 
     /**
-     * @param array $documentIds
+     * @param array $value
      * @return ArrayCollection
      */
-    public function reverseTransform($documentIds)
+    public function reverseTransform(mixed $value): ArrayCollection
     {
-        if (!$documentIds) {
+        if (!$value) {
             return new ArrayCollection();
         }
 
         $documents = new ArrayCollection();
         $position = 0;
-        foreach ($documentIds as $documentId) {
+        foreach ($value as $documentId) {
             $document = $this->manager
                 ->getRepository(Document::class)
                 ->find($documentId)

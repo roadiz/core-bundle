@@ -21,7 +21,12 @@ class ValidAccountConfirmationTokenValidator extends ConstraintValidator
         $this->managerRegistry = $managerRegistry;
     }
 
-    public function validate($value, Constraint $constraint)
+    /**
+     * @param mixed $value
+     * @param ValidAccountConfirmationToken $constraint
+     * @return void
+     */
+    public function validate(mixed $value, Constraint $constraint): void
     {
         $user = $this->managerRegistry
                            ->getRepository(User::class)

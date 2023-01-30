@@ -47,7 +47,7 @@ class CustomFormsType extends AbstractType
      * @param  FormBuilderInterface $builder
      * @param  array $options
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $fieldsArray = $this->getFieldsByGroups($options);
 
@@ -124,7 +124,7 @@ class CustomFormsType extends AbstractType
      * @param array $formOptions
      * @return $this
      */
-    protected function addSingleField(FormBuilderInterface $builder, CustomFormField $field, array $formOptions)
+    protected function addSingleField(FormBuilderInterface $builder, CustomFormField $field, array $formOptions): self
     {
         $builder->add(
             $field->getName(),
@@ -138,7 +138,7 @@ class CustomFormsType extends AbstractType
      * @param CustomFormField $field
      * @return class-string<AbstractType>
      */
-    protected function getTypeForField(CustomFormField $field)
+    protected function getTypeForField(CustomFormField $field): string
     {
         switch ($field->getType()) {
             case AbstractField::ENUM_T:
@@ -177,9 +177,9 @@ class CustomFormsType extends AbstractType
     /**
      * @param CustomFormField $field
      * @param array $formOptions
-     * @return array
+     * @return array<string, mixed>
      */
-    protected function getOptionsForField(CustomFormField $field, array $formOptions)
+    protected function getOptionsForField(CustomFormField $field, array $formOptions): array
     {
         $option = [
             "label" => $field->getLabel(),
@@ -292,7 +292,7 @@ class CustomFormsType extends AbstractType
      * @param CustomFormField $field
      * @return array
      */
-    protected function getChoices(CustomFormField $field)
+    protected function getChoices(CustomFormField $field): array
     {
         $choices = explode(',', $field->getDefaultValues() ?? '');
         $choices = array_map('trim', $choices);
@@ -302,7 +302,7 @@ class CustomFormsType extends AbstractType
     /**
      * @param OptionsResolver $resolver
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'recaptcha_name' => Recaptcha::FORM_NAME,

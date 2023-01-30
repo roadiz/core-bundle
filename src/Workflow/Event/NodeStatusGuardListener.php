@@ -35,7 +35,7 @@ final class NodeStatusGuardListener implements EventSubscriberInterface
         ];
     }
 
-    public function guard(GuardEvent $event)
+    public function guard(GuardEvent $event): void
     {
         if (!$this->security->isGranted('ROLE_ACCESS_NODES')) {
             $event->addTransitionBlocker(new TransitionBlocker(
@@ -45,7 +45,7 @@ final class NodeStatusGuardListener implements EventSubscriberInterface
         }
     }
 
-    public function guardPublish(GuardEvent $event)
+    public function guardPublish(GuardEvent $event): void
     {
         if (!$this->security->isGranted('ROLE_ACCESS_NODES_STATUS')) {
             $event->addTransitionBlocker(new TransitionBlocker(
@@ -55,7 +55,7 @@ final class NodeStatusGuardListener implements EventSubscriberInterface
         }
     }
 
-    public function guardArchive(GuardEvent $event)
+    public function guardArchive(GuardEvent $event): void
     {
         /** @var Node $node */
         $node = $event->getSubject();
@@ -73,7 +73,7 @@ final class NodeStatusGuardListener implements EventSubscriberInterface
         }
     }
 
-    public function guardDelete(GuardEvent $event)
+    public function guardDelete(GuardEvent $event): void
     {
         /** @var Node $node */
         $node = $event->getSubject();

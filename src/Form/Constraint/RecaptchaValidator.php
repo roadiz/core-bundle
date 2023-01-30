@@ -29,7 +29,7 @@ class RecaptchaValidator extends ConstraintValidator implements RecaptchaService
      * @throws \GuzzleHttp\Exception\GuzzleException
      * @see \Symfony\Component\Validator\ConstraintValidator::validate()
      */
-    public function validate($data, Constraint $constraint)
+    public function validate(mixed $data, Constraint $constraint): void
     {
         if ($constraint instanceof Recaptcha) {
             $propertyPath = $this->context->getPropertyPath();

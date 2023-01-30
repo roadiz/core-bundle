@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 
-use RZ\Roadiz\CoreBundle\Entity\Document;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 use Symfony\Component\Validator\Constraint;
 
 /**
@@ -12,10 +12,7 @@ use Symfony\Component\Validator\Constraint;
  */
 class UniqueFilename extends Constraint
 {
-    /**
-     * @var Document null
-     */
-    public $document = null;
+    public ?DocumentInterface $document = null;
 
-    public $message = 'filename.alreadyExists';
+    public string $message = 'filename.alreadyExists';
 }

@@ -15,7 +15,7 @@ class TwigLoaderCompilerPass implements CompilerPassInterface
     /**
      * @inheritDoc
      */
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         if ($container->has('twig.loader.native_filesystem')) {
             $definition = $container->findDefinition('twig.loader.native_filesystem');

@@ -14,7 +14,7 @@ use Symfony\Component\RateLimiter\Storage\CacheStorage;
 
 class RateLimitersCompilerPass implements CompilerPassInterface
 {
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         if (!$container->hasDefinition('limiter')) {
             throw new LogicException('Rate limiter support cannot be enabled as the RateLimiter component is not installed. Try running "composer require symfony/rate-limiter".');

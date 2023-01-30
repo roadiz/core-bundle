@@ -14,7 +14,7 @@ class ImporterCompilerPass implements CompilerPassInterface
     /**
      * @inheritDoc
      */
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         if ($container->has(ChainImporter::class)) {
             $definition = $container->findDefinition(ChainImporter::class);

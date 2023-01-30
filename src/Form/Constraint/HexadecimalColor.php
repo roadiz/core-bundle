@@ -13,5 +13,5 @@ use Symfony\Component\Validator\Constraint;
 #[\Attribute(\Attribute::TARGET_PROPERTY | \Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
 class HexadecimalColor extends Constraint
 {
-    public $message = 'color.should.be.formatted.in.hexadecimal';
+    public string $message = 'color.should.be.formatted.in.hexadecimal';
 }

@@ -12,7 +12,7 @@ class MediaFinderCompilerPass implements CompilerPassInterface
     /**
      * @inheritDoc
      */
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         if ($container->hasParameter('roadiz_core.medias.supported_platforms')) {
             $parameter = $container->getParameter('roadiz_core.medias.supported_platforms');

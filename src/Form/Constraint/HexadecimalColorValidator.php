@@ -9,7 +9,7 @@ use Symfony\Component\Validator\ConstraintValidator;
 
 class HexadecimalColorValidator extends ConstraintValidator
 {
-    public function validate($value, Constraint $constraint)
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if ($constraint instanceof HexadecimalColor) {
             if (null !== $value && preg_match('#\#[0-9a-f]{6}#', strtolower($value)) === 0) {

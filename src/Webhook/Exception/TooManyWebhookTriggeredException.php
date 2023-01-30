@@ -10,8 +10,12 @@ final class TooManyWebhookTriggeredException extends \RuntimeException
 {
     private ?\DateTimeImmutable $doNotTriggerBefore;
 
-    public function __construct(?\DateTimeImmutable $doNotTriggerBefore = null, $message = "", $code = 0, Throwable $previous = null)
-    {
+    public function __construct(
+        ?\DateTimeImmutable $doNotTriggerBefore = null,
+        string $message = "",
+        int $code = 0,
+        Throwable $previous = null
+    ) {
         parent::__construct($message, $code, $previous);
         $this->doNotTriggerBefore = $doNotTriggerBefore;
     }

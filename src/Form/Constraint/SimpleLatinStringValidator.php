@@ -9,7 +9,7 @@ use Symfony\Component\Validator\ConstraintValidator;
 
 class SimpleLatinStringValidator extends ConstraintValidator
 {
-    public function validate($value, Constraint $constraint)
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if ($constraint instanceof SimpleLatinString) {
             if (null !== $value && preg_match('#[^a-z_\s\-]#', strtolower($value)) === 1) {

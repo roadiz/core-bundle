@@ -37,7 +37,7 @@ final class TransChoiceExtension extends AbstractExtension
      *
      * @return AbstractTokenParser[]
      */
-    public function getTokenParsers()
+    public function getTokenParsers(): array
     {
         return [
             // {% transchoice count %}
@@ -50,8 +50,13 @@ final class TransChoiceExtension extends AbstractExtension
     /**
      * @deprecated since Symfony 4.2, use the trans() method instead with a %count% parameter
      */
-    public function transchoice($message, $count, array $arguments = [], $domain = null, $locale = null)
-    {
+    public function transchoice(
+        string $message,
+        int $count,
+        array $arguments = [],
+        ?string $domain = null,
+        ?string $locale = null
+    ): string {
         return $this->translator->trans($message, array_merge(['%count%' => $count], $arguments), $domain, $locale);
     }
 }

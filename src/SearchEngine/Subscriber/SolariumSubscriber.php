@@ -91,7 +91,7 @@ class SolariumSubscriber implements EventSubscriberInterface
      *
      * @throws \Exception
      */
-    public function onSolariumSingleUpdate(NodesSourcesUpdatedEvent $event)
+    public function onSolariumSingleUpdate(NodesSourcesUpdatedEvent $event): void
     {
         $this->messageBus->dispatch(new Envelope(new SolrReindexMessage(NodesSources::class, $event->getNodeSource()->getId())));
     }
@@ -101,7 +101,7 @@ class SolariumSubscriber implements EventSubscriberInterface
      *
      * @param NodesSourcesDeletedEvent $event
      */
-    public function onSolariumSingleDelete(NodesSourcesDeletedEvent $event)
+    public function onSolariumSingleDelete(NodesSourcesDeletedEvent $event): void
     {
         $this->messageBus->dispatch(new Envelope(new SolrDeleteMessage(NodesSources::class, $event->getNodeSource()->getId())));
     }
@@ -111,7 +111,7 @@ class SolariumSubscriber implements EventSubscriberInterface
      *
      * @param NodeDeletedEvent $event
      */
-    public function onSolariumNodeDelete(NodeDeletedEvent $event)
+    public function onSolariumNodeDelete(NodeDeletedEvent $event): void
     {
         $this->messageBus->dispatch(new Envelope(new SolrDeleteMessage(Node::class, $event->getNode()->getId())));
     }
@@ -123,7 +123,7 @@ class SolariumSubscriber implements EventSubscriberInterface
      *
      * @throws \Exception
      */
-    public function onSolariumNodeUpdate(FilterNodeEvent $event)
+    public function onSolariumNodeUpdate(FilterNodeEvent $event): void
     {
         $this->messageBus->dispatch(new Envelope(new SolrReindexMessage(Node::class, $event->getNode()->getId())));
     }
@@ -134,7 +134,7 @@ class SolariumSubscriber implements EventSubscriberInterface
      *
      * @param FilterDocumentEvent $event
      */
-    public function onSolariumDocumentDelete(FilterDocumentEvent $event)
+    public function onSolariumDocumentDelete(FilterDocumentEvent $event): void
     {
         $document = $event->getDocument();
         if ($document instanceof Document) {
@@ -149,7 +149,7 @@ class SolariumSubscriber implements EventSubscriberInterface
      *
      * @throws \Exception
      */
-    public function onSolariumDocumentUpdate(FilterDocumentEvent $event)
+    public function onSolariumDocumentUpdate(FilterDocumentEvent $event): void
     {
         $document = $event->getDocument();
         if ($document instanceof Document) {
@@ -165,7 +165,7 @@ class SolariumSubscriber implements EventSubscriberInterface
      * @throws \Exception
      * @deprecated This can lead to a timeout if more than 500 nodes use that tag!
      */
-    public function onSolariumTagUpdate(TagUpdatedEvent $event)
+    public function onSolariumTagUpdate(TagUpdatedEvent $event): void
     {
         $this->messageBus->dispatch(new Envelope(new SolrReindexMessage(Tag::class, $event->getTag()->getId())));
     }
@@ -178,7 +178,7 @@ class SolariumSubscriber implements EventSubscriberInterface
      * @throws \Exception
      * @deprecated This can lead to a timeout if more than 500 documents use that folder!
      */
-    public function onSolariumFolderUpdate(FolderUpdatedEvent $event)
+    public function onSolariumFolderUpdate(FolderUpdatedEvent $event): void
     {
         $this->messageBus->dispatch(new Envelope(new SolrReindexMessage(Folder::class, $event->getFolder()->getId())));
     }

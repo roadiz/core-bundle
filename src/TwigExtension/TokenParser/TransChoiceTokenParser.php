@@ -29,7 +29,7 @@ class TransChoiceTokenParser extends AbstractTokenParser
      *
      * @return Node
      */
-    public function parse(Token $token)
+    public function parse(Token $token): Node
     {
         $lineno = $token->getLine();
         $stream = $this->parser->getStream();
@@ -72,7 +72,7 @@ class TransChoiceTokenParser extends AbstractTokenParser
         return new TransNode($body, $domain, $count, $vars, $locale, $lineno, $this->getTag());
     }
 
-    public function decideTransChoiceFork($token)
+    public function decideTransChoiceFork(Token $token): bool
     {
         return $token->test(['endtranschoice']);
     }

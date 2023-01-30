@@ -13,7 +13,7 @@ class DoctrineMigrationCompilerPass implements CompilerPassInterface
     /**
      * @inheritDoc
      */
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         if ($container->hasDefinition('doctrine.migrations.configuration')) {
             $configurationDefinition = $container->getDefinition('doctrine.migrations.configuration');

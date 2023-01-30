@@ -22,7 +22,7 @@ final class SuperAdminRoleHierarchyVoter extends RoleArrayVoter
         $this->managerRegistry = $managerRegistry;
     }
 
-    protected function extractRoles(TokenInterface $token)
+    protected function extractRoles(TokenInterface $token): array
     {
         $roleNames = parent::extractRoles($token);
         if ($this->isSuperAdmin($token)) {

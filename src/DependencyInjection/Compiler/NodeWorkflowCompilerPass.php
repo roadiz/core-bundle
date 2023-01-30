@@ -14,7 +14,7 @@ use Symfony\Component\Workflow\SupportStrategy\InstanceOfSupportStrategy;
 
 class NodeWorkflowCompilerPass implements CompilerPassInterface
 {
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         if (!$container->hasDefinition('workflow.registry')) {
             throw new LogicException('Workflow support cannot be enabled as the Workflow component is not installed. Try running "composer require symfony/workflow".');

@@ -8,5 +8,5 @@ use Symfony\Component\Validator\Constraint;
 
 class ValidYaml extends Constraint
 {
-    public $message = 'yaml.is.not.valid.{{ error }}';
+    public string $message = 'yaml.is.not.valid.{{ error }}';
 }

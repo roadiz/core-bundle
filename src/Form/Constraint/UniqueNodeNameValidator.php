@@ -32,7 +32,7 @@ class UniqueNodeNameValidator extends ConstraintValidator
      * @throws NoResultException
      * @throws NonUniqueResultException
      */
-    public function validate($value, Constraint $constraint)
+    public function validate(mixed $value, Constraint $constraint): void
     {
         $value = StringHandler::slugify($value);
 

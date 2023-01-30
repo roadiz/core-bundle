@@ -64,37 +64,37 @@ class AttributesExtension extends AbstractExtension
         ];
     }
 
-    public function isDateTime(AttributeValueTranslationInterface $attributeValueTranslation)
+    public function isDateTime(AttributeValueTranslationInterface $attributeValueTranslation): bool
     {
         return $attributeValueTranslation->getAttributeValue()->getAttribute()->isDateTime();
     }
 
-    public function isDate(AttributeValueTranslationInterface $attributeValueTranslation)
+    public function isDate(AttributeValueTranslationInterface $attributeValueTranslation): bool
     {
         return $attributeValueTranslation->getAttributeValue()->getAttribute()->isDate();
     }
 
-    public function isCountry(AttributeValueTranslationInterface $attributeValueTranslation)
+    public function isCountry(AttributeValueTranslationInterface $attributeValueTranslation): bool
     {
         return $attributeValueTranslation->getAttributeValue()->getAttribute()->isCountry();
     }
 
-    public function isBoolean(AttributeValueTranslationInterface $attributeValueTranslation)
+    public function isBoolean(AttributeValueTranslationInterface $attributeValueTranslation): bool
     {
         return $attributeValueTranslation->getAttributeValue()->getAttribute()->isBoolean();
     }
 
-    public function isEnum(AttributeValueTranslationInterface $attributeValueTranslation)
+    public function isEnum(AttributeValueTranslationInterface $attributeValueTranslation): bool
     {
         return $attributeValueTranslation->getAttributeValue()->getAttribute()->isEnum();
     }
 
-    public function isPercent(AttributeValueTranslationInterface $attributeValueTranslation)
+    public function isPercent(AttributeValueTranslationInterface $attributeValueTranslation): bool
     {
         return $attributeValueTranslation->getAttributeValue()->getAttribute()->isPercent();
     }
 
-    public function isNumber(AttributeValueTranslationInterface $attributeValueTranslation)
+    public function isNumber(AttributeValueTranslationInterface $attributeValueTranslation): bool
     {
         return $attributeValueTranslation->getAttributeValue()->getAttribute()->isInteger() ||
             $attributeValueTranslation->getAttributeValue()->getAttribute()->isDecimal();
@@ -109,8 +109,11 @@ class AttributesExtension extends AbstractExtension
      * @return array
      * @throws SyntaxError
      */
-    public function getAttributeValues($attributable, TranslationInterface $translation, bool $hideNotTranslated = false)
-    {
+    public function getAttributeValues(
+        ?AttributableInterface $attributable,
+        TranslationInterface $translation,
+        bool $hideNotTranslated = false
+    ): array {
         if (null === $attributable) {
             throw new SyntaxError('Cannot call get_attributes on NULL');
         }
@@ -159,7 +162,7 @@ class AttributesExtension extends AbstractExtension
      * @return array
      * @throws SyntaxError
      */
-    public function getNodeSourceAttributeValues(?NodesSources $nodesSources, bool $hideNotTranslated = false)
+    public function getNodeSourceAttributeValues(?NodesSources $nodesSources, bool $hideNotTranslated = false): array
     {
         if (null === $nodesSources) {
             throw new SyntaxError('Cannot call node_source_attributes on NULL');
@@ -232,6 +235,11 @@ class AttributesExtension extends AbstractExtension
         return null;
     }
 
+    /**
+     * @param mixed $mixed
+     * @param TranslationInterface|null $translation
+     * @return string|null
+     */
     public function getAttributeGroupLabelOrCode($mixed, TranslationInterface $translation = null): ?string
     {
         if (null === $mixed) {

@@ -19,7 +19,7 @@ interface WebhookInterface
     public function getPayload(): ?array;
     public function getThrottleSeconds(): int;
     public function doNotTriggerBefore(): ?\DateTime;
-    public function setLastTriggeredAt(?\DateTime $lastTriggeredAt);
+    public function setLastTriggeredAt(?\DateTime $lastTriggeredAt): self;
     public function getLastTriggeredAt(): ?\DateTime;
     public function isAutomatic(): bool;
 }

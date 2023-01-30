@@ -13,7 +13,7 @@ class CommonMarkCompilerPass implements CompilerPassInterface
     /**
      * @inheritDoc
      */
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         if ($container->has('roadiz_core.markdown.environments.text_converter')) {
             $definition = $container->findDefinition(

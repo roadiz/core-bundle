@@ -25,7 +25,7 @@ class AttributeValueTranslationType extends AbstractType
     /**
      * @inheritDoc
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $attributeValueTranslation = $builder->getData();
 

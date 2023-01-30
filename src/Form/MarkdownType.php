@@ -33,7 +33,7 @@ class MarkdownType extends AbstractType
     /**
      * @inheritDoc
      */
-    public function buildView(FormView $view, FormInterface $form, array $options)
+    public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
 
@@ -74,7 +74,7 @@ class MarkdownType extends AbstractType
         $view->vars['attr']['allow_preview'] = $options['allow_preview'];
     }
 
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'required' => false,

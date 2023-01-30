@@ -9,6 +9,7 @@ use JMS\Serializer\Construction\ObjectConstructorInterface;
 use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Visitor\DeserializationVisitorInterface;
+use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 
 class ChainDoctrineObjectConstructor implements ObjectConstructorInterface
 {
@@ -35,7 +36,12 @@ class ChainDoctrineObjectConstructor implements ObjectConstructorInterface
     }
 
     /**
-     * @inheritDoc
+     * @param DeserializationVisitorInterface $visitor
+     * @param ClassMetadata $metadata
+     * @param AbstractEntity|array<AbstractEntity> $data
+     * @param array $type
+     * @param DeserializationContext $context
+     * @return object|null
      */
     public function construct(
         DeserializationVisitorInterface $visitor,
@@ -87,8 +93,12 @@ class ChainDoctrineObjectConstructor implements ObjectConstructorInterface
             }
         }
 
+        // PHPStan need to explicit classname
+        /** @var class-string<AbstractEntity> $className */
+        $className = $metadata->name;
+
         // Fallback to default constructor if missing identifier(s)
-        $classMetadata = $this->entityManager->getClassMetadata($metadata->name);
+        $classMetadata = $this->entityManager->getClassMetadata($className);
         $identifierList = [];
 
         foreach ($classMetadata->getIdentifierFieldNames() as $name) {
@@ -108,7 +118,7 @@ class ChainDoctrineObjectConstructor implements ObjectConstructorInterface
         }
 
         // Entity update, load it from database
-        $object = $this->entityManager->find($metadata->name, $identifierList);
+        $object = $this->entityManager->find($className, $identifierList);
 
         if (null === $object) {
             return $this->fallbackConstructor->construct($visitor, $metadata, $data, $type, $context);

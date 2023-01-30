@@ -28,7 +28,7 @@ class WebhookType extends AbstractType
         $this->webhookMessageTypes = $webhookMessageTypes;
     }
 
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('messageType', ChoiceType::class, [
             'required' => true,

@@ -32,7 +32,7 @@ class SettingType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         if ($options['shortEdit'] === false) {
             $builder
@@ -105,14 +105,14 @@ class SettingType extends AbstractType
     /**
      * {@inheritdoc}
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefault('data_class', Setting::class);
         $resolver->setDefault('shortEdit', false);
         $resolver->setAllowedTypes('shortEdit', ['boolean']);
     }
 
-    protected function getFormOptionsForSetting(Setting $setting, $shortEdit = false)
+    protected function getFormOptionsForSetting(Setting $setting, bool $shortEdit = false): array
     {
         $label = (!$shortEdit) ? 'value' : false;
 

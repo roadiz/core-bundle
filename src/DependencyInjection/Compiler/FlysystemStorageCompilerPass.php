@@ -57,7 +57,7 @@ class FlysystemStorageCompilerPass implements CompilerPassInterface
     /**
      * @inheritDoc
      */
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         $container->setDefinition(
             'roadiz_core.flysystem.mount_manager',

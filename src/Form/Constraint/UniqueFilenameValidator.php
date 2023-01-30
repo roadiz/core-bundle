@@ -6,7 +6,6 @@ namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 
 use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
-use RZ\Roadiz\CoreBundle\Entity\Document;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
@@ -24,10 +23,9 @@ class UniqueFilenameValidator extends ConstraintValidator
      * @param Constraint $constraint
      * @throws FilesystemException
      */
-    public function validate($value, Constraint $constraint)
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if ($constraint instanceof UniqueFilename) {
-            /** @var Document $document */
             $document = $constraint->document;
             /*
              * If value is already the filename

@@ -15,7 +15,7 @@ class AttributeValueType extends AbstractType
     /**
      * @inheritDoc
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('attribute', AttributeChoiceType::class, [
             'label' => 'attribute_values.form.attribute',
@@ -27,7 +27,7 @@ class AttributeValueType extends AbstractType
     /**
      * @inheritDoc
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
 
