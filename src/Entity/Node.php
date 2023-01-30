@@ -950,13 +950,12 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
             $this->id = null;
             $this->home = false;
             $children = $this->getChildren();
-            if ($children !== null) {
-                $this->children = new ArrayCollection();
-                foreach ($children as $child) {
-                    $cloneChild = clone $child;
-                    $this->addChild($cloneChild);
-                }
+            $this->children = new ArrayCollection();
+            foreach ($children as $child) {
+                $cloneChild = clone $child;
+                $this->addChild($cloneChild);
             }
+
             /** @var NodesTags[] $nodesTags */
             $nodesTags = $this->nodesTags->toArray();
             if ($nodesTags !== null) {
@@ -966,24 +965,22 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
                 }
             }
             $nodeSources = $this->getNodeSources();
-            if ($nodeSources !== null) {
-                $this->nodeSources = new ArrayCollection();
-                /** @var NodesSources $nodeSource */
-                foreach ($nodeSources as $nodeSource) {
-                    $cloneNodeSource = clone $nodeSource;
-                    $cloneNodeSource->setNode($this);
-                }
+            $this->nodeSources = new ArrayCollection();
+            /** @var NodesSources $nodeSource */
+            foreach ($nodeSources as $nodeSource) {
+                $cloneNodeSource = clone $nodeSource;
+                $cloneNodeSource->setNode($this);
             }
+
             $attributeValues = $this->getAttributeValues();
-            if ($attributeValues !== null) {
-                $this->attributeValues = new ArrayCollection();
-                /** @var AttributeValue $attributeValue */
-                foreach ($attributeValues as $attributeValue) {
-                    $cloneAttributeValue = clone $attributeValue;
-                    $cloneAttributeValue->setNode($this);
-                    $this->addAttributeValue($cloneAttributeValue);
-                }
+            $this->attributeValues = new ArrayCollection();
+            /** @var AttributeValue $attributeValue */
+            foreach ($attributeValues as $attributeValue) {
+                $cloneAttributeValue = clone $attributeValue;
+                $cloneAttributeValue->setNode($this);
+                $this->addAttributeValue($cloneAttributeValue);
             }
+
             // Get a random string after node-name.
             // This is for safety reasons
             // NodeDuplicator service will override it

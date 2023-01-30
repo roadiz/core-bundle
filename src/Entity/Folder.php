@@ -67,7 +67,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface, Lea
     protected ?Folder $parent = null;
 
     /**
-     * @var Collection<int, Folder>
+     * @var Collection<Folder>
      */
     #[ORM\OneToMany(mappedBy: 'parent', targetEntity: Folder::class, orphanRemoval: true)]
     #[ORM\OrderBy(['position' => 'ASC'])]
