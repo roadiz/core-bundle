@@ -77,7 +77,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface, Lea
     protected Collection $children;
 
     /**
-     * @var Collection<int, Document>
+     * @var Collection<int, DocumentInterface>
      */
     #[ORM\JoinTable(name: 'documents_folders')]
     #[ORM\ManyToMany(targetEntity: Document::class, inversedBy: 'folders')]
@@ -148,7 +148,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface, Lea
     }
 
     /**
-     * @param Document $document
+     * @param DocumentInterface $document
      * @return $this
      */
     public function addDocument(DocumentInterface $document): static
@@ -161,7 +161,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface, Lea
     }
 
     /**
-     * @return Collection<int, Document>
+     * @return Collection<int, DocumentInterface>
      */
     public function getDocuments(): Collection
     {
@@ -169,7 +169,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface, Lea
     }
 
     /**
-     * @param Document $document
+     * @param DocumentInterface $document
      * @return $this
      */
     public function removeDocument(DocumentInterface $document): static

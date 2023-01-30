@@ -151,12 +151,9 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
     /**
      * {@inheritdoc}
      */
-    public function generate($name, $parameters = [], $referenceType = self::ABSOLUTE_PATH): string
+    public function generate(string $name, array $parameters = [], int $referenceType = self::ABSOLUTE_PATH): string
     {
-        if (!is_string($name)) {
-            @trigger_error('Passing an object as route name is deprecated since version 1.5. Pass the `RouteObjectInterface::OBJECT_BASED_ROUTE_NAME` as route name and the object in the parameters with key `RouteObjectInterface::ROUTE_OBJECT` resp the content id with content_id.', E_USER_DEPRECATED);
-            $route = $name;
-        } elseif (RouteObjectInterface::OBJECT_BASED_ROUTE_NAME === $name) {
+        if (RouteObjectInterface::OBJECT_BASED_ROUTE_NAME === $name) {
             if (
                 array_key_exists(RouteObjectInterface::ROUTE_OBJECT, $parameters) &&
                 $parameters[RouteObjectInterface::ROUTE_OBJECT] instanceof NodesSources

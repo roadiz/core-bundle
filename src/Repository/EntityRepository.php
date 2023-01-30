@@ -85,9 +85,9 @@ abstract class EntityRepository extends ServiceEntityRepository
 
     /**
      * @param QueryBuilder $qb
-     * @param string $entityClass
+     * @param class-string $entityClass
      */
-    protected function dispatchQueryBuilderEvent(QueryBuilder $qb, $entityClass)
+    protected function dispatchQueryBuilderEvent(QueryBuilder $qb, string $entityClass): void
     {
         $this->dispatcher->dispatch(new QueryBuilderSelectEvent($qb, $entityClass));
     }
@@ -99,7 +99,7 @@ abstract class EntityRepository extends ServiceEntityRepository
      *
      * @return object|QueryBuilderBuildEvent
      */
-    protected function dispatchQueryBuilderBuildEvent(QueryBuilder $qb, $property, $value)
+    protected function dispatchQueryBuilderBuildEvent(QueryBuilder $qb, string $property, mixed $value): object
     {
         return $this->dispatcher->dispatch(new QueryBuilderBuildEvent(
             $qb,
@@ -115,7 +115,7 @@ abstract class EntityRepository extends ServiceEntityRepository
      *
      * @return object|QueryEvent
      */
-    protected function dispatchQueryEvent(Query $query)
+    protected function dispatchQueryEvent(Query $query): object
     {
         return $this->dispatcher->dispatch(new QueryEvent(
             $query,
@@ -130,7 +130,7 @@ abstract class EntityRepository extends ServiceEntityRepository
      *
      * @return object|QueryBuilderApplyEvent
      */
-    protected function dispatchQueryBuilderApplyEvent(QueryBuilder $qb, $property, $value)
+    protected function dispatchQueryBuilderApplyEvent(QueryBuilder $qb, string $property, mixed $value): object
     {
         return $this->dispatcher->dispatch(new QueryBuilderApplyEvent(
             $qb,
@@ -167,10 +167,10 @@ abstract class EntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * @param array        $criteria
+     * @param array  $criteria
      * @param QueryBuilder $qb
      */
-    protected function applyFilterByCriteria(array &$criteria, QueryBuilder $qb)
+    protected function applyFilterByCriteria(array &$criteria, QueryBuilder $qb): void
     {
         $simpleQB = new SimpleQueryBuilder($qb);
         foreach ($criteria as $key => $value) {
@@ -185,11 +185,11 @@ abstract class EntityRepository extends ServiceEntityRepository
      * @param QueryBuilder $qb
      * @param string $name
      * @param string $key
-     * @param array $value
+     * @param mixed $value
      *
      * @return Query\Expr\Func
      */
-    protected function directExprIn(QueryBuilder $qb, $name, $key, $value)
+    protected function directExprIn(QueryBuilder $qb, string $name, string $key, mixed $value): Query\Expr\Func
     {
         $newValue = [];
 
@@ -213,7 +213,7 @@ abstract class EntityRepository extends ServiceEntityRepository
      *
      * @return int
      */
-    public function countBy($criteria)
+    public function countBy(mixed $criteria): int
     {
         if ($criteria instanceof Criteria) {
             $collection = $this->matching($criteria);
@@ -240,12 +240,13 @@ abstract class EntityRepository extends ServiceEntityRepository
      * @param string $pattern
      * @param QueryBuilder $qb
      * @param string $alias
+     * @return QueryBuilder
      */
     protected function classicLikeComparison(
-        $pattern,
+        string $pattern,
         QueryBuilder $qb,
-        $alias = EntityRepository::DEFAULT_ALIAS
-    ) {
+        string $alias = EntityRepository::DEFAULT_ALIAS
+    ): QueryBuilder {
         /*
          * Get fields needed for a search query
          */
@@ -269,6 +270,8 @@ abstract class EntityRepository extends ServiceEntityRepository
             $fullKey = sprintf('LOWER(%s)', $alias . '.' . $key);
             $qb->orWhere($qb->expr()->like($fullKey, $qb->expr()->literal($value)));
         }
+
+        return $qb;
     }
 
     /**
@@ -281,11 +284,11 @@ abstract class EntityRepository extends ServiceEntityRepository
      * @return QueryBuilder
      */
     protected function createSearchBy(
-        $pattern,
+        string $pattern,
         QueryBuilder $qb,
         array &$criteria = [],
-        $alias = EntityRepository::DEFAULT_ALIAS
-    ) {
+        string $alias = EntityRepository::DEFAULT_ALIAS
+    ): QueryBuilder {
         $this->classicLikeComparison($pattern, $qb, $alias);
         $this->prepareComparisons($criteria, $qb, $alias);
 
@@ -304,25 +307,25 @@ abstract class EntityRepository extends ServiceEntityRepository
      * @psalm-return array<TEntityClass>|Paginator<TEntityClass>
      */
     public function searchBy(
-        $pattern,
+        string $pattern,
         array $criteria = [],
         array $orders = [],
-        $limit = null,
-        $offset = null,
-        $alias = EntityRepository::DEFAULT_ALIAS
-    ) {
+        ?int $limit = null,
+        ?int $offset = null,
+        string $alias = EntityRepository::DEFAULT_ALIAS
+    ): array|Paginator {
         $qb = $this->createQueryBuilder($alias);
         $qb = $this->createSearchBy($pattern, $qb, $criteria, $alias);
 
         // Add ordering
         foreach ($orders as $key => $value) {
             if (
-                strpos($key, static::NODE_ALIAS . '.') !== false &&
+                str_contains($key, static::NODE_ALIAS . '.') &&
                 $this->hasJoinedNode($qb, $alias)
             ) {
                 $qb->addOrderBy($key, $value);
             } elseif (
-                strpos($key, static::NODESSOURCES_ALIAS . '.') !== false &&
+                str_contains($key, static::NODESSOURCES_ALIAS . '.') &&
                 $this->hasJoinedNodesSources($qb, $alias)
             ) {
                 $qb->addOrderBy($key, $value);
@@ -361,7 +364,7 @@ abstract class EntityRepository extends ServiceEntityRepository
      * @param array $criteria Additional criteria
      * @return int
      */
-    public function countSearchBy($pattern, array $criteria = [])
+    public function countSearchBy(string $pattern, array $criteria = []): int
     {
         $qb = $this->createQueryBuilder(static::DEFAULT_ALIAS);
         $qb->select($qb->expr()->countDistinct(static::DEFAULT_ALIAS . '.id'));
@@ -382,7 +385,7 @@ abstract class EntityRepository extends ServiceEntityRepository
      * @param QueryBuilder $qb
      * @param string $nodeAlias
      */
-    protected function buildTagFiltering(array &$criteria, QueryBuilder $qb, string $nodeAlias = 'n')
+    protected function buildTagFiltering(array &$criteria, QueryBuilder $qb, string $nodeAlias = 'n'): void
     {
         if (key_exists('tags', $criteria)) {
             /*
@@ -445,10 +448,10 @@ abstract class EntityRepository extends ServiceEntityRepository
      * @param array $criteria
      * @param QueryBuilder $qb
      */
-    protected function applyFilterByTag(array &$criteria, QueryBuilder $qb)
+    protected function applyFilterByTag(array &$criteria, QueryBuilder $qb): void
     {
         if (key_exists('tags', $criteria)) {
-            if (null !== $criteria['tags'] && $criteria['tags'] instanceof Tag) {
+            if ($criteria['tags'] instanceof Tag) {
                 $qb->setParameter('tags', $criteria['tags']->getId());
             } elseif (is_array($criteria['tags']) || $criteria['tags'] instanceof Collection) {
                 if (count($criteria['tags']) > 0) {

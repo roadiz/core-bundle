@@ -31,16 +31,16 @@ final class AttributeDocumentsTransformer implements DataTransformerInterface
      * Transform AttributeDocuments join entities
      * to Document entities for displaying in document VueJS component.
      *
-     * @param AttributeDocuments[]|null $attributeDocuments
+     * @param AttributeDocuments[]|null $value
      * @return Document[]
      */
-    public function transform(mixed $attributeDocuments): array
+    public function transform(mixed $value): array
     {
-        if (null === $attributeDocuments || empty($attributeDocuments)) {
+        if (empty($value)) {
             return [];
         }
         $documents = [];
-        foreach ($attributeDocuments as $attributeDocument) {
+        foreach ($value as $attributeDocument) {
             $documents[] = $attributeDocument->getDocument();
         }
 

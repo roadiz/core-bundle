@@ -34,17 +34,10 @@ use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Workflow\Event\Event;
 
-/**
- * Subscribe to Node and NodesSources event to update
- * a Solr server documents.
- */
-class SolariumSubscriber implements EventSubscriberInterface
+final class SolariumSubscriber implements EventSubscriberInterface
 {
     protected MessageBusInterface $messageBus;
 
-    /**
-     * @param MessageBusInterface $messageBus
-     */
     public function __construct(MessageBusInterface $messageBus)
     {
         $this->messageBus = $messageBus;

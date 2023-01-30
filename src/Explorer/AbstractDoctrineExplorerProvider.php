@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Explorer;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\ListManager\EntityListManager;
 use RZ\Roadiz\CoreBundle\ListManager\EntityListManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -28,7 +29,7 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
     }
 
     /**
-     * @return string
+     * @return class-string<PersistableInterface>
      */
     abstract protected function getProvidedClassname(): string;
 
@@ -95,7 +96,7 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
     /**
      * @inheritDoc
      */
-    public function getItemsById($ids = []): array
+    public function getItemsById(array $ids = []): array
     {
         if (is_array($ids) && count($ids) > 0) {
             $entities = $this->managerRegistry->getRepository($this->getProvidedClassname())->findBy([

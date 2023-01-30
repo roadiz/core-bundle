@@ -10,25 +10,25 @@ interface ExplorerProviderInterface
      * @param mixed $item
      * @return ExplorerItemInterface|null
      */
-    public function toExplorerItem($item): ?ExplorerItemInterface;
+    public function toExplorerItem(mixed $item): ?ExplorerItemInterface;
 
     /**
      * @param array $options Options (search, page, itemPerPage…)
      * @return ExplorerItemInterface[]
      */
-    public function getItems($options = []): array;
+    public function getItems(array $options = []): array;
 
     /**
      * @param array $options Options (search, page, itemPerPage…)
      * @return array
      */
-    public function getFilters($options = []): array;
+    public function getFilters(array $options = []): array;
 
     /**
-     * @param array $ids
+     * @param array<string|int> $ids
      * @return ExplorerItemInterface[]
      */
-    public function getItemsById($ids = []): array;
+    public function getItemsById(array $ids = []): array;
 
     /**
      * Check if object can be handled be current ExplorerProvider.
@@ -36,5 +36,5 @@ interface ExplorerProviderInterface
      * @param mixed $item
      * @return bool
      */
-    public function supports($item): bool;
+    public function supports(mixed $item): bool;
 }

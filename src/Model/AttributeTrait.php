@@ -109,7 +109,7 @@ trait AttributeTrait
      *
      * @return $this
      */
-    public function setCode(?string $code)
+    public function setCode(?string $code): self
     {
         $this->code = StringHandler::slugify($code ?? '');
         return $this;
@@ -128,7 +128,7 @@ trait AttributeTrait
      *
      * @return $this
      */
-    public function setType(int $type)
+    public function setType(int $type): self
     {
         $this->type = $type;
         return $this;
@@ -147,7 +147,7 @@ trait AttributeTrait
      *
      * @return $this
      */
-    public function setColor(?string $color)
+    public function setColor(?string $color): self
     {
         $this->color = $color;
         return $this;
@@ -166,7 +166,7 @@ trait AttributeTrait
      *
      * @return $this
      */
-    public function setGroup(?AttributeGroupInterface $group)
+    public function setGroup(?AttributeGroupInterface $group): self
     {
         $this->group = $group;
         return $this;
@@ -185,7 +185,7 @@ trait AttributeTrait
      *
      * @return $this
      */
-    public function setSearchable(bool $searchable)
+    public function setSearchable(bool $searchable): self
     {
         $this->searchable = $searchable;
         return $this;
@@ -248,7 +248,7 @@ trait AttributeTrait
      *
      * @return $this
      */
-    public function setAttributeTranslations(Collection $attributeTranslations)
+    public function setAttributeTranslations(Collection $attributeTranslations): self
     {
         $this->attributeTranslations = $attributeTranslations;
         /** @var AttributeTranslationInterface $attributeTranslation */
@@ -263,7 +263,7 @@ trait AttributeTrait
      *
      * @return $this
      */
-    public function addAttributeTranslation(AttributeTranslationInterface $attributeTranslation)
+    public function addAttributeTranslation(AttributeTranslationInterface $attributeTranslation): self
     {
         if (!$this->getAttributeTranslations()->contains($attributeTranslation)) {
             $this->getAttributeTranslations()->add($attributeTranslation);
@@ -275,9 +275,9 @@ trait AttributeTrait
     /**
      * @param AttributeTranslationInterface $attributeTranslation
      *
-     * @return mixed
+     * @return $this
      */
-    public function removeAttributeTranslation(AttributeTranslationInterface $attributeTranslation)
+    public function removeAttributeTranslation(AttributeTranslationInterface $attributeTranslation): self
     {
         if ($this->getAttributeTranslations()->contains($attributeTranslation)) {
             $this->getAttributeTranslations()->removeElement($attributeTranslation);

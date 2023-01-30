@@ -18,15 +18,10 @@ use Symfony\Component\Form\Exception\TransformationFailedException;
  */
 class TagTranslationDocumentsTransformer implements DataTransformerInterface
 {
-    private $manager;
-    /**
-     * @var TagTranslation
-     */
-    private $tagTranslation;
+    private ObjectManager $manager;
+    private TagTranslation $tagTranslation;
 
     /**
-     * NodeTypeTransformer constructor.
-     *
      * @param ObjectManager $manager
      * @param TagTranslation $tagTranslation
      */
@@ -40,16 +35,16 @@ class TagTranslationDocumentsTransformer implements DataTransformerInterface
      * Transform TagTranslationDocuments join entities
      * to Document entities for displaying in document VueJS component.
      *
-     * @param TagTranslationDocuments[]|null $tagTranslationDocuments
+     * @param TagTranslationDocuments[]|null $value
      * @return Document[]
      */
-    public function transform($tagTranslationDocuments)
+    public function transform(mixed $value): array
     {
-        if (null === $tagTranslationDocuments || empty($tagTranslationDocuments)) {
+        if (empty($value)) {
             return [];
         }
         $documents = [];
-        foreach ($tagTranslationDocuments as $tagTranslationDocument) {
+        foreach ($value as $tagTranslationDocument) {
             $documents[] = $tagTranslationDocument->getDocument();
         }
 
@@ -57,18 +52,18 @@ class TagTranslationDocumentsTransformer implements DataTransformerInterface
     }
 
     /**
-     * @param array $documentIds
+     * @param array<int> $value
      * @return ArrayCollection
      */
-    public function reverseTransform($documentIds)
+    public function reverseTransform(mixed $value): ArrayCollection
     {
-        if (!$documentIds) {
+        if (!$value) {
             return new ArrayCollection();
         }
 
         $documents = new ArrayCollection();
         $position = 0;
-        foreach ($documentIds as $documentId) {
+        foreach ($value as $documentId) {
             $document = $this->manager
                 ->getRepository(Document::class)
                 ->find($documentId)

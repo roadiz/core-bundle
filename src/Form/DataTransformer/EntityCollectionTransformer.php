@@ -6,7 +6,6 @@ namespace RZ\Roadiz\CoreBundle\Form\DataTransformer;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ObjectManager;
-use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
@@ -19,13 +18,13 @@ class EntityCollectionTransformer implements DataTransformerInterface
     protected bool $asCollection;
     private ObjectManager $manager;
     /**
-     * @var class-string<AbstractEntity>
+     * @var class-string<PersistableInterface>
      */
     private string $classname;
 
     /**
      * @param ObjectManager $manager
-     * @param class-string $classname
+     * @param class-string<PersistableInterface> $classname
      * @param bool $asCollection
      */
     public function __construct(ObjectManager $manager, string $classname, bool $asCollection = false)
@@ -36,7 +35,7 @@ class EntityCollectionTransformer implements DataTransformerInterface
     }
 
     /**
-     * @param ArrayCollection<AbstractEntity>|AbstractEntity[]|null $value
+     * @param ArrayCollection<PersistableInterface>|PersistableInterface[]|null $value
      * @return string|array
      */
     public function transform(mixed $value): string|array
@@ -57,7 +56,7 @@ class EntityCollectionTransformer implements DataTransformerInterface
 
     /**
      * @param string|array|null $value
-     * @return array<AbstractEntity>|ArrayCollection<AbstractEntity>
+     * @return array<PersistableInterface>|ArrayCollection<PersistableInterface>
      */
     public function reverseTransform(mixed $value): array|ArrayCollection
     {
@@ -74,10 +73,10 @@ class EntityCollectionTransformer implements DataTransformerInterface
             $ids = explode(',', $value);
         }
 
-        /** @var array<AbstractEntity> $entities */
+        /** @var array<PersistableInterface> $entities */
         $entities = [];
         foreach ($ids as $entityId) {
-            /** @var AbstractEntity|null $entity */
+            /** @var PersistableInterface|null $entity */
             $entity = $this->manager
                 ->getRepository($this->classname)
                 ->find($entityId)

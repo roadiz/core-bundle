@@ -22,13 +22,6 @@ class SolariumNodeSource extends AbstractSolarium
     protected NodesSources $nodeSource;
     protected EventDispatcherInterface $dispatcher;
 
-    /**
-     * @param NodesSources $nodeSource
-     * @param ClientRegistry $clientRegistry
-     * @param EventDispatcherInterface $dispatcher
-     * @param LoggerInterface $searchEngineLogger
-     * @param MarkdownInterface $markdown
-     */
     public function __construct(
         NodesSources $nodeSource,
         ClientRegistry $clientRegistry,
@@ -41,12 +34,9 @@ class SolariumNodeSource extends AbstractSolarium
         $this->dispatcher = $dispatcher;
     }
 
-    /**
-     * @return int|string|null
-     */
-    public function getDocumentId()
+    public function getDocumentId(): int|string
     {
-        return $this->nodeSource->getId();
+        return $this->nodeSource->getId() ?? throw new \RuntimeException('NodeSource must have an ID');
     }
 
     /**

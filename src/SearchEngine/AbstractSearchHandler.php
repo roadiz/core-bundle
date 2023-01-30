@@ -19,11 +19,6 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
     protected LoggerInterface $logger;
     protected int $highlightingFragmentSize = 150;
 
-    /**
-     * @param ClientRegistry $clientRegistry
-     * @param ObjectManager $em
-     * @param LoggerInterface $searchEngineLogger
-     */
     public function __construct(
         ClientRegistry $clientRegistry,
         ObjectManager $em,
@@ -54,19 +49,19 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      * @param string $q
      * @param array $args
      * @param int $rows
-     * @param boolean $searchTags Search in tags/folders too, even if a node don’t match
+     * @param bool $searchTags Search in tags/folders too, even if a node don’t match
      * @param int $proximity Proximity matching: Lucene supports finding words are a within a specific distance away.
      * @param int $page
      *
      * @return SearchResultsInterface Return a SearchResultsInterface iterable object.
      */
     public function searchWithHighlight(
-        $q,
-        $args = [],
-        $rows = 20,
-        $searchTags = false,
-        $proximity = 10000000,
-        $page = 1
+        string $q,
+        array $args = [],
+        int $rows = 20,
+        bool $searchTags = false,
+        int $proximity = 1,
+        int $page = 1
     ): SearchResultsInterface {
         $args = $this->argFqProcess($args);
         $args["fq"][] = "document_type_s:" . $this->getDocumentType();
@@ -77,9 +72,9 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
 
     /**
      * @param array $args
-     * @return mixed
+     * @return array
      */
-    abstract protected function argFqProcess(array &$args);
+    abstract protected function argFqProcess(array &$args): array;
 
     /**
      * @return string
@@ -143,22 +138,22 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
     }
 
     /**
-     * @param string  $q
-     * @param array   $args
-     * @param integer $rows
-     * @param boolean $searchTags
-     * @param integer $proximity Proximity matching: Lucene supports finding words are a within a specific distance away.
-     * @param integer $page
+     * @param string $q
+     * @param array $args
+     * @param int $rows
+     * @param bool $searchTags
+     * @param int $proximity Proximity matching: Lucene supports finding words are a within a specific distance away.
+     * @param int $page
      *
      * @return array|null
      */
     abstract protected function nativeSearch(
-        $q,
-        $args = [],
-        $rows = 20,
-        $searchTags = false,
-        $proximity = 10000000,
-        $page = 1
+        string $q,
+        array $args = [],
+        int $rows = 20,
+        bool $searchTags = false,
+        int $proximity = 1,
+        int $page = 1
     ): ?array;
 
     /**
@@ -187,8 +182,8 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      *
      *
      * @param string $q
-     * @param array  $args
-     * @param int  $rows Results per page
+     * @param array $args
+     * @param int $rows Results per page
      * @param boolean $searchTags Search in tags/folders too, even if a node don’t match
      * @param int $proximity Proximity matching: Lucene supports finding words are a within a specific distance away. Default 10000000
      * @param int $page Retrieve a specific page
@@ -196,12 +191,12 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      * @return SearchResultsInterface Return an array of doctrine Entities (Document, NodesSources)
      */
     public function search(
-        $q,
-        $args = [],
-        $rows = 20,
-        $searchTags = false,
-        $proximity = 10000000,
-        $page = 1
+        string $q,
+        array $args = [],
+        int $rows = 20,
+        bool $searchTags = false,
+        int $proximity = 1,
+        int $page = 1
     ): SearchResultsInterface {
         $args = $this->argFqProcess($args);
         $args["fq"][] = "document_type_s:" . $this->getDocumentType();
@@ -233,15 +228,15 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      *
      * Extends this method to customize your Solr queries. Eg. to boost custom fields.
      *
-     * @param string|null $q
+     * @param string $q
      * @param array $args
      * @param bool $searchTags
      * @param int $proximity
      * @return string
      */
-    protected function buildQuery($q, array &$args, $searchTags = false, $proximity = 10000000)
+    protected function buildQuery(string $q, array &$args, bool $searchTags = false, int $proximity = 1): string
     {
-        $q = null !== $q ? trim($q) : '';
+        $q = trim($q);
         $singleWord = $this->isQuerySingleWord($q);
         $titleField = $this->getTitleField($args);
         $collectionField = $this->getCollectionField($args);
@@ -255,6 +250,7 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         $fuzzyiedQuery = implode(' ', array_map(function (string $word) use ($proximity) {
             /*
              * Do not fuzz short words: Solr crashes
+             * Proximity is set to 1 by default for single-words
              */
             if (strlen($word) > 3) {
                 return $this->escapeQuery($word) . '~' . $proximity;
@@ -355,7 +351,7 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      * @param int $page
      * @return Query
      */
-    protected function createSolrQuery(array &$args = [], $rows = 20, $page = 1)
+    protected function createSolrQuery(array &$args = [], int $rows = 20, int $page = 1): Query
     {
         $query = $this->getSolr()->createSelect();
 

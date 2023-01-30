@@ -23,7 +23,7 @@ abstract class DeferredRouteCollection extends RouteCollection
      *
      * @return void
      */
-    public function parseResources()
+    public function parseResources(): void
     {
     }
 }

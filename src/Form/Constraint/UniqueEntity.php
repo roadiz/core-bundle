@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 
+use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use Symfony\Component\Validator\Constraint;
 
 /**
@@ -19,19 +20,22 @@ class UniqueEntity extends Constraint
 {
     public const NOT_UNIQUE_ERROR = '23bd9dbf-6b9b-41cd-a99e-4844bcf3077f';
 
-    public $message = 'value.is.already.used';
-    public $entityClass = null;
-    public $repositoryMethod = 'findBy';
-    public $errorPath = null;
-    public $fields = [];
-    public $ignoreNull = true;
+    public string $message = 'value.is.already.used';
+    /**
+     * @var class-string<PersistableInterface>|null
+     */
+    public ?string $entityClass = null;
+    public string $repositoryMethod = 'findBy';
+    public ?string $errorPath = null;
+    public array $fields = [];
+    public bool $ignoreNull = true;
 
-    public function getRequiredOptions()
+    public function getRequiredOptions(): array
     {
         return ['fields'];
     }
 
-    public function getDefaultOption()
+    public function getDefaultOption(): string
     {
         return 'fields';
     }

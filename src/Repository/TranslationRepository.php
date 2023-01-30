@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
@@ -13,6 +15,11 @@ use RZ\Roadiz\CoreBundle\Entity\Translation;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
+ * @method Translation|null findOneByName(string $name)
+ * @method Translation|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Translation|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Translation[]    findAll()
+ * @method Translation[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  * @extends EntityRepository<Translation>
  */
 final class TranslationRepository extends EntityRepository
@@ -28,6 +35,7 @@ final class TranslationRepository extends EntityRepository
      * Get single default translation.
      *
      * @return TranslationInterface|null
+     * @throws NonUniqueResultException
      */
     public function findDefault(): ?TranslationInterface
     {
@@ -50,7 +58,7 @@ final class TranslationRepository extends EntityRepository
      *
      * @return TranslationInterface[]
      */
-    public function findAllAvailable()
+    public function findAllAvailable(): array
     {
         $qb = $this->createQueryBuilder('t');
         $qb->andWhere($qb->expr()->eq('t.available', ':available'))
@@ -68,9 +76,11 @@ final class TranslationRepository extends EntityRepository
     /**
      * @param string $locale
      *
-     * @return boolean
+     * @return bool
+     * @throws NonUniqueResultException
+     * @throws NoResultException
      */
-    public function exists($locale)
+    public function exists(string $locale): bool
     {
         $qb = $this->createQueryBuilder('t');
         $qb->select($qb->expr()->countDistinct('t.locale'))
@@ -89,7 +99,7 @@ final class TranslationRepository extends EntityRepository
      *
      * @return array
      */
-    public function getAvailableLocales()
+    public function getAvailableLocales(): array
     {
         $qb = $this->createQueryBuilder('t');
         $qb->select('t.locale')
@@ -110,7 +120,7 @@ final class TranslationRepository extends EntityRepository
      *
      * @return array
      */
-    public function getAllLocales()
+    public function getAllLocales(): array
     {
         $qb = $this->createQueryBuilder('t');
         $qb->select('t.locale')
@@ -129,7 +139,7 @@ final class TranslationRepository extends EntityRepository
      *
      * @return array
      */
-    public function getAvailableOverrideLocales()
+    public function getAvailableOverrideLocales(): array
     {
         $qb = $this->createQueryBuilder('t');
         $qb->select('t.overrideLocale')
@@ -153,7 +163,7 @@ final class TranslationRepository extends EntityRepository
      *
      * @return array
      */
-    public function getAllOverrideLocales()
+    public function getAllOverrideLocales(): array
     {
         $qb = $this->createQueryBuilder('t');
         $qb->select('t.overrideLocale')
@@ -177,11 +187,11 @@ final class TranslationRepository extends EntityRepository
      *
      * @return TranslationInterface[]
      */
-    public function findByLocaleAndAvailable($locale)
+    public function findByLocaleAndAvailable(string $locale): array
     {
-        $qb = $this->createQueryBuilder(static::TRANSLATION_ALIAS);
-        $qb->andWhere($qb->expr()->eq(static::TRANSLATION_ALIAS . '.available', ':available'))
-            ->andWhere($qb->expr()->eq(static::TRANSLATION_ALIAS . '.locale', ':locale'))
+        $qb = $this->createQueryBuilder(self::TRANSLATION_ALIAS);
+        $qb->andWhere($qb->expr()->eq(self::TRANSLATION_ALIAS . '.available', ':available'))
+            ->andWhere($qb->expr()->eq(self::TRANSLATION_ALIAS . '.locale', ':locale'))
             ->setParameter('available', true)
             ->setParameter('locale', $locale)
             ->setCacheable(true);
@@ -201,11 +211,11 @@ final class TranslationRepository extends EntityRepository
      * @param string $overrideLocale
      * @return TranslationInterface[]
      */
-    public function findByOverrideLocaleAndAvailable($overrideLocale)
+    public function findByOverrideLocaleAndAvailable(string $overrideLocale): array
     {
-        $qb = $this->createQueryBuilder(static::TRANSLATION_ALIAS);
-        $qb->andWhere($qb->expr()->eq(static::TRANSLATION_ALIAS . '.available', ':available'))
-            ->andWhere($qb->expr()->eq(static::TRANSLATION_ALIAS . '.overrideLocale', ':overrideLocale'))
+        $qb = $this->createQueryBuilder(self::TRANSLATION_ALIAS);
+        $qb->andWhere($qb->expr()->eq(self::TRANSLATION_ALIAS . '.available', ':available'))
+            ->andWhere($qb->expr()->eq(self::TRANSLATION_ALIAS . '.overrideLocale', ':overrideLocale'))
             ->setParameter('available', true)
             ->setParameter('overrideLocale', $overrideLocale)
             ->setCacheable(true);
@@ -226,9 +236,10 @@ final class TranslationRepository extends EntityRepository
      * @param string $alias
      *
      * @return TranslationInterface|null
+     * @throws NonUniqueResultException
      */
     public function findOneByLocaleOrOverrideLocale(
-        $locale,
+        string $locale,
         string $alias = TranslationRepository::TRANSLATION_ALIAS
     ): ?TranslationInterface {
         $qb = $this->createQueryBuilder($alias);
@@ -252,15 +263,16 @@ final class TranslationRepository extends EntityRepository
      * @param string $locale
      *
      * @return TranslationInterface|null
+     * @throws NonUniqueResultException
      */
-    public function findOneAvailableByLocaleOrOverrideLocale($locale)
+    public function findOneAvailableByLocaleOrOverrideLocale(string $locale): ?TranslationInterface
     {
-        $qb = $this->createQueryBuilder(static::TRANSLATION_ALIAS);
+        $qb = $this->createQueryBuilder(self::TRANSLATION_ALIAS);
         $qb->andWhere($qb->expr()->orX(
-            $qb->expr()->eq(static::TRANSLATION_ALIAS . '.locale', ':locale'),
-            $qb->expr()->eq(static::TRANSLATION_ALIAS . '.overrideLocale', ':locale')
+            $qb->expr()->eq(self::TRANSLATION_ALIAS . '.locale', ':locale'),
+            $qb->expr()->eq(self::TRANSLATION_ALIAS . '.overrideLocale', ':locale')
         ))
-            ->andWhere($qb->expr()->eq(static::TRANSLATION_ALIAS . '.available', ':available'))
+            ->andWhere($qb->expr()->eq(self::TRANSLATION_ALIAS . '.available', ':available'))
             ->setParameter('available', true)
             ->setParameter('locale', $locale)
             ->setMaxResults(1)
@@ -278,12 +290,13 @@ final class TranslationRepository extends EntityRepository
      * @param string $locale
      *
      * @return TranslationInterface|null
+     * @throws NonUniqueResultException
      */
-    public function findOneByLocaleAndAvailable($locale)
+    public function findOneByLocaleAndAvailable(string $locale): ?TranslationInterface
     {
-        $qb = $this->createQueryBuilder(static::TRANSLATION_ALIAS);
-        $qb->andWhere($qb->expr()->eq(static::TRANSLATION_ALIAS . '.available', ':available'))
-            ->andWhere($qb->expr()->eq(static::TRANSLATION_ALIAS . '.locale', ':locale'))
+        $qb = $this->createQueryBuilder(self::TRANSLATION_ALIAS);
+        $qb->andWhere($qb->expr()->eq(self::TRANSLATION_ALIAS . '.available', ':available'))
+            ->andWhere($qb->expr()->eq(self::TRANSLATION_ALIAS . '.locale', ':locale'))
             ->setParameter('available', true)
             ->setParameter('locale', $locale)
             ->setMaxResults(1)
@@ -301,12 +314,13 @@ final class TranslationRepository extends EntityRepository
      * @param string $overrideLocale
      *
      * @return TranslationInterface|null
+     * @throws NonUniqueResultException
      */
-    public function findOneByOverrideLocaleAndAvailable($overrideLocale)
+    public function findOneByOverrideLocaleAndAvailable(string $overrideLocale): ?TranslationInterface
     {
-        $qb = $this->createQueryBuilder(static::TRANSLATION_ALIAS);
-        $qb->andWhere($qb->expr()->eq(static::TRANSLATION_ALIAS . '.available', ':available'))
-            ->andWhere($qb->expr()->eq(static::TRANSLATION_ALIAS . '.overrideLocale', ':overrideLocale'))
+        $qb = $this->createQueryBuilder(self::TRANSLATION_ALIAS);
+        $qb->andWhere($qb->expr()->eq(self::TRANSLATION_ALIAS . '.available', ':available'))
+            ->andWhere($qb->expr()->eq(self::TRANSLATION_ALIAS . '.overrideLocale', ':overrideLocale'))
             ->setParameter('available', true)
             ->setParameter('overrideLocale', $overrideLocale)
             ->setMaxResults(1)
@@ -325,11 +339,11 @@ final class TranslationRepository extends EntityRepository
      * @param Node $node
      * @return TranslationInterface[]
      */
-    public function findAvailableTranslationsForNode(Node $node)
+    public function findAvailableTranslationsForNode(Node $node): array
     {
-        $qb = $this->createQueryBuilder(static::TRANSLATION_ALIAS);
-        $qb->innerJoin('t.nodeSources', static::NODESSOURCES_ALIAS)
-            ->andWhere($qb->expr()->eq(static::NODESSOURCES_ALIAS . '.node', ':node'))
+        $qb = $this->createQueryBuilder(self::TRANSLATION_ALIAS);
+        $qb->innerJoin('t.nodeSources', self::NODESSOURCES_ALIAS)
+            ->andWhere($qb->expr()->eq(self::NODESSOURCES_ALIAS . '.node', ':node'))
             ->addOrderBy('t.defaultTranslation', 'DESC')
             ->addOrderBy('t.locale', 'ASC')
             ->setParameter('node', $node)
@@ -342,9 +356,9 @@ final class TranslationRepository extends EntityRepository
      * @param Tag $tag
      * @return TranslationInterface[]
      */
-    public function findAvailableTranslationsForTag(Tag $tag)
+    public function findAvailableTranslationsForTag(Tag $tag): array
     {
-        $qb = $this->createQueryBuilder(static::TRANSLATION_ALIAS);
+        $qb = $this->createQueryBuilder(self::TRANSLATION_ALIAS);
         $qb->innerJoin('t.tagTranslations', 'tt')
             ->andWhere($qb->expr()->eq('tt.tag', ':tag'))
             ->addOrderBy('t.defaultTranslation', 'DESC')
@@ -358,9 +372,9 @@ final class TranslationRepository extends EntityRepository
      * @param Folder $folder
      * @return TranslationInterface[]
      */
-    public function findAvailableTranslationsForFolder(Folder $folder)
+    public function findAvailableTranslationsForFolder(Folder $folder): array
     {
-        $qb = $this->createQueryBuilder(static::TRANSLATION_ALIAS);
+        $qb = $this->createQueryBuilder(self::TRANSLATION_ALIAS);
         $qb->innerJoin('t.folderTranslations', 'ft')
             ->andWhere($qb->expr()->eq('ft.folder', ':folder'))
             ->addOrderBy('t.defaultTranslation', 'DESC')
@@ -376,12 +390,12 @@ final class TranslationRepository extends EntityRepository
      * @param Node $node
      * @return TranslationInterface[]
      */
-    public function findStrictlyAvailableTranslationsForNode(Node $node)
+    public function findStrictlyAvailableTranslationsForNode(Node $node): array
     {
-        $qb = $this->createQueryBuilder(static::TRANSLATION_ALIAS);
-        $qb->innerJoin('t.nodeSources', static::NODESSOURCES_ALIAS)
-            ->andWhere($qb->expr()->eq(static::NODESSOURCES_ALIAS . '.node', ':node'))
-            ->andWhere($qb->expr()->eq(static::TRANSLATION_ALIAS . '.available', ':available'))
+        $qb = $this->createQueryBuilder(self::TRANSLATION_ALIAS);
+        $qb->innerJoin('t.nodeSources', self::NODESSOURCES_ALIAS)
+            ->andWhere($qb->expr()->eq(self::NODESSOURCES_ALIAS . '.node', ':node'))
+            ->andWhere($qb->expr()->eq(self::TRANSLATION_ALIAS . '.available', ':available'))
             ->addOrderBy('t.defaultTranslation', 'DESC')
             ->addOrderBy('t.locale', 'ASC')
             ->setParameter('node', $node)
@@ -396,9 +410,9 @@ final class TranslationRepository extends EntityRepository
      * @param Node $node
      * @return TranslationInterface[]
      */
-    public function findUnavailableTranslationsForNode(Node $node)
+    public function findUnavailableTranslationsForNode(Node $node): array
     {
-        $qb = $this->createQueryBuilder(static::TRANSLATION_ALIAS);
+        $qb = $this->createQueryBuilder(self::TRANSLATION_ALIAS);
         $qb->andWhere($qb->expr()->notIn('t.id', ':translationsId'))
             ->setParameter('translationsId', $this->findAvailableTranslationIdForNode($node))
             ->setCacheable(true);
@@ -410,12 +424,12 @@ final class TranslationRepository extends EntityRepository
      * @param Node $node
      * @return array
      */
-    public function findAvailableTranslationIdForNode(Node $node)
+    public function findAvailableTranslationIdForNode(Node $node): array
     {
-        $qb = $this->createQueryBuilder(static::TRANSLATION_ALIAS);
-        $qb->select(static::TRANSLATION_ALIAS . '.id')
-            ->innerJoin('t.nodeSources', static::NODESSOURCES_ALIAS)
-            ->andWhere($qb->expr()->eq(static::NODESSOURCES_ALIAS . '.node', ':node'))
+        $qb = $this->createQueryBuilder(self::TRANSLATION_ALIAS);
+        $qb->select(self::TRANSLATION_ALIAS . '.id')
+            ->innerJoin('t.nodeSources', self::NODESSOURCES_ALIAS)
+            ->andWhere($qb->expr()->eq(self::NODESSOURCES_ALIAS . '.node', ':node'))
             ->addOrderBy('t.defaultTranslation', 'DESC')
             ->addOrderBy('t.locale', 'ASC')
             ->setParameter('node', $node)
@@ -428,10 +442,10 @@ final class TranslationRepository extends EntityRepository
      * @param Node $node
      * @return array
      */
-    public function findUnavailableTranslationIdForNode(Node $node)
+    public function findUnavailableTranslationIdForNode(Node $node): array
     {
-        $qb = $this->createQueryBuilder(static::TRANSLATION_ALIAS);
-        $qb->select(static::TRANSLATION_ALIAS . '.id')
+        $qb = $this->createQueryBuilder(self::TRANSLATION_ALIAS);
+        $qb->select(self::TRANSLATION_ALIAS . '.id')
             ->andWhere($qb->expr()->notIn('t.id', ':translationsId'))
             ->setParameter('translationsId', $this->findAvailableTranslationIdForNode($node))
             ->setCacheable(true);

@@ -370,7 +370,7 @@ class ContactFormManager extends EmailManager
         return null;
     }
 
-    protected function handleFiles()
+    protected function handleFiles(): void
     {
         $this->uploadedFiles = [];
         $request = $this->requestStack->getMainRequest();
@@ -464,7 +464,7 @@ class ContactFormManager extends EmailManager
      *
      * @throws \Exception
      */
-    protected function handleFormData(FormInterface $form)
+    protected function handleFormData(FormInterface $form): void
     {
         $formData = $form->getData();
         $fields = $this->flattenFormData($form, []);

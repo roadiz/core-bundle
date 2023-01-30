@@ -15,11 +15,9 @@ trait LoginResetTrait
      * @param string $token
      * @return null|User
      */
-    public function getUserByToken(ObjectManager $entityManager, string $token)
+    public function getUserByToken(ObjectManager $entityManager, string $token): ?User
     {
-        /** @var User $user */
-        return $entityManager->getRepository(User::class)
-            ->findOneByConfirmationToken($token);
+        return $entityManager->getRepository(User::class)->findOneByConfirmationToken($token);
     }
 
     /**

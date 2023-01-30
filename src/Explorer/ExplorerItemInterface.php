@@ -7,12 +7,12 @@ namespace RZ\Roadiz\CoreBundle\Explorer;
 interface ExplorerItemInterface
 {
     /**
-     * @return string|integer
+     * @return string|int
      */
-    public function getId();
+    public function getId(): string|int;
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getAlternativeDisplayable(): ?string;
 
@@ -26,7 +26,7 @@ interface ExplorerItemInterface
      *
      * @return mixed
      */
-    public function getOriginal();
+    public function getOriginal(): mixed;
 
     /**
      * Return a structured array of data.

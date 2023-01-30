@@ -11,7 +11,6 @@ use RZ\Roadiz\CoreBundle\Entity\Node;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @package RZ\Roadiz\CoreBundle\Repository
  * @extends EntityRepository<CustomForm>
  */
 final class CustomFormRepository extends EntityRepository

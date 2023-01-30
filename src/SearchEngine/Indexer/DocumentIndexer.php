@@ -10,7 +10,7 @@ use Solarium\Plugin\BufferedAdd\BufferedAdd;
 
 class DocumentIndexer extends AbstractIndexer
 {
-    public function index($id): void
+    public function index(mixed $id): void
     {
         $document = $this->managerRegistry->getRepository(Document::class)->find($id);
         if (null !== $document) {
@@ -26,7 +26,7 @@ class DocumentIndexer extends AbstractIndexer
         }
     }
 
-    public function delete($id): void
+    public function delete(mixed $id): void
     {
         $document = $this->managerRegistry->getRepository(Document::class)->find($id);
         if (null !== $document) {

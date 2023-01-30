@@ -41,7 +41,7 @@ final class NullLoader implements LoaderInterface
      *
      * @return LoaderResolverInterface|null A LoaderResolverInterface instance
      */
-    public function getResolver()
+    public function getResolver(): ?LoaderResolverInterface
     {
         return null;
     }
@@ -50,9 +50,10 @@ final class NullLoader implements LoaderInterface
      * Sets the loader resolver.
      *
      * @param LoaderResolverInterface $resolver
+     * @return NullLoader
      */
-    public function setResolver(LoaderResolverInterface $resolver)
+    public function setResolver(LoaderResolverInterface $resolver): self
     {
-        return;
+        return $this;
     }
 }

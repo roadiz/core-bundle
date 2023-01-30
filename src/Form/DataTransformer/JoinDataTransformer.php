@@ -37,58 +37,58 @@ class JoinDataTransformer implements DataTransformerInterface
     }
 
     /**
-     * @param mixed $entitiesToForm
+     * @param mixed $value
      * @return mixed
      */
-    public function transform($entitiesToForm)
+    public function transform(mixed $value): mixed
     {
         /*
          * If model is already an PersistableInterface
          */
         if (
-            !empty($entitiesToForm) &&
-            $entitiesToForm instanceof PersistableInterface
+            !empty($value) &&
+            $value instanceof PersistableInterface
         ) {
-            return $entitiesToForm->getId();
-        } elseif (!empty($entitiesToForm) && is_array($entitiesToForm)) {
+            return $value->getId();
+        } elseif (!empty($value) && is_array($value)) {
             /*
              * If model is a collection of AbstractEntity
              */
             $idArray = [];
-            foreach ($entitiesToForm as $entity) {
+            foreach ($value as $entity) {
                 if ($entity instanceof PersistableInterface) {
                     $idArray[] = $entity->getId();
                 }
             }
             return $idArray;
-        } elseif (!empty($entitiesToForm)) {
-            return $entitiesToForm;
+        } elseif (!empty($value)) {
+            return $value;
         }
         return '';
     }
 
     /**
-     * @param mixed $formToEntities
+     * @param mixed $value
      * @return mixed
      */
-    public function reverseTransform($formToEntities)
+    public function reverseTransform(mixed $value): mixed
     {
         if ($this->nodeTypeField->isManyToMany()) {
             $unorderedEntities = $this->managerRegistry->getRepository($this->entityClassname)->findBy([
-                'id' => $formToEntities,
+                'id' => $value,
             ]);
             /*
              * Need to preserve order in POST data
              */
-            usort($unorderedEntities, function (PersistableInterface $a, PersistableInterface $b) use ($formToEntities) {
-                return array_search($a->getId(), $formToEntities) -
-                    array_search($b->getId(), $formToEntities);
+            usort($unorderedEntities, function (PersistableInterface $a, PersistableInterface $b) use ($value) {
+                return array_search($a->getId(), $value) -
+                    array_search($b->getId(), $value);
             });
             return $unorderedEntities;
         }
         if ($this->nodeTypeField->isManyToOne()) {
             return $this->managerRegistry->getRepository($this->entityClassname)->findOneBy([
-                'id' => $formToEntities,
+                'id' => $value,
             ]);
         }
         return null;

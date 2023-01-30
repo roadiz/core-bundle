@@ -74,7 +74,7 @@ trait AttributeGroupTrait
         return $this->getCanonicalName();
     }
 
-    public function setName(?string $name)
+    public function setName(?string $name): self
     {
         if ($this->getAttributeGroupTranslations()->count() === 0) {
             $this->getAttributeGroupTranslations()->add(
@@ -95,7 +95,7 @@ trait AttributeGroupTrait
      * @param string|null $canonicalName
      * @return $this
      */
-    public function setCanonicalName(?string $canonicalName)
+    public function setCanonicalName(?string $canonicalName): self
     {
         $this->canonicalName = StringHandler::slugify($canonicalName ?? '');
         return $this;
@@ -110,7 +110,7 @@ trait AttributeGroupTrait
      * @param Collection $attributes
      * @return $this
      */
-    public function setAttributes(Collection $attributes)
+    public function setAttributes(Collection $attributes): self
     {
         $this->attributes = $attributes;
         return $this;
@@ -125,7 +125,7 @@ trait AttributeGroupTrait
      * @param Collection $attributeGroupTranslations
      * @return $this
      */
-    public function setAttributeGroupTranslations(Collection $attributeGroupTranslations)
+    public function setAttributeGroupTranslations(Collection $attributeGroupTranslations): self
     {
         $this->attributeGroupTranslations = $attributeGroupTranslations;
         /** @var AttributeGroupTranslationInterface $attributeGroupTranslation */
@@ -139,7 +139,7 @@ trait AttributeGroupTrait
      * @param AttributeGroupTranslationInterface $attributeGroupTranslation
      * @return $this
      */
-    public function addAttributeGroupTranslation(AttributeGroupTranslationInterface $attributeGroupTranslation)
+    public function addAttributeGroupTranslation(AttributeGroupTranslationInterface $attributeGroupTranslation): self
     {
         if (!$this->getAttributeGroupTranslations()->contains($attributeGroupTranslation)) {
             $this->getAttributeGroupTranslations()->add($attributeGroupTranslation);
@@ -152,7 +152,7 @@ trait AttributeGroupTrait
      * @param AttributeGroupTranslationInterface $attributeGroupTranslation
      * @return $this
      */
-    public function removeAttributeGroupTranslation(AttributeGroupTranslationInterface $attributeGroupTranslation)
+    public function removeAttributeGroupTranslation(AttributeGroupTranslationInterface $attributeGroupTranslation): self
     {
         if ($this->getAttributeGroupTranslations()->contains($attributeGroupTranslation)) {
             $this->getAttributeGroupTranslations()->removeElement($attributeGroupTranslation);

@@ -9,48 +9,40 @@ use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
 
-/**
- * Class NodeTypeTransformer
- * @package RZ\Roadiz\CoreBundle\Form\DataTransformer
- */
 class NodeTypeTransformer implements DataTransformerInterface
 {
-    private $manager;
+    private ObjectManager $manager;
 
-    /**
-     * NodeTypeTransformer constructor.
-     * @param ObjectManager $manager
-     */
     public function __construct(ObjectManager $manager)
     {
         $this->manager = $manager;
     }
 
     /**
-     * @param NodeType|null $nodeType
+     * @param NodeType|null $value
      * @return int|string
      */
-    public function transform($nodeType)
+    public function transform(mixed $value): int|string
     {
-        if (null === $nodeType) {
+        if (!$value instanceof NodeType) {
             return '';
         }
-        return $nodeType->getId();
+        return $value->getId();
     }
 
     /**
-     * @param mixed $nodeTypeId
+     * @param mixed $value
      * @return null|NodeType
      */
-    public function reverseTransform($nodeTypeId)
+    public function reverseTransform(mixed $value): ?NodeType
     {
-        if (!$nodeTypeId) {
+        if (!$value) {
             return null;
         }
 
         $nodeType = $this->manager
             ->getRepository(NodeType::class)
-            ->find($nodeTypeId)
+            ->find($value)
         ;
 
         if (null === $nodeType) {
@@ -59,7 +51,7 @@ class NodeTypeTransformer implements DataTransformerInterface
             // see the invalid_message option
             throw new TransformationFailedException(sprintf(
                 'A node-type with id "%s" does not exist!',
-                $nodeTypeId
+                $value
             ));
         }
 

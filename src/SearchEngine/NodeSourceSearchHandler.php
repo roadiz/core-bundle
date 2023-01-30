@@ -30,12 +30,12 @@ class NodeSourceSearchHandler extends AbstractSearchHandler implements NodeSourc
      * @return array|null
      */
     protected function nativeSearch(
-        $q,
-        $args = [],
-        $rows = 20,
-        $searchTags = false,
-        $proximity = 10000000,
-        $page = 1
+        string $q,
+        array $args = [],
+        int $rows = 20,
+        bool $searchTags = false,
+        int $proximity = 1,
+        int $page = 1
     ): ?array {
         if (!empty($q)) {
             $query = $this->createSolrQuery($args, $rows, $page);
@@ -84,9 +84,9 @@ class NodeSourceSearchHandler extends AbstractSearchHandler implements NodeSourc
 
     /**
      * @param array $args
-     * @return mixed
+     * @return array
      */
-    protected function argFqProcess(array &$args)
+    protected function argFqProcess(array &$args): array
     {
         if (!isset($args["fq"])) {
             $args["fq"] = [];

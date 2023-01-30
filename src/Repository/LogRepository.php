@@ -11,7 +11,6 @@ use RZ\Roadiz\CoreBundle\Entity\Log;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @package RZ\Roadiz\CoreBundle\Repository
  * @extends EntityRepository<Log>
  */
 final class LogRepository extends EntityRepository
@@ -24,12 +23,12 @@ final class LogRepository extends EntityRepository
     }
 
     /**
-     * Find latest Log with NodesSources.
+     * Find the latest Log with NodesSources.
      *
      * @param int $maxResult
      * @return Paginator
      */
-    public function findLatestByNodesSources($maxResult = 5)
+    public function findLatestByNodesSources(int $maxResult = 5): Paginator
     {
         /*
          * We need to split this query in 2 for performance matter.

@@ -15,17 +15,13 @@ final class SolrDeleteMessageHandler implements MessageHandlerInterface
     private LoggerInterface $logger;
     private IndexerFactoryInterface $indexerFactory;
 
-    /**
-     * @param IndexerFactoryInterface $indexerFactory
-     * @param LoggerInterface $searchEngineLogger
-     */
     public function __construct(IndexerFactoryInterface $indexerFactory, LoggerInterface $searchEngineLogger)
     {
         $this->logger = $searchEngineLogger;
         $this->indexerFactory = $indexerFactory;
     }
 
-    public function __invoke(SolrDeleteMessage $message)
+    public function __invoke(SolrDeleteMessage $message): void
     {
         try {
             if (!empty($message->getIdentifier())) {

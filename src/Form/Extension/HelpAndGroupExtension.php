@@ -17,13 +17,13 @@ class HelpAndGroupExtension extends AbstractTypeExtension
         return [FormType::class];
     }
 
-    public function buildView(FormView $view, FormInterface $form, array $options)
+    public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         $view->vars['help'] = $options['help'] ?? '';
         $view->vars['group'] = $options['group'] ?? '';
     }
 
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'help' => null,

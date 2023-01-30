@@ -25,7 +25,7 @@ final class DefaultNodesSourcesIndexingSubscriber implements EventSubscriberInte
         ];
     }
 
-    public function onIndexing(NodesSourcesIndexingEvent $event)
+    public function onIndexing(NodesSourcesIndexingEvent $event): void
     {
         $nodeSource = $event->getNodeSource();
         $subResource = $event->isSubResource();

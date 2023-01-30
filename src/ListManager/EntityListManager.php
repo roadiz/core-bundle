@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\ListManager;
 
 use Doctrine\Persistence\ObjectManager;
+use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
@@ -12,6 +13,7 @@ use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Repository\NodeRepository;
 use RZ\Roadiz\CoreBundle\Repository\StatusAwareRepository;
 use Symfony\Component\HttpFoundation\Request;
+use Doctrine\ORM\Tools\Pagination\Paginator as DoctrinePaginator;
 
 /**
  * Perform basic filtering and search over entity listings.
@@ -19,7 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 class EntityListManager extends AbstractEntityListManager
 {
     /**
-     * @var class-string|string
+     * @var class-string<PersistableInterface>
      */
     protected string $entityName;
     protected ObjectManager $entityManager;
@@ -33,9 +35,9 @@ class EntityListManager extends AbstractEntityListManager
     /**
      * @param Request|null  $request
      * @param ObjectManager $entityManager
-     * @param string        $entityName
-     * @param array         $preFilters
-     * @param array         $preOrdering
+     * @param class-string<PersistableInterface> $entityName
+     * @param array $preFilters
+     * @param array $preOrdering
      */
     public function __construct(
         ?Request $request,
@@ -169,7 +171,7 @@ class EntityListManager extends AbstractEntityListManager
         }
     }
 
-    protected function createPaginator()
+    protected function createPaginator(): void
     {
         if (
             $this->entityName === Node::class ||
@@ -189,7 +191,7 @@ class EntityListManager extends AbstractEntityListManager
             $this->entityName == 'RZ\Roadiz\CoreBundle\Entity\NodesSources' ||
             $this->entityName == '\RZ\Roadiz\CoreBundle\Entity\NodesSources' ||
             $this->entityName == "NodesSources" ||
-            strpos($this->entityName, NodeType::getGeneratedEntitiesNamespace()) !== false
+            str_contains($this->entityName, NodeType::getGeneratedEntitiesNamespace())
         ) {
             $this->paginator = new NodesSourcesPaginator(
                 $this->entityManager,
@@ -253,9 +255,9 @@ class EntityListManager extends AbstractEntityListManager
     /**
      * Return filtered entities.
      *
-     * @return array|\Doctrine\ORM\Tools\Pagination\Paginator
+     * @return array|DoctrinePaginator
      */
-    public function getEntities()
+    public function getEntities(): array|DoctrinePaginator
     {
         if ($this->pagination === true && null !== $this->paginator) {
             $this->paginator->setItemsPerPage($this->getItemPerPage());

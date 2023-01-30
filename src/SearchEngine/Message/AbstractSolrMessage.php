@@ -15,13 +15,9 @@ abstract class AbstractSolrMessage implements AsyncMessage
     /**
      * @var mixed
      */
-    protected $identifier;
+    protected mixed $identifier;
 
-    /**
-     * @param string $classname
-     * @param mixed $identifier
-     */
-    public function __construct(string $classname, $identifier)
+    public function __construct(string $classname, mixed $identifier)
     {
         $this->classname = $classname;
         $this->identifier = $identifier;
@@ -38,7 +34,7 @@ abstract class AbstractSolrMessage implements AsyncMessage
     /**
      * @return mixed
      */
-    public function getIdentifier()
+    public function getIdentifier(): mixed
     {
         return $this->identifier;
     }

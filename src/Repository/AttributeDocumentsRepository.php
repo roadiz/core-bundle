@@ -10,7 +10,7 @@ use RZ\Roadiz\CoreBundle\Model\AttributeInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @package RZ\Roadiz\CoreBundle\Repository
+ * @extends EntityRepository<AttributeDocuments>
  */
 final class AttributeDocumentsRepository extends EntityRepository
 {
@@ -28,7 +28,7 @@ final class AttributeDocumentsRepository extends EntityRepository
      * @throws \Doctrine\ORM\NoResultException
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    public function getLatestPosition(AttributeInterface $attribute)
+    public function getLatestPosition(AttributeInterface $attribute): int
     {
         $qb = $this->createQueryBuilder('ad');
         $qb->select($qb->expr()->max('ad.position'))

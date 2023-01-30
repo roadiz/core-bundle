@@ -12,45 +12,39 @@ use Symfony\Component\Form\Exception\TransformationFailedException;
 
 class TranslationTransformer implements DataTransformerInterface
 {
-    /**
-     * @var ManagerRegistry $managerRegistry
-     */
     private ManagerRegistry $managerRegistry;
 
-    /**
-     * @param ManagerRegistry $managerRegistry
-     */
     public function __construct(ManagerRegistry $managerRegistry)
     {
         $this->managerRegistry = $managerRegistry;
     }
 
     /**
-     * @param Translation|null $translation
+     * @param Translation|null $value
      * @return int|string
      */
-    public function transform($translation)
+    public function transform(mixed $value): int|string
     {
-        if (null === $translation || !($translation instanceof PersistableInterface)) {
+        if (!($value instanceof PersistableInterface)) {
             return '';
         }
-        return $translation->getId();
+        return $value->getId();
     }
 
     /**
-     * @param mixed $translationId
+     * @param mixed $value
      * @return null|Translation
      */
-    public function reverseTransform($translationId)
+    public function reverseTransform(mixed $value): ?Translation
     {
-        if (!$translationId) {
+        if (!$value) {
             return null;
         }
 
         /** @var Translation|null $translation */
         $translation = $this->managerRegistry
             ->getRepository(Translation::class)
-            ->find($translationId)
+            ->find($value)
         ;
 
         if (null === $translation) {
@@ -59,7 +53,7 @@ class TranslationTransformer implements DataTransformerInterface
             // see the invalid_message option
             throw new TransformationFailedException(sprintf(
                 'A translation with id "%s" does not exist!',
-                $translationId
+                $value
             ));
         }
 

@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
-use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
@@ -89,6 +90,8 @@ final class NodeTypeFieldRepository extends EntityRepository
      * @param NodeTypeInterface|null $nodeType
      *
      * @return int
+     * @throws NoResultException
+     * @throws NonUniqueResultException
      */
     public function findLatestPositionInNodeType(?NodeTypeInterface $nodeType): int
     {

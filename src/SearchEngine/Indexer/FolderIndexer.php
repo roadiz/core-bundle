@@ -9,7 +9,7 @@ use Solarium\Exception\HttpException;
 
 final class FolderIndexer extends DocumentIndexer
 {
-    public function index($id): void
+    public function index(mixed $id): void
     {
         try {
             $folder = $this->managerRegistry->getRepository(Folder::class)->find($id);
@@ -41,7 +41,7 @@ final class FolderIndexer extends DocumentIndexer
         }
     }
 
-    public function delete($id): void
+    public function delete(mixed $id): void
     {
         // Just reindex all linked documents to get rid of folder
         $this->index($id);

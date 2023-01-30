@@ -20,13 +20,6 @@ class SolariumFactory implements SolariumFactoryInterface
     protected EventDispatcherInterface $dispatcher;
     protected HandlerFactoryInterface $handlerFactory;
 
-    /**
-     * @param ClientRegistry $clientRegistry
-     * @param LoggerInterface $searchEngineLogger
-     * @param MarkdownInterface $markdown
-     * @param EventDispatcherInterface $dispatcher
-     * @param HandlerFactoryInterface $handlerFactory
-     */
     public function __construct(
         ClientRegistry $clientRegistry,
         LoggerInterface $searchEngineLogger,

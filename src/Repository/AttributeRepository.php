@@ -8,6 +8,9 @@ use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Attribute;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
+/**
+ * @extends EntityRepository<Attribute>
+ */
 final class AttributeRepository extends EntityRepository
 {
     public function __construct(ManagerRegistry $registry, EventDispatcherInterface $dispatcher)

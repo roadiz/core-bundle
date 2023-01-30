@@ -34,7 +34,7 @@ class ExplorerProviderItemTransformer implements DataTransformerInterface
     /**
      * @inheritDoc
      */
-    public function transform($value)
+    public function transform(mixed $value): array|string
     {
         if (!empty($value) && $this->explorerProvider->supports($value)) {
             $item = $this->explorerProvider->toExplorerItem($value);
@@ -64,7 +64,7 @@ class ExplorerProviderItemTransformer implements DataTransformerInterface
     /**
      * @inheritDoc
      */
-    public function reverseTransform($value)
+    public function reverseTransform(mixed $value): null|array|ArrayCollection
     {
         if (empty($value)) {
             $items = [];

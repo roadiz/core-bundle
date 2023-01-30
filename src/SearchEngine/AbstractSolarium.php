@@ -10,6 +10,7 @@ use RZ\Roadiz\Markdown\MarkdownInterface;
 use Solarium\Core\Client\Client;
 use Solarium\Core\Query\DocumentInterface;
 use Solarium\Core\Query\Result\Result;
+use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\QueryType\Update\Query\Document;
 use Solarium\QueryType\Update\Query\Query;
 
@@ -61,11 +62,6 @@ abstract class AbstractSolarium
     protected LoggerInterface $logger;
     protected MarkdownInterface $markdown;
 
-    /**
-     * @param ClientRegistry $clientRegistry
-     * @param LoggerInterface $searchEngineLogger
-     * @param MarkdownInterface $markdown
-     */
     public function __construct(
         ClientRegistry $clientRegistry,
         LoggerInterface $searchEngineLogger,
@@ -90,10 +86,10 @@ abstract class AbstractSolarium
      *
      * Use this method only when you need to index single NodeSources.
      *
-     * @return boolean|Result
+     * @return ResultInterface|null
      * @throws \Exception
      */
-    public function indexAndCommit()
+    public function indexAndCommit(): ?ResultInterface
     {
         $update = $this->getSolr()->createUpdate();
         $this->createEmptyDocument($update);
@@ -106,7 +102,7 @@ abstract class AbstractSolarium
             return $this->getSolr()->update($update);
         }
 
-        return false;
+        return null;
     }
 
     /**
@@ -114,10 +110,10 @@ abstract class AbstractSolarium
      *
      * Use this method **only** when you need to re-index a single NodeSources.
      *
-     * @return Result
+     * @return ResultInterface|null
      * @throws \Exception
      */
-    public function updateAndCommit()
+    public function updateAndCommit(): ?ResultInterface
     {
         $update = $this->getSolr()->createUpdate();
         $this->update($update);
@@ -136,7 +132,7 @@ abstract class AbstractSolarium
      *
      * @throws \Exception
      */
-    public function update(Query $update)
+    public function update(Query $update): void
     {
         $this->clean($update);
         $this->createEmptyDocument($update);
@@ -149,10 +145,10 @@ abstract class AbstractSolarium
      * Remove current document from SearchEngine index.
      *
      * @param Query $update
-     * @return boolean
+     * @return bool
      * @throws \RuntimeException If no document is available.
      */
-    public function remove(Query $update)
+    public function remove(Query $update): bool
     {
         if (null !== $this->document && isset($this->document->id)) {
             $update->addDeleteById($this->document->id);
@@ -168,7 +164,7 @@ abstract class AbstractSolarium
      *
      * Use this method only when you need to remove a single NodeSources.
      */
-    public function removeAndCommit()
+    public function removeAndCommit(): void
     {
         $update = $this->getSolr()->createUpdate();
 
@@ -182,7 +178,7 @@ abstract class AbstractSolarium
      *
      * Use this method only when you need to remove a single NodeSources.
      */
-    public function cleanAndCommit()
+    public function cleanAndCommit(): void
     {
         $update = $this->getSolr()->createUpdate();
 
@@ -195,10 +191,10 @@ abstract class AbstractSolarium
     /**
      * Index current document with entity data.
      *
-     * @return boolean
+     * @return bool
      * @throws \Exception
      */
-    public function index()
+    public function index(): bool
     {
         if ($this->document instanceof Document) {
             $this->document->setKey('id', uniqid('', true));
@@ -218,19 +214,19 @@ abstract class AbstractSolarium
     }
 
     /**
-     * @return DocumentInterface|Document|null
+     * @return DocumentInterface|null
      */
-    public function getDocument()
+    public function getDocument(): ?DocumentInterface
     {
         return $this->document;
     }
 
     /**
-     * @param Document $document
-     * @return self
+     * @param DocumentInterface $document
+     * @return $this
      * @deprecated Use createEmptyDocument instead of set an empty Solr document.
      */
-    public function setDocument(Document $document)
+    public function setDocument(DocumentInterface $document): self
     {
         $this->document = $document;
         return $this;
@@ -240,26 +236,26 @@ abstract class AbstractSolarium
      * @param Query $update
      * @return $this
      */
-    public function createEmptyDocument(Query $update)
+    public function createEmptyDocument(Query $update): self
     {
         $this->document = $update->createDocument();
         return $this;
     }
 
-    abstract public function clean(Query $update);
+    abstract public function clean(Query $update): bool;
 
 
     /**
      * @return int|string
      */
-    abstract public function getDocumentId();
+    abstract public function getDocumentId(): int|string;
 
     /**
      * Get document from Solr index.
      *
-     * @return boolean *FALSE* if no document found linked to current node-source.
+     * @return bool *FALSE* if no document found linked to current node-source.
      */
-    public function getDocumentFromIndex()
+    public function getDocumentFromIndex(): bool
     {
         $query = $this->getSolr()->createSelect();
         $query->setQuery(static::IDENTIFIER_KEY . ':' . $this->getDocumentId());
@@ -285,7 +281,7 @@ abstract class AbstractSolarium
      * @return array
      * @throws \Exception
      */
-    abstract protected function getFieldsAssoc();
+    abstract protected function getFieldsAssoc(): array;
 
     /**
      * @param string|null $content
@@ -293,13 +289,13 @@ abstract class AbstractSolarium
      *
      * @return string|null
      */
-    public function cleanTextContent($content, $stripMarkdown = true)
+    public function cleanTextContent(?string $content, bool $stripMarkdown = true): ?string
     {
         if (!is_string($content)) {
             return null;
         }
         /*
-         * Strip markdown syntax
+         * Strip Markdown syntax
          */
         if (true === $stripMarkdown) {
             $content = $this->markdown->textExtra($content);

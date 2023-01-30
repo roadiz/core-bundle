@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Setting;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @package RZ\Roadiz\CoreBundle\Repository
+ * @method Setting|null findOneByName(string $name)
+ * @method Setting|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Setting|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Setting[]    findAll()
+ * @method Setting[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  * @extends EntityRepository<Setting>
  */
 final class SettingRepository extends EntityRepository
@@ -24,11 +30,11 @@ final class SettingRepository extends EntityRepository
     /**
      * @param string $name
      *
-     * @return int|mixed|string
-     * @throws \Doctrine\ORM\NoResultException
-     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @return mixed
+     * @throws NoResultException
+     * @throws NonUniqueResultException
      */
-    public function getValue($name)
+    public function getValue(string $name): mixed
     {
         $builder = $this->createQueryBuilder('s');
         $builder->select('s.value')
@@ -45,9 +51,10 @@ final class SettingRepository extends EntityRepository
      * @param string $name
      *
      * @return bool
-     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws NoResultException
+     * @throws NonUniqueResultException
      */
-    public function exists($name): bool
+    public function exists(string $name): bool
     {
         $builder = $this->createQueryBuilder('s');
         $builder->select($builder->expr()->count('s.value'))

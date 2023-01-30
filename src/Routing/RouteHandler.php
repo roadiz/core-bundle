@@ -12,7 +12,7 @@ use Symfony\Component\String\UnicodeString;
  */
 class RouteHandler
 {
-    public static function getBaseRoute($path): string
+    public static function getBaseRoute(string $path): string
     {
         if ((new UnicodeString($path))->endsWith('Locale')) {
             $path = StringHandler::replaceLast("Locale", "", $path);

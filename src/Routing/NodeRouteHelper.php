@@ -93,7 +93,7 @@ final class NodeRouteHelper
     /**
      * Return FALSE or TRUE if node is viewable.
      *
-     * @return boolean
+     * @return bool
      * @throws \ReflectionException
      */
     public function isViewable(): bool

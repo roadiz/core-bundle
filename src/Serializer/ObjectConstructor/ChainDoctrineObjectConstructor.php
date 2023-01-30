@@ -9,7 +9,7 @@ use JMS\Serializer\Construction\ObjectConstructorInterface;
 use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Visitor\DeserializationVisitorInterface;
-use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 
 class ChainDoctrineObjectConstructor implements ObjectConstructorInterface
 {
@@ -38,7 +38,7 @@ class ChainDoctrineObjectConstructor implements ObjectConstructorInterface
     /**
      * @param DeserializationVisitorInterface $visitor
      * @param ClassMetadata $metadata
-     * @param AbstractEntity|array<AbstractEntity> $data
+     * @param PersistableInterface|array<PersistableInterface> $data
      * @param array $type
      * @param DeserializationContext $context
      * @return object|null
@@ -94,7 +94,7 @@ class ChainDoctrineObjectConstructor implements ObjectConstructorInterface
         }
 
         // PHPStan need to explicit classname
-        /** @var class-string<AbstractEntity> $className */
+        /** @var class-string<PersistableInterface> $className */
         $className = $metadata->name;
 
         // Fallback to default constructor if missing identifier(s)

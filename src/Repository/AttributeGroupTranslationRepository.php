@@ -9,6 +9,9 @@ use RZ\Roadiz\CoreBundle\Entity\AttributeGroupTranslation;
 use RZ\Roadiz\CoreBundle\Model\AttributeGroupTranslationInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
+/**
+ * @extends EntityRepository<AttributeGroupTranslation>
+ */
 final class AttributeGroupTranslationRepository extends EntityRepository
 {
     public function __construct(

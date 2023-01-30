@@ -18,9 +18,6 @@ class GlobalNodeSourceSearchHandler
 {
     private ObjectManager $em;
 
-    /**
-     * @param ObjectManager $em
-     */
     public function __construct(ObjectManager $em)
     {
         $this->em = $em;
@@ -39,7 +36,7 @@ class GlobalNodeSourceSearchHandler
      *
      * @return $this
      */
-    public function setDisplayNonPublishedNodes(bool $displayNonPublishedNodes)
+    public function setDisplayNonPublishedNodes(bool $displayNonPublishedNodes): self
     {
         $this->getRepository()->setDisplayingNotPublishedNodes($displayNonPublishedNodes);
         return $this;
@@ -51,8 +48,11 @@ class GlobalNodeSourceSearchHandler
      * @param Translation|null $translation
      * @return NodesSources[]
      */
-    public function getNodeSourcesBySearchTerm(string $searchTerm, int $resultCount, ?Translation $translation = null)
-    {
+    public function getNodeSourcesBySearchTerm(
+        string $searchTerm,
+        int $resultCount,
+        ?Translation $translation = null
+    ): array {
         $safeSearchTerms = strip_tags($searchTerm);
 
         /*

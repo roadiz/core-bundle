@@ -12,7 +12,7 @@ abstract class AbstractExplorerProvider implements ExplorerProviderInterface
     protected array $options;
     protected ContainerInterface $container;
 
-    public function setContainer(ContainerInterface $container)
+    public function setContainer(ContainerInterface $container): self
     {
         $this->container = $container;
         return $this;
@@ -21,7 +21,7 @@ abstract class AbstractExplorerProvider implements ExplorerProviderInterface
     /**
      * @param OptionsResolver $resolver
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'page'       => 1,

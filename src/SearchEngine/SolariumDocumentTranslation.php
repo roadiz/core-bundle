@@ -24,13 +24,6 @@ class SolariumDocumentTranslation extends AbstractSolarium
     protected DocumentTranslation $documentTranslation;
     protected EventDispatcherInterface $dispatcher;
 
-    /**
-     * @param DocumentTranslation $documentTranslation
-     * @param ClientRegistry $clientRegistry
-     * @param EventDispatcherInterface $dispatcher
-     * @param LoggerInterface $searchEngineLogger
-     * @param MarkdownInterface $markdown
-     */
     public function __construct(
         DocumentTranslation $documentTranslation,
         ClientRegistry $clientRegistry,
@@ -44,7 +37,7 @@ class SolariumDocumentTranslation extends AbstractSolarium
         $this->dispatcher = $dispatcher;
     }
 
-    public function getDocumentId()
+    public function getDocumentId(): int|string
     {
         return $this->documentTranslation->getId();
     }

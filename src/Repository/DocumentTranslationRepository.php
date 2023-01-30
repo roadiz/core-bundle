@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @package RZ\Roadiz\CoreBundle\Repository
  * @extends EntityRepository<DocumentTranslation>
  */
 final class DocumentTranslationRepository extends EntityRepository
@@ -24,8 +24,9 @@ final class DocumentTranslationRepository extends EntityRepository
     /**
      * @param int $id
      * @return DocumentTranslation|null
+     * @throws NonUniqueResultException
      */
-    public function findOneWithDocument($id)
+    public function findOneWithDocument(int $id): ?DocumentTranslation
     {
         $qb = $this->createQueryBuilder('dt');
         $qb->select('dt, d')

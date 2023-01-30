@@ -99,7 +99,7 @@ class QueryBuilderListManager extends AbstractEntityListManager
     /**
      * @inheritDoc
      */
-    public function setPage(int $page)
+    public function setPage(int $page): self
     {
         parent::setPage($page);
         $this->queryBuilder->setFirstResult($this->getItemPerPage() * ($page - 1));
@@ -109,7 +109,7 @@ class QueryBuilderListManager extends AbstractEntityListManager
     /**
      * @inheritDoc
      */
-    public function setItemPerPage(int $itemPerPage)
+    public function setItemPerPage(int $itemPerPage): self
     {
         parent::setItemPerPage($itemPerPage);
         $this->queryBuilder->setMaxResults((int) $itemPerPage);
@@ -128,7 +128,7 @@ class QueryBuilderListManager extends AbstractEntityListManager
     /**
      * @inheritDoc
      */
-    public function getEntities()
+    public function getEntities(): Paginator
     {
         return $this->getPaginator();
     }
