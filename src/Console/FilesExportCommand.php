@@ -30,7 +30,7 @@ class FilesExportCommand extends Command
         $this->appNamespace = $appNamespace;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('files:export')
@@ -90,7 +90,7 @@ class FilesExportCommand extends Command
      * @param string $folder
      * @param string $prefix
      */
-    protected function zipFolder(ZipArchive $zip, string $folder, string $prefix = "/public")
+    protected function zipFolder(ZipArchive $zip, string $folder, string $prefix = "/public"): void
     {
         $finder = new Finder();
         $files = $finder->files()

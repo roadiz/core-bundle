@@ -26,7 +26,7 @@ final class VersionsPurgeCommand extends Command
         $this->managerRegistry = $managerRegistry;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('versions:purge')
             ->setDescription('Purge entities versions')
@@ -68,7 +68,7 @@ EOT
         return 0;
     }
 
-    private function purgeByDate(InputInterface $input, OutputInterface $output)
+    private function purgeByDate(InputInterface $input, OutputInterface $output): void
     {
         $io = new SymfonyStyle($input, $output);
         $em = $this->managerRegistry->getManagerForClass(UserLogEntry::class);
@@ -105,7 +105,7 @@ EOT
         }
     }
 
-    private function purgeByCount(InputInterface $input, OutputInterface $output)
+    private function purgeByCount(InputInterface $input, OutputInterface $output): void
     {
         $deleteCount = 0;
         $io = new SymfonyStyle($input, $output);

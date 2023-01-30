@@ -25,7 +25,7 @@ final class SignatureSubscriber implements EventSubscriberInterface
      *
      * @param ResponseEvent $event A ResponseEvent instance
      */
-    public function onKernelResponse(ResponseEvent $event)
+    public function onKernelResponse(ResponseEvent $event): void
     {
         if (!$event->isMainRequest() || $this->hideRoadizVersion) {
             return;

@@ -73,9 +73,9 @@ class FolderHandler extends AbstractHandler
      * Return every folder’s parents.
      *
      * @deprecated Use directly Folder::getParents method.
-     * @return array<LeafInterface|Folder>
+     * @return array<Folder>
      */
-    public function getParents()
+    public function getParents(): array
     {
         $parentsArray = [];
         $parent = $this->getFolder();
@@ -98,7 +98,7 @@ class FolderHandler extends AbstractHandler
      * @deprecated Use directly Folder::getFullPath method.
      * @return string
      */
-    public function getFullPath()
+    public function getFullPath(): string
     {
         $parents = $this->getParents();
         $path = [];

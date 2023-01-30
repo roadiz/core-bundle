@@ -72,7 +72,7 @@ final class AutomaticWebhookSubscriber implements EventSubscriberInterface
      * @param mixed $event
      * @return bool
      */
-    protected function isEventRelatedToNode($event): bool
+    protected function isEventRelatedToNode(mixed $event): bool
     {
         return $event instanceof Event ||
             $event instanceof NodeVisibilityChangedEvent ||
@@ -86,7 +86,7 @@ final class AutomaticWebhookSubscriber implements EventSubscriberInterface
     /**
      * @param Event|NodeVisibilityChangedEvent|NodesSourcesPreUpdatedEvent|NodesSourcesDeletedEvent|NodeDeletedEvent|NodeTaggedEvent|TagUpdatedEvent|DocumentTranslationUpdatedEvent|DocumentUpdatedEvent $event
      */
-    public function onAutomaticWebhook($event): void
+    public function onAutomaticWebhook(mixed $event): void
     {
         /** @var Webhook[] $webhooks */
         $webhooks = $this->managerRegistry->getRepository(Webhook::class)->findBy([
@@ -107,7 +107,7 @@ final class AutomaticWebhookSubscriber implements EventSubscriberInterface
         }
     }
 
-    private function isEventSubjectInRootNode($event, ?Node $rootNode): bool
+    private function isEventSubjectInRootNode(mixed $event, ?Node $rootNode): bool
     {
         if (null === $rootNode) {
             /*

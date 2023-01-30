@@ -12,10 +12,7 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 abstract class FilterNodesSourcesEvent extends Event
 {
-    /**
-     * @var NodesSources
-     */
-    protected $nodeSource;
+    protected NodesSources $nodeSource;
 
     public function __construct(NodesSources $nodeSource)
     {

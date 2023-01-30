@@ -12,22 +12,13 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 abstract class FilterNodeEvent extends Event
 {
-    /**
-     * @var Node
-     */
-    protected $node;
+    protected Node $node;
 
-    /**
-     * @param Node $node
-     */
     public function __construct(Node $node)
     {
         $this->node = $node;
     }
 
-    /**
-     * @return Node
-     */
     public function getNode(): Node
     {
         return $this->node;

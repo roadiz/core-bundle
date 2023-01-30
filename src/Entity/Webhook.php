@@ -25,9 +25,6 @@ use Symfony\Component\Validator\Constraints as Assert;
 ]
 class Webhook extends AbstractDateTimed implements WebhookInterface
 {
-    /**
-     * @var string|null
-     */
     #[
         ORM\Id,
         ORM\Column(type:"string", length:36),
@@ -36,7 +33,8 @@ class Webhook extends AbstractDateTimed implements WebhookInterface
         SymfonySerializer\Groups(["id"]),
         Serializer\Type("string")
     ]
-    protected $id = null;
+    /** @phpstan-ignore-next-line */
+    protected int|string|null $id = null;
 
     /**
      * @var string|null

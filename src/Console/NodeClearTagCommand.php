@@ -29,7 +29,7 @@ class NodeClearTagCommand extends Command
         $this->managerRegistry = $managerRegistry;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('nodes:clear-tag')
             ->addArgument('tagId', InputArgument::REQUIRED, 'Tag ID to delete nodes from.')

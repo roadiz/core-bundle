@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 
+use GuzzleHttp\Psr7\Request;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Cache\ReverseProxyCacheLocator;
 use RZ\Roadiz\CoreBundle\Entity\Node;
@@ -62,7 +63,6 @@ final class ReverseProxyCacheEventSubscriber implements EventSubscriberInterface
 
     /**
      * @param Event $event
-     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function onNodeWorkflowCompleted(Event $event): void
     {
@@ -80,7 +80,7 @@ final class ReverseProxyCacheEventSubscriber implements EventSubscriberInterface
     /**
      * @param CachePurgeRequestEvent $event
      */
-    public function onBanRequest(CachePurgeRequestEvent $event)
+    public function onBanRequest(CachePurgeRequestEvent $event): void
     {
         if (!$this->supportConfig()) {
             return;
@@ -90,7 +90,7 @@ final class ReverseProxyCacheEventSubscriber implements EventSubscriberInterface
             $this->sendRequest($request);
             $event->addMessage(
                 'Reverse proxy cache cleared.',
-                static::class,
+                self::class,
                 'Reverse proxy cache [' . $name . ']'
             );
         }
@@ -99,7 +99,7 @@ final class ReverseProxyCacheEventSubscriber implements EventSubscriberInterface
     /**
      * @param NodesSourcesUpdatedEvent $event
      */
-    public function onPurgeRequest(NodesSourcesUpdatedEvent $event)
+    public function onPurgeRequest(NodesSourcesUpdatedEvent $event): void
     {
         if (!$this->supportConfig()) {
             return;
@@ -109,13 +109,13 @@ final class ReverseProxyCacheEventSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @return \GuzzleHttp\Psr7\Request[]
+     * @return Request[]
      */
-    protected function createBanRequests()
+    protected function createBanRequests(): array
     {
         $requests = [];
         foreach ($this->reverseProxyCacheLocator->getFrontends() as $frontend) {
-            $requests[$frontend->getName()] = new \GuzzleHttp\Psr7\Request(
+            $requests[$frontend->getName()] = new Request(
                 'BAN',
                 'http://' . $frontend->getHost(),
                 [
@@ -139,10 +139,10 @@ final class ReverseProxyCacheEventSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @param \GuzzleHttp\Psr7\Request $request
+     * @param Request $request
      * @return void
      */
-    protected function sendRequest(\GuzzleHttp\Psr7\Request $request): void
+    protected function sendRequest(Request $request): void
     {
         try {
             $this->bus->dispatch(new Envelope(new GuzzleRequestMessage($request, [

@@ -38,7 +38,7 @@ class NodeTypesDeleteCommand extends Command
         $this->schemaUpdater = $schemaUpdater;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('nodetypes:delete')
             ->setDescription('Delete a node-type')

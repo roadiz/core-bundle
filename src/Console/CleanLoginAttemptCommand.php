@@ -24,7 +24,7 @@ class CleanLoginAttemptCommand extends Command
         $this->managerRegistry = $managerRegistry;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('login-attempts:clean')
             ->setDescription('Clean all login attempts older than 1 day');

@@ -30,13 +30,13 @@ class NodesSourcesNodeFilter implements EventSubscriberInterface
      */
     protected function supports(QueryBuilderNodesSourcesBuildEvent $event): bool
     {
-        return $event->supports() && false !== strpos($event->getProperty(), 'node.');
+        return $event->supports() && str_contains($event->getProperty(), 'node.');
     }
 
     /**
      * @param QueryBuilderNodesSourcesBuildEvent $event
      */
-    public function onNodesSourcesQueryBuilderBuild(QueryBuilderNodesSourcesBuildEvent $event)
+    public function onNodesSourcesQueryBuilderBuild(QueryBuilderNodesSourcesBuildEvent $event): void
     {
         if ($this->supports($event)) {
             // Prevent other query builder filters to execute

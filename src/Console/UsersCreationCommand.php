@@ -20,7 +20,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 final class UsersCreationCommand extends UsersCommand
 {
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('users:create')
             ->setDescription('Create a user. Without <info>--password</info> a random password will be generated and sent by email. <info>Check if "email_sender" setting is valid.</info>')

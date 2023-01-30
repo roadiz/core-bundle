@@ -31,7 +31,7 @@ class FilesImportCommand extends Command
         $this->appNamespace = $appNamespace;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('files:import')

@@ -27,7 +27,7 @@ class ANodesFilter implements EventSubscriberInterface
     /**
      * @return string
      */
-    protected function getProperty()
+    protected function getProperty(): string
     {
         return 'aNodes';
     }
@@ -35,7 +35,7 @@ class ANodesFilter implements EventSubscriberInterface
     /**
      * @return string
      */
-    protected function getNodeJoinAlias()
+    protected function getNodeJoinAlias(): string
     {
         return 'a_n';
     }
@@ -43,7 +43,7 @@ class ANodesFilter implements EventSubscriberInterface
     /**
      * @return string
      */
-    protected function getNodeFieldJoinAlias()
+    protected function getNodeFieldJoinAlias(): string
     {
         return 'a_n_f';
     }
@@ -51,11 +51,11 @@ class ANodesFilter implements EventSubscriberInterface
     /**
      * @param QueryBuilderBuildEvent $event
      */
-    public function onNodeQueryBuilderBuild(QueryBuilderBuildEvent $event)
+    public function onNodeQueryBuilderBuild(QueryBuilderBuildEvent $event): void
     {
         if ($event->supports() && $event->getActualEntityName() === Node::class) {
             $simpleQB = new SimpleQueryBuilder($event->getQueryBuilder());
-            if (false !== strpos($event->getProperty(), $this->getProperty() . '.')) {
+            if (str_contains($event->getProperty(), $this->getProperty() . '.')) {
                 // Prevent other query builder filters to execute
                 $event->stopPropagation();
                 $qb = $event->getQueryBuilder();
@@ -72,7 +72,7 @@ class ANodesFilter implements EventSubscriberInterface
                         $this->getNodeJoinAlias()
                     );
                 }
-                if (false !== strpos($event->getProperty(), $this->getProperty() . '.field.')) {
+                if (str_contains($event->getProperty(), $this->getProperty() . '.field.')) {
                     if (
                         !$simpleQB->joinExists(
                             $simpleQB->getRootAlias(),
@@ -99,11 +99,11 @@ class ANodesFilter implements EventSubscriberInterface
     /**
      * @param QueryBuilderNodesSourcesBuildEvent $event
      */
-    public function onNodesSourcesQueryBuilderBuild(QueryBuilderNodesSourcesBuildEvent $event)
+    public function onNodesSourcesQueryBuilderBuild(QueryBuilderNodesSourcesBuildEvent $event): void
     {
         if ($event->supports()) {
             $simpleQB = new SimpleQueryBuilder($event->getQueryBuilder());
-            if (false !== strpos($event->getProperty(), 'node.' . $this->getProperty() . '.')) {
+            if (str_contains($event->getProperty(), 'node.' . $this->getProperty() . '.')) {
                 // Prevent other query builder filters to execute
                 $event->stopPropagation();
                 $qb = $event->getQueryBuilder();
@@ -132,7 +132,7 @@ class ANodesFilter implements EventSubscriberInterface
                         $this->getNodeJoinAlias()
                     );
                 }
-                if (false !== strpos($event->getProperty(), 'node.' . $this->getProperty() . '.field.')) {
+                if (str_contains($event->getProperty(), 'node.' . $this->getProperty() . '.field.')) {
                     if (
                         !$simpleQB->joinExists(
                             $simpleQB->getRootAlias(),

@@ -27,7 +27,7 @@ class TranslationsCommand extends Command
         $this->managerRegistry = $managerRegistry;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('translations:list')
             ->setDescription('List translations');

@@ -39,7 +39,7 @@ class SolrReindexCommand extends SolrCommand implements ThemeAwareCommandInterfa
         $this->indexerFactory = $indexerFactory;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('solr:reindex')
             ->setDescription('Reindex Solr search engine index')

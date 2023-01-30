@@ -10,5 +10,8 @@ namespace RZ\Roadiz\CoreBundle\Exception;
  */
 class ReservedSQLWordException extends \Exception
 {
+    /**
+     * @var string
+     */
     protected $message = 'You tried to use a MySQL reserved word as a column name. Choose another one.';
 }

@@ -29,7 +29,7 @@ class NodesOrphansCommand extends Command
         $this->managerRegistry = $managerRegistry;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('nodes:orphans')
             ->setDescription('Find nodes without any source attached, and delete them.')

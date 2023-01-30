@@ -29,7 +29,7 @@ class NodesCommand extends Command
         $this->managerRegistry = $managerRegistry;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('nodes:list')
             ->setDescription('List available nodes')

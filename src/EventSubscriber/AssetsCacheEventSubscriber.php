@@ -31,7 +31,7 @@ final class AssetsCacheEventSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function onPurgeAssetsRequest(CachePurgeAssetsRequestEvent $event)
+    public function onPurgeAssetsRequest(CachePurgeAssetsRequestEvent $event): void
     {
         try {
             $this->assetsClearer->clear();

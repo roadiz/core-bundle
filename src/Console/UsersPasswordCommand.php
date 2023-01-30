@@ -30,7 +30,7 @@ final class UsersPasswordCommand extends UsersCommand
         $this->passwordGenerator = $passwordGenerator;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('users:password')
             ->setDescription('Regenerate a new password for user')

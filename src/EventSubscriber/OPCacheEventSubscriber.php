@@ -24,15 +24,15 @@ final class OPCacheEventSubscriber implements EventSubscriberInterface
     /**
      * @param CachePurgeRequestEvent $event
      */
-    public function onPurgeRequest(CachePurgeRequestEvent $event)
+    public function onPurgeRequest(CachePurgeRequestEvent $event): void
     {
         try {
             $clearer = new OPCacheClearer();
             if (false !== $clearer->clear()) {
-                $event->addMessage($clearer->getOutput(), static::class, 'OPCode cache');
+                $event->addMessage($clearer->getOutput(), self::class, 'OPCode cache');
             }
         } catch (\Exception $e) {
-            $event->addError($e->getMessage(), static::class, 'OPCode cache');
+            $event->addError($e->getMessage(), self::class, 'OPCode cache');
         }
     }
 }

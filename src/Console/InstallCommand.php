@@ -47,7 +47,7 @@ class InstallCommand extends Command
         $this->settingsImporter = $settingsImporter;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('install')

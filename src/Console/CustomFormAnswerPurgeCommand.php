@@ -35,7 +35,7 @@ final class CustomFormAnswerPurgeCommand extends Command
         $this->logger = $logger;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('custom-form-answer:prune')
             ->setDescription('Prune all custom-form answers older than custom-form retention time policy.')

@@ -12,10 +12,7 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 abstract class FilterTagEvent extends Event
 {
-    /**
-     * @var Tag
-     */
-    protected $tag;
+    protected Tag $tag;
 
     /**
      * @param Tag $tag
@@ -25,10 +22,7 @@ abstract class FilterTagEvent extends Event
         $this->tag = $tag;
     }
 
-    /**
-     * @return Tag
-     */
-    public function getTag()
+    public function getTag(): Tag
     {
         return $this->tag;
     }

@@ -27,7 +27,7 @@ class SolrCommand extends Command
         $this->clientRegistry = $clientRegistry;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('solr:check')
             ->setDescription('Check Solr search engine server');

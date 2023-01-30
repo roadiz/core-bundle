@@ -836,7 +836,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
         return $this;
     }
 
-    public function clearBNodesForField(NodeTypeField $nodeTypeField)
+    public function clearBNodesForField(NodeTypeField $nodeTypeField): Node
     {
         $toRemoveCollection = $this->getBNodes()->filter(function (NodesToNodes $element) use ($nodeTypeField) {
             return $element->getField()->getId() === $nodeTypeField->getId();
@@ -846,6 +846,7 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
             $this->getBNodes()->removeElement($toRemove);
             $toRemove->setNodeA(null);
         }
+        return $this;
     }
 
     /**

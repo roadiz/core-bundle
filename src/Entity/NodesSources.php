@@ -219,11 +219,9 @@ class NodesSources extends AbstractEntity implements Loggable
     }
 
     #[ORM\PreUpdate]
-    public function preUpdate()
+    public function preUpdate(): void
     {
-        if (null !== $this->getNode()) {
-            $this->getNode()->setUpdatedAt(new \DateTime("now"));
-        }
+        $this->getNode()?->setUpdatedAt(new \DateTime("now"));
     }
 
     /**
@@ -263,7 +261,7 @@ class NodesSources extends AbstractEntity implements Loggable
         return $this;
     }
 
-    public function clearDocumentsByFields(NodeTypeField $nodeTypeField)
+    public function clearDocumentsByFields(NodeTypeField $nodeTypeField): NodesSources
     {
         $toRemoveCollection = $this->getDocumentsByFields()->filter(
             function (NodesSourcesDocuments $element) use ($nodeTypeField) {
@@ -275,6 +273,8 @@ class NodesSources extends AbstractEntity implements Loggable
             $this->getDocumentsByFields()->removeElement($toRemove);
             $toRemove->setNodeSource(null);
         }
+
+        return $this;
     }
 
     /**

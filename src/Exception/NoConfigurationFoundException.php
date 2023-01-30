@@ -11,5 +11,8 @@ use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
  */
 class NoConfigurationFoundException extends InvalidConfigurationException
 {
+    /**
+     * @var string
+     */
     protected $message = "No configuration file was found. Make sure that conf/config.json exists.";
 }

@@ -27,7 +27,7 @@ class DecodePrivateKeyCommand extends Command
         $this->uniqueKeyEncoderFactory = $uniqueKeyEncoderFactory;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('crypto:private-key:decode')
             ->addArgument('key-name', InputArgument::REQUIRED)

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\TreeWalker\Definition;
 
+use ArrayIterator;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Exception;
 use RZ\Roadiz\CoreBundle\Api\TreeWalker\NodeSourceWalkerContext;
@@ -33,7 +34,9 @@ final class ReachableNodeSourceDefinition
 
             if ($children instanceof Paginator) {
                 $iterator = $children->getIterator();
-                return $iterator->getArrayCopy();
+                if ($iterator instanceof ArrayIterator) {
+                    return $iterator->getArrayCopy();
+                }
             }
             return $children;
         }

@@ -21,7 +21,7 @@ class LoginAttempt
         ORM\Column(type: "integer"),
         ORM\GeneratedValue(strategy: "AUTO")
     ]
-    private $id;
+    private int $id;
 
     #[ORM\Column(name: 'ip_address', type: 'string', length: 50, nullable: true)]
     private ?string $ipAddress = null;

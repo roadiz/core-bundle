@@ -237,7 +237,7 @@ class Log extends AbstractEntity
     }
 
     #[ORM\PrePersist]
-    public function prePersist()
+    public function prePersist(): void
     {
         $this->datetime = new \DateTime("now");
     }

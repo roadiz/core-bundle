@@ -22,7 +22,7 @@ final class CopyrightValidFilter extends AbstractContextAwareFilter
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
         string $operationName = null
-    ) {
+    ): void {
         if ($property !== self::PARAMETER) {
             return;
         }

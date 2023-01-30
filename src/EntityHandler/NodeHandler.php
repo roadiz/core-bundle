@@ -446,7 +446,7 @@ class NodeHandler extends AbstractHandler
      * Return every node’s parents
      *
      * @param TokenStorageInterface|null $tokenStorage
-     * @return array<LeafInterface|Node>
+     * @return array<Node>
      */
     public function getParents(?TokenStorageInterface $tokenStorage = null): array
     {

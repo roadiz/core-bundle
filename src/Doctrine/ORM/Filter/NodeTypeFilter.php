@@ -29,13 +29,13 @@ class NodeTypeFilter implements EventSubscriberInterface
 
     protected function supports(QueryBuilderBuildEvent $event): bool
     {
-        return $event->supports() && false !== strpos($event->getProperty(), 'nodeType.');
+        return $event->supports() && str_contains($event->getProperty(), 'nodeType.');
     }
 
     /**
      * @param QueryBuilderBuildEvent $event
      */
-    public function onNodeQueryBuilderBuild(QueryBuilderBuildEvent $event)
+    public function onNodeQueryBuilderBuild(QueryBuilderBuildEvent $event): void
     {
         if ($this->supports($event)) {
             // Prevent other query builder filters to execute
@@ -66,11 +66,11 @@ class NodeTypeFilter implements EventSubscriberInterface
     /**
      * @param QueryBuilderNodesSourcesBuildEvent $event
      */
-    public function onNodesSourcesQueryBuilderBuild(QueryBuilderNodesSourcesBuildEvent $event)
+    public function onNodesSourcesQueryBuilderBuild(QueryBuilderNodesSourcesBuildEvent $event): void
     {
         if ($this->supports($event)) {
             $simpleQB = new SimpleQueryBuilder($event->getQueryBuilder());
-            if (false !== strpos($event->getProperty(), 'node.nodeType.')) {
+            if (str_contains($event->getProperty(), 'node.nodeType.')) {
                 // Prevent other query builder filters to execute
                 $event->stopPropagation();
                 $qb = $event->getQueryBuilder();

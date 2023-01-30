@@ -45,7 +45,7 @@ class RoleSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function onRoleChanged(RoleEvent $event)
+    public function onRoleChanged(RoleEvent $event): void
     {
         $manager = $this->managerRegistry->getManagerForClass(Role::class);
         // Clear result cache
@@ -56,8 +56,6 @@ class RoleSubscriber implements EventSubscriberInterface
             $manager->getConfiguration()->getResultCacheImpl()->deleteAll();
         }
         // Clear memory roles bag
-        if (null !== $this->roles) {
-            $this->roles->reset();
-        }
+        $this->roles?->reset();
     }
 }

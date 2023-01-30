@@ -22,7 +22,7 @@ class AttributeValueIndexingSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function onNodeSourceIndexing(NodesSourcesIndexingEvent $event)
+    public function onNodeSourceIndexing(NodesSourcesIndexingEvent $event): void
     {
         if ($event->getNodeSource()->getNode()->getAttributeValues()->count() === 0) {
             return;

@@ -6,7 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber;
 
 use ArrayIterator;
 use Doctrine\Common\EventSubscriber;
-use Doctrine\ORM\Event\LifecycleEventArgs;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Events;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueInterface;
@@ -28,9 +28,9 @@ final class AttributeValueLifeCycleSubscriber implements EventSubscriber
     /**
      * @param LifecycleEventArgs $event
      */
-    public function prePersist(LifecycleEventArgs $event)
+    public function prePersist(LifecycleEventArgs $event): void
     {
-        $entity = $event->getEntity();
+        $entity = $event->getObject();
         if ($entity instanceof AttributeValueInterface) {
             /*
              * Automatically set position only if not manually set before.
@@ -56,9 +56,9 @@ final class AttributeValueLifeCycleSubscriber implements EventSubscriber
      *
      * @throws \Exception
      */
-    public function onFlush(OnFlushEventArgs $eventArgs)
+    public function onFlush(OnFlushEventArgs $eventArgs): void
     {
-        $em = $eventArgs->getEntityManager();
+        $em = $eventArgs->getObjectManager();
         $uow = $em->getUnitOfWork();
 
         foreach ($uow->getScheduledEntityUpdates() as $entity) {

@@ -27,7 +27,7 @@ class MailerTestCommand extends Command
     }
 
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('mailer:send:test')
             ->addArgument('email', InputArgument::REQUIRED, 'Receiver email address.')

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber;
 
 use Doctrine\Common\EventSubscriber;
-use Doctrine\ORM\Event\LifecycleEventArgs;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Events;
 use Psr\Log\LoggerInterface;
@@ -119,7 +119,7 @@ final class UserLifeCycleSubscriber implements EventSubscriber
      * @param User $user
      * @param string|null $plainPassword
      */
-    protected function setPassword(User $user, ?string $plainPassword)
+    protected function setPassword(User $user, ?string $plainPassword): void
     {
         if (null !== $plainPassword) {
             $hasher = $this->passwordHasherFactory->getPasswordHasher($user);
@@ -131,9 +131,9 @@ final class UserLifeCycleSubscriber implements EventSubscriber
     /**
      * @param LifecycleEventArgs $event
      */
-    public function postUpdate(LifecycleEventArgs $event)
+    public function postUpdate(LifecycleEventArgs $event): void
     {
-        $user = $event->getEntity();
+        $user = $event->getObject();
         if ($user instanceof User) {
             $userEvent = new UserUpdatedEvent($user);
             $this->dispatcher->dispatch($userEvent);
@@ -143,9 +143,9 @@ final class UserLifeCycleSubscriber implements EventSubscriber
     /**
      * @param LifecycleEventArgs $event
      */
-    public function postRemove(LifecycleEventArgs $event)
+    public function postRemove(LifecycleEventArgs $event): void
     {
-        $user = $event->getEntity();
+        $user = $event->getObject();
         if ($user instanceof User) {
             $userEvent = new UserDeletedEvent($user);
             $this->dispatcher->dispatch($userEvent);
@@ -157,9 +157,9 @@ final class UserLifeCycleSubscriber implements EventSubscriber
      *
      * @throws \Exception
      */
-    public function postPersist(LifecycleEventArgs $event)
+    public function postPersist(LifecycleEventArgs $event): void
     {
-        $user = $event->getEntity();
+        $user = $event->getObject();
         if ($user instanceof User) {
             $userEvent = new UserCreatedEvent($user);
             $this->dispatcher->dispatch($userEvent);
@@ -171,9 +171,9 @@ final class UserLifeCycleSubscriber implements EventSubscriber
      *
      * @throws \Exception
      */
-    public function prePersist(LifecycleEventArgs $event)
+    public function prePersist(LifecycleEventArgs $event): void
     {
-        $user = $event->getEntity();
+        $user = $event->getObject();
         if ($user instanceof User) {
             if (
                 $user->willSendCreationConfirmationEmail() &&

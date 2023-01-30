@@ -29,7 +29,7 @@ class SolrOptimizeCommand extends SolrCommand
         $this->indexerFactory = $indexerFactory;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('solr:optimize')
             ->setDescription('Optimize Solr search engine index');

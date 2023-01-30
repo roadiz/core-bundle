@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber;
 
 use Doctrine\Common\EventSubscriber;
-use Doctrine\ORM\Event\LifecycleEventArgs;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Events;
 use ParagonIE\Halite\Alerts\InvalidKey;
@@ -42,10 +42,11 @@ final class SettingLifeCycleSubscriber implements EventSubscriber
 
     /**
      * @param PreUpdateEventArgs $event
+     * @throws InvalidKey
      */
-    public function preUpdate(PreUpdateEventArgs $event)
+    public function preUpdate(PreUpdateEventArgs $event): void
     {
-        $setting = $event->getEntity();
+        $setting = $event->getObject();
         if ($setting instanceof Setting) {
             if (
                 $event->hasChangedField('encrypted') &&
@@ -82,9 +83,9 @@ final class SettingLifeCycleSubscriber implements EventSubscriber
     /**
      * @param LifecycleEventArgs $event
      */
-    public function postLoad(LifecycleEventArgs $event)
+    public function postLoad(LifecycleEventArgs $event): void
     {
-        $setting = $event->getEntity();
+        $setting = $event->getObject();
         if (
             $setting instanceof Setting &&
             $setting->isEncrypted() &&
@@ -112,6 +113,9 @@ final class SettingLifeCycleSubscriber implements EventSubscriber
         }
     }
 
+    /**
+     * @throws InvalidKey
+     */
     protected function getEncoder(): UniqueKeyEncoderInterface
     {
         return $this->uniqueKeyEncoderFactory->getEncoder($this->privateKeyName);

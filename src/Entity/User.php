@@ -52,6 +52,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[Assert\NotBlank]
     #[Assert\Length(max: 200)]
     #[Assert\Email]
+    /** @phpstan-ignore-next-line */
     protected ?string $email = null;
 
     /**
@@ -700,7 +701,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
         return !$this->locked;
     }
 
-    public function setLocked(bool $locked)
+    public function setLocked(bool $locked): self
     {
         $this->locked = $locked;
         return $this;
@@ -938,7 +939,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
         return $this;
     }
 
-    public function __serialize()
+    public function __serialize(): array
     {
         return [
             $this->password,
@@ -959,7 +960,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
         ];
     }
 
-    public function __unserialize($data)
+    public function __unserialize(array $data): void
     {
         [
             $this->password,

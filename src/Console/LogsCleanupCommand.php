@@ -27,7 +27,7 @@ class LogsCleanupCommand extends Command
         $this->managerRegistry = $managerRegistry;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('logs:cleanup')

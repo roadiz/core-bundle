@@ -30,7 +30,7 @@ class SolrResetCommand extends SolrCommand
         $this->indexerFactory = $indexerFactory;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('solr:reset')
             ->setDescription('Reset Solr search engine index');

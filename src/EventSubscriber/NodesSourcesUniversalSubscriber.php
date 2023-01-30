@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 
+use Doctrine\ORM\OptimisticLockException;
+use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Event\NodesSources\NodesSourcesUpdatedEvent;
 use RZ\Roadiz\CoreBundle\Node\UniversalDataDuplicator;
@@ -38,10 +40,10 @@ class NodesSourcesUniversalSubscriber implements EventSubscriberInterface
     /**
      * @param NodesSourcesUpdatedEvent $event
      *
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws ORMException
+     * @throws OptimisticLockException
      */
-    public function duplicateUniversalContents(NodesSourcesUpdatedEvent $event)
+    public function duplicateUniversalContents(NodesSourcesUpdatedEvent $event): void
     {
         $source = $event->getNodeSource();
 

@@ -29,7 +29,7 @@ class GeneratePrivateKeyCommand extends Command
         $this->privateKeyName = $privateKeyName;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('crypto:private-key:generate')
             ->setDescription('Generate a default private key to encode data in your database.')

@@ -33,13 +33,7 @@ class NodeDuplicationSubscriber implements EventSubscriberInterface
         ];
     }
 
-    /**
-     * @param NodeDuplicatedEvent $event
-     *
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
-    public function cleanPosition(NodeDuplicatedEvent $event)
+    public function cleanPosition(NodeDuplicatedEvent $event): void
     {
         /** @var NodeHandler $nodeHandler */
         $nodeHandler = $this->handlerFactory->getHandler($event->getNode());

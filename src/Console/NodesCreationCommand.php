@@ -36,7 +36,7 @@ class NodesCreationCommand extends Command
         $this->nodeFactory = $nodeFactory;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('nodes:create')
             ->setDescription('Create a new node')
@@ -110,7 +110,7 @@ class NodesCreationCommand extends Command
         string $nodeName,
         NodeType $type,
         TranslationInterface $translation
-    ) {
+    ): void {
         $node = $this->nodeFactory->create($nodeName, $type, $translation);
         $source = $node->getNodeSources()->first() ?: null;
         if (null === $source) {

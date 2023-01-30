@@ -32,7 +32,7 @@ class GenerateNodeSourceEntitiesCommand extends Command
         $this->handlerFactory = $handlerFactory;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('generate:nsentities')
             ->setDescription('Generate node-sources entities PHP classes.');

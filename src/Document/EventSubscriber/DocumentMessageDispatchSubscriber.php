@@ -43,7 +43,7 @@ final class DocumentMessageDispatchSubscriber implements EventSubscriberInterfac
         ];
     }
 
-    public function onFilterDocumentEvent(FilterDocumentEvent $event)
+    public function onFilterDocumentEvent(FilterDocumentEvent $event): void
     {
         $document = $event->getDocument();
         if (

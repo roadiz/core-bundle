@@ -29,7 +29,7 @@ class NodeTypesCommand extends Command
         $this->managerRegistry = $managerRegistry;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('nodetypes:list')
             ->setDescription('List available node-types or fields for a given node-type name')

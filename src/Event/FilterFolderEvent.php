@@ -12,22 +12,13 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 abstract class FilterFolderEvent extends Event
 {
-    /**
-     * @var Folder
-     */
-    protected $folder;
+    protected Folder $folder;
 
-    /**
-     * @param Folder $folder
-     */
     public function __construct(Folder $folder)
     {
         $this->folder = $folder;
     }
 
-    /**
-     * @return Folder
-     */
     public function getFolder(): Folder
     {
         return $this->folder;

@@ -12,14 +12,14 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 abstract class FilterTranslationEvent extends Event
 {
-    protected $translation;
+    protected Translation $translation;
 
     public function __construct(Translation $translation)
     {
         $this->translation = $translation;
     }
 
-    public function getTranslation()
+    public function getTranslation(): Translation
     {
         return $this->translation;
     }

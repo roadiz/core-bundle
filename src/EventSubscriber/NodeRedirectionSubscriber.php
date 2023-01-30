@@ -51,8 +51,11 @@ class NodeRedirectionSubscriber implements EventSubscriberInterface
      * @param string                   $eventName
      * @param EventDispatcherInterface $dispatcher
      */
-    public function redirectOldPaths(NodePathChangedEvent $event, $eventName, EventDispatcherInterface $dispatcher)
-    {
+    public function redirectOldPaths(
+        NodePathChangedEvent $event,
+        string $eventName,
+        EventDispatcherInterface $dispatcher
+    ): void {
         if (
             $this->kernel->getEnvironment() === 'prod' &&
             !$this->previewResolver->isPreview() &&

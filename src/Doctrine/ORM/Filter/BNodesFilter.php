@@ -23,7 +23,7 @@ class BNodesFilter extends ANodesFilter
     /**
      * @return string
      */
-    protected function getProperty()
+    protected function getProperty(): string
     {
         return 'bNodes';
     }
@@ -31,7 +31,7 @@ class BNodesFilter extends ANodesFilter
     /**
      * @return string
      */
-    protected function getNodeJoinAlias()
+    protected function getNodeJoinAlias(): string
     {
         return 'b_n';
     }
@@ -39,7 +39,7 @@ class BNodesFilter extends ANodesFilter
     /**
      * @return string
      */
-    protected function getNodeFieldJoinAlias()
+    protected function getNodeFieldJoinAlias(): string
     {
         return 'b_n_f';
     }
