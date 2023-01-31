@@ -143,6 +143,10 @@
                 <source>yaml.is.not.valid.{{ error }}</source>
                 <target></target>
             </trans-unit>
+            <trans-unit xml:space="preserve" id="json.is.not.valid">
+                <source>json.is.not.valid.{{ error }}</source>
+                <target></target>
+            </trans-unit>
             <trans-unit xml:space="preserve" id="value.is.already.used">
                 <source>value.is.already.used</source>
                 <target></target>

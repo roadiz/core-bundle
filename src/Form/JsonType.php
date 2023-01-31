@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
 
+use RZ\Roadiz\CoreBundle\Form\Constraint\ValidJson;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormInterface;
@@ -44,6 +45,9 @@ class JsonType extends AbstractType
     {
         $resolver->setDefaults([
             'required' => false,
+            'constraints' => [
+                new ValidJson()
+            ]
         ]);
     }
 }
