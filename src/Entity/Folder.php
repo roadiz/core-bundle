@@ -80,6 +80,8 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface, Lea
      * @var Collection<int, DocumentInterface>
      */
     #[ORM\JoinTable(name: 'documents_folders')]
+    #[ORM\JoinColumn(name: 'folder_id', referencedColumnName: 'id')]
+    #[ORM\InverseJoinColumn(name: 'document_id', referencedColumnName: 'id')]
     #[ORM\ManyToMany(targetEntity: DocumentInterface::class, inversedBy: 'folders')]
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]
