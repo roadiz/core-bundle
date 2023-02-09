@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\CustomForm;
 
 use Doctrine\Persistence\ObjectManager;
+use League\Flysystem\FilesystemException;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Entity\CustomFormAnswer;
@@ -85,10 +86,11 @@ class CustomFormHelper
      * Create or update custom-form answer and its attributes from
      * a submitted form data.
      *
-     * @param FormInterface         $form
+     * @param FormInterface $form
      * @param CustomFormAnswer|null $answer
-     * @param string                $ipAddress
+     * @param string $ipAddress
      * @return CustomFormAnswer
+     * @throws FilesystemException
      */
     public function parseAnswerFormData(
         FormInterface $form,
@@ -176,6 +178,7 @@ class CustomFormHelper
      * @param UploadedFile $file
      * @param CustomFormFieldAttribute $fieldAttr
      * @return DocumentInterface|null
+     * @throws FilesystemException
      */
     protected function handleUploadedFile(
         UploadedFile $file,

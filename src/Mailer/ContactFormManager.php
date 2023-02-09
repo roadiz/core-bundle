@@ -301,10 +301,11 @@ class ContactFormManager extends EmailManager
     /**
      * Handle custom form validation and send it as an email.
      *
+     * @param callable|null $onValid
      * @return Response|null
      * @throws \Exception
      */
-    public function handle(): ?Response
+    public function handle(?callable $onValid = null): ?Response
     {
         $request = $this->requestStack->getMainRequest();
         if (null === $request) {
@@ -320,6 +321,10 @@ class ContactFormManager extends EmailManager
         if ($this->form->isSubmitted()) {
             if ($this->form->isValid()) {
                 try {
+                    if (null !== $onValid) {
+                        $onValid($this->form);
+                    }
+
                     $this->handleFiles();
                     $this->handleFormData($this->form);
                     $this->send();
