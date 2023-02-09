@@ -1,3 +1,10 @@
+## 2.0.44 (2023-02-09)
+
+
+### Bug Fixes
+
+* Add documentTranslation into document during persisting loop to allow fetching before flushing ([cc94cbe](https://github.com/roadiz/core-bundle/commit/cc94cbe0adf9d959cdcc42bcd216faf6bbfc66c9))
+
 ## 2.0.43 (2023-01-26)
 
 
