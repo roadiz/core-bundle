@@ -33,7 +33,7 @@
         "gedmo/doctrine-extensions": "~3.10.0",
         "inlinestyle/inlinestyle": "~1.2.7",
         "james-heinrich/getid3": "^1.9",
-        "jms/serializer": "^3.1.1",
+        "jms/serializer": "^3.9.0",
         "jms/serializer-bundle": "^3.10.0",
         "lexik/jwt-authentication-bundle": "^2.13",
         "phpdocumentor/reflection-docblock": "^5.2",
@@ -91,7 +91,7 @@
         "twig/extra-bundle": "^2.12|^3.0",
         "twig/intl-extra": "*",
         "twig/string-extra": "*",
-        "twig/twig": "^2.12|^3.0"
+        "twig/twig": "^3.1"
     },
     "replace": {
         "roadiz/roadiz": "*"
@@ -114,7 +114,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "symfony/flex": false,
-            "symfony/runtime": false
+            "symfony/runtime": false,
+            "php-http/discovery": false
         }
     },
     "autoload": {
@@ -126,6 +127,11 @@
         "auto-scripts": {
             "cache:clear": "symfony-cmd",
             "assets:install %PUBLIC_DIR%": "symfony-cmd"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-develop": "2.1-dev"
         }
     }
 }
