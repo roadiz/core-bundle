@@ -35,4 +35,9 @@ final class Version20210527131435 extends AbstractMigration
             $this->addSql('ALTER TABLE redirections CHANGE redirectUri redirectUri VARCHAR(255) DEFAULT NULL');
         }
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

@@ -26,4 +26,9 @@ final class Version20230125105107 extends AbstractMigration
     {
         $this->addSql('ALTER TABLE nodes_sources CHANGE discr discr VARCHAR(255) CHARACTER SET utf8mb4 NOT NULL COLLATE `utf8mb4_unicode_ci`');
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

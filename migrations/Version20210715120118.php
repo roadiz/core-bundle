@@ -40,4 +40,9 @@ final class Version20210715120118 extends AbstractMigration
         }
         $this->addSql('ALTER TABLE webhooks DROP root_node');
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

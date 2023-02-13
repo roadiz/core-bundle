@@ -28,4 +28,9 @@ final class Version20220623133037 extends AbstractMigration
         // this down() migration is auto-generated, please modify it to your needs
         $this->addSql('ALTER TABLE documents DROP copyright_valid_since, DROP copyright_valid_until');
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

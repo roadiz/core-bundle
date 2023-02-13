@@ -42,4 +42,9 @@ final class Version20220204180955 extends AbstractMigration
         $this->addSql('DROP INDEX document_image_height ON documents');
         $this->addSql('ALTER TABLE documents_translations DROP external_url');
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

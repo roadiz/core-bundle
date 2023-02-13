@@ -30,4 +30,9 @@ final class Version20220530132117 extends AbstractMigration
         $this->addSql('DROP INDEX realms_behaviour ON realms');
         $this->addSql('ALTER TABLE realms DROP behaviour');
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

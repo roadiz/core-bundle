@@ -28,4 +28,9 @@ final class Version20220530112008 extends AbstractMigration
         // this down() migration is auto-generated, please modify it to your needs
         $this->addSql('DROP INDEX realms_nodes_node_inheritance_type ON realms_nodes');
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

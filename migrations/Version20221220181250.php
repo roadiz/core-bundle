@@ -27,4 +27,9 @@ final class Version20221220181250 extends AbstractMigration
     {
         $this->addSql('ALTER TABLE nodes_sources DROP no_index');
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

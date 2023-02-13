@@ -36,4 +36,9 @@ final class Version20220901082425 extends AbstractMigration
         $this->addSql('DROP INDEX folder_parent_visible_position ON folders');
         $this->addSql('ALTER TABLE folders DROP locked, DROP color');
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

@@ -28,4 +28,9 @@ final class Version20220104132107 extends AbstractMigration
         // this down() migration is auto-generated, please modify it to your needs
         $this->addSql('DROP INDEX node_type_name ON node_types');
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }
