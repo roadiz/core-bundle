@@ -103,6 +103,13 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
                 'id' => $ids
             ]);
 
+            /*
+             * Sort entities the same way IDs were given
+             */
+            usort($entities, function ($a, $b) use ($ids) {
+                return array_search($a->getId(), $ids) <=> array_search($b->getId(), $ids);
+            });
+
             $items = [];
             foreach ($entities as $entity) {
                 $items[] = $this->toExplorerItem($entity);
