@@ -64,7 +64,7 @@ class ExplorerProviderItemTransformer implements DataTransformerInterface
     /**
      * @inheritDoc
      */
-    public function reverseTransform(mixed $value): null|array|ArrayCollection
+    public function reverseTransform(mixed $value): mixed
     {
         if (empty($value)) {
             $items = [];
