@@ -61,7 +61,8 @@ class NodesSourcesLinkHeaderEventSubscriber implements EventSubscriberInterface
                         ])
                     ))
                         ->withAttribute('hreflang', $singleSource->getTranslation()->getLocale())
-                        ->withAttribute('title', $singleSource->getTranslation()->getName())
+                        // Must encode translation name in base64 because headers are ASCII only
+                        ->withAttribute('title', \base64_encode($singleSource->getTranslation()->getName()))
                         ->withAttribute('type', 'text/html')
                 );
             }
