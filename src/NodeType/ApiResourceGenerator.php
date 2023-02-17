@@ -147,7 +147,6 @@ final class ApiResourceGenerator
                         'walker_metadata',
                         'meta',
                         'children',
-                        'children_count',
                     ])
                 ],
             ];
