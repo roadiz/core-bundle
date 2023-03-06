@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\CustomForm;
 
 use Doctrine\Persistence\ObjectManager;
-use RZ\Roadiz\Core\Events\DocumentCreatedEvent;
-use RZ\Roadiz\Core\Models\DocumentInterface;
+use League\Flysystem\FilesystemException;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Entity\CustomFormAnswer;
@@ -14,7 +13,9 @@ use RZ\Roadiz\CoreBundle\Entity\CustomFormField;
 use RZ\Roadiz\CoreBundle\Entity\CustomFormFieldAttribute;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\CoreBundle\Form\CustomFormsType;
-use RZ\Roadiz\Utils\Document\AbstractDocumentFactory;
+use RZ\Roadiz\Documents\AbstractDocumentFactory;
+use RZ\Roadiz\Documents\Events\DocumentCreatedEvent;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
@@ -23,9 +24,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-/**
- * @package RZ\Roadiz\Utils\CustomForm
- */
 class CustomFormHelper
 {
     public const ARRAY_SEPARATOR = ', ';
@@ -79,8 +77,6 @@ class CustomFormHelper
             $name = '';
         }
         return $this->formFactory->createNamed($name, CustomFormsType::class, $defaults, [
-            'recaptcha_public_key' => $this->settingsBag->get('recaptcha_public_key'),
-            'recaptcha_private_key' => $this->settingsBag->get('recaptcha_private_key'),
             'customForm' => $this->customForm,
             'forceExpanded' => $forceExpanded,
         ]);
@@ -90,10 +86,11 @@ class CustomFormHelper
      * Create or update custom-form answer and its attributes from
      * a submitted form data.
      *
-     * @param FormInterface         $form
+     * @param FormInterface $form
      * @param CustomFormAnswer|null $answer
-     * @param string                $ipAddress
+     * @param string $ipAddress
      * @return CustomFormAnswer
+     * @throws FilesystemException
      */
     public function parseAnswerFormData(
         FormInterface $form,
@@ -181,6 +178,7 @@ class CustomFormHelper
      * @param UploadedFile $file
      * @param CustomFormFieldAttribute $fieldAttr
      * @return DocumentInterface|null
+     * @throws FilesystemException
      */
     protected function handleUploadedFile(
         UploadedFile $file,

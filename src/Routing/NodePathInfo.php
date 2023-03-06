@@ -94,7 +94,7 @@ class NodePathInfo
     /**
      * @deprecated Use __serialize
      */
-    public function serialize()
+    public function serialize(): string
     {
         return \json_encode([
             'path' => $this->getPath(),
@@ -104,7 +104,7 @@ class NodePathInfo
         ]);
     }
 
-    public function __serialize()
+    public function __serialize(): array
     {
         return [
             'path' => $this->getPath(),
@@ -117,7 +117,7 @@ class NodePathInfo
     /**
      * @deprecated Use __unserialize
      */
-    public function unserialize($serialized)
+    public function unserialize(string $serialized): void
     {
         $data = \json_decode($serialized, true);
         $this->setComplete($data['is_complete']);
@@ -126,7 +126,7 @@ class NodePathInfo
         $this->setContainsScheme($data['contains_scheme']);
     }
 
-    public function __unserialize($data)
+    public function __unserialize(array $data): void
     {
         $this->setComplete($data['is_complete']);
         $this->setParameters($data['parameters']);

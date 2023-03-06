@@ -13,7 +13,7 @@ class DoctrineMigrationCompilerPass implements CompilerPassInterface
     /**
      * @inheritDoc
      */
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         if ($container->hasDefinition('doctrine.migrations.configuration')) {
             $configurationDefinition = $container->getDefinition('doctrine.migrations.configuration');
@@ -30,9 +30,7 @@ class DoctrineMigrationCompilerPass implements CompilerPassInterface
         if (isset($path[0]) && $path[0] === '@') {
             $pathParts  = explode('/', $path);
             $bundleName = substr($pathParts[0], 1);
-
             $bundlePath = $this->getBundlePath($bundleName, $container);
-
             return $bundlePath . substr($path, strlen('@' . $bundleName));
         }
 

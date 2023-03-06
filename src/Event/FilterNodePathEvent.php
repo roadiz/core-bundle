@@ -11,14 +11,8 @@ use RZ\Roadiz\CoreBundle\Entity\Node;
  */
 abstract class FilterNodePathEvent extends FilterNodeEvent
 {
-    /**
-     * @var array
-     */
-    protected $paths;
-    /**
-     * @var \DateTime
-     */
-    protected $updatedAt;
+    protected array $paths;
+    protected ?\DateTime $updatedAt;
 
     /**
      * @param Node           $node

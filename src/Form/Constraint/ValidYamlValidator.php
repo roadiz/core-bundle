@@ -11,7 +11,12 @@ use Symfony\Component\Yaml\Yaml;
 
 class ValidYamlValidator extends ConstraintValidator
 {
-    public function validate($value, Constraint $constraint)
+    /**
+     * @param mixed $value
+     * @param ValidYaml $constraint
+     * @return void
+     */
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if ($value != "") {
             try {

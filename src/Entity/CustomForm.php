@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\CoreBundle\Repository\CustomFormRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
@@ -20,107 +21,121 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * CustomForms describe each node structure family,
  * They are mandatory before creating any Node.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\CustomFormRepository")
- * @ORM\Table(name="custom_forms")
- * @ORM\HasLifecycleCallbacks
- * @UniqueEntity(fields={"name"})
  */
+#[
+    ORM\Entity(repositoryClass: CustomFormRepository::class),
+    ORM\Table(name: "custom_forms"),
+    ORM\HasLifecycleCallbacks,
+    UniqueEntity(fields: ["name"])
+]
 class CustomForm extends AbstractDateTimed
 {
-    /**
-     * @ORM\Column(type="string", name="color", unique=false, nullable=true)
-     * @var string|null
-     * @Serializer\Groups({"custom_form", "nodes_sources"})
-     * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
-     */
+    #[
+        ORM\Column(name: "color", type: "string", unique: false, nullable: true),
+        Serializer\Groups(["custom_form", "nodes_sources"]),
+        SymfonySerializer\Ignore()
+    ]
     protected ?string $color = '#000000';
-    /**
-     * @ORM\Column(type="string", unique=true)
-     * @var string
-     * @Serializer\Groups({"custom_form", "nodes_sources"})
-     * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
-     * @Assert\NotNull()
-     * @Assert\NotBlank()
-     * @Assert\Length(max=250)
-     */
+
+    #[
+        ORM\Column(type: "string", unique: true),
+        Serializer\Groups(["custom_form", "nodes_sources"]),
+        SymfonySerializer\Groups(["custom_form", "nodes_sources"]),
+        Assert\NotNull(),
+        Assert\NotBlank(),
+        Assert\Length(max: 250),
+        SymfonySerializer\Ignore()
+    ]
     private string $name = 'Untitled';
-    /**
-     * @ORM\Column(name="display_name", type="string")
-     * @var string
-     * @Serializer\Groups({"custom_form", "nodes_sources"})
-     * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
-     * @Assert\NotNull()
-     * @Assert\NotBlank()
-     * @Assert\Length(max=250)
-     */
+
+    #[
+        ORM\Column(name: "display_name", type: "string"),
+        Serializer\Groups(["custom_form", "nodes_sources"]),
+        SymfonySerializer\Groups(["custom_form", "nodes_sources"]),
+        Assert\NotNull(),
+        Assert\NotBlank(),
+        Assert\Length(max: 250),
+        SymfonySerializer\Ignore()
+    ]
     private string $displayName = 'Untitled';
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @var string|null
-     * @Serializer\Groups({"custom_form", "nodes_sources"})
-     * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
-     */
+
+    #[
+        ORM\Column(type: "text", nullable: true),
+        Serializer\Groups(["custom_form", "nodes_sources"]),
+        SymfonySerializer\Groups(["custom_form", "nodes_sources"]),
+        SymfonySerializer\Ignore()
+    ]
     private ?string $description = null;
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @var string|null
-     * @Serializer\Groups({"custom_form"})
-     * @SymfonySerializer\Groups({"custom_form"})
-     */
+
+    #[
+        ORM\Column(type: "text", nullable: true),
+        Serializer\Groups(["custom_form"]),
+        SymfonySerializer\Groups(["custom_form"]),
+        SymfonySerializer\Ignore()
+    ]
     private ?string $email = null;
-    /**
-     * @ORM\Column(type="string", length=15, nullable=true)
-     * @var string|null \DateInterval specification format
-     * @Serializer\Groups({"custom_form"})
-     * @SymfonySerializer\Groups({"custom_form"})
-     */
+
+    #[
+        ORM\Column(type: "string", length: 15, nullable: true),
+        Serializer\Groups(["custom_form"]),
+        SymfonySerializer\Groups(["custom_form"]),
+        SymfonySerializer\Ignore()
+    ]
     private ?string $retentionTime = null;
-    /**
-     * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
-     * @var bool
-     * @Serializer\Groups({"custom_form", "nodes_sources"})
-     * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
-     */
+
+    #[
+        ORM\Column(type: "boolean", nullable: false, options: ["default" => true]),
+        Serializer\Groups(["custom_form", "nodes_sources"]),
+        SymfonySerializer\Groups(["custom_form", "nodes_sources"]),
+        SymfonySerializer\Ignore()
+    ]
     private bool $open = true;
-    /**
-     * @ORM\Column(name="close_date", type="datetime", nullable=true)
-     * @var DateTime|null
-     * @Serializer\Groups({"custom_form", "nodes_sources"})
-     * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
-     * @ApiFilter(RoadizFilter\ArchiveFilter::class)
-     */
+
+    #[
+        ApiFilter(RoadizFilter\ArchiveFilter::class),
+        ORM\Column(name: "close_date", type: "datetime", nullable: true),
+        Serializer\Groups(["custom_form", "nodes_sources"]),
+        SymfonySerializer\Groups(["custom_form", "nodes_sources"]),
+        SymfonySerializer\Ignore()
+    ]
     private ?DateTime $closeDate = null;
-    /**
-     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomFormField", mappedBy="customForm", cascade={"ALL"})
-     * @ORM\OrderBy({"position" = "ASC"})
-     * @var Collection<CustomFormField>
-     * @Serializer\Groups({"custom_form"})
-     * @SymfonySerializer\Groups({"custom_form"})
-     */
-    private Collection $fields;
-    /**
-     * @ORM\OneToMany(
-     *    targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomFormAnswer",
-     *    mappedBy="customForm",
-     *    cascade={"ALL"}
-     * )
-     * @var Collection<CustomFormAnswer>
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
-     */
-    private Collection $customFormAnswers;
-    /**
-     * @ORM\OneToMany(targetEntity="NodesCustomForms", mappedBy="customForm", fetch="EXTRA_LAZY")
-     * @var Collection<NodesCustomForms>
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
-     */
-    private Collection $nodes;
 
     /**
-     * Create a new CustomForm.
+     * @var Collection<CustomFormField>
      */
+    #[
+        ORM\OneToMany(mappedBy: "customForm", targetEntity: CustomFormField::class, cascade: ["ALL"]),
+        ORM\OrderBy(["position" => "ASC"]),
+        Serializer\Groups(["custom_form"]),
+        SymfonySerializer\Groups(["custom_form"]),
+        SymfonySerializer\Ignore()
+    ]
+    private Collection $fields;
+
+    /**
+     * @var Collection<CustomFormAnswer>
+     */
+    #[
+        ORM\OneToMany(
+            mappedBy: "customForm",
+            targetEntity: CustomFormAnswer::class,
+            cascade: ["ALL"]
+        ),
+        Serializer\Exclude,
+        SymfonySerializer\Ignore
+    ]
+    private Collection $customFormAnswers;
+
+    /**
+     * @var Collection<NodesCustomForms>
+     */
+    #[
+        ORM\OneToMany(mappedBy: "customForm", targetEntity: NodesCustomForms::class, fetch: "EXTRA_LAZY"),
+        Serializer\Exclude,
+        SymfonySerializer\Ignore
+    ]
+    private Collection $nodes;
+
     public function __construct()
     {
         $this->fields = new ArrayCollection();
@@ -150,7 +165,7 @@ class CustomForm extends AbstractDateTimed
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getDescription(): ?string
     {
@@ -221,10 +236,12 @@ class CustomForm extends AbstractDateTimed
      * if current form is still available.
      *
      * @return bool
-     * @Serializer\Groups({"custom_form", "nodes_sources"})
-     * @Serializer\VirtualProperty
-     * @SymfonySerializer\Groups({"custom_form", "nodes_sources"})
      */
+    #[
+        Serializer\Groups(["custom_form", "nodes_sources"]),
+        Serializer\VirtualProperty,
+        SymfonySerializer\Ignore
+    ]
     public function isFormStillOpen(): bool
     {
         return (null === $this->getCloseDate() || $this->getCloseDate() >= (new \DateTime('now'))) &&

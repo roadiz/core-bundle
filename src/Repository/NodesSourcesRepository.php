@@ -8,6 +8,7 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderNodesSourcesApplyEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderNodesSourcesBuildEvent;
@@ -28,7 +29,9 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 /**
  * EntityRepository that implements search engine query with Solr.
  *
- * @extends StatusAwareRepository<NodesSources>
+ * @template T of NodesSources
+ * @extends StatusAwareRepository<T>
+ * @template-extends StatusAwareRepository<T>
  */
 class NodesSourcesRepository extends StatusAwareRepository
 {
@@ -59,7 +62,7 @@ class NodesSourcesRepository extends StatusAwareRepository
      *
      * @return object|QueryBuilderNodesSourcesBuildEvent
      */
-    protected function dispatchQueryBuilderBuildEvent(QueryBuilder $qb, $property, $value)
+    protected function dispatchQueryBuilderBuildEvent(QueryBuilder $qb, string $property, mixed $value): object
     {
         return $this->dispatcher->dispatch(
             new QueryBuilderNodesSourcesBuildEvent($qb, $property, $value, $this->getEntityName())
@@ -73,7 +76,7 @@ class NodesSourcesRepository extends StatusAwareRepository
      *
      * @return object|QueryBuilderNodesSourcesApplyEvent
      */
-    protected function dispatchQueryBuilderApplyEvent(QueryBuilder $qb, $property, $value)
+    protected function dispatchQueryBuilderApplyEvent(QueryBuilder $qb, string $property, mixed $value): object
     {
         return $this->dispatcher->dispatch(
             new QueryBuilderNodesSourcesApplyEvent($qb, $property, $value, $this->getEntityName())
@@ -85,7 +88,7 @@ class NodesSourcesRepository extends StatusAwareRepository
      *
      * @return object|QueryNodesSourcesEvent
      */
-    protected function dispatchQueryEvent(Query $query)
+    protected function dispatchQueryEvent(Query $query): object
     {
         return $this->dispatcher->dispatch(
             new QueryNodesSourcesEvent($query, $this->getEntityName())
@@ -98,7 +101,7 @@ class NodesSourcesRepository extends StatusAwareRepository
      * @param array        $criteria
      * @param QueryBuilder $qb
      */
-    protected function filterByTag(array &$criteria, QueryBuilder $qb)
+    protected function filterByTag(array &$criteria, QueryBuilder $qb): void
     {
         if (key_exists('tags', $criteria)) {
             if (!$this->hasJoinedNode($qb, static::NODESSOURCES_ALIAS)) {
@@ -135,7 +138,7 @@ class NodesSourcesRepository extends StatusAwareRepository
     protected function filterByCriteria(
         array &$criteria,
         QueryBuilder $qb
-    ) {
+    ): void {
         $simpleQB = new SimpleQueryBuilder($qb);
         /*
          * Reimplementing findBy features…
@@ -169,7 +172,7 @@ class NodesSourcesRepository extends StatusAwareRepository
      * @param array $criteria
      * @param QueryBuilder $qb
      */
-    protected function applyFilterByCriteria(array &$criteria, QueryBuilder $qb)
+    protected function applyFilterByCriteria(array &$criteria, QueryBuilder $qb): void
     {
         /*
          * Reimplementing findBy features…
@@ -314,7 +317,7 @@ class NodesSourcesRepository extends StatusAwareRepository
      * @throws \Doctrine\ORM\NoResultException
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    public function countBy($criteria)
+    public function countBy(mixed $criteria): int
     {
         $query = $this->getCountContextualQuery($criteria);
         $this->dispatchQueryBuilderEvent($query, $this->getEntityName());
@@ -603,20 +606,23 @@ class NodesSourcesRepository extends StatusAwareRepository
 
     /**
      * @param Node $node
-     * @param TranslationInterface $translation
+     * @param TranslationInterface|null $translation
      * @return mixed|null
      */
-    public function findOneByNodeAndTranslation(Node $node, TranslationInterface $translation)
+    public function findOneByNodeAndTranslation(Node $node, ?TranslationInterface $translation)
     {
         $qb = $this->createQueryBuilder(static::NODESSOURCES_ALIAS);
 
         $qb->select(static::NODESSOURCES_ALIAS)
             ->andWhere($qb->expr()->eq(static::NODESSOURCES_ALIAS . '.node', ':node'))
-            ->andWhere($qb->expr()->eq(static::NODESSOURCES_ALIAS . '.translation', ':translation'))
             ->setMaxResults(1)
             ->setParameter('node', $node)
-            ->setParameter('translation', $translation)
             ->setCacheable(true);
+
+        if (null !== $translation) {
+            $qb->andWhere($qb->expr()->eq(static::NODESSOURCES_ALIAS . '.translation', ':translation'))
+                ->setParameter('translation', $translation);
+        }
 
         return $qb->getQuery()->getOneOrNullResult();
     }
@@ -670,11 +676,11 @@ class NodesSourcesRepository extends StatusAwareRepository
      * @inheritDoc
      */
     protected function createSearchBy(
-        $pattern,
+        string $pattern,
         QueryBuilder $qb,
         array &$criteria = [],
-        $alias = EntityRepository::DEFAULT_ALIAS
-    ) {
+        string $alias = EntityRepository::DEFAULT_ALIAS
+    ): QueryBuilder {
         $qb = parent::createSearchBy($pattern, $qb, $criteria, $alias);
         $this->alterQueryBuilderWithAuthorizationChecker($qb, $alias);
 
@@ -685,26 +691,26 @@ class NodesSourcesRepository extends StatusAwareRepository
      * @inheritDoc
      */
     public function searchBy(
-        $pattern,
+        string $pattern,
         array $criteria = [],
         array $orders = [],
         $limit = null,
         $offset = null,
-        $alias = EntityRepository::DEFAULT_ALIAS
-    ) {
+        string $alias = EntityRepository::DEFAULT_ALIAS
+    ): array|Paginator {
         return parent::searchBy($pattern, $criteria, $orders, $limit, $offset, static::NODESSOURCES_ALIAS);
     }
 
     /**
      * @param NodesSources  $nodesSources
-     * @param NodeTypeField $field
+     * @param NodeTypeFieldInterface $field
      *
      * @return array|null
      */
     public function findByNodesSourcesAndFieldAndTranslation(
         NodesSources $nodesSources,
-        NodeTypeField $field
-    ) {
+        NodeTypeFieldInterface $field
+    ): ?array {
         $qb = $this->createQueryBuilder(static::NODESSOURCES_ALIAS);
         $qb->select('ns, n, ua')
             ->innerJoin('ns.node', static::NODE_ALIAS)

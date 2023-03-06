@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber;
 
 use Doctrine\Common\EventSubscriber;
-use Doctrine\ORM\Event\LifecycleEventArgs;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\Events;
 use RZ\Roadiz\CoreBundle\Entity\CustomFormField;
 use RZ\Roadiz\CoreBundle\EntityHandler\CustomFormFieldHandler;
@@ -35,9 +35,9 @@ final class CustomFormFieldLifeCycleSubscriber implements EventSubscriber
     /**
      * @param LifecycleEventArgs $event
      */
-    public function prePersist(LifecycleEventArgs $event)
+    public function prePersist(LifecycleEventArgs $event): void
     {
-        $field = $event->getEntity();
+        $field = $event->getObject();
         if ($field instanceof CustomFormField) {
             /*
              * Automatically set position only if not manually set before.

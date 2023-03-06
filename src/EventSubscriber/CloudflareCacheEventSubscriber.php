@@ -7,6 +7,7 @@ namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Cache\CloudflareProxyCache;
@@ -71,7 +72,7 @@ final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
      * @throws \GuzzleHttp\Exception\GuzzleException
      * @return void
      */
-    public function onBanRequest(CachePurgeRequestEvent $event)
+    public function onBanRequest(CachePurgeRequestEvent $event): void
     {
         if (!$this->supportConfig()) {
             return;
@@ -81,7 +82,7 @@ final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
             $this->sendRequest($request);
             $event->addMessage(
                 'Cloudflare cache cleared.',
-                static::class,
+                self::class,
                 'Cloudflare proxy cache'
             );
         } catch (RequestException $e) {
@@ -89,20 +90,20 @@ final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
                 $data = \json_decode($e->getResponse()->getBody()->getContents(), true);
                 $event->addError(
                     $data['errors'][0]['message'] ?? $e->getMessage(),
-                    static::class,
+                    self::class,
                     'Cloudflare proxy cache'
                 );
             } else {
                 $event->addError(
                     $e->getMessage(),
-                    static::class,
+                    self::class,
                     'Cloudflare proxy cache'
                 );
             }
         } catch (ConnectException $e) {
             $event->addError(
                 $e->getMessage(),
-                static::class,
+                self::class,
                 'Cloudflare proxy cache'
             );
         }
@@ -113,7 +114,7 @@ final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
      *
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function onPurgeRequest(NodesSourcesUpdatedEvent $event)
+    public function onPurgeRequest(NodesSourcesUpdatedEvent $event): void
     {
         if (!$this->supportConfig()) {
             return;
@@ -152,9 +153,9 @@ final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
 
     /**
      * @param array $body
-     * @return \GuzzleHttp\Psr7\Request
+     * @return Request
      */
-    protected function createRequest(array $body): \GuzzleHttp\Psr7\Request
+    protected function createRequest(array $body): Request
     {
         $headers = [
             'Content-type' => 'application/json',
@@ -168,7 +169,7 @@ final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
             $this->getCloudflareCacheProxy()->getVersion(),
             $this->getCloudflareCacheProxy()->getZone()
         );
-        return new \GuzzleHttp\Psr7\Request(
+        return new Request(
             'POST',
             $uri,
             $headers,
@@ -177,9 +178,9 @@ final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @return \GuzzleHttp\Psr7\Request
+     * @return Request
      */
-    protected function createBanRequest()
+    protected function createBanRequest(): Request
     {
         return $this->createRequest([
             'purge_everything' => true,
@@ -189,9 +190,9 @@ final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
     /**
      * @param string[] $uris
      *
-     * @return \GuzzleHttp\Psr7\Request
+     * @return Request
      */
-    protected function createPurgeRequest(array $uris = [])
+    protected function createPurgeRequest(array $uris = []): Request
     {
         return $this->createRequest([
             'files' => $uris

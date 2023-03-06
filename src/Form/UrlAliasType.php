@@ -6,7 +6,6 @@ namespace RZ\Roadiz\CoreBundle\Form;
 
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
-use RZ\Roadiz\CoreBundle\Form\Constraint\UniqueNodeName;
 use RZ\Roadiz\CoreBundle\Form\DataTransformer\TranslationTransformer;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -28,7 +27,7 @@ class UrlAliasType extends AbstractType
     /**
      * @inheritDoc
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('alias', TextType::class, [
             'label' => false,
@@ -50,7 +49,7 @@ class UrlAliasType extends AbstractType
     /**
      * @inheritDoc
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefault('data_class', UrlAlias::class);
         $resolver->setDefault('with_translation', false);

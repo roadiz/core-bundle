@@ -65,9 +65,9 @@ interface AttributeInterface extends PersistableInterface
     /**
      * @param string $code
      *
-     * @return mixed
+     * @return $this
      */
-    public function setCode(string $code);
+    public function setCode(string $code): self;
 
     /**
      * @param TranslationInterface|null $translation
@@ -84,23 +84,23 @@ interface AttributeInterface extends PersistableInterface
     /**
      * @param Collection<AttributeTranslationInterface> $attributeTranslations
      *
-     * @return mixed
+     * @return $this
      */
-    public function setAttributeTranslations(Collection $attributeTranslations);
+    public function setAttributeTranslations(Collection $attributeTranslations): self;
 
     /**
      * @param AttributeTranslationInterface $attributeTranslation
      *
-     * @return mixed
+     * @return $this
      */
-    public function addAttributeTranslation(AttributeTranslationInterface $attributeTranslation);
+    public function addAttributeTranslation(AttributeTranslationInterface $attributeTranslation): self;
 
     /**
      * @param AttributeTranslationInterface $attributeTranslation
      *
-     * @return mixed
+     * @return $this
      */
-    public function removeAttributeTranslation(AttributeTranslationInterface $attributeTranslation);
+    public function removeAttributeTranslation(AttributeTranslationInterface $attributeTranslation): self;
 
     /**
      * @return bool
@@ -110,7 +110,7 @@ interface AttributeInterface extends PersistableInterface
      /**
      * @param bool $searchable
      */
-    public function setSearchable(bool $searchable);
+    public function setSearchable(bool $searchable): self;
 
     /**
      * @param TranslationInterface $translation
@@ -132,7 +132,7 @@ interface AttributeInterface extends PersistableInterface
     /**
      * @param string|null $color
      */
-    public function setColor(?string $color);
+    public function setColor(?string $color): self;
 
     /**
      * @return AttributeGroupInterface|null
@@ -141,8 +141,9 @@ interface AttributeInterface extends PersistableInterface
 
     /**
      * @param AttributeGroupInterface|null $group
+     * @return $this
      */
-    public function setGroup(?AttributeGroupInterface $group);
+    public function setGroup(?AttributeGroupInterface $group): self;
 
     /**
      * @return Collection
@@ -151,10 +152,9 @@ interface AttributeInterface extends PersistableInterface
 
     /**
      * @param int $type
-     *
-     * @return mixed
+     * @return $this
      */
-    public function setType(int $type);
+    public function setType(int $type): self;
 
     /**
      * @return bool

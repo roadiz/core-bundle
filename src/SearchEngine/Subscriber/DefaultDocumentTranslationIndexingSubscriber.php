@@ -23,7 +23,7 @@ final class DefaultDocumentTranslationIndexingSubscriber implements EventSubscri
         ];
     }
 
-    public function onIndexing(DocumentTranslationIndexingEvent $event)
+    public function onIndexing(DocumentTranslationIndexingEvent $event): void
     {
         $documentTranslation = $event->getDocumentTranslation();
         $assoc = $event->getAssociations();

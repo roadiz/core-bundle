@@ -20,12 +20,6 @@ abstract class AbstractIndexer implements CliAwareIndexer
     protected ?SymfonyStyle $io = null;
     protected ManagerRegistry $managerRegistry;
 
-    /**
-     * @param ClientRegistry $clientRegistry
-     * @param ManagerRegistry $managerRegistry
-     * @param SolariumFactoryInterface $solariumFactory
-     * @param LoggerInterface $searchEngineLogger
-     */
     public function __construct(
         ClientRegistry $clientRegistry,
         ManagerRegistry $managerRegistry,
@@ -54,7 +48,7 @@ abstract class AbstractIndexer implements CliAwareIndexer
      * @param SymfonyStyle|null $io
      * @return AbstractIndexer
      */
-    public function setIo(?SymfonyStyle $io)
+    public function setIo(?SymfonyStyle $io): self
     {
         $this->io = $io;
         return $this;
@@ -90,7 +84,7 @@ abstract class AbstractIndexer implements CliAwareIndexer
         $this->commitSolr();
     }
 
-    public function commitSolr()
+    public function commitSolr(): void
     {
         $finalCommitUpdate = $this->getSolr()->createUpdate();
         $finalCommitUpdate->addCommit(true, true, false);

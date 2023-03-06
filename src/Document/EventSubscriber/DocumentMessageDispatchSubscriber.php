@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Document\EventSubscriber;
 
-use RZ\Roadiz\Core\Events\DocumentCreatedEvent;
-use RZ\Roadiz\Core\Events\DocumentFileUpdatedEvent;
-use RZ\Roadiz\Core\Events\FilterDocumentEvent;
 use RZ\Roadiz\CoreBundle\Document\Message\DocumentAudioVideoMessage;
 use RZ\Roadiz\CoreBundle\Document\Message\DocumentAverageColorMessage;
 use RZ\Roadiz\CoreBundle\Document\Message\DocumentExifMessage;
@@ -14,8 +11,10 @@ use RZ\Roadiz\CoreBundle\Document\Message\DocumentFilesizeMessage;
 use RZ\Roadiz\CoreBundle\Document\Message\DocumentRawMessage;
 use RZ\Roadiz\CoreBundle\Document\Message\DocumentSizeMessage;
 use RZ\Roadiz\CoreBundle\Document\Message\DocumentSvgMessage;
-use RZ\Roadiz\CoreBundle\Document\Message\DocumentVideoThumbnailMessage;
 use RZ\Roadiz\CoreBundle\Entity\Document;
+use RZ\Roadiz\Documents\Events\DocumentCreatedEvent;
+use RZ\Roadiz\Documents\Events\DocumentFileUpdatedEvent;
+use RZ\Roadiz\Documents\Events\FilterDocumentEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -44,7 +43,7 @@ final class DocumentMessageDispatchSubscriber implements EventSubscriberInterfac
         ];
     }
 
-    public function onFilterDocumentEvent(FilterDocumentEvent $event)
+    public function onFilterDocumentEvent(FilterDocumentEvent $event): void
     {
         $document = $event->getDocument();
         if (
@@ -60,7 +59,6 @@ final class DocumentMessageDispatchSubscriber implements EventSubscriberInterfac
             $this->bus->dispatch(new Envelope(new DocumentExifMessage($document->getId())));
             $this->bus->dispatch(new Envelope(new DocumentSvgMessage($document->getId())));
             $this->bus->dispatch(new Envelope(new DocumentAudioVideoMessage($document->getId())));
-            $this->bus->dispatch(new Envelope(new DocumentVideoThumbnailMessage($document->getId())));
         }
     }
 }

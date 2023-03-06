@@ -17,7 +17,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 final class NodeTypesAddFieldCommand extends NodeTypesCreationCommand
 {
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('nodetypes:add-fields')
             ->setDescription('Add fields to a node-type')

@@ -59,4 +59,9 @@ final class Version20210520092543 extends AbstractMigration
             $this->addSql('ALTER TABLE node_type_fields DROP excluded_from_serialization');
         }
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

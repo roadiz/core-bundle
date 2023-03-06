@@ -8,6 +8,7 @@ use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Entity\TagTranslation;
 use Symfony\Component\HttpFoundation\Request;
+use Doctrine\ORM\Tools\Pagination\Paginator as DoctrinePaginator;
 
 /**
  * Perform basic filtering and search over entity listings.
@@ -30,9 +31,9 @@ class TagListManager extends EntityListManager
     }
 
     /**
-     * @return array|\Doctrine\ORM\Tools\Pagination\Paginator|null
+     * @return array|DoctrinePaginator
      */
-    public function getEntities()
+    public function getEntities(): array|DoctrinePaginator
     {
         try {
             if ($this->searchPattern != '') {
@@ -43,7 +44,7 @@ class TagListManager extends EntityListManager
                 return $this->paginator->findByAtPage($this->filteringArray, $this->currentPage);
             }
         } catch (\Exception $e) {
-            return null;
+            return [];
         }
     }
 }

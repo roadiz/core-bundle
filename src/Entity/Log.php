@@ -8,23 +8,23 @@ use Doctrine\ORM\Mapping as ORM;
 use Monolog\Logger;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\CoreBundle\Repository\LogRepository;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
-/**
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\LogRepository")
- * @ORM\Table(name="log", indexes={
- *     @ORM\Index(columns={"datetime"}),
- *     @ORM\Index(columns={"node_source_id", "datetime"}, name="log_ns_datetime"),
- *     @ORM\Index(columns={"username", "datetime"}, name="log_username_datetime"),
- *     @ORM\Index(columns={"user_id", "datetime"}, name="log_user_datetime"),
- *     @ORM\Index(columns={"level", "datetime"}, name="log_level_datetime"),
- *     @ORM\Index(columns={"channel", "datetime"}, name="log_channel_datetime"),
- *     @ORM\Index(columns={"level"}),
- *     @ORM\Index(columns={"username"}),
- *     @ORM\Index(columns={"channel"})
- * })
- * @ORM\HasLifecycleCallbacks
- */
+#[
+    ORM\Entity(repositoryClass: LogRepository::class),
+    ORM\Table(name: "log"),
+    ORM\Index(columns: ["datetime"]),
+    ORM\Index(columns: ["node_source_id", "datetime"], name: "log_ns_datetime"),
+    ORM\Index(columns: ["username", "datetime"], name: "log_username_datetime"),
+    ORM\Index(columns: ["user_id", "datetime"], name: "log_user_datetime"),
+    ORM\Index(columns: ["level", "datetime"], name: "log_level_datetime"),
+    ORM\Index(columns: ["channel", "datetime"], name: "log_channel_datetime"),
+    ORM\Index(columns: ["level"]),
+    ORM\Index(columns: ["username"]),
+    ORM\Index(columns: ["channel"]),
+    ORM\HasLifecycleCallbacks
+]
 class Log extends AbstractEntity
 {
     public const EMERGENCY = Logger::EMERGENCY;
@@ -37,69 +37,51 @@ class Log extends AbstractEntity
     public const DEBUG =     Logger::DEBUG;
     public const LOG =       Logger::INFO;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\User")
-     * @ORM\JoinColumn(name="user_id", referencedColumnName="id", unique=false, onDelete="SET NULL")
-     * @var User|null
-     * @Serializer\Groups({"log_user"})
-     * @SymfonySerializer\Groups({"log_user"})
-     */
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', unique: false, onDelete: 'SET NULL')]
+    #[SymfonySerializer\Groups(['log_user'])]
+    #[Serializer\Groups(['log_user'])]
     protected ?User $user = null;
-    /**
-     * @ORM\Column(type="string", name="username", nullable=true)
-     * @var string|null
-     * @Serializer\Groups({"log_user"})
-     * @SymfonySerializer\Groups({"log_user"})
-     */
+
+    #[ORM\Column(name: 'username', type: 'string', nullable: true)]
+    #[SymfonySerializer\Groups(['log_user'])]
+    #[Serializer\Groups(['log_user'])]
     protected ?string $username = null;
-    /**
-     * @ORM\Column(type="text", name="message")
-     * @Serializer\Groups({"log"})
-     * @SymfonySerializer\Groups({"log"})
-     * @var string
-     */
+
+    #[ORM\Column(name: 'message', type: 'text')]
+    #[SymfonySerializer\Groups(['log'])]
+    #[Serializer\Groups(['log'])]
     protected string $message = '';
-    /**
-     * @ORM\Column(type="integer", name="level", nullable=false)
-     * @Serializer\Groups({"log"})
-     * @SymfonySerializer\Groups({"log"})
-     * @var int
-     */
+
+    #[ORM\Column(name: 'level', type: 'integer', nullable: false)]
+    #[SymfonySerializer\Groups(['log'])]
+    #[Serializer\Groups(['log'])]
     protected int $level = Log::DEBUG;
-    /**
-     * @ORM\Column(type="datetime", name="datetime", nullable=false)
-     * @Serializer\Groups({"log"})
-     * @SymfonySerializer\Groups({"log"})
-     * @var \DateTime
-     */
+
+    #[ORM\Column(name: 'datetime', type: 'datetime', nullable: false)]
+    #[SymfonySerializer\Groups(['log'])]
+    #[Serializer\Groups(['log'])]
     protected \DateTime $datetime;
-    /**
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\NodesSources", inversedBy="logs")
-     * @ORM\JoinColumn(name="node_source_id", referencedColumnName="id", onDelete="SET NULL")
-     * @Serializer\Groups({"log_sources"})
-     * @SymfonySerializer\Groups({"log_sources"})
-     */
+
+    #[ORM\ManyToOne(targetEntity: NodesSources::class, inversedBy: 'logs')]
+    #[ORM\JoinColumn(name: 'node_source_id', referencedColumnName: 'id', onDelete: 'SET NULL')]
+    #[SymfonySerializer\Groups(['log_sources'])]
+    #[Serializer\Groups(['log_sources'])]
     protected ?NodesSources $nodeSource = null;
-    /**
-     * @ORM\Column(type="string", name="client_ip", unique=false, nullable=true)
-     * @Serializer\Groups({"log"})
-     * @SymfonySerializer\Groups({"log"})
-     * @var string|null
-     */
+
+    #[ORM\Column(name: 'client_ip', type: 'string', unique: false, nullable: true)]
+    #[SymfonySerializer\Groups(['log'])]
+    #[Serializer\Groups(['log'])]
     protected ?string $clientIp = null;
-    /**
-     * @ORM\Column(type="string", name="channel", unique=false, nullable=true)
-     * @Serializer\Groups({"log"})
-     * @SymfonySerializer\Groups({"log"})
-     * @var string|null
-     */
+
+    #[ORM\Column(name: 'channel', type: 'string', unique: false, nullable: true)]
+    #[SymfonySerializer\Groups(['log'])]
+    #[Serializer\Groups(['log'])]
     protected ?string $channel = null;
-    /**
-     * @ORM\Column(type="json", name="additional_data", unique=false, nullable=true)
-     * @Serializer\Groups({"log"})
-     * @SymfonySerializer\Groups({"log"})
-     * @var array|null
-     */
+
+    #[ORM\Column(name: 'additional_data', type: 'json', unique: false, nullable: true)]
+    #[SymfonySerializer\Groups(['log'])]
+    #[Serializer\Groups(['log'])]
     protected ?array $additionalData = null;
 
     /**
@@ -115,9 +97,6 @@ class Log extends AbstractEntity
         $this->datetime = new \DateTime("now");
     }
 
-    /**
-     * @return User
-     */
     public function getUser(): ?User
     {
         return $this->user;
@@ -132,6 +111,26 @@ class Log extends AbstractEntity
     {
         $this->user = $user;
         $this->username = $user->getUsername();
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getUsername(): ?string
+    {
+        return $this->username;
+    }
+
+    /**
+     * @param string|null $username
+     *
+     * @return Log
+     */
+    public function setUsername(?string $username)
+    {
+        $this->username = $username;
+
         return $this;
     }
 
@@ -237,30 +236,8 @@ class Log extends AbstractEntity
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
-    public function getUsername(): ?string
-    {
-        return $this->username;
-    }
-
-    /**
-     * @param string|null $username
-     *
-     * @return Log
-     */
-    public function setUsername(?string $username)
-    {
-        $this->username = $username;
-
-        return $this;
-    }
-
-    /**
-     * @ORM\PrePersist
-     */
-    public function prePersist()
+    #[ORM\PrePersist]
+    public function prePersist(): void
     {
         $this->datetime = new \DateTime("now");
     }

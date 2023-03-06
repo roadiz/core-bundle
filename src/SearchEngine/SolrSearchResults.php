@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\SearchEngine;
 
 use Doctrine\Persistence\ObjectManager;
-use RZ\Roadiz\Core\Models\DocumentInterface;
+use JMS\Serializer\Annotation as JMS;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use JMS\Serializer\Annotation as JMS;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 /**
  * Wrapper over Solr search results and metas.
@@ -54,7 +54,6 @@ class SolrSearchResults implements SearchResultsInterface
     public function getResultCount(): int
     {
         if (
-            null !== $this->response &&
             isset($this->response['response']['numFound'])
         ) {
             return (int) $this->response['response']['numFound'];
@@ -72,7 +71,6 @@ class SolrSearchResults implements SearchResultsInterface
         if (null === $this->resultItems) {
             $this->resultItems = [];
             if (
-                null !== $this->response &&
                 isset($this->response['response']['docs'])
             ) {
                 $this->resultItems = array_filter(array_map(
@@ -111,7 +109,7 @@ class SolrSearchResults implements SearchResultsInterface
      * @param string $id
      * @return array|array[]|mixed
      */
-    protected function getHighlighting(string $id)
+    protected function getHighlighting(string $id): mixed
     {
         $highlights = $this->response['highlighting'][$id];
         if (!isset($highlights['collection_txt'])) {
@@ -141,7 +139,7 @@ class SolrSearchResults implements SearchResultsInterface
      *
      * @return array|object|null
      */
-    protected function getHydratedItem(array $item)
+    protected function getHydratedItem(array $item): mixed
     {
         if (isset($item[AbstractSolarium::TYPE_DISCRIMINATOR])) {
             switch ($item[AbstractSolarium::TYPE_DISCRIMINATOR]) {
@@ -169,7 +167,7 @@ class SolrSearchResults implements SearchResultsInterface
      * @since 5.0
      */
     #[\ReturnTypeWillChange]
-    public function current()
+    public function current(): mixed
     {
         return $this->getResultItems()[$this->position];
     }
@@ -190,11 +188,11 @@ class SolrSearchResults implements SearchResultsInterface
      * Return the key of the current element
      *
      * @link https://php.net/manual/en/iterator.key.php
-     * @return string|float|int|bool|null scalar on success, or null on failure.
+     * @return int
      * @since 5.0
      */
     #[\ReturnTypeWillChange]
-    public function key()
+    public function key(): int
     {
         return $this->position;
     }

@@ -5,18 +5,17 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
 use Doctrine\Persistence\ObjectManager;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
 use RZ\Roadiz\Core\Handlers\AbstractHandler;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Repository\FolderRepository;
-use RZ\Roadiz\Utils\Asset\Packages;
-use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 
 /**
@@ -25,135 +24,34 @@ use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 class DocumentHandler extends AbstractHandler
 {
     protected ?DocumentInterface $document = null;
-    protected Packages $packages;
+    private FilesystemOperator $documentStorage;
 
-    /**
-     * Create a new document handler with document to handle.
-     *
-     * @param ObjectManager $objectManager
-     * @param Packages $packages
-     */
-    public function __construct(ObjectManager $objectManager, Packages $packages)
+    public function __construct(ObjectManager $objectManager, FilesystemOperator $documentStorage)
     {
         parent::__construct($objectManager);
-        $this->packages = $packages;
-    }
-
-    /**
-     * Make current document private moving its file
-     * to the secured /files/private folder.
-     *
-     * You must explicitly call flush after this method.
-     * @deprecated USe DocumentLifeCycle events
-     */
-    public function makePrivate()
-    {
-        if (null === $this->document) {
-            throw new \BadMethodCallException('Document is null');
-        }
-        $documentPublicPath = $this->packages->getPublicFilesPath($this->document->getRelativePath());
-        $documentPrivatePath = $this->packages->getPrivateFilesPath($this->document->getRelativePath());
-
-        if (!$this->document->isPrivate()) {
-            $fs = new Filesystem();
-
-            if ($fs->exists($documentPublicPath)) {
-                /*
-                 * Create destination folder if not exist
-                 */
-                if (!$fs->exists(dirname($documentPrivatePath))) {
-                    $fs->mkdir(dirname($documentPrivatePath));
-                }
-                $fs->rename(
-                    $documentPublicPath,
-                    $documentPrivatePath
-                );
-                $this->document->setPrivate(true);
-
-                /*
-                 * Bubble privatisation to raw document if available.
-                 */
-                if (null !== $this->document->getRawDocument() && !$this->document->getRawDocument()->isPrivate()) {
-                    $rawHandler = new DocumentHandler($this->objectManager, $this->packages);
-                    $rawHandler->setDocument($this->document->getRawDocument());
-                    $rawHandler->makePrivate();
-                }
-            } else {
-                throw new \RuntimeException("Can’t make private a document file which does not exist.", 1);
-            }
-        } else {
-            throw new \RuntimeException("Can’t make private an already private document.", 1);
-        }
-    }
-
-    /**
-     * Make current document public moving off its file
-     * from the secured /files/private folder into /files folder.
-     *
-     * You must explicitly call flush after this method.
-     * @deprecated Use DocumentLifeCycle events
-     */
-    public function makePublic()
-    {
-        if (null === $this->document) {
-            throw new \BadMethodCallException('Document is null');
-        }
-        $documentPublicPath = $this->packages->getPublicFilesPath($this->document->getRelativePath());
-        $documentPrivatePath = $this->packages->getPrivateFilesPath($this->document->getRelativePath());
-
-        if ($this->document->isPrivate()) {
-            $fs = new Filesystem();
-
-            if ($fs->exists($documentPrivatePath)) {
-                /*
-                 * Create destination folder if not exist
-                 */
-                if (!$fs->exists(dirname($documentPublicPath))) {
-                    $fs->mkdir(dirname($documentPublicPath));
-                }
-
-                $fs->rename(
-                    $documentPrivatePath,
-                    $documentPublicPath
-                );
-                $this->document->setPrivate(false);
-
-                /*
-                 * Bubble un-privatisation to raw document if available.
-                 */
-                if (
-                    null !== $this->document->getRawDocument() &&
-                    $this->document->getRawDocument()->isPrivate()
-                ) {
-                    $rawHandler = new DocumentHandler($this->objectManager, $this->packages);
-                    $rawHandler->setDocument($this->document->getRawDocument());
-                    $rawHandler->makePublic();
-                }
-            } else {
-                throw new \RuntimeException("Can’t make public a document file which does not exist.", 1);
-            }
-        } else {
-            throw new \RuntimeException("Can’t make public an already public document.", 1);
-        }
+        $this->documentStorage = $documentStorage;
     }
 
     /**
      * Get a Response object to force download document.
      * This method works for both private and public documents.
      *
-     * @return Response
+     * @return StreamedResponse
+     * @throws FilesystemException
      */
-    public function getDownloadResponse()
+    public function getDownloadResponse(): StreamedResponse
     {
-        $fs = new Filesystem();
         if ($this->document->isLocal()) {
-            $documentPath = $this->packages->getDocumentFilePath($this->document);
+            $documentPath = $this->document->getMountPath();
 
-            if ($fs->exists($documentPath)) {
-                $response =  new BinaryFileResponse($documentPath, Response::HTTP_OK, [], false);
-                $response->setContentDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT);
-
-                return $response;
+            if ($this->documentStorage->fileExists($documentPath)) {
+                return new StreamedResponse(function () use ($documentPath) {
+                    \fpassthru($this->documentStorage->readStream($documentPath));
+                }, Response::HTTP_OK, [
+                    "Content-Type" => $this->documentStorage->mimeType($documentPath),
+                    "Content-Length" => $this->documentStorage->fileSize($documentPath),
+                    "Content-disposition" => "attachment; filename=\"" . basename($this->document->getFilename()) . "\"",
+                ]);
             }
         }
 

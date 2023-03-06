@@ -16,7 +16,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 final class UsersEnableCommand extends UsersCommand
 {
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('users:enable')
             ->setDescription('Enable a user')

@@ -7,7 +7,6 @@ namespace RZ\Roadiz\CoreBundle\Security\Blacklist;
 use Rollerworks\Component\PasswordStrength\Blacklist\ArrayProvider;
 
 /**
- * @package RZ\Roadiz\Utils\Security\Blacklist
  * @see https://github.com/cry/nbp/blob/master/build_collection/top500
  */
 final class Top500Provider extends ArrayProvider

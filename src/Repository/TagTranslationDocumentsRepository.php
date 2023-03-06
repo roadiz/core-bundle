@@ -10,7 +10,11 @@ use RZ\Roadiz\CoreBundle\Entity\TagTranslationDocuments;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @package RZ\Roadiz\CoreBundle\Repository
+ * @method TagTranslationDocuments|null findOneByName(string $query)
+ * @method TagTranslationDocuments|null find($id, $lockMode = null, $lockVersion = null)
+ * @method TagTranslationDocuments|null findOneBy(array $criteria, array $orderBy = null)
+ * @method TagTranslationDocuments[]    findAll()
+ * @method TagTranslationDocuments[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  * @extends EntityRepository<TagTranslationDocuments>
  */
 final class TagTranslationDocumentsRepository extends EntityRepository

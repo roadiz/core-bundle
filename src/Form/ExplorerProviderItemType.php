@@ -22,7 +22,7 @@ class ExplorerProviderItemType extends AbstractType
      * @param FormBuilderInterface $builder
      * @param array $options
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer(new ExplorerProviderItemTransformer(
             $options['explorerProvider'],
@@ -38,7 +38,7 @@ class ExplorerProviderItemType extends AbstractType
      * @param FormInterface $form
      * @param array $options
      */
-    public function buildView(FormView $view, FormInterface $form, array $options)
+    public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
 
@@ -66,7 +66,7 @@ class ExplorerProviderItemType extends AbstractType
     /**
      * @inheritDoc
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
 

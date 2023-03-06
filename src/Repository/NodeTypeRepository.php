@@ -23,7 +23,7 @@ final class NodeTypeRepository extends EntityRepository
     /**
      * @return array
      */
-    public function findAll()
+    public function findAll(): array
     {
         $qb = $this->createQueryBuilder('nt');
         $qb->addSelect('ntf')

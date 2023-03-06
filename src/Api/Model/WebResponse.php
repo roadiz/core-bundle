@@ -14,40 +14,29 @@ use Symfony\Component\Serializer\Annotation as Serializer;
 
 final class WebResponse implements WebResponseInterface, BlocksAwareWebResponseInterface, RealmsAwareWebResponseInterface
 {
-    /**
-     * @return string|null
-     * @ApiProperty(identifier=true)
-     */
+    #[ApiProperty(identifier: true)]
     public ?string $path = null;
-    /**
-     * @var PersistableInterface|null
-     * @Serializer\Groups({"web_response"})
-     */
+
+    #[Serializer\Groups(["web_response"])]
     public ?PersistableInterface $item = null;
-    /**
-     * @var BreadcrumbsInterface|null
-     * @Serializer\Groups({"web_response"})
-     */
+
+    #[Serializer\Groups(["web_response"])]
     public ?BreadcrumbsInterface $breadcrumbs = null;
-    /**
-     * @var NodesSourcesHeadInterface|null
-     * @Serializer\Groups({"web_response"})
-     */
+
+    #[Serializer\Groups(["web_response"])]
     public ?NodesSourcesHeadInterface $head = null;
     /**
      * @var Collection<WalkerInterface>|null
-     * @Serializer\Groups({"web_response"})
      */
+    #[Serializer\Groups(["web_response"])]
     private ?Collection $blocks = null;
     /**
      * @var array<RealmInterface>|null
-     * @Serializer\Groups({"web_response"})
      */
+    #[Serializer\Groups(["web_response"])]
     private ?array $realms = null;
-    /**
-     * @var bool
-     * @Serializer\Groups({"web_response"})
-     */
+
+    #[Serializer\Groups(["web_response"])]
     private bool $hidingBlocks = false;
 
     /**

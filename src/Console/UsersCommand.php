@@ -29,7 +29,7 @@ class UsersCommand extends Command
         $this->managerRegistry = $managerRegistry;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('users:list')
             ->setDescription('List all users or just one')

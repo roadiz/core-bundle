@@ -8,5 +8,5 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 interface CliAwareIndexer extends Indexer
 {
-    public function setIo(?SymfonyStyle $io);
+    public function setIo(?SymfonyStyle $io): self;
 }

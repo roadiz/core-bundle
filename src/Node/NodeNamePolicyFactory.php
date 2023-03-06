@@ -5,28 +5,27 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Node;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\CoreBundle\Bag\Settings;
 
 final class NodeNamePolicyFactory
 {
     private ManagerRegistry $registry;
-    private Settings $settings;
+    private bool $useTypedNodeNames;
 
     /**
      * @param ManagerRegistry $registry
-     * @param Settings $settings
+     * @param bool $useTypedNodeNames
      */
-    public function __construct(ManagerRegistry $registry, Settings $settings)
+    public function __construct(ManagerRegistry $registry, bool $useTypedNodeNames)
     {
         $this->registry = $registry;
-        $this->settings = $settings;
+        $this->useTypedNodeNames = $useTypedNodeNames;
     }
 
     public function create(): NodeNamePolicyInterface
     {
         return new NodeNameChecker(
             $this->registry,
-            $this->settings->getBoolean('use_typed_node_names', false)
+            $this->useTypedNodeNames
         );
     }
 }

@@ -15,10 +15,9 @@ use Symfony\Component\Form\Exception\TransformationFailedException;
  */
 class AttributeGroupTransformer implements DataTransformerInterface
 {
-    private $manager;
+    private ObjectManager $manager;
 
     /**
-     * AttributeGroupTransformer constructor.
      * @param ObjectManager $manager
      */
     public function __construct(ObjectManager $manager)
@@ -27,30 +26,30 @@ class AttributeGroupTransformer implements DataTransformerInterface
     }
 
     /**
-     * @param AttributeGroup|null $attributeGroup
+     * @param AttributeGroup|null $value
      * @return int|string
      */
-    public function transform($attributeGroup)
+    public function transform(mixed $value): int|string
     {
-        if (null === $attributeGroup) {
+        if (!$value instanceof AttributeGroup) {
             return '';
         }
-        return $attributeGroup->getId();
+        return $value->getId();
     }
 
     /**
-     * @param mixed $attributeGroupId
+     * @param mixed $value
      * @return null|AttributeGroup
      */
-    public function reverseTransform($attributeGroupId)
+    public function reverseTransform(mixed $value): ?AttributeGroup
     {
-        if (!$attributeGroupId) {
+        if (!$value) {
             return null;
         }
 
         $attributeGroup = $this->manager
             ->getRepository(AttributeGroup::class)
-            ->find($attributeGroupId)
+            ->find($value)
         ;
 
         if (null === $attributeGroup) {
@@ -59,7 +58,7 @@ class AttributeGroupTransformer implements DataTransformerInterface
             // see the invalid_message option
             throw new TransformationFailedException(sprintf(
                 'A attribute-group with id "%s" does not exist!',
-                $attributeGroupId
+                $value
             ));
         }
 

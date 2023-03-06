@@ -16,31 +16,34 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 trait AttributeGroupTrait
 {
-    /**
-     * @var string
-     * @ORM\Column(type="string", name="canonical_name", nullable=false, unique=true)
-     * @Serializer\Groups({"attribute_group", "attribute", "node", "nodes_sources"})
-     * @Serializer\Type("string")
-     * @Assert\NotNull()
-     * @Assert\NotBlank()
-     */
+    #[
+        ORM\Column(name: "canonical_name", type: "string", unique: true, nullable: false),
+        Serializer\Groups(["attribute_group", "attribute", "node", "nodes_sources"]),
+        Serializer\Type("string"),
+        Assert\NotNull(),
+        Assert\NotBlank()
+    ]
     protected string $canonicalName = '';
 
     /**
      * @var Collection<AttributeInterface>
-     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Model\AttributeInterface", mappedBy="group")
-     * @Serializer\Groups({"attribute_group"})
-     * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Model\AttributeInterface>")
      */
+    #[
+        ORM\OneToMany(mappedBy: "group", targetEntity: AttributeInterface::class),
+        Serializer\Groups(["attribute_group"]),
+        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Model\AttributeInterface>")
+    ]
     protected Collection $attributes;
 
     /**
      * @var Collection<AttributeGroupTranslationInterface>
-     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Model\AttributeGroupTranslationInterface", mappedBy="attributeGroup", cascade={"all"})
-     * @Serializer\Groups({"attribute_group", "attribute", "node", "nodes_sources"})
-     * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Model\AttributeGroupTranslationInterface>")
-     * @Serializer\Accessor(getter="getAttributeGroupTranslations", setter="setAttributeGroupTranslations")
      */
+    #[
+        ORM\OneToMany(mappedBy: "attributeGroup", targetEntity: AttributeGroupTranslationInterface::class, cascade: ["all"]),
+        Serializer\Groups(["attribute_group", "attribute", "node", "nodes_sources"]),
+        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Model\AttributeGroupTranslationInterface>"),
+        Serializer\Accessor(getter: "getAttributeGroupTranslations", setter: "setAttributeGroupTranslations")
+    ]
     protected Collection $attributeGroupTranslations;
 
     public function getName(): ?string
@@ -71,7 +74,7 @@ trait AttributeGroupTrait
         return $this->getCanonicalName();
     }
 
-    public function setName(?string $name)
+    public function setName(?string $name): self
     {
         if ($this->getAttributeGroupTranslations()->count() === 0) {
             $this->getAttributeGroupTranslations()->add(
@@ -88,7 +91,11 @@ trait AttributeGroupTrait
         return $this->canonicalName;
     }
 
-    public function setCanonicalName(?string $canonicalName)
+    /**
+     * @param string|null $canonicalName
+     * @return $this
+     */
+    public function setCanonicalName(?string $canonicalName): self
     {
         $this->canonicalName = StringHandler::slugify($canonicalName ?? '');
         return $this;
@@ -99,7 +106,11 @@ trait AttributeGroupTrait
         return $this->attributes;
     }
 
-    public function setAttributes(Collection $attributes)
+    /**
+     * @param Collection $attributes
+     * @return $this
+     */
+    public function setAttributes(Collection $attributes): self
     {
         $this->attributes = $attributes;
         return $this;
@@ -112,10 +123,9 @@ trait AttributeGroupTrait
 
     /**
      * @param Collection $attributeGroupTranslations
-     *
      * @return $this
      */
-    public function setAttributeGroupTranslations(Collection $attributeGroupTranslations)
+    public function setAttributeGroupTranslations(Collection $attributeGroupTranslations): self
     {
         $this->attributeGroupTranslations = $attributeGroupTranslations;
         /** @var AttributeGroupTranslationInterface $attributeGroupTranslation */
@@ -127,10 +137,9 @@ trait AttributeGroupTrait
 
     /**
      * @param AttributeGroupTranslationInterface $attributeGroupTranslation
-     *
      * @return $this
      */
-    public function addAttributeGroupTranslation(AttributeGroupTranslationInterface $attributeGroupTranslation)
+    public function addAttributeGroupTranslation(AttributeGroupTranslationInterface $attributeGroupTranslation): self
     {
         if (!$this->getAttributeGroupTranslations()->contains($attributeGroupTranslation)) {
             $this->getAttributeGroupTranslations()->add($attributeGroupTranslation);
@@ -141,10 +150,9 @@ trait AttributeGroupTrait
 
     /**
      * @param AttributeGroupTranslationInterface $attributeGroupTranslation
-     *
-     * @return mixed
+     * @return $this
      */
-    public function removeAttributeGroupTranslation(AttributeGroupTranslationInterface $attributeGroupTranslation)
+    public function removeAttributeGroupTranslation(AttributeGroupTranslationInterface $attributeGroupTranslation): self
     {
         if ($this->getAttributeGroupTranslations()->contains($attributeGroupTranslation)) {
             $this->getAttributeGroupTranslations()->removeElement($attributeGroupTranslation);

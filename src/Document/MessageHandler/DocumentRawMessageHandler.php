@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 
 use Doctrine\Persistence\ManagerRegistry;
+use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
-use RZ\Roadiz\CoreBundle\Entity\Document;
-use RZ\Roadiz\Utils\Asset\Packages;
-use RZ\Roadiz\Utils\Document\DownscaleImageManager;
+use RZ\Roadiz\Documents\DownscaleImageManager;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 final class DocumentRawMessageHandler extends AbstractLockingDocumentMessageHandler
 {
@@ -20,9 +19,9 @@ final class DocumentRawMessageHandler extends AbstractLockingDocumentMessageHand
         DownscaleImageManager $downscaleImageManager,
         ManagerRegistry $managerRegistry,
         LoggerInterface $logger,
-        Packages $packages
+        FilesystemOperator $documentsStorage
     ) {
-        parent::__construct($managerRegistry, $logger, $packages);
+        parent::__construct($managerRegistry, $logger, $documentsStorage);
         $this->downscaleImageManager = $downscaleImageManager;
     }
 
@@ -35,7 +34,7 @@ final class DocumentRawMessageHandler extends AbstractLockingDocumentMessageHand
         return $document->isLocal() && null !== $document->getRelativePath() && $document->isProcessable();
     }
 
-    protected function processMessage(AbstractDocumentMessage $message, Document $document): void
+    protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
         $this->downscaleImageManager->processAndOverrideDocument($document);
     }

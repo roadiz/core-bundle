@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Model;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
@@ -13,39 +13,40 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 
 trait AttributeValueTrait
 {
-    /**
-     * @var AttributeInterface|null
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Model\AttributeInterface", inversedBy="attributeValues", fetch="EAGER")
-     * @ORM\JoinColumn(name="attribute_id", onDelete="CASCADE", referencedColumnName="id")
-     * @Serializer\Groups({"attribute", "node", "nodes_sources"})
-     * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Attribute")
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "attribute.id": "exact",
-     *     "attribute.code": "exact",
-     *     "attribute.type": "exact",
-     *     "attribute.group": "exact",
-     *     "attribute.group.canonicalName": "exact",
-     * })
-     * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
-     *     "attribute.visible",
-     *     "attribute.searchable"
-     * })
-     */
+    #[
+        ORM\ManyToOne(targetEntity: AttributeInterface::class, fetch: "EAGER", inversedBy: "attributeValues"),
+        ORM\JoinColumn(name: "attribute_id", referencedColumnName: "id", onDelete: "CASCADE"),
+        Serializer\Groups(["attribute", "node", "nodes_sources"]),
+        Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Attribute"),
+        ApiFilter(BaseFilter\SearchFilter::class, properties: [
+            "attribute.id" => "exact",
+            "attribute.code" => "exact",
+            "attribute.type" => "exact",
+            "attribute.group" => "exact",
+            "attribute.group.canonicalName" => "exact",
+        ]),
+        ApiFilter(BaseFilter\BooleanFilter::class, properties: [
+            "attribute.visible",
+            "attribute.searchable"
+        ])
+    ]
     protected ?AttributeInterface $attribute = null;
 
     /**
      * @var Collection<AttributeValueTranslationInterface>
-     * @ORM\OneToMany(
-     *     targetEntity="RZ\Roadiz\CoreBundle\Model\AttributeValueTranslationInterface",
-     *     mappedBy="attributeValue",
-     *     fetch="EAGER",
-     *     cascade={"persist", "remove"},
-     *     orphanRemoval=true
-     * )
-     * @Serializer\Groups({"attribute", "node", "nodes_sources"})
-     * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Model\AttributeValueTranslationInterface>")
-     * @Serializer\Accessor(getter="getAttributeValueTranslations",setter="setAttributeValueTranslations")
      */
+    #[
+        ORM\OneToMany(
+            mappedBy: "attributeValue",
+            targetEntity: AttributeValueTranslationInterface::class,
+            cascade: ["persist", "remove"],
+            fetch: "EAGER",
+            orphanRemoval: true
+        ),
+        Serializer\Groups(["attribute", "node", "nodes_sources"]),
+        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Model\AttributeValueTranslationInterface>"),
+        Serializer\Accessor(getter: "getAttributeValueTranslations", setter: "setAttributeValueTranslations")
+    ]
     protected Collection $attributeValueTranslations;
 
     /**

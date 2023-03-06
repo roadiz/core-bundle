@@ -69,4 +69,9 @@ final class Version20210506085247 extends AbstractMigration
             $this->addSql('ALTER TABLE tags RENAME INDEX tag_parent_visible TO IDX_6FBC9426F5C1A0D77AB0E859');
         }
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

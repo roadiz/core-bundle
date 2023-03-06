@@ -20,7 +20,7 @@ class DocumentTimestampSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function onDocumentTranslationUpdatedEvent(DocumentTranslationUpdatedEvent $event)
+    public function onDocumentTranslationUpdatedEvent(DocumentTranslationUpdatedEvent $event): void
     {
         $document = $event->getDocument();
         if ($document instanceof AbstractDateTimed) {

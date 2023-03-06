@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Event\Document;
 
-use RZ\Roadiz\Core\Events\FilterDocumentEvent;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
+use RZ\Roadiz\Documents\Events\FilterDocumentEvent;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 final class DocumentTranslationUpdatedEvent extends FilterDocumentEvent
 {

@@ -24,7 +24,7 @@ class PrivateKeyCommand extends Command
         $this->keyChain = $keyChain;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('crypto:private-key:info')
             ->addArgument('key-name', InputArgument::REQUIRED)

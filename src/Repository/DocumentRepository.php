@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Repository;
 
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Documents\Repository\DocumentRepositoryInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
@@ -21,10 +25,10 @@ use RZ\Roadiz\CoreBundle\Entity\Setting;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @package RZ\Roadiz\CoreBundle\Repository
  * @extends EntityRepository<Document>
+ * @implements DocumentRepositoryInterface<Document>
  */
-final class DocumentRepository extends EntityRepository
+final class DocumentRepository extends EntityRepository implements DocumentRepositoryInterface
 {
     public function __construct(
         ManagerRegistry $registry,
@@ -37,9 +41,10 @@ final class DocumentRepository extends EntityRepository
      * Get a document with its translation id.
      *
      * @param int $id
-     * @return mixed|null
+     * @return Document|null
+     * @throws NonUniqueResultException
      */
-    public function findOneByDocumentTranslationId($id)
+    public function findOneByDocumentTranslationId(int $id): ?Document
     {
         $qb = $this->createQueryBuilder('d');
         $qb->select('d, dt')
@@ -80,7 +85,7 @@ final class DocumentRepository extends EntityRepository
      * @param QueryBuilder $qb
      * @param string $prefix
      */
-    protected function filterByFolder(array &$criteria, QueryBuilder $qb, $prefix = 'd')
+    protected function filterByFolder(array &$criteria, QueryBuilder $qb, string $prefix = 'd'): void
     {
         if (key_exists('folders', $criteria)) {
             /*
@@ -153,7 +158,7 @@ final class DocumentRepository extends EntityRepository
      * @param array        $criteria
      * @param QueryBuilder $qb
      */
-    protected function filterByCriteria(array &$criteria, QueryBuilder $qb)
+    protected function filterByCriteria(array &$criteria, QueryBuilder $qb): void
     {
         $simpleQB = new SimpleQueryBuilder($qb);
         /*
@@ -175,10 +180,10 @@ final class DocumentRepository extends EntityRepository
             /*
              * Search in translation fields
              */
-            if (false !== strpos($key, 'translation.')) {
+            if (str_contains($key, 'translation.')) {
                 $prefix = 't.';
                 $key = str_replace('translation.', '', $key);
-            } elseif (false !== strpos($key, 'documentTranslations.')) {
+            } elseif (str_contains($key, 'documentTranslations.')) {
                 /*
                  * Search in translation fields
                  */
@@ -193,21 +198,21 @@ final class DocumentRepository extends EntityRepository
     }
 
     /**
-     * Create a Criteria object from a search pattern and additionnal fields.
+     * Create a Criteria object from a search pattern and additional fields.
      *
      * @param string $pattern Search pattern
      * @param QueryBuilder $qb QueryBuilder to pass
-     * @param array $criteria Additionnal criteria
+     * @param array $criteria Additional criteria
      * @param string $alias SQL query table alias
      *
      * @return QueryBuilder
      */
     protected function createSearchBy(
-        $pattern,
+        string $pattern,
         QueryBuilder $qb,
         array &$criteria = [],
-        $alias = "obj"
-    ) {
+        string $alias = "obj"
+    ): QueryBuilder {
         $this->filterByFolder($criteria, $qb, $alias);
         $this->applyFilterByFolder($criteria, $qb);
         $this->classicLikeComparison($pattern, $qb, $alias);
@@ -231,9 +236,7 @@ final class DocumentRepository extends EntityRepository
             $qb->orWhere($qb->expr()->like($fullKey, $qb->expr()->literal($value)));
         }
 
-        $qb = $this->prepareComparisons($criteria, $qb, $alias);
-
-        return $qb;
+        return $this->prepareComparisons($criteria, $qb, $alias);
     }
 
     /**
@@ -242,7 +245,7 @@ final class DocumentRepository extends EntityRepository
      * @param array $criteria
      * @param QueryBuilder $qb
      */
-    protected function applyFilterByCriteria(array &$criteria, QueryBuilder $qb)
+    protected function applyFilterByCriteria(array &$criteria, QueryBuilder $qb): void
     {
         /*
          * Reimplementing findBy features…
@@ -262,7 +265,7 @@ final class DocumentRepository extends EntityRepository
      * @param array $criteria
      * @param QueryBuilder $qb
      */
-    protected function applyFilterByFolder(array &$criteria, QueryBuilder $qb)
+    protected function applyFilterByFolder(array &$criteria, QueryBuilder $qb): void
     {
         if (key_exists('folders', $criteria)) {
             if ($criteria['folders'] instanceof Folder) {
@@ -287,7 +290,7 @@ final class DocumentRepository extends EntityRepository
     protected function applyTranslationByFolder(
         QueryBuilder $qb,
         TranslationInterface $translation = null
-    ) {
+    ): void {
         if (null !== $translation) {
             $qb->setParameter('translation', $translation);
         }
@@ -314,11 +317,11 @@ final class DocumentRepository extends EntityRepository
     /**
      * Create filters according to any translation criteria OR argument.
      *
-     * @param array        $criteria
+     * @param array $criteria
      * @param QueryBuilder $qb
      * @param TranslationInterface|null $translation
      */
-    protected function filterByTranslation(&$criteria, QueryBuilder $qb, TranslationInterface $translation = null)
+    protected function filterByTranslation(array &$criteria, QueryBuilder $qb, TranslationInterface $translation = null): void
     {
         if (
             isset($criteria['translation']) ||
@@ -359,8 +362,8 @@ final class DocumentRepository extends EntityRepository
      *
      * @param array $criteria
      * @param array|null $orderBy
-     * @param integer|null $limit
-     * @param integer|null $offset
+     * @param int|null $limit
+     * @param int|null $offset
      * @param TranslationInterface|null $translation
      *
      * @return QueryBuilder
@@ -368,10 +371,10 @@ final class DocumentRepository extends EntityRepository
     protected function getContextualQueryWithTranslation(
         array &$criteria,
         array $orderBy = null,
-        $limit = null,
-        $offset = null,
+        ?int $limit = null,
+        ?int $offset = null,
         TranslationInterface $translation = null
-    ) {
+    ): QueryBuilder {
         $qb = $this->createQueryBuilder('d');
         $qb->andWhere($qb->expr()->eq('d.raw', ':raw'))
             ->setParameter('raw', false);
@@ -411,7 +414,7 @@ final class DocumentRepository extends EntityRepository
     protected function getCountContextualQueryWithTranslation(
         array &$criteria,
         TranslationInterface $translation = null
-    ) {
+    ): QueryBuilder {
         $qb = $this->getContextualQueryWithTranslation($criteria, null, null, null, $translation);
         return $qb->select($qb->expr()->countDistinct('d.id'));
     }
@@ -421,8 +424,8 @@ final class DocumentRepository extends EntityRepository
      *
      * @param array $criteria
      * @param array|null $orderBy
-     * @param integer|null $limit
-     * @param integer|null $offset
+     * @param int|null $limit
+     * @param int|null $offset
      * @param TranslationInterface|null $translation
      *
      * @return array|Paginator
@@ -433,7 +436,7 @@ final class DocumentRepository extends EntityRepository
         $limit = null,
         $offset = null,
         TranslationInterface $translation = null
-    ) {
+    ): array|Paginator {
         $qb = $this->getContextualQueryWithTranslation(
             $criteria,
             $orderBy,
@@ -476,7 +479,7 @@ final class DocumentRepository extends EntityRepository
         array $criteria,
         array $orderBy = null,
         TranslationInterface $translation = null
-    ) {
+    ): ?Document {
         $qb = $this->getContextualQueryWithTranslation(
             $criteria,
             $orderBy,
@@ -497,25 +500,33 @@ final class DocumentRepository extends EntityRepository
     /**
      * Just like the countBy method but with relational criteria.
      *
-     * @param array $criteria
+     * @param Criteria|mixed|array $criteria
      * @param TranslationInterface|null $translation
      *
      * @return int
+     * @throws NonUniqueResultException
+     * @throws NoResultException
      */
     public function countBy(
-        $criteria,
+        mixed $criteria,
         TranslationInterface $translation = null
-    ) {
-        $query = $this->getCountContextualQueryWithTranslation(
-            $criteria,
-            $translation
-        );
+    ): int {
+        if ($criteria instanceof Criteria) {
+            $collection = $this->matching($criteria);
+            return $collection->count();
+        } elseif (\is_array($criteria)) {
+            $query = $this->getCountContextualQueryWithTranslation(
+                $criteria,
+                $translation
+            );
 
-        $this->dispatchQueryBuilderEvent($query, $this->getEntityName());
-        $this->applyFilterByFolder($criteria, $query);
-        $this->applyFilterByCriteria($criteria, $query);
+            $this->dispatchQueryBuilderEvent($query, $this->getEntityName());
+            $this->applyFilterByFolder($criteria, $query);
+            $this->applyFilterByCriteria($criteria, $query);
 
-        return (int) $query->getQuery()->getSingleScalarResult();
+            return (int) $query->getQuery()->getSingleScalarResult();
+        }
+        return 0;
     }
 
     /**
@@ -546,9 +557,9 @@ final class DocumentRepository extends EntityRepository
     /**
      * Find documents used as Settings.
      *
-     * @return array
+     * @return array<Document>
      */
-    public function findAllSettingDocuments()
+    public function findAllSettingDocuments(): array
     {
         $query = $this->_em->createQuery('
             SELECT d FROM RZ\Roadiz\CoreBundle\Entity\Document d
@@ -565,9 +576,9 @@ final class DocumentRepository extends EntityRepository
     /**
      * Find all unused document.
      *
-     * @return array
+     * @return array<Document>
      */
-    public function findAllUnused()
+    public function findAllUnused(): array
     {
         return $this->getAllUnusedQueryBuilder()->getQuery()->getResult();
     }
@@ -661,7 +672,7 @@ final class DocumentRepository extends EntityRepository
     }
 
     /**
-     * @return Document[]
+     * @return array<Document>
      */
     public function findDuplicates(): array
     {

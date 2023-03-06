@@ -9,7 +9,7 @@ use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 
 final class NodeIndexer extends NodesSourcesIndexer
 {
-    public function index($id): void
+    public function index(mixed $id): void
     {
         $node = $this->managerRegistry->getRepository(Node::class)->find($id);
         if (null !== $node) {
@@ -23,7 +23,7 @@ final class NodeIndexer extends NodesSourcesIndexer
         }
     }
 
-    public function delete($id): void
+    public function delete(mixed $id): void
     {
         $node = $this->managerRegistry->getRepository(Node::class)->find($id);
         if (null !== $node) {

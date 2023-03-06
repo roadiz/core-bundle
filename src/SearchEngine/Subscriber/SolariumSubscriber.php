@@ -4,12 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\SearchEngine\Subscriber;
 
-use RZ\Roadiz\Core\Events\DocumentCreatedEvent;
-use RZ\Roadiz\Core\Events\DocumentDeletedEvent;
-use RZ\Roadiz\Core\Events\DocumentInFolderEvent;
-use RZ\Roadiz\Core\Events\DocumentOutFolderEvent;
-use RZ\Roadiz\Core\Events\DocumentUpdatedEvent;
-use RZ\Roadiz\Core\Events\FilterDocumentEvent;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\CoreBundle\Entity\Node;
@@ -29,22 +23,21 @@ use RZ\Roadiz\CoreBundle\Event\NodesSources\NodesSourcesUpdatedEvent;
 use RZ\Roadiz\CoreBundle\Event\Tag\TagUpdatedEvent;
 use RZ\Roadiz\CoreBundle\SearchEngine\Message\SolrDeleteMessage;
 use RZ\Roadiz\CoreBundle\SearchEngine\Message\SolrReindexMessage;
+use RZ\Roadiz\Documents\Events\DocumentCreatedEvent;
+use RZ\Roadiz\Documents\Events\DocumentDeletedEvent;
+use RZ\Roadiz\Documents\Events\DocumentInFolderEvent;
+use RZ\Roadiz\Documents\Events\DocumentOutFolderEvent;
+use RZ\Roadiz\Documents\Events\DocumentUpdatedEvent;
+use RZ\Roadiz\Documents\Events\FilterDocumentEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Workflow\Event\Event;
 
-/**
- * Subscribe to Node and NodesSources event to update
- * a Solr server documents.
- */
-class SolariumSubscriber implements EventSubscriberInterface
+final class SolariumSubscriber implements EventSubscriberInterface
 {
     protected MessageBusInterface $messageBus;
 
-    /**
-     * @param MessageBusInterface $messageBus
-     */
     public function __construct(MessageBusInterface $messageBus)
     {
         $this->messageBus = $messageBus;
@@ -91,7 +84,7 @@ class SolariumSubscriber implements EventSubscriberInterface
      *
      * @throws \Exception
      */
-    public function onSolariumSingleUpdate(NodesSourcesUpdatedEvent $event)
+    public function onSolariumSingleUpdate(NodesSourcesUpdatedEvent $event): void
     {
         $this->messageBus->dispatch(new Envelope(new SolrReindexMessage(NodesSources::class, $event->getNodeSource()->getId())));
     }
@@ -101,7 +94,7 @@ class SolariumSubscriber implements EventSubscriberInterface
      *
      * @param NodesSourcesDeletedEvent $event
      */
-    public function onSolariumSingleDelete(NodesSourcesDeletedEvent $event)
+    public function onSolariumSingleDelete(NodesSourcesDeletedEvent $event): void
     {
         $this->messageBus->dispatch(new Envelope(new SolrDeleteMessage(NodesSources::class, $event->getNodeSource()->getId())));
     }
@@ -111,7 +104,7 @@ class SolariumSubscriber implements EventSubscriberInterface
      *
      * @param NodeDeletedEvent $event
      */
-    public function onSolariumNodeDelete(NodeDeletedEvent $event)
+    public function onSolariumNodeDelete(NodeDeletedEvent $event): void
     {
         $this->messageBus->dispatch(new Envelope(new SolrDeleteMessage(Node::class, $event->getNode()->getId())));
     }
@@ -123,7 +116,7 @@ class SolariumSubscriber implements EventSubscriberInterface
      *
      * @throws \Exception
      */
-    public function onSolariumNodeUpdate(FilterNodeEvent $event)
+    public function onSolariumNodeUpdate(FilterNodeEvent $event): void
     {
         $this->messageBus->dispatch(new Envelope(new SolrReindexMessage(Node::class, $event->getNode()->getId())));
     }
@@ -134,7 +127,7 @@ class SolariumSubscriber implements EventSubscriberInterface
      *
      * @param FilterDocumentEvent $event
      */
-    public function onSolariumDocumentDelete(FilterDocumentEvent $event)
+    public function onSolariumDocumentDelete(FilterDocumentEvent $event): void
     {
         $document = $event->getDocument();
         if ($document instanceof Document) {
@@ -149,7 +142,7 @@ class SolariumSubscriber implements EventSubscriberInterface
      *
      * @throws \Exception
      */
-    public function onSolariumDocumentUpdate(FilterDocumentEvent $event)
+    public function onSolariumDocumentUpdate(FilterDocumentEvent $event): void
     {
         $document = $event->getDocument();
         if ($document instanceof Document) {
@@ -165,7 +158,7 @@ class SolariumSubscriber implements EventSubscriberInterface
      * @throws \Exception
      * @deprecated This can lead to a timeout if more than 500 nodes use that tag!
      */
-    public function onSolariumTagUpdate(TagUpdatedEvent $event)
+    public function onSolariumTagUpdate(TagUpdatedEvent $event): void
     {
         $this->messageBus->dispatch(new Envelope(new SolrReindexMessage(Tag::class, $event->getTag()->getId())));
     }
@@ -178,7 +171,7 @@ class SolariumSubscriber implements EventSubscriberInterface
      * @throws \Exception
      * @deprecated This can lead to a timeout if more than 500 documents use that folder!
      */
-    public function onSolariumFolderUpdate(FolderUpdatedEvent $event)
+    public function onSolariumFolderUpdate(FolderUpdatedEvent $event): void
     {
         $this->messageBus->dispatch(new Envelope(new SolrReindexMessage(Folder::class, $event->getFolder()->getId())));
     }

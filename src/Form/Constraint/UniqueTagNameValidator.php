@@ -26,7 +26,7 @@ class UniqueTagNameValidator extends ConstraintValidator
      * @param string $value
      * @param UniqueTagName $constraint
      */
-    public function validate($value, Constraint $constraint)
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if ($this->isMulti($value)) {
             $names = explode(',', $value);
@@ -43,7 +43,7 @@ class UniqueTagNameValidator extends ConstraintValidator
      * @param string|null $value
      * @param UniqueTagName $constraint
      */
-    protected function testSingleValue(?string $value, Constraint $constraint)
+    protected function testSingleValue(?string $value, Constraint $constraint): void
     {
         $value = StringHandler::slugify($value ?? '');
 

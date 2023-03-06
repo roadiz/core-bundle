@@ -14,19 +14,17 @@ use Symfony\Component\Form\DataTransformerInterface;
 class ReversePersistableTransformer implements DataTransformerInterface
 {
     /**
-     * @var string
+     * @var class-string<PersistableInterface>
      */
-    protected $doctrineEntity;
+    protected string $doctrineEntity;
     /**
      * @var EntityManagerInterface
      */
-    private $entityManager;
+    private EntityManagerInterface $entityManager;
 
     /**
-     * DoctrineToExplorerProviderItemTransformer constructor.
-     *
      * @param EntityManagerInterface $entityManager
-     * @param string                 $doctrineEntity
+     * @param class-string<PersistableInterface> $doctrineEntity
      */
     public function __construct(EntityManagerInterface $entityManager, string $doctrineEntity)
     {
@@ -34,7 +32,7 @@ class ReversePersistableTransformer implements DataTransformerInterface
         $this->doctrineEntity = $doctrineEntity;
     }
 
-    public function transform($value)
+    public function transform(mixed $value): ?array
     {
         if (null === $value) {
             return null;
@@ -44,7 +42,7 @@ class ReversePersistableTransformer implements DataTransformerInterface
         ]);
     }
 
-    public function reverseTransform($value)
+    public function reverseTransform(mixed $value): mixed
     {
         if (is_array($value)) {
             return array_map(function (PersistableInterface $item) {

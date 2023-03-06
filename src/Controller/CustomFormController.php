@@ -6,10 +6,11 @@ namespace RZ\Roadiz\CoreBundle\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Exception;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
 use Limenius\Liform\LiformInterface;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\CustomForm\CustomFormHelperFactory;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
@@ -17,11 +18,12 @@ use RZ\Roadiz\CoreBundle\Entity\CustomFormAnswer;
 use RZ\Roadiz\CoreBundle\Exception\EntityAlreadyExistsException;
 use RZ\Roadiz\CoreBundle\Form\Error\FormErrorSerializerInterface;
 use RZ\Roadiz\CoreBundle\Mailer\EmailManager;
-use RZ\Roadiz\Utils\Asset\Packages;
+use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
+use RZ\Roadiz\CoreBundle\Repository\TranslationRepository;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormInterface;
-use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,12 +32,15 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
-use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Translation\LocaleAwareInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 
 final class CustomFormController extends AbstractController
 {
@@ -49,7 +54,8 @@ final class CustomFormController extends AbstractController
     private FormErrorSerializerInterface $formErrorSerializer;
     private ManagerRegistry $registry;
     private RateLimiterFactory $customFormLimiter;
-    private Packages $packages;
+    private FilesystemOperator $documentsStorage;
+    private PreviewResolverInterface $previewResolver;
 
     public function __construct(
         EmailManager $emailManager,
@@ -62,7 +68,8 @@ final class CustomFormController extends AbstractController
         FormErrorSerializerInterface $formErrorSerializer,
         ManagerRegistry $registry,
         RateLimiterFactory $customFormLimiter,
-        Packages $packages
+        FilesystemOperator $documentsStorage,
+        PreviewResolverInterface $previewResolver
     ) {
         $this->emailManager = $emailManager;
         $this->settingsBag = $settingsBag;
@@ -74,7 +81,8 @@ final class CustomFormController extends AbstractController
         $this->formErrorSerializer = $formErrorSerializer;
         $this->registry = $registry;
         $this->customFormLimiter = $customFormLimiter;
-        $this->packages = $packages;
+        $this->documentsStorage = $documentsStorage;
+        $this->previewResolver = $previewResolver;
     }
 
     protected function validateCustomForm(?CustomForm $customForm): void
@@ -87,18 +95,34 @@ final class CustomFormController extends AbstractController
         }
     }
 
-    protected function getTranslation(string $_locale = 'fr'): TranslationInterface
+    protected function getTranslationFromRequest(?Request $request): TranslationInterface
     {
-        if (empty($_locale)) {
-            throw new BadRequestHttpException('Locale must not be empty.');
+        $locale = null;
+
+        if (null !== $request) {
+            $locale = $request->query->get('_locale');
+
+            /*
+             * If no _locale query param is defined check Accept-Language header
+             */
+            if (null === $locale) {
+                $locale = $request->getPreferredLanguage($this->getTranslationRepository()->getAllLocales());
+            }
         }
-        $translation = $this->registry
-            ->getRepository(TranslationInterface::class)
-            ->findOneBy([
-                'locale' => $_locale
-            ]);
+        /*
+         * Then fallback to default CMS locale
+         */
+        if (null === $locale) {
+            $translation = $this->getTranslationRepository()->findDefault();
+        } elseif ($this->previewResolver->isPreview()) {
+            $translation = $this->getTranslationRepository()
+                ->findOneByLocaleOrOverrideLocale((string) $locale);
+        } else {
+            $translation = $this->getTranslationRepository()
+                ->findOneAvailableByLocaleOrOverrideLocale((string) $locale);
+        }
         if (null === $translation) {
-            throw new NotFoundHttpException('Translation does not exist.');
+            throw new NotFoundHttpException('No translation for locale ' . $locale);
         }
         return $translation;
     }
@@ -106,17 +130,16 @@ final class CustomFormController extends AbstractController
     /**
      * @param Request $request
      * @param int $id
-     * @param string $_locale
      * @return JsonResponse
      */
-    public function definitionAction(Request $request, int $id, string $_locale = 'fr'): JsonResponse
+    public function definitionAction(Request $request, int $id): JsonResponse
     {
         /** @var CustomForm|null $customForm */
         $customForm = $this->registry->getRepository(CustomForm::class)->find($id);
         $this->validateCustomForm($customForm);
 
         $helper = $this->customFormHelperFactory->createHelper($customForm);
-        $translation = $this->getTranslation($_locale);
+        $translation = $this->getTranslationFromRequest($request);
         $request->setLocale($translation->getPreferredLocale());
         if ($this->translator instanceof LocaleAwareInterface) {
             $this->translator->setLocale($translation->getPreferredLocale());
@@ -134,11 +157,10 @@ final class CustomFormController extends AbstractController
     /**
      * @param Request $request
      * @param int $id
-     * @param string $_locale
      * @return Response
      * @throws Exception
      */
-    public function postAction(Request $request, int $id, string $_locale = 'fr'): Response
+    public function postAction(Request $request, int $id): Response
     {
         // create a limiter based on a unique identifier of the client
         $limiter = $this->customFormLimiter->create($request->getClientIp());
@@ -157,7 +179,7 @@ final class CustomFormController extends AbstractController
         $customForm = $this->registry->getRepository(CustomForm::class)->find($id);
         $this->validateCustomForm($customForm);
 
-        $translation = $this->getTranslation($_locale);
+        $translation = $this->getTranslationFromRequest($request);
         $request->setLocale($translation->getPreferredLocale());
         if ($this->translator instanceof LocaleAwareInterface) {
             $this->translator->setLocale($translation->getPreferredLocale());
@@ -199,7 +221,7 @@ final class CustomFormController extends AbstractController
      * @param Request $request
      * @param int $customFormId
      * @return Response
-     * @throws \Twig\Error\RuntimeError
+     * @throws Exception
      */
     public function addAction(Request $request, int $customFormId): Response
     {
@@ -249,7 +271,10 @@ final class CustomFormController extends AbstractController
      * @param array $assignation
      * @param string|array|null $receiver
      * @return bool
-     * @throws Exception
+     * @throws TransportExceptionInterface
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
      */
     public function sendAnswer(
         CustomFormAnswer $answer,
@@ -264,15 +289,21 @@ final class CustomFormController extends AbstractController
         $this->emailManager->setSubject($assignation['title']);
         $this->emailManager->setEmailTitle($assignation['title']);
         $this->emailManager->setSender($defaultSender);
-        $files = [];
 
-        foreach ($answer->getAnswers() as $customFormAnswerAttr) {
-            $files = array_merge($files, $customFormAnswerAttr->getDocuments()->map(function (DocumentInterface $document) {
-                return new File($this->packages->getDocumentFilePath($document));
-            })->toArray());
+        try {
+            foreach ($answer->getAnswers() as $customFormAnswerAttr) {
+                /** @var DocumentInterface $document */
+                foreach ($customFormAnswerAttr->getDocuments() as $document) {
+                    $this->emailManager->addResource(
+                        $this->documentsStorage->readStream($document->getMountPath()),
+                        $document->getFilename(),
+                        $this->documentsStorage->mimeType($document->getMountPath())
+                    );
+                }
+            }
+        } catch (FilesystemException $exception) {
+            $this->logger->error($exception->getMessage());
         }
-
-        $this->emailManager->setFiles($files);
 
         if (empty($receiver)) {
             $this->emailManager->setReceiver($defaultSender);
@@ -301,7 +332,10 @@ final class CustomFormController extends AbstractController
      * @param string|null $emailSender
      * @param bool $prefix
      * @return array|Response
-     * @throws Exception
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     * @throws TransportExceptionInterface
      */
     public function prepareAndHandleCustomFormAssignation(
         Request $request,
@@ -395,5 +429,17 @@ final class CustomFormController extends AbstractController
         $assignation['form'] = $form->createView();
         $assignation['formObject'] = $form;
         return $assignation;
+    }
+
+    protected function getTranslationRepository(): TranslationRepository
+    {
+        $repository = $this->registry->getRepository(TranslationInterface::class);
+        if (!$repository instanceof TranslationRepository) {
+            throw new \RuntimeException(
+                'Translation repository must be instance of ' .
+                TranslationRepository::class
+            );
+        }
+        return $repository;
     }
 }

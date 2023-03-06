@@ -25,7 +25,7 @@ class RecaptchaType extends AbstractType
      * @param FormInterface $form
      * @param array $options
      */
-    public function buildView(FormView $view, FormInterface $form, array $options)
+    public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         $view->vars['configs'] = $options['configs'];
     }
@@ -34,7 +34,7 @@ class RecaptchaType extends AbstractType
      * @see \Symfony\Component\Form\AbstractType::configureOptions()
      * @param OptionsResolver $resolver
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'configs' => [

@@ -28,7 +28,7 @@ class EncodePrivateKeyCommand extends Command
         $this->uniqueKeyEncoderFactory = $uniqueKeyEncoderFactory;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('crypto:private-key:encode')
             ->addArgument('key-name', InputArgument::REQUIRED)

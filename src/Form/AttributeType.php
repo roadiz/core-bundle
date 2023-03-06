@@ -19,7 +19,7 @@ class AttributeType extends AbstractType
     /**
      * @inheritDoc
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('code', TextType::class, [
                 'label' => 'attributes.form.code',
@@ -88,7 +88,7 @@ class AttributeType extends AbstractType
     /**
      * @inheritDoc
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
         $resolver->setDefault('data_class', Attribute::class);

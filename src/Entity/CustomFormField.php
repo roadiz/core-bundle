@@ -15,19 +15,18 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 /**
  * CustomFormField entities are used to create CustomForms with
  * custom data structure.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\CustomFormFieldRepository")
- * @ORM\Table(name="custom_form_fields", uniqueConstraints={
- *      @ORM\UniqueConstraint(columns={"name", "custom_form_id"})
- * }, indexes={
-*      @ORM\Index(columns={"position"}),
-*      @ORM\Index(columns={"group_name"}),
-*      @ORM\Index(columns={"type"}),
- *     @ORM\Index(columns={"custom_form_id", "position"}, name="cfield_customform_position")
-*  })
- * @ORM\HasLifecycleCallbacks
- * @UniqueEntity(fields={"label", "customForm"})
  */
+#[
+    ORM\Entity(repositoryClass: "RZ\Roadiz\CoreBundle\Repository\CustomFormFieldRepository"),
+    ORM\Table(name: "custom_form_fields"),
+    ORM\UniqueConstraint(columns: ["name", "custom_form_id"]),
+    ORM\Index(columns: ["position"]),
+    ORM\Index(columns: ["group_name"]),
+    ORM\Index(columns: ["type"]),
+    ORM\Index(columns: ["custom_form_id", "position"], name: "cfield_customform_position"),
+    ORM\HasLifecycleCallbacks,
+    UniqueEntity(fields: ["label", "customForm"])
+]
 class CustomFormField extends AbstractField
 {
     /**
@@ -48,26 +47,30 @@ class CustomFormField extends AbstractField
         AbstractField::COUNTRY_T => 'country.type',
         AbstractField::DOCUMENTS_T => 'documents.type',
     ];
-    /**
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomForm", inversedBy="fields")
-     * @ORM\JoinColumn(name="custom_form_id", referencedColumnName="id", onDelete="CASCADE")
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
-     */
+
+    #[
+        ORM\ManyToOne(targetEntity: CustomForm::class, inversedBy: "fields"),
+        ORM\JoinColumn(name: "custom_form_id", referencedColumnName: "id", onDelete: "CASCADE"),
+        Serializer\Exclude,
+        SymfonySerializer\Ignore
+    ]
     private ?CustomForm $customForm = null;
+
     /**
-     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomFormFieldAttribute", mappedBy="customFormField")
      * @var Collection<CustomFormFieldAttribute>
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[
+        ORM\OneToMany(mappedBy: "customFormField", targetEntity: CustomFormFieldAttribute::class),
+        Serializer\Exclude,
+        SymfonySerializer\Ignore
+    ]
     private Collection $customFormFieldAttributes;
-    /**
-     * @ORM\Column(name="field_required", type="boolean", nullable=false, options={"default" = false})
-     * @var bool
-     * @Serializer\Groups({"custom_form"})
-     * @SymfonySerializer\Groups({"custom_form"})
-     */
+
+    #[
+        ORM\Column(name: "field_required", type: "boolean", nullable: false, options: ["default" => false]),
+        Serializer\Groups(["custom_form"]),
+        SymfonySerializer\Groups(["custom_form"])
+    ]
     private bool $required = false;
 
     public function __construct()
@@ -144,7 +147,7 @@ class CustomFormField extends AbstractField
      */
     public function getOneLineSummary(): string
     {
-        return $this->__toString();
+        return $this->getId() . " — " . $this->getName() . " — " . $this->getLabel() . PHP_EOL;
     }
 
     /**
@@ -152,7 +155,7 @@ class CustomFormField extends AbstractField
      */
     public function __toString(): string
     {
-        return $this->getId() . " — " . $this->getName() . " — " . $this->getLabel() . PHP_EOL;
+        return (string) $this->getId();
     }
 
     public function __clone()

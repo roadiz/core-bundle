@@ -5,15 +5,13 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Explorer;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\ListManager\EntityListManager;
 use RZ\Roadiz\CoreBundle\ListManager\EntityListManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-/**
- * @package Themes\Rozier\Explorer
- */
 abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
 {
     protected ManagerRegistry $managerRegistry;
@@ -31,7 +29,7 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
     }
 
     /**
-     * @return string
+     * @return class-string<PersistableInterface>
      */
     abstract protected function getProvidedClassname(): string;
 
@@ -98,12 +96,19 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
     /**
      * @inheritDoc
      */
-    public function getItemsById($ids = []): array
+    public function getItemsById(array $ids = []): array
     {
         if (is_array($ids) && count($ids) > 0) {
             $entities = $this->managerRegistry->getRepository($this->getProvidedClassname())->findBy([
                 'id' => $ids
             ]);
+
+            /*
+             * Sort entities the same way IDs were given
+             */
+            usort($entities, function ($a, $b) use ($ids) {
+                return array_search($a->getId(), $ids) <=> array_search($b->getId(), $ids);
+            });
 
             $items = [];
             foreach ($entities as $entity) {

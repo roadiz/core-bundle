@@ -63,4 +63,9 @@ final class Version20210423161606 extends AbstractMigration
             $this->addSql('DROP INDEX tag_parent_position ON tags');
         }
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

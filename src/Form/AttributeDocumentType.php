@@ -16,9 +16,6 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-/**
- * @package RZ\Roadiz\CoreBundle\Form\NodeSource
- */
 class AttributeDocumentType extends AbstractType
 {
     protected EntityManagerInterface $entityManager;
@@ -35,7 +32,7 @@ class AttributeDocumentType extends AbstractType
      * @param FormBuilderInterface $builder
      * @param array $options
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addEventListener(
             FormEvents::POST_SUBMIT,
@@ -50,7 +47,7 @@ class AttributeDocumentType extends AbstractType
     /**
      * @param OptionsResolver $resolver
      */
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'required' => false,
@@ -84,7 +81,7 @@ class AttributeDocumentType extends AbstractType
      *
      * @param FormEvent $event
      */
-    public function onPostSubmit(FormEvent $event)
+    public function onPostSubmit(FormEvent $event): void
     {
         if ($event->getForm()->getConfig()->getOption('attribute') instanceof AttributeInterface) {
             /** @var AttributeInterface $attribute */

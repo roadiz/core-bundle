@@ -34,6 +34,9 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('staticDomainName')
                 ->defaultNull()
             ->end()
+            ->scalarNode('maxVersionsShowed')
+                ->defaultValue(10)
+            ->end()
             ->scalarNode('defaultNodeSourceController')
                 ->defaultValue(DefaultNodeSourceController::class)
             ->end()
@@ -43,6 +46,9 @@ class Configuration implements ConfigurationInterface
             ->booleanNode('hideRoadizVersion')
                 ->defaultValue(false)
             ->end()
+            ->scalarNode('documentsLibDir')->defaultValue(
+                'vendor/roadiz/documents/src'
+            )->info('Relative path to Roadiz Documents lib sources from project directory.')->end()
             ->booleanNode('useAcceptLanguageHeader')
                 ->defaultValue(false)
                 ->info(<<<EOT
@@ -50,6 +56,13 @@ When no information to find locale is found and "force_locale" setting is ON,
 we must find translation based on Accept-Language header.
 Be careful if you are using a reverse-proxy cache, YOU MUST vary on Accept-Language header and normalize it.
 @see https://varnish-cache.org/docs/6.3/users-guide/increasing-your-hitrate.html#http-vary
+EOT)
+            ->end()
+            ->booleanNode('useTypedNodeNames')
+                ->defaultValue(true)
+                ->info(<<<EOT
+When enabled, this option will suffix each name for unreachable nodes (blocks) with
+their node-type to avoid name conflicts with reachable nodes (pages).
 EOT)
             ->end()
             ->arrayNode('security')
@@ -113,6 +126,10 @@ EOD
         $node->addDefaultsIfNotSet()
             ->children()
             ->scalarNode('unsplash_client_id')->defaultNull()->end()
+            ->scalarNode('google_server_id')->defaultNull()->end()
+            ->scalarNode('soundcloud_client_id')->defaultNull()->end()
+            ->scalarNode('recaptcha_private_key')->defaultNull()->end()
+            ->scalarNode('recaptcha_public_key')->defaultNull()->end()
             ->scalarNode('ffmpeg_path')->defaultNull()->end()
             ->end();
 

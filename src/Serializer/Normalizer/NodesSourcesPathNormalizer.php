@@ -20,7 +20,14 @@ final class NodesSourcesPathNormalizer extends AbstractPathNormalizer
     public function normalize($object, $format = null, array $context = [])
     {
         $data = $this->decorated->normalize($object, $format, $context);
-        if ($object instanceof NodesSources && $object->isReachable() && is_array($data) && !isset($data['url'])) {
+        if (
+            $object instanceof NodesSources &&
+            $object->isReachable() &&
+            \is_array($data) &&
+            !isset($data['url']) &&
+            isset($context['groups']) &&
+            \in_array('urls', $context['groups'], true)
+        ) {
             $data['url'] = $this->urlGenerator->generate(
                 RouteObjectInterface::OBJECT_BASED_ROUTE_NAME,
                 [

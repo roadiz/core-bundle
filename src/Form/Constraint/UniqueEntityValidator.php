@@ -33,40 +33,36 @@ class UniqueEntityValidator extends ConstraintValidator
     }
 
     /**
-     * @param object     $entity
-     * @param Constraint $constraint
+     * @param mixed $value
+     * @param UniqueEntity $constraint
      *
-     * @throws UnexpectedTypeException
-     * @throws ConstraintDefinitionException
+     * @throws \Exception
      */
-    public function validate($entity, Constraint $constraint)
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if (!$constraint instanceof UniqueEntity) {
             throw new UnexpectedTypeException($constraint, __NAMESPACE__ . '\UniqueEntity');
         }
-        if (!is_array($constraint->fields) && !is_string($constraint->fields)) {
-            throw new UnexpectedTypeException($constraint->fields, 'array');
-        }
 
-        $fields = (array) $constraint->fields;
+        $fields = $constraint->fields;
         if (0 === count($fields)) {
             throw new ConstraintDefinitionException('At least one field has to be specified.');
         }
 
         $class = $this->managerRegistry
-            ->getManagerForClass(get_class($entity))
-            ->getClassMetadata(get_class($entity));
+            ->getManagerForClass(get_class($value))
+            ->getClassMetadata(get_class($value));
 
         $criteria = [];
         $hasNullValue = false;
         foreach ($fields as $fieldName) {
             if (!$class instanceof ClassMetadataInfo) {
-                throw new ConstraintDefinitionException(sprintf('The class "%s" is not mapped by Doctrine, so it cannot be validated for uniqueness.', get_class($entity)));
+                throw new ConstraintDefinitionException(sprintf('The class "%s" is not mapped by Doctrine, so it cannot be validated for uniqueness.', get_class($value)));
             }
             if (!$class->hasField($fieldName) && !$class->hasAssociation($fieldName)) {
                 throw new ConstraintDefinitionException(sprintf('The field "%s" is not mapped by Doctrine, so it cannot be validated for uniqueness.', $fieldName));
             }
-            $fieldValue = $class->getReflectionProperty($fieldName)->getValue($entity);
+            $fieldValue = $class->getReflectionProperty($fieldName)->getValue($value);
 
             if (null === $fieldValue) {
                 $hasNullValue = true;
@@ -81,7 +77,7 @@ class UniqueEntityValidator extends ConstraintValidator
                  * getter methods in the Proxy are being bypassed.
                  */
                 $this->managerRegistry
-                    ->getManagerForClass(get_class($entity))
+                    ->getManagerForClass(get_class($value))
                     ->initializeObject($criteria[$fieldName]);
             }
         }
@@ -101,11 +97,11 @@ class UniqueEntityValidator extends ConstraintValidator
              */
             $repository = $this->managerRegistry->getRepository($constraint->entityClass);
             $supportedClass = $repository->getClassName();
-            if (!$entity instanceof $supportedClass) {
+            if (!$value instanceof $supportedClass) {
                 throw new ConstraintDefinitionException(sprintf('The "%s" entity repository does not support the "%s" entity. The entity should be an instance of or extend "%s".', $constraint->entityClass, $class->getName(), $supportedClass));
             }
         } else {
-            $repository = $this->managerRegistry->getRepository(get_class($entity));
+            $repository = $this->managerRegistry->getRepository(get_class($value));
         }
         $result = $repository->{$constraint->repositoryMethod}($criteria);
         if ($result instanceof \IteratorAggregate) {
@@ -124,12 +120,12 @@ class UniqueEntityValidator extends ConstraintValidator
          * which is the same as the entity being validated, the criteria is
          * unique.
          */
-        if (0 === count($result) || (1 === count($result) && $entity === ($result instanceof \Iterator ? $result->current() : current($result)))) {
+        if (0 === count($result) || (1 === count($result) && $value === ($result instanceof \Iterator ? $result->current() : current($result)))) {
             return;
         }
 
         $errorPath = null !== $constraint->errorPath ? $constraint->errorPath : $fields[0];
-        $invalidValue = isset($criteria[$errorPath]) ? $criteria[$errorPath] : $criteria[$fields[0]];
+        $invalidValue = $criteria[$errorPath] ?? $criteria[$fields[0]];
 
         $this->context->buildViolation($constraint->message)
             ->atPath($errorPath)
@@ -139,7 +135,7 @@ class UniqueEntityValidator extends ConstraintValidator
             ->addViolation();
     }
 
-    private function formatWithIdentifiers(ClassMetadata $class, $value)
+    private function formatWithIdentifiers(ClassMetadata $class, mixed $value): string
     {
         if (!is_object($value) || $value instanceof \DateTimeInterface) {
             return $this->formatValue($value, self::PRETTY_DATE);

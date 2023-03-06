@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\SearchEngine\Indexer;
 
 use LogicException;
+use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\CoreBundle\Entity\Node;
@@ -16,9 +18,6 @@ class IndexerFactory implements IndexerFactoryInterface
 {
     protected ContainerInterface $serviceLocator;
 
-    /**
-     * @param ContainerInterface $serviceLocator
-     */
     public function __construct(ContainerInterface $serviceLocator)
     {
         $this->serviceLocator = $serviceLocator;
@@ -27,24 +26,18 @@ class IndexerFactory implements IndexerFactoryInterface
     /**
      * @param class-string $classname
      * @return Indexer
-     * @throws \Psr\Container\ContainerExceptionInterface
-     * @throws \Psr\Container\NotFoundExceptionInterface
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      */
     public function getIndexerFor(string $classname): Indexer
     {
-        switch ($classname) {
-            case Node::class:
-                return $this->serviceLocator->get(NodeIndexer::class);
-            case NodesSources::class:
-                return $this->serviceLocator->get(NodesSourcesIndexer::class);
-            case Document::class:
-                return $this->serviceLocator->get(DocumentIndexer::class);
-            case Tag::class:
-                return $this->serviceLocator->get(TagIndexer::class);
-            case Folder::class:
-                return $this->serviceLocator->get(FolderIndexer::class);
-            default:
-                throw new LogicException(sprintf('No indexer found for "%s"', $classname));
-        }
+        return match ($classname) {
+            Node::class => $this->serviceLocator->get(NodeIndexer::class),
+            NodesSources::class => $this->serviceLocator->get(NodesSourcesIndexer::class),
+            Document::class => $this->serviceLocator->get(DocumentIndexer::class),
+            Tag::class => $this->serviceLocator->get(TagIndexer::class),
+            Folder::class => $this->serviceLocator->get(FolderIndexer::class),
+            default => throw new LogicException(sprintf('No indexer found for "%s"', $classname)),
+        };
     }
 }

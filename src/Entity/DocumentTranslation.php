@@ -8,26 +8,56 @@ use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Loggable\Loggable;
 use Gedmo\Mapping\Annotation as Gedmo;
 use JMS\Serializer\Annotation as Serializer;
-use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
-use RZ\Roadiz\Core\Models\DocumentInterface;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Repository\DocumentTranslationRepository;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
-/**
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\DocumentTranslationRepository")
- * @ORM\Table(name="documents_translations", uniqueConstraints={@ORM\UniqueConstraint(columns={"document_id", "translation_id"})})
- * @Gedmo\Loggable(logEntryClass="RZ\Roadiz\CoreBundle\Entity\UserLogEntry")
- */
+#[
+    ORM\Entity(repositoryClass: DocumentTranslationRepository::class),
+    ORM\Table(name: "documents_translations"),
+    ORM\UniqueConstraint(columns: ["document_id", "translation_id"]),
+    Gedmo\Loggable(logEntryClass: UserLogEntry::class)
+]
 class DocumentTranslation extends AbstractEntity implements Loggable
 {
-    /**
-     * @ORM\Column(type="string", nullable=true)
-     * @var string|null
-     * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @Gedmo\Versioned
-     */
+    #[ORM\Column(type: 'string', nullable: true)]
+    #[SymfonySerializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
+    #[Gedmo\Versioned]
     protected ?string $name = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[SymfonySerializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
+    #[Gedmo\Versioned]
+    protected ?string $description = null;
+
+    #[ORM\Column(type: 'text', length: 2000, nullable: true)]
+    #[SymfonySerializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
+    #[Gedmo\Versioned]
+    protected ?string $externalUrl = null;
+
+    #[ORM\ManyToOne(targetEntity: Translation::class, fetch: 'EXTRA_LAZY', inversedBy: 'documentTranslations')]
+    #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[SymfonySerializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
+    protected ?TranslationInterface $translation = null;
+
+    #[ORM\ManyToOne(targetEntity: Document::class, fetch: 'EXTRA_LAZY', inversedBy: 'documentTranslations')]
+    #[ORM\JoinColumn(name: 'document_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    protected ?DocumentInterface $document;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[SymfonySerializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
+    #[Gedmo\Versioned]
+    private ?string $copyright = null;
+
     /**
      * @return string|null
      */
@@ -35,6 +65,7 @@ class DocumentTranslation extends AbstractEntity implements Loggable
     {
         return $this->name;
     }
+
     /**
      * @param string|null $name
      *
@@ -45,14 +76,6 @@ class DocumentTranslation extends AbstractEntity implements Loggable
         $this->name = $name;
         return $this;
     }
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @Gedmo\Versioned
-     */
-    protected ?string $description = null;
 
     /**
      * @return string
@@ -72,15 +95,6 @@ class DocumentTranslation extends AbstractEntity implements Loggable
         $this->description = $description;
         return $this;
     }
-
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @Gedmo\Versioned
-     * @var string|null
-     */
-    private ?string $copyright = null;
 
     /**
      * @return string|null
@@ -103,15 +117,6 @@ class DocumentTranslation extends AbstractEntity implements Loggable
     }
 
     /**
-     * @ORM\Column(type="text", length=2000, nullable=true)
-     * @var string|null
-     * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @Gedmo\Versioned
-     */
-    protected ?string $externalUrl = null;
-
-    /**
      * @return string|null
      */
     public function getExternalUrl(): ?string
@@ -128,15 +133,6 @@ class DocumentTranslation extends AbstractEntity implements Loggable
         $this->externalUrl = $externalUrl;
         return $this;
     }
-
-    /**
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Translation", inversedBy="documentTranslations", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="translation_id", referencedColumnName="id", onDelete="CASCADE")
-     * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @var TranslationInterface|null
-     */
-    protected ?TranslationInterface $translation = null;
 
     /**
      * @return TranslationInterface
@@ -156,15 +152,6 @@ class DocumentTranslation extends AbstractEntity implements Loggable
 
         return $this;
     }
-
-    /**
-     * @ORM\ManyToOne(targetEntity="Document", inversedBy="documentTranslations", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="document_id", referencedColumnName="id", onDelete="CASCADE")
-     * @var DocumentInterface|null
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
-     */
-    protected ?DocumentInterface $document;
 
     /**
      * @return DocumentInterface

@@ -39,4 +39,9 @@ final class Version20220525131842 extends AbstractMigration
         $this->addSql('DROP TABLE realms_users');
         $this->addSql('DROP TABLE realms_nodes');
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

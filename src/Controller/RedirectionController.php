@@ -12,9 +12,6 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-/**
- * @package RZ\Roadiz\CMS\Controllers
- */
 final class RedirectionController
 {
     private UrlGeneratorInterface $urlGenerator;

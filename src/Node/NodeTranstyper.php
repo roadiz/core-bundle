@@ -43,7 +43,7 @@ final class NodeTranstyper
     {
         $manager = $this->managerRegistry->getManagerForClass(NodesSources::class);
         if (null === $manager) {
-            throw new \RuntimeException('No manager was found during transtyping.');
+            throw new \RuntimeException('No manager was found during trans-typing.');
         }
         return $manager;
     }
@@ -155,7 +155,7 @@ final class NodeTranstyper
      * @param Node  $node
      * @param array $sources
      */
-    protected function removeOldSources(Node $node, array &$sources)
+    protected function removeOldSources(Node $node, array &$sources): void
     {
         /** @var NodesSources $existingSource */
         foreach ($sources as $existingSource) {

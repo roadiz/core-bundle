@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
@@ -42,10 +44,10 @@ final class CustomFormAnswerRepository extends EntityRepository
      * @param CustomForm $customForm
      * @param \DateTime $submittedAt
      * @return int
-     * @throws \Doctrine\ORM\NoResultException
-     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws NoResultException
+     * @throws NonUniqueResultException
      */
-    public function deleteByCustomFormSubmittedBefore(CustomForm $customForm, \DateTime $submittedAt)
+    public function deleteByCustomFormSubmittedBefore(CustomForm $customForm, \DateTime $submittedAt): int
     {
         $qb = $this->getCustomFormSubmittedBeforeQueryBuilder()
             ->delete()

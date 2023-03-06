@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use ParagonIE\HiddenString\HiddenString;
 use RZ\Crypto\KeyChain\KeyChainInterface;
 use RZ\Roadiz\CoreBundle\Crypto\UniqueKeyEncoderFactory;
 use Symfony\Component\Console\Command\Command;
@@ -28,7 +27,7 @@ class DecodePrivateKeyCommand extends Command
         $this->uniqueKeyEncoderFactory = $uniqueKeyEncoderFactory;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('crypto:private-key:decode')
             ->addArgument('key-name', InputArgument::REQUIRED)

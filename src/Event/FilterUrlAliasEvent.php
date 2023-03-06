@@ -12,14 +12,14 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 abstract class FilterUrlAliasEvent extends Event
 {
-    protected $urlAlias;
+    protected UrlAlias $urlAlias;
 
     public function __construct(UrlAlias $urlAlias)
     {
         $this->urlAlias = $urlAlias;
     }
 
-    public function getUrlAlias()
+    public function getUrlAlias(): UrlAlias
     {
         return $this->urlAlias;
     }

@@ -6,11 +6,11 @@ namespace RZ\Roadiz\CoreBundle\Doctrine\ORM\Filter;
 
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\FilterNodesSourcesQueryBuilderCriteriaEvent;
-use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryNodesSourcesEvent;
-use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderNodesSourcesApplyEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderNodesSourcesBuildEvent;
+use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryNodesSourcesEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
+use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -50,14 +50,14 @@ final class NodesSourcesReachableFilter implements EventSubscriberInterface
     protected function supports(FilterNodesSourcesQueryBuilderCriteriaEvent $event): bool
     {
         return $event->supports() &&
-            in_array($event->getProperty(), static::PARAMETER) &&
+            in_array($event->getProperty(), self::PARAMETER) &&
             is_bool($event->getValue());
     }
 
     /**
      * @param QueryBuilderNodesSourcesBuildEvent $event
      */
-    public function onNodesSourcesQueryBuilderBuild(QueryBuilderNodesSourcesBuildEvent $event)
+    public function onNodesSourcesQueryBuilderBuild(QueryBuilderNodesSourcesBuildEvent $event): void
     {
         if ($this->supports($event)) {
             // Prevent other query builder filters to execute
@@ -84,7 +84,7 @@ final class NodesSourcesReachableFilter implements EventSubscriberInterface
         }
     }
 
-    public function onNodesSourcesQueryBuilderApply(QueryBuilderNodesSourcesApplyEvent $event)
+    public function onNodesSourcesQueryBuilderApply(QueryBuilderNodesSourcesApplyEvent $event): void
     {
         if ($this->supports($event)) {
             // Prevent other query builder filters to execute
@@ -92,10 +92,8 @@ final class NodesSourcesReachableFilter implements EventSubscriberInterface
         }
     }
 
-    public function onQueryNodesSourcesEvent(QueryNodesSourcesEvent $event)
+    public function onQueryNodesSourcesEvent(QueryNodesSourcesEvent $event): void
     {
-        if ($event->supports()) {
-            // TODO: Find a way to reduce NodeSource query joins when filtered by node-types.
-        }
+        // TODO: Find a way to reduce NodeSource query joins when filtered by node-types.
     }
 }

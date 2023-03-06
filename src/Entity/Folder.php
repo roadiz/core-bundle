@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
@@ -15,8 +16,9 @@ use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimedPositioned;
 use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
 use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use RZ\Roadiz\Core\Models\DocumentInterface;
-use RZ\Roadiz\Core\Models\FolderInterface;
+use RZ\Roadiz\CoreBundle\Repository\FolderRepository;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Models\FolderInterface;
 use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
@@ -24,115 +26,117 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Folders entity represent a directory on server with datetime and naming.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\FolderRepository")
- * @ORM\HasLifecycleCallbacks
- * @ORM\Table(name="folders", indexes={
- *     @ORM\Index(columns={"visible"}),
- *     @ORM\Index(columns={"locked"}),
- *     @ORM\Index(columns={"position"}),
- *     @ORM\Index(columns={"created_at"}),
- *     @ORM\Index(columns={"updated_at"}),
- *     @ORM\Index(columns={"parent_id", "position"}, name="folder_parent_position"),
- *     @ORM\Index(columns={"visible", "position"}, name="folder_visible_position"),
- *     @ORM\Index(columns={"parent_id", "visible"}, name="folder_parent_visible"),
- *     @ORM\Index(columns={"parent_id", "visible", "position"}, name="folder_parent_visible_position")
- * })
- * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
- * @ApiFilter(BaseFilter\OrderFilter::class, properties={
- *     "position",
- *     "createdAt",
- *     "updatedAt"
- * })
- * @UniqueEntity(fields={"folderName"})
  */
-class Folder extends AbstractDateTimedPositioned implements FolderInterface
+#[
+    ORM\Entity(repositoryClass: FolderRepository::class),
+    ORM\HasLifecycleCallbacks,
+    ORM\Table(name: "folders"),
+    ORM\Index(columns: ["visible"]),
+    ORM\Index(columns: ["locked"]),
+    ORM\Index(columns: ["position"]),
+    ORM\Index(columns: ["created_at"]),
+    ORM\Index(columns: ["updated_at"]),
+    ORM\Index(columns: ["parent_id", "position"], name: "folder_parent_position"),
+    ORM\Index(columns: ["visible", "position"], name: "folder_visible_position"),
+    ORM\Index(columns: ["parent_id", "visible"], name: "folder_parent_visible"),
+    ORM\Index(columns: ["parent_id", "visible", "position"], name: "folder_parent_visible_position"),
+    UniqueEntity(fields: ["folderName"]),
+    ApiFilter(PropertyFilter::class),
+    ApiFilter(BaseFilter\OrderFilter::class, properties: [
+        "position",
+        "createdAt",
+        "updatedAt"
+    ])
+]
+class Folder extends AbstractDateTimedPositioned implements FolderInterface, LeafInterface
 {
     use LeafTrait;
 
     /**
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Folder", inversedBy="children")
-     * @ORM\JoinColumn(name="parent_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Folder|null
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "parent.id": "exact",
-     *     "parent.folderName": "exact"
-     * })
      */
-    protected ?LeafInterface $parent = null;
+    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "parent.id" => "exact",
+        "parent.folderName" => "exact"
+    ])]
+    #[ORM\ManyToOne(targetEntity: Folder::class, inversedBy: 'children')]
+    #[ORM\JoinColumn(name: 'parent_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[Serializer\Groups(['folder_parent'])]
+    #[SymfonySerializer\Groups(['folder_parent'])]
+    #[SymfonySerializer\MaxDepth(1)]
+    protected ?Folder $parent = null;
+
     /**
-     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Folder", mappedBy="parent", orphanRemoval=true)
-     * @ORM\OrderBy({"position" = "ASC"})
      * @var Collection<Folder>
-     * @Serializer\Groups({"folder"})
-     * @SymfonySerializer\Groups({"folder"})
      */
+    #[ORM\OneToMany(mappedBy: 'parent', targetEntity: Folder::class, orphanRemoval: true)]
+    #[ORM\OrderBy(['position' => 'ASC'])]
+    #[SymfonySerializer\Groups(['folder_children'])]
+    #[Serializer\Groups(['folder_children'])]
+    #[SymfonySerializer\MaxDepth(1)]
     protected Collection $children;
+
     /**
-     * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Document", inversedBy="folders")
-     * @ORM\JoinTable(name="documents_folders")
-     * @var Collection<Document>
-     * @Serializer\Groups({"folder"})
-     * @SymfonySerializer\Groups({"folder"})
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "documents.id": "exact",
-     *     "documents.mimeType": "exact",
-     *     "documents.filename": "exact",
-     *     "documents.embedPlatform": "exact",
-     *     "documents.folders": "exact",
-     *     "documents.folders.folderName": "exact",
-     * })
+     * @var Collection<int, DocumentInterface>
      */
+    #[ORM\JoinTable(name: 'documents_folders')]
+    #[ORM\JoinColumn(name: 'folder_id', referencedColumnName: 'id')]
+    #[ORM\InverseJoinColumn(name: 'document_id', referencedColumnName: 'id')]
+    #[ORM\ManyToMany(targetEntity: DocumentInterface::class, inversedBy: 'folders')]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    /** @phpstan-ignore-next-line */
     protected Collection $documents;
-    /**
-     * @ORM\Column(name="folder_name", type="string", unique=true, nullable=false)
-     * @var string
-     * @Serializer\Groups({"folder", "document"})
-     * @SymfonySerializer\Groups({"folder", "document"})
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
-     * @Assert\NotBlank()
-     * @Assert\NotNull()
-     * @Assert\Length(max=250)
-     */
-    private string $folderName = '';
+
     /**
      * @var string
-     * @Serializer\Exclude()
-     * @SymfonySerializer\Ignore()
-     */
-    private string $dirtyFolderName = '';
-    /**
-     * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
-     * @var bool
-     * @Serializer\Groups({"folder", "document"})
-     * @SymfonySerializer\Groups({"folder", "document"})
-     * @ApiFilter(BaseFilter\BooleanFilter::class)
-     */
-    private bool $visible = true;
-    /**
-     * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
-     * @Serializer\Groups({"folder"})
-     * @SymfonySerializer\Groups({"folder"})
-     * @Serializer\Type("bool")
-     * @ApiFilter(BaseFilter\BooleanFilter::class)
-     */
-    private bool $locked = false;
-    /**
-     * @var string
-     * @ORM\Column(type="string", name="color", length=7, unique=false, nullable=false, options={"default" = "#000000"})
      * @Serializer\Groups({"folder", "folder_color"})
-     * @SymfonySerializer\Groups({"folder", "folder_color"})
      * @Serializer\Type("string")
      */
+    #[ORM\Column(
+        name: 'color',
+        type: 'string',
+        length: 7,
+        unique: false,
+        nullable: false,
+        options: ['default' => '#000000']
+    )]
+    #[SymfonySerializer\Groups(['folder', 'folder_color'])]
     protected string $color = '#000000';
+
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
+    #[ORM\Column(name: 'folder_name', type: 'string', unique: true, nullable: false)]
+    #[Serializer\Groups(['folder', 'document_folders'])]
+    #[SymfonySerializer\Groups(['folder', 'document_folders'])]
+    #[SymfonySerializer\SerializedName('slug')]
+    #[Assert\NotBlank]
+    #[Assert\NotNull]
+    #[Assert\Length(max: 250)]
+    private string $folderName = '';
+
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    private string $dirtyFolderName = '';
+
+    #[ApiFilter(BaseFilter\BooleanFilter::class)]
+    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => true])]
+    #[SymfonySerializer\Groups(['folder', 'document_folders'])]
+    #[Serializer\Groups(['folder', 'document_folders'])]
+    private bool $visible = true;
+
+    #[ApiFilter(BaseFilter\BooleanFilter::class)]
+    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
+    #[SymfonySerializer\Groups(['folder'])]
+    #[Serializer\Groups(['folder'])]
+    #[Serializer\Type('bool')]
+    private bool $locked = false;
+
     /**
-     * @ORM\OneToMany(targetEntity="FolderTranslation", mappedBy="folder", orphanRemoval=true)
      * @var Collection<FolderTranslation>
-     * @Serializer\Groups({"folder", "document"})
-     * @SymfonySerializer\Groups({"folder", "document"})
      */
+    #[ORM\OneToMany(mappedBy: 'folder', targetEntity: FolderTranslation::class, orphanRemoval: true)]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private Collection $translatedFolders;
 
     /**
@@ -150,7 +154,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @param DocumentInterface $document
      * @return $this
      */
-    public function addDocument(DocumentInterface $document)
+    public function addDocument(DocumentInterface $document): static
     {
         if (!$this->getDocuments()->contains($document)) {
             $this->documents->add($document);
@@ -160,7 +164,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
     }
 
     /**
-     * @return Collection<Document>
+     * @return Collection<int, DocumentInterface>
      */
     public function getDocuments(): Collection
     {
@@ -171,7 +175,7 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      * @param DocumentInterface $document
      * @return $this
      */
-    public function removeDocument(DocumentInterface $document)
+    public function removeDocument(DocumentInterface $document): static
     {
         if ($this->getDocuments()->contains($document)) {
             $this->documents->removeElement($document);
@@ -183,27 +187,53 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
     /**
      * @return boolean
      */
-    public function isVisible(): bool
-    {
-        return $this->visible;
-    }
-
-    /**
-     * @return boolean
-     */
     public function getVisible(): bool
     {
         return $this->isVisible();
     }
 
     /**
-     * @param bool $visible
-     * @return Folder
+     * @return boolean
      */
-    public function setVisible($visible)
+    public function isVisible(): bool
     {
-        $this->visible = (bool) $visible;
+        return $this->visible;
+    }
+
+    /**
+     * @param bool $visible
+     * @return $this
+     */
+    public function setVisible(bool $visible): static
+    {
+        $this->visible = $visible;
         return $this;
+    }
+
+    /**
+     * @param TranslationInterface $translation
+     * @return Collection<FolderTranslation>
+     */
+    #[SymfonySerializer\Ignore]
+    public function getTranslatedFoldersByTranslation(TranslationInterface $translation): Collection
+    {
+        $criteria = Criteria::create();
+        $criteria->where(Criteria::expr()->eq('translation', $translation));
+
+        return $this->translatedFolders->matching($criteria);
+    }
+
+    /**
+     * @return string|null
+     * @Serializer\VirtualProperty
+     * @Serializer\Groups({"folder", "document_folders"})
+     */
+    #[SymfonySerializer\Groups(['folder', 'document_folders'])]
+    public function getName(): ?string
+    {
+        return $this->getTranslatedFolders()->first() ?
+            $this->getTranslatedFolders()->first()->getName() :
+            $this->getFolderName();
     }
 
     /**
@@ -216,70 +246,46 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
 
     /**
      * @param Collection<FolderTranslation> $translatedFolders
-     * @return Folder
+     * @return $this
      */
-    public function setTranslatedFolders(Collection $translatedFolders)
+    public function setTranslatedFolders(Collection $translatedFolders): static
     {
         $this->translatedFolders = $translatedFolders;
         return $this;
     }
 
     /**
-     * @param TranslationInterface $translation
-     * @return Collection<FolderTranslation>
-     */
-    public function getTranslatedFoldersByTranslation(TranslationInterface $translation): Collection
-    {
-        $criteria = Criteria::create();
-        $criteria->where(Criteria::expr()->eq('translation', $translation));
-
-        return $this->translatedFolders->matching($criteria);
-    }
-
-    /**
      * @return string
      */
-    public function getFolderName()
+    public function getFolderName(): string
     {
-        return $this->folderName;
+        return $this->folderName ?? '';
     }
 
     /**
-     * @param string|null $folderName
-     * @return Folder
+     * @param string $folderName
+     * @return $this
      */
-    public function setFolderName($folderName)
+    public function setFolderName(string $folderName): static
     {
         $this->dirtyFolderName = $folderName;
-        $this->folderName = StringHandler::slugify($folderName ?? '');
+        $this->folderName = StringHandler::slugify($folderName);
         return $this;
     }
 
     /**
-     * @return string|null
-     * @Serializer\VirtualProperty
-     * @Serializer\Groups({"folder"})
-     */
-    public function getName(): ?string
-    {
-        return $this->getTranslatedFolders()->first() ?
-            $this->getTranslatedFolders()->first()->getName() :
-            $this->getFolderName();
-    }
-
-    /**
      * @return string
      */
-    public function getDirtyFolderName()
+    public function getDirtyFolderName(): string
     {
         return $this->dirtyFolderName;
     }
 
     /**
      * @param string $dirtyFolderName
-     * @return Folder
+     * @return $this
      */
-    public function setDirtyFolderName($dirtyFolderName)
+    public function setDirtyFolderName(string $dirtyFolderName): static
     {
         $this->dirtyFolderName = $dirtyFolderName;
         return $this;
@@ -326,12 +332,12 @@ class Folder extends AbstractDateTimedPositioned implements FolderInterface
      *
      * @return string
      */
+    #[SymfonySerializer\Ignore]
     public function getFullPath(): string
     {
         $parents = $this->getParents();
         $path = [];
 
-        /** @var Folder $parent */
         foreach ($parents as $parent) {
             $path[] = $parent->getFolderName();
         }

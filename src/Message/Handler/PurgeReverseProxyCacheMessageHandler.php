@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Message\Handler;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use RZ\Roadiz\CoreBundle\Cache\ReverseProxyCacheLocator;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Message\GuzzleRequestMessage;
@@ -15,6 +13,7 @@ use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\NoHandlerForMessageException;
+use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -23,7 +22,6 @@ final class PurgeReverseProxyCacheMessageHandler implements MessageHandlerInterf
 {
     private UrlGeneratorInterface $urlGenerator;
     private ReverseProxyCacheLocator $reverseProxyCacheLocator;
-    private LoggerInterface $logger;
     private MessageBusInterface $bus;
     private ManagerRegistry $managerRegistry;
 
@@ -32,18 +30,15 @@ final class PurgeReverseProxyCacheMessageHandler implements MessageHandlerInterf
      * @param UrlGeneratorInterface $urlGenerator
      * @param ReverseProxyCacheLocator $reverseProxyCacheLocator
      * @param ManagerRegistry $managerRegistry
-     * @param LoggerInterface|null $logger
      */
     public function __construct(
         MessageBusInterface $bus,
         UrlGeneratorInterface $urlGenerator,
         ReverseProxyCacheLocator $reverseProxyCacheLocator,
-        ManagerRegistry $managerRegistry,
-        LoggerInterface $logger = null
+        ManagerRegistry $managerRegistry
     ) {
         $this->urlGenerator = $urlGenerator;
         $this->reverseProxyCacheLocator = $reverseProxyCacheLocator;
-        $this->logger = $logger ?? new NullLogger();
         $this->managerRegistry = $managerRegistry;
         $this->bus = $bus;
     }
@@ -54,8 +49,7 @@ final class PurgeReverseProxyCacheMessageHandler implements MessageHandlerInterf
             ->getRepository(NodesSources::class)
             ->find($message->getNodeSourceId());
         if (null === $nodeSource) {
-            $this->logger->error('NodesSources does not exist anymore.');
-            return;
+            throw new UnrecoverableMessageHandlingException('NodesSources does not exist anymore.');
         }
 
         while (!$nodeSource->isReachable()) {
@@ -108,7 +102,7 @@ final class PurgeReverseProxyCacheMessageHandler implements MessageHandlerInterf
                 'timeout' => 3
             ])));
         } catch (NoHandlerForMessageException $exception) {
-            $this->logger->error($exception->getMessage());
+            throw new UnrecoverableMessageHandlingException($exception->getMessage(), 0, $exception);
         }
     }
 }

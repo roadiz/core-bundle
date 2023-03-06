@@ -44,7 +44,7 @@ final class NodesSourcesNodeTypeFilter implements EventSubscriberInterface
     /**
      * @param QueryBuilderNodesSourcesBuildEvent $event
      */
-    public function onNodesSourcesQueryBuilderBuild(QueryBuilderNodesSourcesBuildEvent $event)
+    public function onNodesSourcesQueryBuilderBuild(QueryBuilderNodesSourcesBuildEvent $event): void
     {
         if ($this->supports($event)) {
             // Prevent other query builder filters to execute
@@ -82,7 +82,7 @@ final class NodesSourcesNodeTypeFilter implements EventSubscriberInterface
         }
     }
 
-    public function onNodesSourcesQueryBuilderApply(QueryBuilderNodesSourcesApplyEvent $event)
+    public function onNodesSourcesQueryBuilderApply(QueryBuilderNodesSourcesApplyEvent $event): void
     {
         if ($this->supports($event)) {
             // Prevent other query builder filters to execute

@@ -37,17 +37,17 @@ class NodeTranslationFilter implements EventSubscriberInterface
     {
         return $event->supports() &&
             $event->getActualEntityName() === Node::class &&
-            false !== strpos($event->getProperty(), 'translation');
+            str_contains($event->getProperty(), 'translation');
     }
 
     /**
      * @param QueryBuilderBuildEvent $event
      */
-    public function onTranslationPrefixFilter(QueryBuilderBuildEvent $event)
+    public function onTranslationPrefixFilter(QueryBuilderBuildEvent $event): void
     {
         if ($this->supports($event)) {
             $simpleQB = new SimpleQueryBuilder($event->getQueryBuilder());
-            if (false !== strpos($event->getProperty(), 'translation.')) {
+            if (str_contains($event->getProperty(), 'translation.')) {
                 // Prevent other query builder filters to execute
                 $event->stopPropagation();
                 $qb = $event->getQueryBuilder();
@@ -87,7 +87,7 @@ class NodeTranslationFilter implements EventSubscriberInterface
     /**
      * @param QueryBuilderBuildEvent $event
      */
-    public function onTranslationFilter(QueryBuilderBuildEvent $event)
+    public function onTranslationFilter(QueryBuilderBuildEvent $event): void
     {
         if ($this->supports($event)) {
             $simpleQB = new SimpleQueryBuilder($event->getQueryBuilder());

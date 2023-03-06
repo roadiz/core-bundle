@@ -6,11 +6,14 @@ namespace RZ\Roadiz\CoreBundle\Api\DataTransformer;
 
 use ApiPlatform\Core\DataTransformer\DataTransformerInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use RZ\Roadiz\Core\Models\FolderInterface;
 use RZ\Roadiz\CoreBundle\Api\Dto\FolderOutput;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\CoreBundle\Entity\FolderTranslation;
+use RZ\Roadiz\Documents\Models\FolderInterface;
 
+/**
+ * @deprecated Use FolderNormalizer
+ */
 class FolderOutputDataTransformer implements DataTransformerInterface
 {
     /**

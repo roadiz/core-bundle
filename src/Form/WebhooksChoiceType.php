@@ -31,7 +31,7 @@ class WebhooksChoiceType extends ChoiceType
         $this->managerRegistry = $managerRegistry;
     }
 
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildForm($builder, $options);
         $builder->addModelTransformer(new CallbackTransformer(function (?Webhook $webhook) {
@@ -47,7 +47,7 @@ class WebhooksChoiceType extends ChoiceType
         }));
     }
 
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
 

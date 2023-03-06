@@ -110,7 +110,7 @@ final class GetWebResponseByPathController extends AbstractController
         return $resource;
     }
 
-    protected function addResourceToCacheTags(?PersistableInterface $resource)
+    protected function addResourceToCacheTags(?PersistableInterface $resource): void
     {
         $request = $this->requestStack->getMainRequest();
         if (null !== $request && null !== $resource) {

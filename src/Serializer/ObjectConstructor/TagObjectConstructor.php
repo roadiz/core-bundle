@@ -18,7 +18,10 @@ class TagObjectConstructor extends AbstractTypedObjectConstructor
      */
     public function supports(string $className, array $data): bool
     {
-        return $className === Tag::class && \array_key_exists('tagName', $data);
+        return $className === Tag::class && (
+            \array_key_exists('tagName', $data) ||
+            \array_key_exists('tag_name', $data)
+        );
     }
 
     /**
@@ -47,7 +50,7 @@ class TagObjectConstructor extends AbstractTypedObjectConstructor
     protected function fillIdentifier(object $object, array $data): void
     {
         if ($object instanceof Tag) {
-            $object->setTagName($data['tagName']);
+            $object->setTagName($data['tagName'] ?? $data['tag_name']);
         }
     }
 }

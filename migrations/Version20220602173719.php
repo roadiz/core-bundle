@@ -32,4 +32,9 @@ final class Version20220602173719 extends AbstractMigration
         $this->addSql('DROP INDEX document_file_hash_algorithm ON documents');
         $this->addSql('ALTER TABLE documents DROP file_hash, DROP file_hash_algorithm');
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

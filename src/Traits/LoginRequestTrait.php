@@ -17,8 +17,6 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  * Trait LoginRequestTrait.
  *
  * This trait MUST be used in Controllers ONLY.
- *
- * @package RZ\Roadiz\CMS\Traits
  */
 trait LoginRequestTrait
 {

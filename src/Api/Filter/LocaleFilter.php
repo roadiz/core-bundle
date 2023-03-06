@@ -51,7 +51,7 @@ final class LocaleFilter extends GeneratedEntityFilter
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
         string $operationName = null
-    ) {
+    ): void {
         if ($property !== self::PROPERTY) {
             return;
         }

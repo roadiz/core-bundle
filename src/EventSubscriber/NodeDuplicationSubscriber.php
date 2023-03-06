@@ -10,9 +10,6 @@ use RZ\Roadiz\CoreBundle\Event\Node\NodeDuplicatedEvent;
 use RZ\Roadiz\CoreBundle\EntityHandler\NodeHandler;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-/**
- * @package Themes\Rozier\Events
- */
 class NodeDuplicationSubscriber implements EventSubscriberInterface
 {
     protected HandlerFactoryInterface $handlerFactory;
@@ -36,13 +33,7 @@ class NodeDuplicationSubscriber implements EventSubscriberInterface
         ];
     }
 
-    /**
-     * @param NodeDuplicatedEvent $event
-     *
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
-     */
-    public function cleanPosition(NodeDuplicatedEvent $event)
+    public function cleanPosition(NodeDuplicatedEvent $event): void
     {
         /** @var NodeHandler $nodeHandler */
         $nodeHandler = $this->handlerFactory->getHandler($event->getNode());

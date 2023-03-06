@@ -65,17 +65,17 @@ final class NodesSourcesUrlsCacheEventSubscriber implements EventSubscriberInter
     /**
      * @param CachePurgeRequestEvent|mixed $event
      */
-    public function onPurgeRequest($event)
+    public function onPurgeRequest(mixed $event): void
     {
         try {
             if (false !== $this->cacheClearer->clear()) {
                 if ($event instanceof CachePurgeRequestEvent) {
-                    $event->addMessage($this->cacheClearer->getOutput(), static::class, 'NodesSources URL cache');
+                    $event->addMessage($this->cacheClearer->getOutput(), self::class, 'NodesSources URL cache');
                 }
             }
         } catch (\Exception $e) {
             if ($event instanceof CachePurgeRequestEvent) {
-                $event->addError($e->getMessage(), static::class, 'NodesSources URL cache');
+                $event->addError($e->getMessage(), self::class, 'NodesSources URL cache');
             }
         }
     }

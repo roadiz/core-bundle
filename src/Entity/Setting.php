@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\CoreBundle\Repository\SettingRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
@@ -15,15 +16,15 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Settings entity are a simple key-value configuration system.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\SettingRepository")
- * @ORM\Table(name="settings", indexes={
- *     @ORM\Index(columns={"type"}),
- *     @ORM\Index(columns={"name"}),
- *     @ORM\Index(columns={"visible"})
- * })
- * @UniqueEntity(fields={"name"})
  */
+#[
+    ORM\Entity(repositoryClass: SettingRepository::class),
+    ORM\Table(name: "settings"),
+    ORM\Index(columns: ["type"]),
+    ORM\Index(columns: ["name"]),
+    ORM\Index(columns: ["visible"]),
+    UniqueEntity(fields: ["name"])
+]
 class Setting extends AbstractEntity
 {
     /**
@@ -32,9 +33,9 @@ class Setting extends AbstractEntity
      * These string will be used as translation key.
      *
      * @var array<int, string>
-     * @Serializer\Exclude()
-     * @SymfonySerializer\Ignore()
      */
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     public static array $typeToHuman = [
         AbstractField::STRING_T => 'string.type',
         AbstractField::DATETIME_T => 'date-time.type',
@@ -53,15 +54,71 @@ class Setting extends AbstractEntity
         AbstractField::MULTIPLE_T => 'multiple-choice.type',
     ];
 
-    /**
-     * @ORM\Column(type="string", unique=true)
-     * @Serializer\Groups({"setting", "nodes_sources"})
-     * @SymfonySerializer\Groups({"setting", "nodes_sources"})
-     * @Serializer\Type("string")
-     * @Assert\NotBlank()
-     * @Assert\Length(max=250)
-     */
+    #[ORM\Column(type: 'string', unique: true)]
+    #[SymfonySerializer\Groups(['setting', 'nodes_sources'])]
+    #[Serializer\Groups(['setting', 'nodes_sources'])]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 250)]
     private string $name = '';
+
+    #[ORM\Column(type: 'text', unique: false, nullable: true)]
+    #[SymfonySerializer\Groups(['setting'])]
+    #[Serializer\Groups(['setting'])]
+    private ?string $description = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[SymfonySerializer\Groups(['setting', 'nodes_sources'])]
+    #[Serializer\Groups(['setting', 'nodes_sources'])]
+    private ?string $value = null;
+
+    /**
+     * Holds clear setting value after value is decoded by postLoad Doctrine event.
+     *
+     * READ ONLY: Not persisted value to hold clear value if setting is encrypted.
+     */
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    private ?string $clearValue = null;
+
+    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => true])]
+    #[SymfonySerializer\Groups(['setting'])]
+    #[Serializer\Groups(['setting'])]
+    private bool $visible = true;
+
+    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
+    #[SymfonySerializer\Groups(['setting'])]
+    #[Serializer\Groups(['setting'])]
+    private bool $encrypted = false;
+
+    #[ORM\ManyToOne(
+        targetEntity: SettingGroup::class,
+        cascade: ['persist', 'merge'],
+        fetch: 'EAGER',
+        inversedBy: 'settings'
+    )]
+    #[ORM\JoinColumn(name: 'setting_group_id', referencedColumnName: 'id', onDelete: 'SET NULL')]
+    #[SymfonySerializer\Groups(['setting'])]
+    #[Serializer\Groups(['setting'])]
+    #[Serializer\AccessType(type: 'public_method')]
+    #[Serializer\Accessor(getter: "getSettingGroup", setter: "setSettingGroup")]
+    private ?SettingGroup $settingGroup;
+
+    /**
+     * Value types.
+     * Use NodeTypeField types constants.
+     */
+    #[ORM\Column(type: 'integer')]
+    #[SymfonySerializer\Groups(['setting'])]
+    #[Serializer\Groups(['setting'])]
+    private int $type = AbstractField::STRING_T;
+
+    /**
+     * Available values for ENUM and MULTIPLE setting types.
+     */
+    #[ORM\Column(name: 'defaultValues', type: 'text', nullable: true)]
+    #[SymfonySerializer\Groups(['setting'])]
+    #[Serializer\Groups(['setting'])]
+    private ?string $defaultValues;
 
     /**
      * @return string
@@ -88,15 +145,6 @@ class Setting extends AbstractEntity
     }
 
     /**
-     * @var string|null
-     * @ORM\Column(type="text", unique=false, nullable=true)
-     * @Serializer\Groups({"setting"})
-     * @SymfonySerializer\Groups({"setting"})
-     * @Serializer\Type("string")
-     */
-    private ?string $description = null;
-
-    /**
      * @return string|null
      */
     public function getDescription(): ?string
@@ -117,25 +165,6 @@ class Setting extends AbstractEntity
     }
 
     /**
-     * @ORM\Column(type="text", nullable=true)
-     * @Serializer\Groups({"setting", "nodes_sources"})
-     * @SymfonySerializer\Groups({"setting", "nodes_sources"})
-     * @Serializer\Type("string")
-     */
-    private ?string $value = null;
-
-    /**
-     * Holds clear setting value after value is decoded by postLoad Doctrine event.
-     *
-     * READ ONLY: Not persisted value to hold clear value if setting is encrypted.
-     *
-     * @var string|null
-     * @Serializer\Exclude()
-     * @SymfonySerializer\Ignore
-     */
-    private ?string $clearValue = null;
-
-    /**
      * @return string|null
      */
     public function getRawValue(): ?string
@@ -147,9 +176,9 @@ class Setting extends AbstractEntity
      * Getter for setting value OR clear value, if encrypted.
      *
      * @return string|bool|\DateTime|int|null
-     * @SymfonySerializer\Ignore
      * @throws \Exception
      */
+    #[SymfonySerializer\Ignore]
     public function getValue()
     {
         if ($this->isEncrypted()) {
@@ -173,6 +202,7 @@ class Setting extends AbstractEntity
 
         return $value;
     }
+
     /**
      * @param null|mixed $value
      *
@@ -195,55 +225,6 @@ class Setting extends AbstractEntity
     }
 
     /**
-     * Holds clear setting value after value is decoded by postLoad Doctrine event.
-     *
-     * @param string|null $clearValue
-     *
-     * @return Setting
-     */
-    public function setClearValue(?string $clearValue): Setting
-    {
-        $this->clearValue = $clearValue;
-
-        return $this;
-    }
-
-    /**
-     * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
-     * @Serializer\Groups({"setting"})
-     * @SymfonySerializer\Groups({"setting"})
-     * @Serializer\Type("bool")
-     */
-    private bool $visible = true;
-
-    /**
-     * @return boolean
-     */
-    public function isVisible(): bool
-    {
-        return $this->visible;
-    }
-    /**
-     * @param bool $visible
-     *
-     * @return $this
-     */
-    public function setVisible(bool $visible)
-    {
-        $this->visible = $visible;
-
-        return $this;
-    }
-
-    /**
-     * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
-     * @Serializer\Groups({"setting"})
-     * @SymfonySerializer\Groups({"setting"})
-     * @Serializer\Type("bool")
-     */
-    private bool $encrypted = false;
-
-    /**
      * @return bool
      */
     public function isEncrypted(): bool
@@ -262,53 +243,6 @@ class Setting extends AbstractEntity
 
         return $this;
     }
-
-    /**
-     * @ORM\ManyToOne(
-     *     targetEntity="RZ\Roadiz\CoreBundle\Entity\SettingGroup",
-     *     inversedBy="settings",
-     *     cascade={"persist", "merge"},
-     *     fetch="EAGER"
-     * )
-     * @ORM\JoinColumn(name="setting_group_id", referencedColumnName="id", onDelete="SET NULL")
-     * @Serializer\Groups({"setting"})
-     * @SymfonySerializer\Groups({"setting"})
-     * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\SettingGroup")
-     * @Serializer\Accessor(getter="getSettingGroup", setter="setSettingGroup")
-     * @Serializer\AccessType("public_method")
-     * @var SettingGroup|null
-     */
-    private ?SettingGroup $settingGroup;
-
-    /**
-     * @return SettingGroup|null
-     */
-    public function getSettingGroup(): ?SettingGroup
-    {
-        return $this->settingGroup;
-    }
-    /**
-     * @param SettingGroup|null $settingGroup
-     *
-     * @return $this
-     */
-    public function setSettingGroup(?SettingGroup $settingGroup)
-    {
-        $this->settingGroup = $settingGroup;
-
-        return $this;
-    }
-
-    /**
-     * Value types.
-     * Use NodeTypeField types constants.
-     *
-     * @ORM\Column(type="integer")
-     * @Serializer\Groups({"setting"})
-     * @SymfonySerializer\Groups({"setting"})
-     * @Serializer\Type("int")
-     */
-    private int $type = AbstractField::STRING_T;
 
     /**
      * @return int
@@ -331,15 +265,58 @@ class Setting extends AbstractEntity
     }
 
     /**
-     * Available values for ENUM and MULTIPLE setting types.
+     * Holds clear setting value after value is decoded by postLoad Doctrine event.
      *
-     * @var string|null
-     * @ORM\Column(name="defaultValues", type="text", nullable=true)
-     * @Serializer\Groups({"setting"})
-     * @SymfonySerializer\Groups({"setting"})
-     * @Serializer\Type("string")
+     * @param string|null $clearValue
+     *
+     * @return Setting
      */
-    private ?string $defaultValues;
+    public function setClearValue(?string $clearValue): Setting
+    {
+        $this->clearValue = $clearValue;
+
+        return $this;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isVisible(): bool
+    {
+        return $this->visible;
+    }
+
+    /**
+     * @param bool $visible
+     *
+     * @return $this
+     */
+    public function setVisible(bool $visible)
+    {
+        $this->visible = $visible;
+
+        return $this;
+    }
+
+    /**
+     * @return SettingGroup|null
+     */
+    public function getSettingGroup(): ?SettingGroup
+    {
+        return $this->settingGroup;
+    }
+
+    /**
+     * @param SettingGroup|null $settingGroup
+     *
+     * @return $this
+     */
+    public function setSettingGroup(?SettingGroup $settingGroup)
+    {
+        $this->settingGroup = $settingGroup;
+
+        return $this;
+    }
 
     /**
      * @return string|null

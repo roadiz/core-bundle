@@ -10,9 +10,6 @@ use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TagObjectConstructor;
 use RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TypedObjectConstructorInterface;
 
-/**
- * @package RZ\Roadiz\CMS\Importers
- */
 class TagsImporter implements EntityImporterInterface
 {
     protected SerializerInterface $serializer;

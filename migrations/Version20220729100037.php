@@ -28,4 +28,9 @@ final class Version20220729100037 extends AbstractMigration
         // this down() migration is auto-generated, please modify it to your needs
         $this->addSql('ALTER TABLE documents DROP INDEX IDX_A2B0728826CBD5A5, ADD UNIQUE INDEX UNIQ_A2B0728826CBD5A5 (raw_document)');
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

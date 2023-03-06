@@ -6,23 +6,20 @@ namespace RZ\Roadiz\CoreBundle\Importer;
 
 use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\SerializerInterface;
-use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
+use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\EntityHandler\NodeTypeHandler;
+use RZ\Roadiz\CoreBundle\Message\UpdateNodeTypeSchemaMessage;
 use RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TypedObjectConstructorInterface;
+use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\MessageBusInterface;
 
-/**
- * @package RZ\Roadiz\CMS\Importers
- */
 class NodeTypesImporter implements EntityImporterInterface
 {
     protected SerializerInterface $serializer;
     protected HandlerFactoryInterface $handlerFactory;
 
-    /**
-     * @param SerializerInterface $serializer
-     * @param HandlerFactoryInterface $handlerFactory
-     */
+
     public function __construct(SerializerInterface $serializer, HandlerFactoryInterface $handlerFactory)
     {
         $this->serializer = $serializer;

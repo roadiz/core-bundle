@@ -10,42 +10,38 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 
 trait AttributeTranslationTrait
 {
-    /**
-     * @var TranslationInterface|null
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\Core\AbstractEntities\TranslationInterface")
-     * @ORM\JoinColumn(onDelete="CASCADE")
-     * @Serializer\Groups({"attribute", "node", "nodes_sources"})
-     * @Serializer\Type("RZ\Roadiz\Core\AbstractEntities\TranslationInterface")
-     * @Serializer\Accessor(getter="getTranslation", setter="setTranslation")
-     */
+    #[
+        ORM\ManyToOne(targetEntity: TranslationInterface::class),
+        ORM\JoinColumn(onDelete: "CASCADE"),
+        Serializer\Groups(["attribute", "node", "nodes_sources"]),
+        Serializer\Type("RZ\Roadiz\Core\AbstractEntities\TranslationInterface"),
+        Serializer\Accessor(getter: "getTranslation", setter: "setTranslation")
+    ]
     protected ?TranslationInterface $translation = null;
 
-    /**
-     * @var string
-     * @ORM\Column(type="string", nullable=false, unique=false)
-     * @Serializer\Groups({"attribute", "node", "nodes_sources"})
-     * @Serializer\Type("string")
-     */
+    #[
+        ORM\Column(type: "string", unique: false, nullable: false),
+        Serializer\Groups(["attribute", "node", "nodes_sources"]),
+        Serializer\Type("string")
+    ]
     protected string $label = '';
 
-    /**
-     * @var array|null
-     * @ORM\Column(type="simple_array", nullable=true, unique=false)
-     * @Serializer\Groups({"attribute"})
-     * @Serializer\Type("array")
-     */
+    #[
+        ORM\Column(type: "simple_array", unique: false, nullable: true),
+        Serializer\Groups(["attribute"]),
+        Serializer\Type("array")
+    ]
     protected ?array $options = [];
 
-    /**
-     * @var AttributeInterface|null
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Model\AttributeInterface", inversedBy="attributeTranslations", cascade={"persist"})
-     * @ORM\JoinColumn(onDelete="CASCADE", referencedColumnName="id")
-     * @Serializer\Exclude
-     */
+    #[
+        ORM\ManyToOne(targetEntity: AttributeInterface::class, cascade: ["persist"], inversedBy: "attributeTranslations"),
+        ORM\JoinColumn(referencedColumnName: "id", onDelete: "CASCADE"),
+        Serializer\Exclude
+    ]
     protected ?AttributeInterface $attribute = null;
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getLabel(): ?string
     {

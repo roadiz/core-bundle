@@ -10,6 +10,9 @@ use RZ\Roadiz\CoreBundle\Entity\AttributeValue;
 use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
+/**
+ * @extends EntityRepository<AttributeValue>
+ */
 final class AttributeValueRepository extends EntityRepository
 {
     public function __construct(

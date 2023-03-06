@@ -14,7 +14,7 @@ class AttributeImportType extends AbstractType
     /**
      * @inheritDoc
      */
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('file', FileType::class, [
             'label' => 'attributes.import_form.file.label',

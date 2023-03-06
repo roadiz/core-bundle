@@ -30,7 +30,7 @@ class PurgeLoginAttemptCommand extends Command
         $this->managerRegistry = $managerRegistry;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('login-attempts:purge')
             ->setDescription('Purge all login attempts for one IP address')

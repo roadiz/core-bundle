@@ -13,7 +13,7 @@ use Solarium\QueryType\Update\Query\Query as UpdateQuery;
 
 class NodesSourcesIndexer extends AbstractIndexer implements BatchIndexer
 {
-    public function index($id): void
+    public function index(mixed $id): void
     {
         $update = $this->getSolr()->createUpdate();
         $this->indexNodeSource(
@@ -37,7 +37,7 @@ class NodesSourcesIndexer extends AbstractIndexer implements BatchIndexer
         }
     }
 
-    public function delete($id): void
+    public function delete(mixed $id): void
     {
         $this->deleteNodeSource($this->managerRegistry->getRepository(NodesSources::class)->find($id));
     }

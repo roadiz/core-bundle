@@ -4,38 +4,28 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 
-use RZ\Roadiz\CoreBundle\Entity\Document;
-use RZ\Roadiz\Utils\Asset\Packages;
-use Symfony\Component\Filesystem\Filesystem;
+use League\Flysystem\FilesystemException;
+use League\Flysystem\FilesystemOperator;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
-/**
- * @package RZ\Roadiz\CoreBundle\Form\Constraint
- */
 class UniqueFilenameValidator extends ConstraintValidator
 {
-    /**
-     * @var Packages
-     */
-    protected $packages;
+    protected FilesystemOperator $documentsStorage;
 
-    /**
-     * @param Packages $packages
-     */
-    public function __construct(Packages $packages)
+    public function __construct(FilesystemOperator $documentsStorage)
     {
-        $this->packages = $packages;
+        $this->documentsStorage = $documentsStorage;
     }
 
     /**
      * @param mixed $value
      * @param Constraint $constraint
+     * @throws FilesystemException
      */
-    public function validate($value, Constraint $constraint)
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if ($constraint instanceof UniqueFilename) {
-            /** @var Document $document */
             $document = $constraint->document;
             /*
              * If value is already the filename
@@ -48,10 +38,9 @@ class UniqueFilenameValidator extends ConstraintValidator
                 return;
             }
 
-            $fs = new Filesystem();
-            $folder = $this->packages->getDocumentFolderPath($document);
+            $folder = $document->getMountFolderPath();
 
-            if ($fs->exists($folder . '/' . $value)) {
+            if ($this->documentsStorage->fileExists($folder . '/' . $value)) {
                 $this->context->addViolation($constraint->message);
             }
         }

@@ -7,7 +7,6 @@ namespace RZ\Roadiz\CoreBundle\Form\DataTransformer;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Explorer\ExplorerProviderInterface;
 use Symfony\Component\Form\DataTransformerInterface;
-use Symfony\Component\Form\Exception\TransformationFailedException;
 
 class ProviderDataTransformer implements DataTransformerInterface
 {
@@ -25,39 +24,42 @@ class ProviderDataTransformer implements DataTransformerInterface
     }
 
     /**
-     * @param mixed $entitiesToForm
-     * @return mixed
+     * @param mixed $value
+     * @return array|null
      */
-    public function transform($entitiesToForm)
+    public function transform(mixed $value): ?array
     {
-        if ($this->nodeTypeField->isMultiProvider() && (null === $entitiesToForm || is_array($entitiesToForm))) {
-            if (null !== $entitiesToForm && count($entitiesToForm) > 0) {
-                return $this->provider->getItemsById($entitiesToForm);
-            }
-            return [];
-        } elseif ($this->nodeTypeField->isSingleProvider()) {
-            if (isset($entitiesToForm)) {
-                return $this->provider->getItemsById($entitiesToForm);
-            }
+        if (null === $value) {
             return null;
         }
-        throw new TransformationFailedException('Provider entities cannot be transformed to form model.');
+
+        if (!is_array($value)) {
+            $value = [$value];
+        }
+
+        $value = array_filter($value);
+
+        if (count($value) === 0) {
+            return null;
+        }
+
+        return $this->provider->getItemsById($value);
     }
 
     /**
-     * @param mixed $formToEntities
+     * @param mixed $value
      * @return mixed
      */
-    public function reverseTransform($formToEntities)
+    public function reverseTransform(mixed $value): mixed
     {
         if (
-            is_array($formToEntities) &&
+            is_array($value) &&
             $this->nodeTypeField->isSingleProvider() &&
-            isset($formToEntities[0])
+            isset($value[0])
         ) {
-            return $formToEntities[0];
+            return $value[0];
         }
 
-        return $formToEntities;
+        return $value;
     }
 }

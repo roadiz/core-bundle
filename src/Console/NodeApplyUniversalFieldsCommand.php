@@ -31,7 +31,7 @@ class NodeApplyUniversalFieldsCommand extends Command
         $this->universalDataDuplicator = $universalDataDuplicator;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('nodes:force-universal')
             ->setDescription('Clean every nodes universal fields getting value form their default translation.')

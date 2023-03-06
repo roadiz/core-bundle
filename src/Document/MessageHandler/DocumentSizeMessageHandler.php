@@ -7,11 +7,11 @@ namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 use Doctrine\Persistence\ManagerRegistry;
 use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManager;
+use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
-use RZ\Roadiz\CoreBundle\Entity\Document;
-use RZ\Roadiz\Utils\Asset\Packages;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Models\SizeableInterface;
 
 final class DocumentSizeMessageHandler extends AbstractLockingDocumentMessageHandler
 {
@@ -20,10 +20,10 @@ final class DocumentSizeMessageHandler extends AbstractLockingDocumentMessageHan
     public function __construct(
         ManagerRegistry $managerRegistry,
         LoggerInterface $messengerLogger,
-        Packages $packages,
+        FilesystemOperator $documentsStorage,
         ImageManager $imageManager
     ) {
-        parent::__construct($managerRegistry, $messengerLogger, $packages);
+        parent::__construct($managerRegistry, $messengerLogger, $documentsStorage);
         $this->imageManager = $imageManager;
     }
 
@@ -36,18 +36,20 @@ final class DocumentSizeMessageHandler extends AbstractLockingDocumentMessageHan
         return $document->isLocal() && $document->isImage();
     }
 
-    protected function processMessage(AbstractDocumentMessage $message, Document $document): void
+    protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
-        $documentPath = $this->packages->getDocumentFilePath($document);
+        if (!$document instanceof SizeableInterface) {
+            return;
+        }
         try {
-            $imageProcess = $this->imageManager->make($documentPath);
+            $imageProcess = $this->imageManager->make($this->documentsStorage->readStream($document->getMountPath()));
             $document->setImageWidth($imageProcess->width());
             $document->setImageHeight($imageProcess->height());
         } catch (NotReadableException $exception) {
             $this->logger->warning(
                 'Document file is not a readable image.',
                 [
-                    'path' => $documentPath,
+                    'path' => $document->getMountPath(),
                     'message' => $exception->getMessage()
                 ]
             );

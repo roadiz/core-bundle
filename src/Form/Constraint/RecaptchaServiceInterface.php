@@ -10,14 +10,12 @@ interface RecaptchaServiceInterface
      * Makes a request to recaptcha service and checks if recaptcha field is valid.
      * Returns Google error-codes if recaptcha fails.
      *
-     * @param string $privateKey
      * @param string $responseValue
      * @param string $verifyUrl
-     * @return true|string|array
+     * @return true|mixed
      */
     public function check(
-        string $privateKey,
         string $responseValue,
         string $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify'
-    );
+    ): mixed;
 }

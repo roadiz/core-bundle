@@ -16,10 +16,6 @@ final class RequestPreviewRevolver implements PreviewResolverInterface
     private RequestStack $requestStack;
     private string $requiredRole;
 
-    /**
-     * @param RequestStack $requestStack
-     * @param string $requiredRole
-     */
     public function __construct(
         RequestStack $requestStack,
         string $requiredRole

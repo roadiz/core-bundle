@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Document;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Repository\DocumentRepository;
-use RZ\Roadiz\Document\AbstractDocumentFinder;
+use RZ\Roadiz\Documents\AbstractDocumentFinder;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 final class DocumentFinder extends AbstractDocumentFinder
 {
@@ -41,6 +41,17 @@ final class DocumentFinder extends AbstractDocumentFinder
         return $this->getRepository()->findOneBy([
             "filename" => $fileNames,
             "raw" => false,
+        ]);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function findOneByHashAndAlgorithm(string $hash, string $algorithm): ?DocumentInterface
+    {
+        return $this->getRepository()->findOneBy([
+            "fileHash" => $hash,
+            "fileHashAlgorithm" => $algorithm,
         ]);
     }
 

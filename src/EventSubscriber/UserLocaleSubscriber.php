@@ -42,7 +42,7 @@ final class UserLocaleSubscriber implements EventSubscriberInterface
     /**
      * @param InteractiveLoginEvent $event
      */
-    public function onInteractiveLogin(InteractiveLoginEvent $event)
+    public function onInteractiveLogin(InteractiveLoginEvent $event): void
     {
         $user = $event->getAuthenticationToken()->getUser();
 
@@ -57,7 +57,7 @@ final class UserLocaleSubscriber implements EventSubscriberInterface
     /**
      * @param FilterUserEvent $event
      */
-    public function onUserUpdated(FilterUserEvent $event)
+    public function onUserUpdated(FilterUserEvent $event): void
     {
         $user = $event->getUser();
 

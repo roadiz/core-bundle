@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 
+use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Cache\Clearer\AssetsFileClearer;
-use RZ\Roadiz\CoreBundle\Event\Cache\CachePurgeAssetsRequestEvent;
+use RZ\Roadiz\Documents\Events\CachePurgeAssetsRequestEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 final class AssetsCacheEventSubscriber implements EventSubscriberInterface
 {
     private AssetsFileClearer $assetsClearer;
+    private LoggerInterface $logger;
 
-    /**
-     * @param AssetsFileClearer $assetsClearer
-     */
-    public function __construct(AssetsFileClearer $assetsClearer)
+    public function __construct(AssetsFileClearer $assetsClearer, LoggerInterface $logger)
     {
         $this->assetsClearer = $assetsClearer;
+        $this->logger = $logger;
     }
 
     /**
@@ -31,16 +31,13 @@ final class AssetsCacheEventSubscriber implements EventSubscriberInterface
         ];
     }
 
-    /**
-     * @param CachePurgeAssetsRequestEvent $event
-     */
-    public function onPurgeAssetsRequest(CachePurgeAssetsRequestEvent $event)
+    public function onPurgeAssetsRequest(CachePurgeAssetsRequestEvent $event): void
     {
         try {
             $this->assetsClearer->clear();
-            $event->addMessage($this->assetsClearer->getOutput(), static::class, 'Assets cache');
+            $this->logger->info($this->assetsClearer->getOutput());
         } catch (\Exception $e) {
-            $event->addError($e->getMessage(), static::class, 'Assets cache');
+            $this->logger->error($e->getMessage());
         }
     }
 }

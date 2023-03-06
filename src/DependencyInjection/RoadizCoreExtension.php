@@ -26,8 +26,8 @@ use RZ\Roadiz\CoreBundle\Webhook\Message\GitlabPipelineTriggerMessage;
 use RZ\Roadiz\CoreBundle\Webhook\Message\NetlifyBuildHookMessage;
 use RZ\Roadiz\Markdown\CommonMark;
 use RZ\Roadiz\Markdown\MarkdownInterface;
-use Solarium\Core\Client\Client;
 use Solarium\Core\Client\Adapter\Curl;
+use Solarium\Core\Client\Client;
 use Solarium\Core\Client\Endpoint;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -49,7 +49,7 @@ class RoadizCoreExtension extends Extension
     /**
      * @inheritDoc
      */
-    public function load(array $configs, ContainerBuilder $container)
+    public function load(array $configs, ContainerBuilder $container): void
     {
         $loader = new YamlFileLoader($container, new FileLocator(dirname(__DIR__) . '/../config'));
         $loader->load('services.yaml');
@@ -61,6 +61,7 @@ class RoadizCoreExtension extends Extension
         $container->setParameter('roadiz_core.app_version', $config['appVersion']);
         $container->setParameter('roadiz_core.health_check_token', $config['healthCheckToken']);
         $container->setParameter('roadiz_core.inheritance_type', $config['inheritance']['type']);
+        $container->setParameter('roadiz_core.max_versions_showed', $config['maxVersionsShowed']);
         $container->setParameter('roadiz_core.static_domain_name', $config['staticDomainName'] ?? '');
         $container->setParameter('roadiz_core.private_key_name', $config['security']['private_key_name']);
         $container->setParameter('roadiz_core.private_key_dir', $config['security']['private_key_dir']);
@@ -70,6 +71,7 @@ class RoadizCoreExtension extends Extension
         );
         $container->setParameter('roadiz_core.default_node_source_controller', $config['defaultNodeSourceController']);
         $container->setParameter('roadiz_core.use_native_json_column_type', $config['useNativeJsonColumnType']);
+        $container->setParameter('roadiz_core.use_typed_node_names', $config['useTypedNodeNames']);
         $container->setParameter('roadiz_core.hide_roadiz_version', $config['hideRoadizVersion']);
         $container->setParameter('roadiz_core.use_accept_language_header', $config['useAcceptLanguageHeader']);
 
@@ -83,6 +85,10 @@ class RoadizCoreExtension extends Extension
             $container->setParameter('roadiz_core.assets_processing.supports_webp', false);
         }
 
+        $container->setParameter(
+            'roadiz_core.documents_lib_dir',
+            $container->getParameter('kernel.project_dir') . DIRECTORY_SEPARATOR . trim($config['documentsLibDir'], "/ \t\n\r\0\x0B")
+        );
         /*
          * Media config
          */
@@ -94,18 +100,23 @@ class RoadizCoreExtension extends Extension
             'roadiz_core.medias.unsplash_client_id',
             $config['medias']['unsplash_client_id'] ?? ''
         );
-        $container->setParameter('roadiz_core.medias.supported_platforms', [
-            'youtube' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\YoutubeEmbedFinder::class,
-            'vimeo' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\VimeoEmbedFinder::class,
-            'deezer' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\DeezerEmbedFinder::class,
-            'dailymotion' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\DailymotionEmbedFinder::class,
-            'soundcloud' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\SoundcloudEmbedFinder::class,
-            'mixcloud' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\MixcloudEmbedFinder::class,
-            'spotify' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\SpotifyEmbedFinder::class,
-            'ted' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\TedEmbedFinder::class,
-            'podcast' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\PodcastFinder::class,
-            'twitch' => \RZ\Roadiz\CoreBundle\Document\MediaFinder\TwitchEmbedFinder::class
-        ]);
+        $container->setParameter(
+            'roadiz_core.medias.google_server_id',
+            $config['medias']['google_server_id'] ?? null
+        );
+        $container->setParameter(
+            'roadiz_core.medias.soundcloud_client_id',
+            $config['medias']['soundcloud_client_id'] ?? null
+        );
+        $container->setParameter(
+            'roadiz_core.medias.recaptcha_private_key',
+            $config['medias']['recaptcha_private_key'] ?? null
+        );
+        $container->setParameter(
+            'roadiz_core.medias.recaptcha_public_key',
+            $config['medias']['recaptcha_public_key'] ?? null
+        );
+        $container->setParameter('roadiz_core.medias.supported_platforms', []);
 
         $container->setParameter('roadiz_core.webhook.message_types', [
             'webhook.type.generic_json_post' => GenericJsonPostMessage::class,

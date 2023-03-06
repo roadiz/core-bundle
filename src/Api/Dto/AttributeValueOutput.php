@@ -8,31 +8,34 @@ use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 
+/**
+ * @deprecated
+ */
 final class AttributeValueOutput
 {
     /**
      * @var AttributeInterface|null
-     * @Groups({"attribute"})
      */
+    #[Groups(['attribute'])]
     public ?AttributeInterface $attribute = null;
     /**
      * @var AttributableInterface|null
-     * @Groups({"attribute"})
      */
+    #[Groups(['attribute'])]
     public ?AttributableInterface $attributable = null;
     /**
      * @var int|null
-     * @Groups({"attribute"})
      */
+    #[Groups(['attribute'])]
     public ?int $type = null;
     /**
      * @var mixed|null
-     * @Groups({"attribute"})
      */
+    #[Groups(['attribute'])]
     public $value = null;
     /**
      * @var string|null
-     * @Groups({"attribute"})
      */
+    #[Groups(['attribute'])]
     public ?string $label = null;
 }

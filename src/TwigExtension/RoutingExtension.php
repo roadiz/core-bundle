@@ -13,8 +13,6 @@ use Twig\TwigFunction;
 
 /**
  * Override Symfony RoutingExtension to support object url generation.
- *
- * @package RZ\Roadiz\Utils\TwigExtensions
  */
 class RoutingExtension extends AbstractExtension
 {

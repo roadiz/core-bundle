@@ -27,7 +27,7 @@ class GroupHandler extends AbstractHandler
      * @param Group $group
      * @return $this
      */
-    public function setGroup(Group $group)
+    public function setGroup(Group $group): self
     {
         $this->group = $group;
         return $this;
@@ -38,7 +38,7 @@ class GroupHandler extends AbstractHandler
      *
      * @param Group $newGroup
      */
-    public function diff(Group $newGroup)
+    public function diff(Group $newGroup): void
     {
         if ("" != $newGroup->getName()) {
             $this->getGroup()->setName($newGroup->getName());

@@ -26,4 +26,9 @@ final class Version20210802132310 extends AbstractMigration
     {
         $this->addSql('ALTER TABLE webhooks DROP description');
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

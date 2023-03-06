@@ -8,6 +8,7 @@ RZ\Roadiz\CoreBundle\Api\Model\WebResponse:
             controller: RZ\Roadiz\CoreBundle\Api\Controller\GetWebResponseByPathController
             pagination_enabled: false
             normalization_context:
+                enable_max_depth: true
                 pagination_enabled: false
                 groups:
                     - get
@@ -23,6 +24,7 @@ RZ\Roadiz\CoreBundle\Api\Model\WebResponse:
                     - tag_base
                     - translation_base
                     - document_display
+                    - node_attributes
             openapi_context:
                 summary: Get a resource by its path wrapped in a WebResponse object
                 description: |

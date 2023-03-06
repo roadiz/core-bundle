@@ -9,6 +9,11 @@ use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
+ * @method UrlAlias|null findOneByName(string $name)
+ * @method UrlAlias|null find($id, $lockMode = null, $lockVersion = null)
+ * @method UrlAlias|null findOneBy(array $criteria, array $orderBy = null)
+ * @method UrlAlias[]    findAll()
+ * @method UrlAlias[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  * @extends EntityRepository<UrlAlias>
  */
 final class UrlAliasRepository extends EntityRepository

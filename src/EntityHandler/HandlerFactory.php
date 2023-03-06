@@ -6,11 +6,12 @@ namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
 use Psr\Container\ContainerInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\Core\Handlers\AbstractHandler;
+use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Entity\CustomFormField;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
-use RZ\Roadiz\CoreBundle\Entity\Font;
 use RZ\Roadiz\CoreBundle\Entity\Group;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
@@ -18,8 +19,6 @@ use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
-use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
-use RZ\Roadiz\Core\Handlers\AbstractHandler;
 
 class HandlerFactory implements HandlerFactoryInterface
 {
@@ -58,8 +57,6 @@ class HandlerFactory implements HandlerFactoryInterface
                 return $this->container->get(CustomFormFieldHandler::class)->setCustomFormField($entity);
             case ($entity instanceof Folder):
                 return $this->container->get(FolderHandler::class)->setFolder($entity);
-            case ($entity instanceof Font):
-                return $this->container->get(FontHandler::class)->setFont($entity);
             case ($entity instanceof Group):
                 return $this->container->get(GroupHandler::class)->setGroup($entity);
             case ($entity instanceof Tag):

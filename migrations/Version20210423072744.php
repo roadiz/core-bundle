@@ -26,4 +26,9 @@ final class Version20210423072744 extends AbstractMigration
     {
         $this->addSql('ALTER TABLE documents DROP duration');
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

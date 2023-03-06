@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Markdown\MarkdownInterface;
 use Solarium\Core\Query\DocumentInterface;
+use Solarium\Core\Query\Result\ResultInterface;
 use Solarium\QueryType\Update\Query\Query;
 
 /**
@@ -44,7 +45,7 @@ class SolariumDocument extends AbstractSolarium
     /**
      * @deprecated
      */
-    public function getDocument()
+    public function getDocument(): ?DocumentInterface
     {
         throw new \RuntimeException('Method getDocument cannot be called for SolariumDocument.');
     }
@@ -63,7 +64,7 @@ class SolariumDocument extends AbstractSolarium
         return array_filter($documents);
     }
 
-    public function getDocumentId()
+    public function getDocumentId(): string|int
     {
         throw new \RuntimeException('SolariumDocument should not provide any ID');
     }
@@ -71,9 +72,9 @@ class SolariumDocument extends AbstractSolarium
     /**
      * Get document from Solr index.
      *
-     * @return boolean *FALSE* if no document found linked to current Roadiz document.
+     * @return bool *FALSE* if no document found linked to current Roadiz document.
      */
-    public function getDocumentFromIndex()
+    public function getDocumentFromIndex(): bool
     {
         /** @var SolariumDocumentTranslation $documentTranslationItem */
         foreach ($this->documentTranslationItems as $documentTranslationItem) {
@@ -87,7 +88,7 @@ class SolariumDocument extends AbstractSolarium
      * @param Query $update
      * @return $this
      */
-    public function createEmptyDocument(Query $update)
+    public function createEmptyDocument(Query $update): self
     {
         /** @var SolariumDocumentTranslation $documentTranslationItem */
         foreach ($this->documentTranslationItems as $documentTranslationItem) {
@@ -96,7 +97,7 @@ class SolariumDocument extends AbstractSolarium
         return $this;
     }
 
-    protected function getFieldsAssoc()
+    protected function getFieldsAssoc(): array
     {
         return [];
     }
@@ -106,7 +107,7 @@ class SolariumDocument extends AbstractSolarium
      *
      * @return bool
      */
-    public function clean(Query $update)
+    public function clean(Query $update): bool
     {
         /** @var SolariumDocumentTranslation $documentTranslationItem */
         foreach ($this->documentTranslationItems as $documentTranslationItem) {
@@ -116,47 +117,42 @@ class SolariumDocument extends AbstractSolarium
         return true;
     }
 
-    /**
-     * @return bool
-     * @throws \Exception
-     */
-    public function indexAndCommit()
+    public function indexAndCommit(): ?ResultInterface
     {
+        $lastResult = null;
         /** @var SolariumDocumentTranslation $documentTranslationItem */
         foreach ($this->documentTranslationItems as $documentTranslationItem) {
-            $documentTranslationItem->indexAndCommit();
+            $lastResult = $documentTranslationItem->indexAndCommit();
         }
-        return true;
+        return $lastResult;
     }
 
     /**
-     * @return \Solarium\Core\Query\Result\Result
+     * @return ResultInterface|null
      * @throws \Exception
      */
-    public function updateAndCommit()
+    public function updateAndCommit(): ?ResultInterface
     {
-        $last = null;
+        $lastResult = null;
         /** @var SolariumDocumentTranslation $documentTranslationItem */
         foreach ($this->documentTranslationItems as $documentTranslationItem) {
-            $last = $documentTranslationItem->updateAndCommit();
+            $lastResult = $documentTranslationItem->updateAndCommit();
         }
 
-        return $last;
+        return $lastResult;
     }
 
     /**
      * @param Query $update
      *
-     * @return bool
      * @throws \Exception
      */
-    public function update(Query $update)
+    public function update(Query $update): void
     {
         /** @var SolariumDocumentTranslation $documentTranslationItem */
         foreach ($this->documentTranslationItems as $documentTranslationItem) {
             $documentTranslationItem->update($update);
         }
-        return true;
     }
 
     /**
@@ -164,7 +160,7 @@ class SolariumDocument extends AbstractSolarium
      *
      * @return bool
      */
-    public function remove(Query $update)
+    public function remove(Query $update): bool
     {
         /** @var SolariumDocumentTranslation $documentTranslationItem */
         foreach ($this->documentTranslationItems as $documentTranslationItem) {
@@ -176,7 +172,7 @@ class SolariumDocument extends AbstractSolarium
     /**
      * @inheritdoc
      */
-    public function removeAndCommit()
+    public function removeAndCommit(): void
     {
         /** @var SolariumDocumentTranslation $documentTranslationItem */
         foreach ($this->documentTranslationItems as $documentTranslationItem) {
@@ -187,7 +183,7 @@ class SolariumDocument extends AbstractSolarium
     /**
      * @inheritdoc
      */
-    public function cleanAndCommit()
+    public function cleanAndCommit(): void
     {
         /** @var SolariumDocumentTranslation $documentTranslationItem */
         foreach ($this->documentTranslationItems as $documentTranslationItem) {
@@ -198,7 +194,7 @@ class SolariumDocument extends AbstractSolarium
     /**
      * @inheritdoc
      */
-    public function index()
+    public function index(): bool
     {
         /** @var SolariumDocumentTranslation $documentTranslationItem */
         foreach ($this->documentTranslationItems as $documentTranslationItem) {

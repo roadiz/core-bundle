@@ -27,7 +27,7 @@ class NodesDetailsCommand extends Command
         $this->managerRegistry = $managerRegistry;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('nodes:show')
             ->setDescription('Show node details and data.')

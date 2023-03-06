@@ -1,6 +1,6 @@
 # Roadiz Core bundle
 
-[![Build Status](https://app.travis-ci.com/roadiz/core-bundle.svg?branch=main)](https://app.travis-ci.com/roadiz/core-bundle)
+![Run test status](https://github.com/roadiz/core-bundle/actions/workflows/run-test.yml/badge.svg?branch=develop)
 
 Installation
 ============
@@ -59,3 +59,7 @@ rz_intervention_request:
     resource: "@RZInterventionRequestBundle/Resources/config/routing.yml"
     prefix:   /
 ```
+
+## Contributing
+
+Report [issues](https://github.com/roadiz/core-bundle-dev-app/issues) and send [Pull Requests](https://github.com/roadiz/core-bundle-dev-app/pulls) in the [main Roadiz repository](https://github.com/roadiz/core-bundle-dev-app)

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\CoreBundle\Repository\RealmRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
@@ -23,128 +25,81 @@ use Symfony\Component\Validator\Constraints as Assert;
  *
  * It supports plain_password (in query string), role-based and user-based authentication.
  * All behaviours except for serializationGroups are only applied when using API WebResponse.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\RealmRepository")
- * @ORM\Table(name="realms", indexes={
- *     @ORM\Index(columns={"type"}, name="realms_type"),
- *     @ORM\Index(columns={"behaviour"}, name="realms_behaviour"),
- * })
- * @ApiFilter(ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
- * @ApiFilter(BaseFilter\SearchFilter::class, properties={
- *     "type": "exact",
- *     "behaviour": "exact",
- *     "name": "exact"
- * })
- * @UniqueEntity(fields={"name"})
  */
+#[
+    ORM\Entity(repositoryClass: RealmRepository::class),
+    ORM\Table(name: "realms"),
+    ORM\Index(columns: ["type"], name: "realms_type"),
+    ORM\Index(columns: ["behaviour"], name: "realms_behaviour"),
+    UniqueEntity(fields: ["name"]),
+    ApiFilter(PropertyFilter::class),
+    ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "type" => "exact",
+        "behaviour" => "exact",
+        "name" => "exact"
+    ])
+]
 class Realm extends AbstractEntity implements RealmInterface
 {
-    /**
-     * @var string
-     * @ORM\Column(name="type", type="string", length=30)
-     * @Serializer\Groups({"get", "realm"})
-     * @SymfonySerializer\Groups({"get", "realm"})
-     */
+    #[ORM\Column(name: 'type', type: 'string', length: 30)]
+    #[SymfonySerializer\Groups(['get', 'realm'])]
+    #[Serializer\Groups(['get', 'realm'])]
     private string $type = RealmInterface::TYPE_PLAIN_PASSWORD;
-    /**
-     * @var string
-     * @ORM\Column(name="behaviour", type="string", length=30, nullable=false, options={"default"="none"})
-     * @Serializer\Groups({"get", "realm", "web_response"})
-     * @SymfonySerializer\Groups({"get", "realm", "web_response"})
-     */
+
+    #[ORM\Column(name: 'behaviour', type: 'string', length: 30, nullable: false, options: ['default' => 'none'])]
+    #[SymfonySerializer\Groups(['get', 'realm', 'web_response'])]
+    #[Serializer\Groups(['get', 'realm', 'web_response'])]
     private string $behaviour = RealmInterface::BEHAVIOUR_NONE;
-    /**
-     * @var string
-     * @ORM\Column(name="name", unique=true)
-     * @Serializer\Groups({"get", "realm", "web_response"})
-     * @SymfonySerializer\Groups({"get", "realm", "web_response"})
-     * @Assert\NotBlank()
-     * @Assert\NotNull()
-     * @Assert\Length(max=250)
-     * @Assert\Regex("#^[\w\s]+$#u")
-     */
+
+    #[ORM\Column(name: 'name', unique: true)]
+    #[SymfonySerializer\Groups(['get', 'realm', 'web_response'])]
+    #[Serializer\Groups(['get', 'realm', 'web_response'])]
+    #[Assert\NotBlank]
+    #[Assert\NotNull]
+    #[Assert\Length(max: 250)]
+    #[Assert\Regex('#^[\w\s]+$#u')]
     private string $name = '';
+
     /**
      * @var string|null
-     * @ORM\Column(name="plain_password", unique=false, type="string", length=255, nullable=true)
      * @Serializer\Exclude()
-     * @SymfonySerializer\Ignore()
      */
+    #[ORM\Column(name: 'plain_password', unique: false, type: 'string', length: 255, nullable: true)]
+    #[SymfonySerializer\Ignore]
     private ?string $plainPassword = null;
-    /**
-     * @var Role|null
-     * @ORM\ManyToOne(targetEntity="Role")
-     * @ORM\JoinColumn(name="role_id", referencedColumnName="id", onDelete="SET NULL")
-     * @Serializer\Exclude()
-     * @SymfonySerializer\Ignore()
-     */
+
+    #[ORM\ManyToOne(targetEntity: Role::class)]
+    #[ORM\JoinColumn(name: 'role_id', referencedColumnName: 'id', onDelete: 'SET NULL')]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private ?Role $roleEntity = null;
-    /**
-     * @var string|null
-     * @ORM\Column(name="serialization_group", type="string", length=200, nullable=true)
-     * @Serializer\Exclude()
-     * @SymfonySerializer\Ignore()
-     */
+
+    #[ORM\Column(name: 'serialization_group', type: 'string', length: 200, nullable: true)]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private ?string $serializationGroup = null;
+
     /**
-     * @var Collection<UserInterface>|ArrayCollection<UserInterface>
-     * @ORM\ManyToMany(targetEntity="User")
-     * @ORM\JoinTable(name="realms_users")
-     * @Serializer\Exclude()
-     * @SymfonySerializer\Ignore()
+     * @var Collection<UserInterface>
      */
+    #[ORM\JoinTable(name: 'realms_users')]
+    #[ORM\ManyToMany(targetEntity: User::class)]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private Collection $users;
+
     /**
-     * @var Collection<RealmNode>|ArrayCollection<RealmNode>
-     * @ORM\OneToMany(targetEntity="RealmNode", mappedBy="realm")
-     * @Serializer\Exclude()
-     * @SymfonySerializer\Ignore()
+     * @var Collection<RealmNode>
      */
+    #[ORM\OneToMany(mappedBy: 'realm', targetEntity: RealmNode::class)]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private Collection $realmNodes;
 
     public function __construct()
     {
         $this->users = new ArrayCollection();
         $this->realmNodes = new ArrayCollection();
-    }
-
-    /**
-     * @return string
-     */
-    public function getType(): string
-    {
-        return $this->type;
-    }
-
-    /**
-     * @param string $type
-     * @return Realm
-     */
-    public function setType(string $type): Realm
-    {
-        $this->type = $type;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name ?? '';
-    }
-
-    /**
-     * @param string $name
-     * @return Realm
-     */
-    public function setName(string $name): Realm
-    {
-        $this->name = $name;
-        if (null === $this->serializationGroup) {
-            $this->serializationGroup = (new AsciiSlugger())->slug($this->name, '_')->lower()->toString();
-        }
-        return $this;
     }
 
     /**
@@ -193,6 +148,27 @@ class Realm extends AbstractEntity implements RealmInterface
         $this->serializationGroup = null !== $serializationGroup ?
             (new AsciiSlugger())->slug($serializationGroup, '_')->lower()->toString() :
             (new AsciiSlugger())->slug($this->getName(), '_')->lower()->toString();
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name ?? '';
+    }
+
+    /**
+     * @param string $name
+     * @return Realm
+     */
+    public function setName(string $name): Realm
+    {
+        $this->name = $name;
+        if (null === $this->serializationGroup) {
+            $this->serializationGroup = (new AsciiSlugger())->slug($this->name, '_')->lower()->toString();
+        }
         return $this;
     }
 
@@ -268,11 +244,16 @@ class Realm extends AbstractEntity implements RealmInterface
         return $this;
     }
 
+    public function getChallenge(): string
+    {
+        return $this->getAuthenticationScheme() . ' realm="' . addslashes($this->getName()) . '"';
+    }
+
     /**
      * @return string
-     * @Serializer\Groups({"get", "realm", "web_response"})
-     * @SymfonySerializer\Groups({"get", "realm", "web_response"})
      */
+    #[SymfonySerializer\Groups(['get', 'realm', 'web_response'])]
+    #[Serializer\Groups(['get', 'realm', 'web_response'])]
     public function getAuthenticationScheme(): string
     {
         switch ($this->getType()) {
@@ -283,8 +264,21 @@ class Realm extends AbstractEntity implements RealmInterface
         }
     }
 
-    public function getChallenge(): string
+    /**
+     * @return string
+     */
+    public function getType(): string
     {
-        return $this->getAuthenticationScheme() . ' realm="' . addslashes($this->getName()) . '"';
+        return $this->type;
+    }
+
+    /**
+     * @param string $type
+     * @return Realm
+     */
+    public function setType(string $type): Realm
+    {
+        $this->type = $type;
+        return $this;
     }
 }

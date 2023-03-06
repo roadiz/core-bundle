@@ -6,10 +6,8 @@ namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
-use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
-use RZ\Roadiz\CoreBundle\Node\UniversalDataDuplicator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -31,7 +29,7 @@ class NodeClearTagCommand extends Command
         $this->managerRegistry = $managerRegistry;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('nodes:clear-tag')
             ->addArgument('tagId', InputArgument::REQUIRED, 'Tag ID to delete nodes from.')
@@ -42,8 +40,8 @@ class NodeClearTagCommand extends Command
     protected function getNodeQueryBuilder(Tag $tag): QueryBuilder
     {
         $qb = $this->managerRegistry->getRepository(Node::class)->createQueryBuilder('n');
-        return $qb->innerJoin('n.tags', 't')
-            ->andWhere($qb->expr()->eq('t.id', ':tagId'))
+        return $qb->innerJoin('n.nodesTags', 'ntg')
+            ->andWhere($qb->expr()->eq('ntg.tag', ':tagId'))
             ->setParameter(':tagId', $tag);
     }
 

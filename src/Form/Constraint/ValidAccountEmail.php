@@ -8,5 +8,5 @@ use Symfony\Component\Validator\Constraint;
 
 class ValidAccountEmail extends Constraint
 {
-    public $message = '%email%.email.does.not.exist.in.user.account.database';
+    public string $message = '%email%.email.does.not.exist.in.user.account.database';
 }

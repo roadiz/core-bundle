@@ -12,6 +12,7 @@ use RZ\Roadiz\CoreBundle\Entity\RealmNode;
 use RZ\Roadiz\CoreBundle\EntityHandler\NodeHandler;
 use RZ\Roadiz\CoreBundle\Message\ApplyRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
+use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
 final class ApplyRealmNodeInheritanceMessageHandler implements MessageHandlerInterface
@@ -33,8 +34,11 @@ final class ApplyRealmNodeInheritanceMessageHandler implements MessageHandlerInt
         $node = $this->managerRegistry->getRepository(Node::class)->find($message->getNodeId());
         $realm = $this->managerRegistry->getRepository(Realm::class)->find($message->getRealmId());
 
-        if (null === $node || null === $realm) {
-            return;
+        if (null === $node) {
+            throw new UnrecoverableMessageHandlingException('Node does not exist');
+        }
+        if (null === $realm) {
+            throw new UnrecoverableMessageHandlingException('Realm does not exist');
         }
 
         $realmNode = $this->managerRegistry->getRepository(RealmNode::class)->findOneBy([

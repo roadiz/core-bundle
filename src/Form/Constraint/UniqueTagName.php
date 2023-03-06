@@ -8,6 +8,6 @@ use Symfony\Component\Validator\Constraint;
 
 class UniqueTagName extends Constraint
 {
-    public $currentValue = null;
-    public $message = 'tagName.%name%.alreadyExists';
+    public mixed $currentValue = null;
+    public string $message = 'tagName.%name%.alreadyExists';
 }

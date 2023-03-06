@@ -20,8 +20,6 @@ use Twig\Error\SyntaxError;
 
 /**
  * ExceptionViewer for production exception handling only.
- *
- * @package RZ\Roadiz\Core\Viewers
  */
 class ExceptionViewer
 {

@@ -23,11 +23,6 @@ class PreviewModeSubscriber implements EventSubscriberInterface
     protected TokenStorageInterface $tokenStorage;
     protected Security $security;
 
-    /**
-     * @param PreviewResolverInterface $previewResolver
-     * @param TokenStorageInterface $tokenStorage
-     * @param Security $security
-     */
     public function __construct(
         PreviewResolverInterface $previewResolver,
         TokenStorageInterface $tokenStorage,
@@ -61,7 +56,7 @@ class PreviewModeSubscriber implements EventSubscriberInterface
     /**
      * @param RequestEvent $event
      */
-    public function onKernelRequest(RequestEvent $event)
+    public function onKernelRequest(RequestEvent $event): void
     {
         $request = $event->getRequest();
         if (
@@ -81,7 +76,7 @@ class PreviewModeSubscriber implements EventSubscriberInterface
      * @param ControllerEvent $event
      * @throws PreviewNotAllowedException
      */
-    public function onControllerMatched(ControllerEvent $event)
+    public function onControllerMatched(ControllerEvent $event): void
     {
         if ($this->supports() && $event->isMainRequest()) {
             /** @var TokenInterface|null $token */
@@ -100,7 +95,7 @@ class PreviewModeSubscriber implements EventSubscriberInterface
      *
      * @param ResponseEvent $event
      */
-    public function onResponse(ResponseEvent $event)
+    public function onResponse(ResponseEvent $event): void
     {
         if ($this->supports()) {
             $response = $event->getResponse();

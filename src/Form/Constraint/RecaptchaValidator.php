@@ -15,13 +15,12 @@ use Symfony\Component\Validator\ConstraintValidator;
 class RecaptchaValidator extends ConstraintValidator implements RecaptchaServiceInterface
 {
     protected RequestStack $requestStack;
+    protected ?string $recaptchaPrivateKey;
 
-    /**
-     * @param RequestStack $requestStack
-     */
-    public function __construct(RequestStack $requestStack)
+    public function __construct(RequestStack $requestStack, ?string $recaptchaPrivateKey)
     {
         $this->requestStack = $requestStack;
+        $this->recaptchaPrivateKey = $recaptchaPrivateKey;
     }
 
     /**
@@ -30,7 +29,7 @@ class RecaptchaValidator extends ConstraintValidator implements RecaptchaService
      * @throws \GuzzleHttp\Exception\GuzzleException
      * @see \Symfony\Component\Validator\ConstraintValidator::validate()
      */
-    public function validate($data, Constraint $constraint)
+    public function validate(mixed $data, Constraint $constraint): void
     {
         if ($constraint instanceof Recaptcha) {
             $propertyPath = $this->context->getPropertyPath();
@@ -47,7 +46,7 @@ class RecaptchaValidator extends ConstraintValidator implements RecaptchaService
                 $this->context->buildViolation($constraint->emptyMessage)
                     ->atPath($propertyPath)
                     ->addViolation();
-            } elseif (true !== $response = $this->check($constraint->privateKey, $responseField, $constraint->verifyUrl)) {
+            } elseif (true !== $response = $this->check($responseField, $constraint->verifyUrl)) {
                 $this->context->buildViolation($constraint->invalidMessage)
                     ->atPath($propertyPath)
                     ->addViolation();
@@ -71,19 +70,21 @@ class RecaptchaValidator extends ConstraintValidator implements RecaptchaService
      * Makes a request to recaptcha service and checks if recaptcha field is valid.
      * Returns Google error-codes if recaptcha fails.
      *
-     * @param string $privateKey
      * @param string $responseValue
      * @param string $verifyUrl
-     * @return true|string|array
+     * @return true|mixed
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function check(
-        string $privateKey,
         string $responseValue,
         string $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify'
-    ) {
+    ): mixed {
+        if (empty($this->recaptchaPrivateKey)) {
+            return true;
+        }
+
         $data = [
-            'secret' => $privateKey,
+            'secret' => $this->recaptchaPrivateKey,
             'response' => $responseValue,
         ];
 

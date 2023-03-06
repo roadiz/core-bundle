@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber;
 
 use Doctrine\Common\EventSubscriber;
-use Doctrine\ORM\Event\LifecycleEventArgs;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
@@ -15,9 +15,6 @@ use RZ\Roadiz\CoreBundle\DependencyInjection\Configuration;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 
-/**
- * @package RZ\Roadiz\Core\Events
- */
 final class NodesSourcesInheritanceSubscriber implements EventSubscriber
 {
     private NodeTypes $nodeTypes;
@@ -44,7 +41,7 @@ final class NodesSourcesInheritanceSubscriber implements EventSubscriber
         ];
     }
 
-    public function postLoad(LifecycleEventArgs $event)
+    public function postLoad(LifecycleEventArgs $event): void
     {
         $object = $event->getObject();
         if ($object instanceof NodesSources) {
@@ -55,7 +52,7 @@ final class NodesSourcesInheritanceSubscriber implements EventSubscriber
     /**
      * @param LoadClassMetadataEventArgs $eventArgs
      */
-    public function loadClassMetadata(LoadClassMetadataEventArgs $eventArgs)
+    public function loadClassMetadata(LoadClassMetadataEventArgs $eventArgs): void
     {
         // the $metadata is all the mapping info for this class
         $metadata = $eventArgs->getClassMetadata();

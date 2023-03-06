@@ -13,9 +13,9 @@ class ValidAccountConfirmationToken extends Constraint
      *
      * @var integer
      */
-    public $ttl = 60;
+    public int $ttl = 60;
 
-    public $message = 'confirmation.token.is.invalid';
+    public string $message = 'confirmation.token.is.invalid';
 
-    public $expiredMessage = 'confirmation.token.has.expired';
+    public string $expiredMessage = 'confirmation.token.has.expired';
 }

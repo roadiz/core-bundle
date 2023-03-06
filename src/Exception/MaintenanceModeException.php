@@ -18,6 +18,9 @@ class MaintenanceModeException extends \Exception
         return $this->controller;
     }
 
+    /**
+     * @var string
+     */
     protected $message = 'Website is currently under maintenance. We will be back shortly.';
 
     /**

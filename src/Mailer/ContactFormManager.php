@@ -10,7 +10,7 @@ use RZ\Roadiz\CoreBundle\Form\Constraint\Recaptcha;
 use RZ\Roadiz\CoreBundle\Form\Error\FormErrorSerializerInterface;
 use RZ\Roadiz\CoreBundle\Form\HoneypotType;
 use RZ\Roadiz\CoreBundle\Form\RecaptchaType;
-use RZ\Roadiz\Utils\UrlGenerators\DocumentUrlGeneratorInterface;
+use RZ\Roadiz\Documents\UrlGenerators\DocumentUrlGeneratorInterface;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
@@ -37,9 +37,6 @@ use Symfony\Component\Validator\Constraints\NotNull;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
 
-/**
- * @package RZ\Roadiz\Utils
- */
 class ContactFormManager extends EmailManager
 {
     protected string $formName = 'contact_form';
@@ -61,19 +58,12 @@ class ContactFormManager extends EmailManager
     protected int $maxFileSize = 5242880; // 5MB
     protected FormFactoryInterface $formFactory;
     protected FormErrorSerializerInterface $formErrorSerializer;
+    protected ?string $recaptchaPrivateKey;
+    protected ?string $recaptchaPublicKey;
 
-    /**
+    /*
      * DO NOT DIRECTLY USE THIS CONSTRUCTOR
      * USE 'contactFormManager' Factory Service
-     *
-     * @param RequestStack $requestStack
-     * @param FormFactoryInterface $formFactory
-     * @param TranslatorInterface $translator
-     * @param Environment $templating
-     * @param MailerInterface $mailer
-     * @param Settings $settingsBag
-     * @param DocumentUrlGeneratorInterface $documentUrlGenerator
-     * @param FormErrorSerializerInterface $formErrorSerializer
      */
     public function __construct(
         RequestStack $requestStack,
@@ -83,7 +73,9 @@ class ContactFormManager extends EmailManager
         MailerInterface $mailer,
         Settings $settingsBag,
         DocumentUrlGeneratorInterface $documentUrlGenerator,
-        FormErrorSerializerInterface $formErrorSerializer
+        FormErrorSerializerInterface $formErrorSerializer,
+        ?string $recaptchaPrivateKey,
+        ?string $recaptchaPublicKey
     ) {
         parent::__construct($requestStack, $translator, $templating, $mailer, $settingsBag, $documentUrlGenerator);
 
@@ -109,6 +101,8 @@ class ContactFormManager extends EmailManager
             'new.contact.form.%site%',
             ['%site%' => $this->settingsBag->get('site_name')]
         ));
+        $this->recaptchaPrivateKey = $recaptchaPrivateKey;
+        $this->recaptchaPublicKey = $recaptchaPublicKey;
     }
 
     /**
@@ -283,22 +277,19 @@ class ContactFormManager extends EmailManager
         string $name = 'recaptcha',
         string $validatorFieldName = Recaptcha::FORM_NAME
     ) {
-        $publicKey = $this->settingsBag->get('recaptcha_public_key');
-        $privateKey = $this->settingsBag->get('recaptcha_private_key');
-
         if (
-            !empty($publicKey) &&
-            !empty($privateKey)
+            !empty($this->recaptchaPublicKey) &&
+            !empty($this->recaptchaPrivateKey)
         ) {
             $this->getFormBuilder()->add($name, RecaptchaType::class, [
                 'label' => false,
                 'configs' => [
-                    'publicKey' => $publicKey,
+                    'publicKey' => $this->recaptchaPublicKey,
                 ],
                 'constraints' => [
                     new Recaptcha([
                         'fieldName' => $validatorFieldName,
-                        'privateKey' => $privateKey,
+                        'privateKey' => $this->recaptchaPrivateKey,
                     ]),
                 ],
             ]);
@@ -310,10 +301,11 @@ class ContactFormManager extends EmailManager
     /**
      * Handle custom form validation and send it as an email.
      *
+     * @param callable|null $onValid
      * @return Response|null
      * @throws \Exception
      */
-    public function handle(): ?Response
+    public function handle(?callable $onValid = null): ?Response
     {
         $request = $this->requestStack->getMainRequest();
         if (null === $request) {
@@ -329,6 +321,10 @@ class ContactFormManager extends EmailManager
         if ($this->form->isSubmitted()) {
             if ($this->form->isValid()) {
                 try {
+                    if (null !== $onValid) {
+                        $onValid($this->form);
+                    }
+
                     $this->handleFiles();
                     $this->handleFormData($this->form);
                     $this->send();
@@ -379,7 +375,7 @@ class ContactFormManager extends EmailManager
         return null;
     }
 
-    protected function handleFiles()
+    protected function handleFiles(): void
     {
         $this->uploadedFiles = [];
         $request = $this->requestStack->getMainRequest();
@@ -473,7 +469,7 @@ class ContactFormManager extends EmailManager
      *
      * @throws \Exception
      */
-    protected function handleFormData(FormInterface $form)
+    protected function handleFormData(FormInterface $form): void
     {
         $formData = $form->getData();
         $fields = $this->flattenFormData($form, []);

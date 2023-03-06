@@ -38,7 +38,7 @@ final class LocaleSubscriber implements EventSubscriberInterface
         return $this->managerRegistry->getRepository(Translation::class)->findDefault();
     }
 
-    public function onKernelRequest(RequestEvent $event)
+    public function onKernelRequest(RequestEvent $event): void
     {
         $request = $event->getRequest();
         $locale = $request->query->get('_locale') ?? $request->attributes->get('_locale');

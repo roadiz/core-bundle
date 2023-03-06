@@ -47,14 +47,9 @@ final class NodeNameSubscriber implements EventSubscriberInterface
         ];
     }
 
-    /**
-     * @param NodesSourcesPreUpdatedEvent  $event
-     * @param string                       $eventName
-     * @param EventDispatcherInterface     $dispatcher
-     */
     public function onBeforeUpdate(
         NodesSourcesPreUpdatedEvent $event,
-        $eventName,
+        string $eventName,
         EventDispatcherInterface $dispatcher
     ): void {
         $nodeSource = $event->getNodeSource();

@@ -6,7 +6,6 @@ namespace RZ\Roadiz\CoreBundle\Form\DataTransformer;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ObjectManager;
-use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
@@ -16,22 +15,16 @@ use Symfony\Component\Form\Exception\TransformationFailedException;
  */
 class EntityCollectionTransformer implements DataTransformerInterface
 {
+    protected bool $asCollection;
+    private ObjectManager $manager;
     /**
-     * @var bool
+     * @var class-string<PersistableInterface>
      */
-    protected $asCollection;
-    /**
-     * @var ObjectManager
-     */
-    private $manager;
-    /**
-     * @var class-string|string
-     */
-    private $classname;
+    private string $classname;
 
     /**
      * @param ObjectManager $manager
-     * @param class-string $classname
+     * @param class-string<PersistableInterface> $classname
      * @param bool $asCollection
      */
     public function __construct(ObjectManager $manager, string $classname, bool $asCollection = false)
@@ -42,17 +35,17 @@ class EntityCollectionTransformer implements DataTransformerInterface
     }
 
     /**
-     * @param ArrayCollection<AbstractEntity>|AbstractEntity[]|null $entities
+     * @param ArrayCollection<PersistableInterface>|PersistableInterface[]|null $value
      * @return string|array
      */
-    public function transform($entities)
+    public function transform(mixed $value): string|array
     {
-        if (null === $entities || empty($entities)) {
+        if (empty($value)) {
             return '';
         }
         $ids = [];
         /** @var PersistableInterface $entity */
-        foreach ($entities as $entity) {
+        foreach ($value as $entity) {
             $ids[] = $entity->getId();
         }
         if ($this->asCollection) {
@@ -62,28 +55,28 @@ class EntityCollectionTransformer implements DataTransformerInterface
     }
 
     /**
-     * @param string|array|null $entityIds
-     * @return array<AbstractEntity>|ArrayCollection<AbstractEntity>
+     * @param string|array|null $value
+     * @return array<PersistableInterface>|ArrayCollection<PersistableInterface>
      */
-    public function reverseTransform($entityIds)
+    public function reverseTransform(mixed $value): array|ArrayCollection
     {
-        if (!$entityIds) {
+        if (!$value) {
             if ($this->asCollection) {
                 return new ArrayCollection();
             }
             return [];
         }
 
-        if (is_array($entityIds)) {
-            $ids = $entityIds;
+        if (is_array($value)) {
+            $ids = $value;
         } else {
-            $ids = explode(',', $entityIds);
+            $ids = explode(',', $value);
         }
 
-        /** @var array<AbstractEntity> $entities */
+        /** @var array<PersistableInterface> $entities */
         $entities = [];
         foreach ($ids as $entityId) {
-            /** @var AbstractEntity|null $entity */
+            /** @var PersistableInterface|null $entity */
             $entity = $this->manager
                 ->getRepository($this->classname)
                 ->find($entityId)

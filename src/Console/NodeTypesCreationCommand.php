@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\ORM\EntityManager;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Doctrine\SchemaUpdater;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
@@ -41,7 +40,7 @@ class NodeTypesCreationCommand extends Command
         $this->schemaUpdater = $schemaUpdater;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('nodetypes:create')
             ->setDescription('Manage node-types')
@@ -75,7 +74,7 @@ class NodeTypesCreationCommand extends Command
         return 0;
     }
 
-    private function executeCreation(InputInterface $input, OutputInterface $output)
+    private function executeCreation(InputInterface $input, OutputInterface $output): void
     {
         $io = new SymfonyStyle($input, $output);
         $name = $input->getArgument('name');
@@ -106,7 +105,7 @@ class NodeTypesCreationCommand extends Command
         $io->success('Node type ' . $nt->getName() . ' has been created.');
     }
 
-    protected function addNodeTypeField(NodeType $nodeType, $position, SymfonyStyle $io)
+    protected function addNodeTypeField(NodeType $nodeType, int|float|string $position, SymfonyStyle $io): void
     {
         $field = new NodeTypeField();
         $field->setPosition((float) $position);

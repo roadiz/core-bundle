@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\SearchEngine\Indexer;
 
+use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
 use Solarium\Exception\HttpException;
 
 final class FolderIndexer extends DocumentIndexer
 {
-    public function index($id): void
+    public function index(mixed $id): void
     {
         try {
             $folder = $this->managerRegistry->getRepository(Folder::class)->find($id);
@@ -20,10 +21,12 @@ final class FolderIndexer extends DocumentIndexer
             $documents = $folder->getDocuments();
 
             foreach ($documents as $document) {
-                foreach ($document->getDocumentTranslations() as $documentTranslation) {
-                    $solarium = $this->solariumFactory->createWithDocumentTranslation($documentTranslation);
-                    $solarium->getDocumentFromIndex();
-                    $solarium->update($update);
+                if ($document instanceof Document) {
+                    foreach ($document->getDocumentTranslations() as $documentTranslation) {
+                        $solarium = $this->solariumFactory->createWithDocumentTranslation($documentTranslation);
+                        $solarium->getDocumentFromIndex();
+                        $solarium->update($update);
+                    }
                 }
             }
             $this->getSolr()->update($update);
@@ -41,7 +44,7 @@ final class FolderIndexer extends DocumentIndexer
         }
     }
 
-    public function delete($id): void
+    public function delete(mixed $id): void
     {
         // Just reindex all linked documents to get rid of folder
         $this->index($id);

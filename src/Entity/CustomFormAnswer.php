@@ -8,53 +8,58 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\CoreBundle\Repository\CustomFormAnswerRepository;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 
-/**
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\CustomFormAnswerRepository")
- * @ORM\Table(name="custom_form_answers",  indexes={
- *     @ORM\Index(columns={"ip"}),
- *     @ORM\Index(columns={"submitted_at"}),
- *     @ORM\Index(columns={"custom_form_id", "submitted_at"}, name="answer_customform_submitted_at")
- * })
- */
+#[
+    ORM\Entity(repositoryClass: CustomFormAnswerRepository::class),
+    ORM\Table(name: "custom_form_answers"),
+    ORM\Index(columns: ["ip"]),
+    ORM\Index(columns: ["submitted_at"]),
+    ORM\Index(columns: ["custom_form_id", "submitted_at"], name: "answer_customform_submitted_at")
+]
 class CustomFormAnswer extends AbstractEntity
 {
-    /**
-     * @ORM\Column(type="string", name="ip", nullable=false)
-     * @Serializer\Groups({"custom_form_answer"})
-     * @SymfonySerializer\Groups({"custom_form_answer"})
-     */
+    #[
+        ORM\Column(name: "ip", type: "string", nullable: false),
+        Serializer\Groups(["custom_form_answer"]),
+        SymfonySerializer\Groups(["custom_form_answer"])
+    ]
     private string $ip = '';
-    /**
-     * @ORM\Column(type="datetime", name="submitted_at", nullable=false)
-     * @Serializer\Groups({"custom_form_answer"})
-     * @SymfonySerializer\Groups({"custom_form_answer"})
-     */
+
+    #[
+        ORM\Column(name: "submitted_at", type: "datetime", nullable: false),
+        Serializer\Groups(["custom_form_answer"]),
+        SymfonySerializer\Groups(["custom_form_answer"])
+    ]
     private \DateTime $submittedAt;
-    /**
-     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomFormFieldAttribute",
-     *            mappedBy="customFormAnswer",
-     *            cascade={"ALL"})
-     * @Serializer\Groups({"custom_form_answer"})
-     * @SymfonySerializer\Groups({"custom_form_answer"})
-     * @var Collection<CustomFormFieldAttribute>
-     */
-    private Collection $answerFields;
-    /**
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomForm",
-     *           inversedBy="customFormAnswers")
-     * @ORM\JoinColumn(name="custom_form_id", referencedColumnName="id", onDelete="CASCADE")
-     * @var CustomForm|null
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
-     **/
-    private ?CustomForm $customForm = null;
 
     /**
-     * Create a new empty CustomFormAnswer according to given node-type.
+     * @var Collection<CustomFormFieldAttribute>
      */
+    #[
+        ORM\OneToMany(
+            mappedBy: "customFormAnswer",
+            targetEntity: CustomFormFieldAttribute::class,
+            cascade: ["ALL"]
+        ),
+        Serializer\Groups(["custom_form_answer"]),
+        SymfonySerializer\Groups(["custom_form_answer"])
+    ]
+    private Collection $answerFields;
+
+    #[
+        ORM\ManyToOne(
+            targetEntity: CustomForm::class,
+            inversedBy: "customFormAnswers"
+        ),
+        ORM\JoinColumn(name: "custom_form_id", referencedColumnName: "id", onDelete: "CASCADE"),
+        Serializer\Exclude,
+        SymfonySerializer\Ignore
+    ]
+    private ?CustomForm $customForm = null;
+
     public function __construct()
     {
         $this->answerFields = new ArrayCollection();
@@ -77,7 +82,7 @@ class CustomFormAnswer extends AbstractEntity
     /**
      * @return Collection<CustomFormFieldAttribute>
      */
-    public function getAnswers()
+    public function getAnswers(): Collection
     {
         return $this->answerFields;
     }
@@ -119,8 +124,7 @@ class CustomFormAnswer extends AbstractEntity
      */
     public function __toString(): string
     {
-        return $this->getId() . " — " . $this->getIp() .
-        " — Submitted : " . ($this->getSubmittedAt()->format('Y-m-d H:i:s'));
+        return (string) $this->getId();
     }
 
     /**
@@ -143,7 +147,7 @@ class CustomFormAnswer extends AbstractEntity
     }
 
     /**
-     * @return \DateTime
+     * @return \DateTime|null
      */
     public function getSubmittedAt(): ?\DateTime
     {

@@ -4,296 +4,291 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
-use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use RZ\Roadiz\Core\Models\AbstractDocument;
-use RZ\Roadiz\Core\Models\AdvancedDocumentInterface;
-use RZ\Roadiz\Core\Models\DisplayableInterface;
-use RZ\Roadiz\Core\Models\DocumentInterface;
-use RZ\Roadiz\Core\Models\FileHashInterface;
-use RZ\Roadiz\Core\Models\FolderInterface;
-use RZ\Roadiz\Core\Models\HasThumbnailInterface;
-use RZ\Roadiz\Core\Models\SizeableInterface;
-use RZ\Roadiz\Core\Models\TimeableInterface;
-use RZ\Roadiz\Utils\StringHandler;
 use JMS\Serializer\Annotation as Serializer;
-use Symfony\Component\Serializer\Annotation as SymfonySerializer;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
+use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
+use RZ\Roadiz\CoreBundle\Api\Filter\CopyrightValidFilter;
+use RZ\Roadiz\CoreBundle\Repository\DocumentRepository;
+use RZ\Roadiz\Documents\Models\AdvancedDocumentInterface;
+use RZ\Roadiz\Documents\Models\DisplayableInterface;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Models\DocumentTrait;
+use RZ\Roadiz\Documents\Models\FileHashInterface;
+use RZ\Roadiz\Documents\Models\FolderInterface;
+use RZ\Roadiz\Documents\Models\HasThumbnailInterface;
+use RZ\Roadiz\Documents\Models\TimeableInterface;
+use RZ\Roadiz\Utils\StringHandler;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 /**
  * Documents entity represent a file on server with datetime and naming.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\DocumentRepository")
- * @ORM\Table(name="documents", indexes={
- *     @ORM\Index(columns={"created_at"}, name="document_created_at"),
- *     @ORM\Index(columns={"updated_at"}, name="document_updated_at"),
- *     @ORM\Index(columns={"raw"}),
- *     @ORM\Index(columns={"raw", "created_at"}, name="document_raw_created_at"),
- *     @ORM\Index(columns={"private"}),
- *     @ORM\Index(columns={"filename"}, name="document_filename"),
- *     @ORM\Index(columns={"file_hash"}, name="document_file_hash"),
- *     @ORM\Index(columns={"file_hash_algorithm"}, name="document_hash_algorithm"),
- *     @ORM\Index(columns={"file_hash", "file_hash_algorithm"}, name="document_file_hash_algorithm"),
- *     @ORM\Index(columns={"embedId"}, name="document_embed_id"),
- *     @ORM\Index(columns={"embedId", "embedPlatform"}, name="document_embed_platform_id"),
- *     @ORM\Index(columns={"embedPlatform"}, name="document_embed_platform"),
- *     @ORM\Index(columns={"raw", "private"}),
- *     @ORM\Index(columns={"duration"}, name="document_duration"),
- *     @ORM\Index(columns={"filesize"}, name="document_filesize"),
- *     @ORM\Index(columns={"imageWidth"}, name="document_image_width"),
- *     @ORM\Index(columns={"imageHeight"}, name="document_image_height"),
- *     @ORM\Index(columns={"mime_type"})
- * })
- * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
- * @ApiFilter(BaseFilter\OrderFilter::class, properties={
- *     "createdAt",
- *     "updatedAt",
- *     "copyrightValidSince",
- *     "copyrightValidUntil",
- *     "filesize"
- * })
- * @ApiFilter(BaseFilter\DateFilter::class, properties={
- *     "createdAt",
- *     "updatedAt",
- *     "copyrightValidSince": "include_null_before",
- *     "copyrightValidUntil": "include_null_after"
- * })
  */
-class Document extends AbstractDocument implements AdvancedDocumentInterface, HasThumbnailInterface, SizeableInterface, TimeableInterface, DisplayableInterface, FileHashInterface
+#[
+    ORM\Entity(repositoryClass: DocumentRepository::class),
+    ORM\Table(name: "documents"),
+    ORM\Index(columns: ["created_at"], name: "document_created_at"),
+    ORM\Index(columns: ["updated_at"], name: "document_updated_at"),
+    ORM\Index(columns: ["raw"]),
+    ORM\Index(columns: ["raw", "created_at"], name: "document_raw_created_at"),
+    ORM\Index(columns: ["private"]),
+    ORM\Index(columns: ["filename"], name: "document_filename"),
+    ORM\Index(columns: ["file_hash"], name: "document_file_hash"),
+    ORM\Index(columns: ["file_hash_algorithm"], name: "document_hash_algorithm"),
+    ORM\Index(columns: ["file_hash", "file_hash_algorithm"], name: "document_file_hash_algorithm"),
+    ORM\Index(columns: ["embedId"], name: "document_embed_id"),
+    ORM\Index(columns: ["embedId", "embedPlatform"], name: "document_embed_platform_id"),
+    ORM\Index(columns: ["embedPlatform"], name: "document_embed_platform"),
+    ORM\Index(columns: ["raw", "private"]),
+    ORM\Index(columns: ["duration"], name: "document_duration"),
+    ORM\Index(columns: ["filesize"], name: "document_filesize"),
+    ORM\Index(columns: ["imageWidth"], name: "document_image_width"),
+    ORM\Index(columns: ["imageHeight"], name: "document_image_height"),
+    ORM\Index(columns: ["mime_type"]),
+    Serializer\ExclusionPolicy("all"),
+    ApiFilter(PropertyFilter::class),
+    ApiFilter(BaseFilter\OrderFilter::class, properties: [
+        "createdAt",
+        "updatedAt",
+        "copyrightValidSince",
+        "copyrightValidUntil",
+        "filesize"
+    ]),
+    ApiFilter(BaseFilter\DateFilter::class, properties: [
+        "createdAt",
+        "updatedAt",
+        "copyrightValidSince" => "include_null_before",
+        "copyrightValidUntil" => "include_null_after"
+    ]),
+    ApiFilter(CopyrightValidFilter::class)
+]
+class Document extends AbstractDateTimed implements AdvancedDocumentInterface, HasThumbnailInterface, TimeableInterface, DisplayableInterface, FileHashInterface
 {
+    use DocumentTrait;
+
     /**
-     * @ORM\Column(type="datetime", name="copyright_valid_since", nullable=true)
      * @var \DateTime|null Null value is included in before filters
-     * @Serializer\Groups({"document_copyright"})
-     * @SymfonySerializer\Groups({"document_copyright"})
      */
+    #[ORM\Column(name: 'copyright_valid_since', type: 'datetime', nullable: true)]
+    #[SymfonySerializer\Groups(['document_copyright'])]
+    #[Serializer\Groups(['document_copyright'])]
     protected ?\DateTime $copyrightValidSince = null;
 
     /**
-     * @ORM\Column(type="datetime", name="copyright_valid_until", nullable=true)
      * @var \DateTime|null Null value is always included in after filters
-     * @Serializer\Groups({"document_copyright"})
-     * @SymfonySerializer\Groups({"document_copyright"})
      */
+    #[ORM\Column(name: 'copyright_valid_until', type: 'datetime', nullable: true)]
+    #[SymfonySerializer\Groups(['document_copyright'])]
+    #[Serializer\Groups(['document_copyright'])]
     protected ?\DateTime $copyrightValidUntil = null;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="Document", inversedBy="downscaledDocuments", cascade={"all"}, fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="raw_document", referencedColumnName="id", onDelete="SET NULL")
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
-     */
+    #[ORM\ManyToOne(
+        targetEntity: Document::class,
+        cascade: ['all'],
+        fetch: 'EXTRA_LAZY',
+        inversedBy: 'downscaledDocuments'
+    )]
+    #[ORM\JoinColumn(name: 'raw_document', referencedColumnName: 'id', onDelete: 'SET NULL')]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     protected ?DocumentInterface $rawDocument = null;
-    /**
-     * @ORM\Column(type="boolean", name="raw", nullable=false, options={"default" = false})
-     * @Serializer\Groups({"document"})
-     * @SymfonySerializer\Groups({"document"})
-     * @Serializer\Type("bool")
-     */
+
+    #[
+        SymfonySerializer\Ignore,
+        Serializer\Groups(["document"]),
+        Serializer\Type("bool"),
+        ORM\Column(name: 'raw', type: 'boolean', nullable: false, options: ['default' => false])
+    ]
     protected bool $raw = false;
-    /**
-     * @ORM\Column(type="string", name="embedId", unique=false, nullable=true)
-     * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @Serializer\Type("string")
-     */
+
+    #[ORM\Column(name: 'embedId', type: 'string', unique: false, nullable: true)]
+    #[SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Type("string")]
     protected ?string $embedId = null;
-    /**
-     * @ORM\Column(type="string", length=64, name="file_hash", unique=false, nullable=true)
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
-     * @Serializer\Type("string")
-     */
+
+    #[ORM\Column(name: 'file_hash', type: 'string', length: 64, unique: false, nullable: true)]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    #[Serializer\Type('string')]
     protected ?string $fileHash = null;
-    /**
-     * @ORM\Column(type="string", length=15, name="file_hash_algorithm", unique=false, nullable=true)
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
-     * @Serializer\Type("string")
-     */
+
+    #[ORM\Column(name: 'file_hash_algorithm', type: 'string', length: 15, unique: false, nullable: true)]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    #[Serializer\Type('string')]
     protected ?string $fileHashAlgorithm = null;
-    /**
-     * @ORM\Column(type="string", name="embedPlatform", unique=false, nullable=true)
-     * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @Serializer\Type("string")
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="exact")
-     * @ApiFilter(RoadizFilter\NotFilter::class)
-     */
+
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "exact")]
+    #[ApiFilter(RoadizFilter\NotFilter::class)]
+    #[ORM\Column(name: 'embedPlatform', type: 'string', unique: false, nullable: true)]
+    #[SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Type('string')]
     protected ?string $embedPlatform = null;
     /**
-     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments", mappedBy="document")
      * @var Collection<NodesSourcesDocuments>
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[ORM\OneToMany(mappedBy: 'document', targetEntity: NodesSourcesDocuments::class)]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     protected Collection $nodesSourcesByFields;
     /**
-     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\TagTranslationDocuments", mappedBy="document")
      * @var Collection<TagTranslationDocuments>
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[ORM\OneToMany(mappedBy: 'document', targetEntity: TagTranslationDocuments::class)]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     protected Collection $tagTranslations;
     /**
-     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\AttributeDocuments", mappedBy="document")
      * @var Collection<AttributeDocuments>
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[ORM\OneToMany(mappedBy: 'document', targetEntity: AttributeDocuments::class)]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     protected Collection $attributeDocuments;
     /**
-     * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\CustomFormFieldAttribute", mappedBy="documents")
      * @var Collection<CustomFormFieldAttribute>
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[ORM\ManyToMany(targetEntity: CustomFormFieldAttribute::class, mappedBy: 'documents')]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     protected Collection $customFormFieldAttributes;
     /**
-     * @ORM\ManyToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Folder", mappedBy="documents")
-     * @ORM\JoinTable(name="documents_folders")
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "folders.id": "exact",
-     *     "folders.folderName": "exact",
-     * })
-     * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
-     *     "folders.visible",
-     *     "folders.locked"
-     * })
-     * @ApiFilter(RoadizFilter\NotFilter::class, properties={
-     *     "folders.id",
-     *     "folders.folderName"
-     * })
-     * Use IntersectionFilter after SearchFilter!
-     * @ApiFilter(RoadizFilter\IntersectionFilter::class, properties={
-     *     "folders.id",
-     *     "folders.folderName"
-     * })
      * @var Collection<Folder>
      */
+    #[ORM\JoinTable(name: 'documents_folders')]
+    #[ORM\ManyToMany(targetEntity: Folder::class, mappedBy: 'documents')]
+    #[SymfonySerializer\Ignore]
     protected Collection $folders;
     /**
-     * @ORM\OneToMany(targetEntity="DocumentTranslation", mappedBy="document", orphanRemoval=true, fetch="EAGER")
      * @var Collection<DocumentTranslation>
-     * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\DocumentTranslation>")
      */
+    #[ORM\OneToMany(
+        mappedBy: 'document',
+        targetEntity: DocumentTranslation::class,
+        fetch: 'EAGER',
+        orphanRemoval: true
+    )]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Type('ArrayCollection<RZ\Roadiz\CoreBundle\Entity\DocumentTranslation>')]
     protected Collection $documentTranslations;
     /**
-     * @ORM\Column(type="string", name="filename", nullable=true)
-     * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @Serializer\Type("string")
      * @var string|null
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="partial")
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
+    #[ORM\Column(name: 'filename', type: 'string', nullable: true)]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Type('string')]
     private ?string $filename = null;
     /**
-     * @ORM\Column(name="mime_type", type="string", nullable=true)
-     * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @Serializer\Type("string")
      * @var string|null
-     * @ApiFilter(BaseFilter\SearchFilter::class, strategy="exact")
-     * @ApiFilter(RoadizFilter\NotFilter::class)
      */
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "exact")]
+    #[ApiFilter(RoadizFilter\NotFilter::class)]
+    #[ORM\Column(name: 'mime_type', type: 'string', nullable: true)]
+    #[SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Type('string')]
     private ?string $mimeType = null;
     /**
-     * @ORM\OneToMany(targetEntity="Document", mappedBy="rawDocument", fetch="EXTRA_LAZY")
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      * @var Collection<DocumentInterface>
      */
+    #[ORM\OneToMany(mappedBy: 'rawDocument', targetEntity: Document::class, fetch: 'EXTRA_LAZY')]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private Collection $downscaledDocuments;
     /**
-     * @ORM\Column(type="string")
-     * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @Serializer\Type("string")
      * @var string
      */
+    #[ORM\Column(type: 'string')]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Type('string')]
     private string $folder = '';
     /**
-     * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
-     * @Serializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "nodes_sources", "tag", "attribute"})
-     * @Serializer\Type("bool")
      * @var bool
      */
+    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Groups(['document', 'document_private', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Type('bool')]
     private bool $private = false;
     /**
      * @var integer
-     * @ORM\Column(name="imageWidth", type="integer", nullable=false, options={"default" = 0})
-     * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @Serializer\Type("int")
      */
+    #[ORM\Column(name: 'imageWidth', type: 'integer', nullable: false, options: ['default' => 0])]
+    #[SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Type('int')]
     private int $imageWidth = 0;
     /**
      * @var integer
-     * @ORM\Column(name="imageHeight", type="integer", nullable=false, options={"default" = 0})
-     * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @Serializer\Type("int")
      */
+    #[ORM\Column(name: 'imageHeight', type: 'integer', nullable: false, options: ['default' => 0])]
+    #[SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Type('int')]
     private int $imageHeight = 0;
     /**
      * @var integer
-     * @ORM\Column(type="integer", name="duration", nullable=false, options={"default" = 0})
-     * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @Serializer\Type("int")
      */
+    #[ORM\Column(name: 'duration', type: 'integer', nullable: false, options: ['default' => 0])]
+    #[SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Type('int')]
     private int $mediaDuration = 0;
     /**
      * @var string|null
-     * @ORM\Column(type="string", name="average_color", length=7, unique=false, nullable=true)
-     * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @Serializer\Type("string")
      */
+    #[ORM\Column(name: 'average_color', type: 'string', length: 7, unique: false, nullable: true)]
+    #[SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Type('string')]
     private ?string $imageAverageColor = null;
     /**
      * @var int|null The filesize in bytes.
-     * @ORM\Column(type="integer", name="filesize", nullable=true, unique=false)
-     * @Serializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @SymfonySerializer\Groups({"document", "document_display", "nodes_sources", "tag", "attribute"})
-     * @Serializer\Type("int")
      */
+    #[ORM\Column(name: 'filesize', type: 'integer', unique: false, nullable: true)]
+    #[SymfonySerializer\Groups(['document_filesize'])]
+    #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
+    #[Serializer\Type('int')]
     private ?int $filesize = null;
 
     /**
      * @var Collection<Document>
-     * @ORM\OneToMany(targetEntity="RZ\Roadiz\CoreBundle\Entity\Document", mappedBy="original", fetch="EXTRA_LAZY")
-     * @Serializer\Groups({"document_thumbnails"})
-     * @SymfonySerializer\Groups({"document_thumbnails"})
-     * @Serializer\MaxDepth(2)
-     * @SymfonySerializer\MaxDepth(2)
-     * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Document>")
      */
+    #[ORM\OneToMany(mappedBy: 'original', targetEntity: Document::class, fetch: 'EXTRA_LAZY')]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Groups(['document_thumbnails'])]
+    #[Serializer\Type('ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Document>')]
     private Collection $thumbnails;
 
     /**
      * @var Document|null
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Document", inversedBy="thumbnails", fetch="EXTRA_LAZY")
-     * @ORM\JoinColumn(name="original", nullable=true, onDelete="SET NULL")
-     * @Serializer\Groups({"document_original"})
-     * @SymfonySerializer\Groups({"document_original"})
-     * @Serializer\MaxDepth(2)
-     * @SymfonySerializer\MaxDepth(2)
-     * @Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Document")
      */
+    #[ORM\ManyToOne(targetEntity: Document::class, fetch: 'EXTRA_LAZY', inversedBy: 'thumbnails')]
+    #[ORM\JoinColumn(name: 'original', nullable: true, onDelete: 'SET NULL')]
+    #[SymfonySerializer\Groups(['document_original'])]
+    #[SymfonySerializer\MaxDepth(1)]
+    #[Serializer\Groups(['document_original'])]
+    #[Serializer\MaxDepth(1)]
+    #[Serializer\Type('RZ\Roadiz\CoreBundle\Entity\Document')]
     private ?DocumentInterface $original = null;
 
     public function __construct()
     {
-        parent::__construct();
+        $this->initAbstractDateTimed();
+        $this->initDocumentTrait();
 
         $this->folders = new ArrayCollection();
         $this->downscaledDocuments = new ArrayCollection();
@@ -306,25 +301,6 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     }
 
     /**
-     * @return string
-     */
-    public function getFilename(): string
-    {
-        return $this->filename ?? '';
-    }
-
-    /**
-     * @param string $filename
-     * @return $this
-     */
-    public function setFilename(string $filename)
-    {
-        $this->filename = StringHandler::cleanForFilename($filename);
-
-        return $this;
-    }
-
-    /**
      * @return string|null
      */
     public function getMimeType(): ?string
@@ -332,15 +308,9 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->mimeType;
     }
 
-    /**
-     * @param string|null $mimeType
-     *
-     * @return $this
-     */
-    public function setMimeType($mimeType)
+    public function setMimeType(?string $mimeType): static
     {
         $this->mimeType = $mimeType;
-
         return $this;
     }
 
@@ -352,68 +322,18 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->folder;
     }
 
-    /**
-     * Set folder name.
-     *
-     * @param string $folder
-     * @return $this
-     */
-    public function setFolder(string $folder)
+    public function setFolder(string $folder): static
     {
         $this->folder = $folder;
         return $this;
     }
 
-    /**
-     * @return string
-     */
-    public function getEmbedId(): ?string
-    {
-        return $this->embedId;
-    }
-
-    /**
-     * @param string|null $embedId
-     * @return $this
-     */
-    public function setEmbedId(?string $embedId)
-    {
-        $this->embedId = $embedId;
-        return $this;
-    }
-
-    /**
-     * @return string
-     */
-    public function getEmbedPlatform(): ?string
-    {
-        return $this->embedPlatform;
-    }
-
-    /**
-     * @param string|null $embedPlatform
-     * @return $this
-     */
-    public function setEmbedPlatform(?string $embedPlatform)
-    {
-        $this->embedPlatform = $embedPlatform;
-
-        return $this;
-    }
-
-    /**
-     * @return bool
-     */
     public function isPrivate(): bool
     {
         return $this->private;
     }
 
-    /**
-     * @param boolean $private
-     * @return $this
-     */
-    public function setPrivate(bool $private)
+    public function setPrivate(bool $private): static
     {
         $this->private = $private;
         if (null !== $raw = $this->getRawDocument()) {
@@ -423,38 +343,48 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this;
     }
 
+    #[SymfonySerializer\Ignore]
+    public function getRawDocument(): ?DocumentInterface
+    {
+        return $this->rawDocument;
+    }
+
+    public function setRawDocument(DocumentInterface $rawDocument = null): static
+    {
+        if (null === $rawDocument || $rawDocument instanceof Document) {
+            $this->rawDocument = $rawDocument;
+        }
+        return $this;
+    }
+
     /**
      * @return Collection<NodesSourcesDocuments>
-     * @SymfonySerializer\Ignore
      */
-    public function getNodesSourcesByFields()
+    #[SymfonySerializer\Ignore]
+    public function getNodesSourcesByFields(): Collection
     {
         return $this->nodesSourcesByFields;
     }
 
     /**
      * @return Collection<TagTranslationDocuments>
-     * @SymfonySerializer\Ignore
      */
-    public function getTagTranslations()
+    #[SymfonySerializer\Ignore]
+    public function getTagTranslations(): Collection
     {
         return $this->tagTranslations;
     }
 
     /**
      * @return Collection<AttributeDocuments>
-     * @SymfonySerializer\Ignore
      */
+    #[SymfonySerializer\Ignore]
     public function getAttributeDocuments(): Collection
     {
         return $this->attributeDocuments;
     }
 
-    /**
-     * @param FolderInterface $folder
-     * @return $this
-     */
-    public function addFolder(FolderInterface $folder)
+    public function addFolder(FolderInterface $folder): static
     {
         if (!$this->getFolders()->contains($folder)) {
             $this->folders->add($folder);
@@ -467,27 +397,20 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @return Collection<Folder>
      */
+    #[SymfonySerializer\Ignore]
     public function getFolders(): Collection
     {
         return $this->folders;
     }
 
-    /**
-     * @param Collection<Folder> $folders
-     * @return $this
-     */
-    public function setFolders(Collection $folders)
+    public function setFolders(Collection $folders): static
     {
         $this->folders = $folders;
 
         return $this;
     }
 
-    /**
-     * @param FolderInterface $folder
-     * @return $this
-     */
-    public function removeFolder(FolderInterface $folder)
+    public function removeFolder(FolderInterface $folder): static
     {
         if ($this->getFolders()->contains($folder)) {
             $this->folders->removeElement($folder);
@@ -501,7 +424,8 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @param TranslationInterface $translation
      * @return Collection<DocumentTranslation>
      */
-    public function getDocumentTranslationsByTranslation(TranslationInterface $translation)
+    #[SymfonySerializer\Ignore]
+    public function getDocumentTranslationsByTranslation(TranslationInterface $translation): Collection
     {
         $criteria = Criteria::create();
         $criteria->where(Criteria::expr()->eq('translation', $translation));
@@ -513,7 +437,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      * @param DocumentTranslation $documentTranslation
      * @return $this
      */
-    public function addDocumentTranslation(DocumentTranslation $documentTranslation)
+    public function addDocumentTranslation(DocumentTranslation $documentTranslation): static
     {
         if (!$this->getDocumentTranslations()->contains($documentTranslation)) {
             $this->documentTranslations->add($documentTranslation);
@@ -525,45 +449,18 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @return Collection<DocumentTranslation>
      */
-    public function getDocumentTranslations()
+    public function getDocumentTranslations(): Collection
     {
         return $this->documentTranslations;
     }
 
     /**
      * @return bool
-     * @SymfonySerializer\Ignore
      */
+    #[SymfonySerializer\Ignore]
     public function hasTranslations(): bool
     {
         return $this->getDocumentTranslations()->count() > 0;
-    }
-
-    /**
-     * Gets the value of rawDocument.
-     *
-     * @return DocumentInterface|null
-     * @SymfonySerializer\Ignore
-     */
-    public function getRawDocument(): ?DocumentInterface
-    {
-        return $this->rawDocument;
-    }
-
-    /**
-     * Sets the value of rawDocument.
-     *
-     * @param DocumentInterface|null $rawDocument the raw document
-     *
-     * @return self
-     */
-    public function setRawDocument(DocumentInterface $rawDocument = null)
-    {
-        if (null === $rawDocument || $rawDocument instanceof Document) {
-            $this->rawDocument = $rawDocument;
-        }
-
-        return $this;
     }
 
     /**
@@ -576,14 +473,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->raw;
     }
 
-    /**
-     * Sets the value of raw.
-     *
-     * @param bool $raw the raw
-     *
-     * @return self
-     */
-    public function setRaw(bool $raw)
+    public function setRaw(bool $raw): static
     {
         $this->raw = $raw;
         return $this;
@@ -594,9 +484,22 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
      *
      * @return DocumentInterface|null
      */
+    #[SymfonySerializer\Ignore]
     public function getDownscaledDocument(): ?DocumentInterface
     {
         return $this->downscaledDocuments->first() ?: null;
+    }
+
+    /**
+     * @return float|null
+     */
+    #[SymfonySerializer\Ignore]
+    public function getImageRatio(): ?float
+    {
+        if ($this->getImageWidth() > 0 && $this->getImageHeight() > 0) {
+            return $this->getImageWidth() / $this->getImageHeight();
+        }
+        return null;
     }
 
     /**
@@ -607,12 +510,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->imageWidth;
     }
 
-    /**
-     * @param int $imageWidth
-     *
-     * @return Document
-     */
-    public function setImageWidth(int $imageWidth)
+    public function setImageWidth(int $imageWidth): static
     {
         $this->imageWidth = $imageWidth;
 
@@ -627,27 +525,11 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->imageHeight;
     }
 
-    /**
-     * @param int $imageHeight
-     *
-     * @return Document
-     */
-    public function setImageHeight(int $imageHeight)
+    public function setImageHeight(int $imageHeight): static
     {
         $this->imageHeight = $imageHeight;
 
         return $this;
-    }
-
-    /**
-     * @return float|null
-     */
-    public function getImageRatio(): ?float
-    {
-        if ($this->getImageWidth() > 0 && $this->getImageHeight() > 0) {
-            return $this->getImageWidth() / $this->getImageHeight();
-        }
-        return null;
     }
 
     /**
@@ -658,13 +540,9 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->mediaDuration;
     }
 
-    /**
-     * @param int $mediaDuration
-     * @return Document
-     */
-    public function setMediaDuration(int $mediaDuration): Document
+    public function setMediaDuration(int $duration): static
     {
-        $this->mediaDuration = $mediaDuration;
+        $this->mediaDuration = $duration;
         return $this;
     }
 
@@ -676,12 +554,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->imageAverageColor;
     }
 
-    /**
-     * @param string|null $imageAverageColor
-     *
-     * @return Document
-     */
-    public function setImageAverageColor(?string $imageAverageColor)
+    public function setImageAverageColor(?string $imageAverageColor): static
     {
         $this->imageAverageColor = $imageAverageColor;
         return $this;
@@ -695,22 +568,26 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->filesize;
     }
 
-    /**
-     * @param int|null $filesize
-     * @return Document
-     */
-    public function setFilesize(?int $filesize)
+    public function setFilesize(?int $filesize): static
     {
         $this->filesize = $filesize;
         return $this;
     }
 
+    #[
+        Serializer\Groups(["document", "document_display", "nodes_sources", "tag", "attribute"]),
+        Serializer\Type("string"),
+        Serializer\VirtualProperty,
+        Serializer\SerializedName("alt"),
+        SymfonySerializer\Groups(["document", "document_display", "nodes_sources", "tag", "attribute"]),
+        SymfonySerializer\SerializedName("alt"),
+    ]
     public function getAlternativeText(): string
     {
         $documentTranslation = $this->getDocumentTranslations()->first();
         return $documentTranslation && !empty($documentTranslation->getName()) ?
             $documentTranslation->getName() :
-            parent::getAlternativeText();
+            $this->getFilename();
     }
 
     public function __clone()
@@ -722,6 +599,46 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     }
 
     /**
+     * @return bool
+     */
+    #[SymfonySerializer\Groups(['document'])]
+    #[Serializer\Groups(['document'])]
+    #[Serializer\VirtualProperty]
+    public function isThumbnail(): bool
+    {
+        return $this->getOriginal() !== null;
+    }
+
+    /**
+     * @return HasThumbnailInterface|null
+     */
+    #[SymfonySerializer\Ignore]
+    public function getOriginal(): ?HasThumbnailInterface
+    {
+        return $this->original;
+    }
+
+    public function setOriginal(?HasThumbnailInterface $original): static
+    {
+        if (null === $original || ($original !== $this && $original instanceof Document)) {
+            $this->original = $original;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    #[SymfonySerializer\Groups(['document'])]
+    #[Serializer\Groups(['document'])]
+    #[Serializer\VirtualProperty]
+    public function hasThumbnails(): bool
+    {
+        return $this->getThumbnails()->count() > 0;
+    }
+
+    /**
      * @return Collection
      */
     public function getThumbnails(): Collection
@@ -729,12 +646,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->thumbnails;
     }
 
-    /**
-     * @param Collection $thumbnails
-     *
-     * @return Document
-     */
-    public function setThumbnails(Collection $thumbnails): Document
+    public function setThumbnails(Collection $thumbnails): static
     {
         if ($this->thumbnails->count()) {
             /** @var HasThumbnailInterface $thumbnail */
@@ -754,48 +666,18 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     }
 
     /**
-     * @return HasThumbnailInterface|null
-     * @SymfonySerializer\Ignore
+     * @return DocumentInterface|null
      */
-    public function getOriginal(): ?HasThumbnailInterface
+    #[SymfonySerializer\Groups(['document_thumbnails'])]
+    #[SymfonySerializer\SerializedName('thumbnail')]
+    #[SymfonySerializer\MaxDepth(1)]
+    #[Serializer\MaxDepth(1)]
+    public function getFirstThumbnail(): ?DocumentInterface
     {
-        return $this->original;
-    }
-
-    /**
-     * @param HasThumbnailInterface|null $original
-     *
-     * @return Document
-     */
-    public function setOriginal(?HasThumbnailInterface $original): Document
-    {
-        if (null === $original || ($original !== $this && $original instanceof Document)) {
-            $this->original = $original;
+        if ($this->isEmbed() || !$this->isImage()) {
+            return $this->getThumbnails()->first() ?: null;
         }
-
-        return $this;
-    }
-
-    /**
-     * @return bool
-     * @Serializer\Groups({"document"})
-     * @SymfonySerializer\Groups({"document"})
-     * @Serializer\VirtualProperty()
-     */
-    public function isThumbnail(): bool
-    {
-        return $this->getOriginal() !== null;
-    }
-
-    /**
-     * @return bool
-     * @Serializer\Groups({"document"})
-     * @SymfonySerializer\Groups({"document"})
-     * @Serializer\VirtualProperty()
-     */
-    public function hasThumbnails(): bool
-    {
-        return $this->getThumbnails()->count() > 0;
+        return null;
     }
 
     /**
@@ -814,11 +696,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->fileHash;
     }
 
-    /**
-     * @param string|null $hash
-     * @return Document
-     */
-    public function setFileHash(?string $hash): Document
+    public function setFileHash(?string $hash): static
     {
         $this->fileHash = $hash;
         return $this;
@@ -832,11 +710,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->fileHashAlgorithm;
     }
 
-    /**
-     * @param string|null $algorithm
-     * @return Document
-     */
-    public function setFileHashAlgorithm(?string $algorithm): Document
+    public function setFileHashAlgorithm(?string $algorithm): static
     {
         $this->fileHashAlgorithm = $algorithm;
         return $this;
@@ -850,11 +724,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->copyrightValidSince;
     }
 
-    /**
-     * @param \DateTime|null $copyrightValidSince
-     * @return Document
-     */
-    public function setCopyrightValidSince(?\DateTime $copyrightValidSince): Document
+    public function setCopyrightValidSince(?\DateTime $copyrightValidSince): static
     {
         $this->copyrightValidSince = $copyrightValidSince;
         return $this;
@@ -868,11 +738,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
         return $this->copyrightValidUntil;
     }
 
-    /**
-     * @param \DateTime|null $copyrightValidUntil
-     * @return Document
-     */
-    public function setCopyrightValidUntil(?\DateTime $copyrightValidUntil): Document
+    public function setCopyrightValidUntil(?\DateTime $copyrightValidUntil): static
     {
         $this->copyrightValidUntil = $copyrightValidUntil;
         return $this;
@@ -881,7 +747,7 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         if (!empty($this->getFilename())) {
             return $this->getFilename();
@@ -894,5 +760,43 @@ class Document extends AbstractDocument implements AdvancedDocumentInterface, Ha
             return $this->getEmbedPlatform() . ' (' . $this->getEmbedId() . ')';
         }
         return (string) $this->getId();
+    }
+
+    /**
+     * @return string
+     */
+    public function getFilename(): string
+    {
+        return $this->filename ?? '';
+    }
+
+    public function setFilename(string $filename): static
+    {
+        $this->filename = StringHandler::cleanForFilename($filename);
+
+        return $this;
+    }
+
+
+    public function getEmbedPlatform(): ?string
+    {
+        return $this->embedPlatform;
+    }
+
+    public function setEmbedPlatform(?string $embedPlatform): static
+    {
+        $this->embedPlatform = $embedPlatform;
+        return $this;
+    }
+
+    public function getEmbedId(): ?string
+    {
+        return $this->embedId;
+    }
+
+    public function setEmbedId(?string $embedId): static
+    {
+        $this->embedId = $embedId;
+        return $this;
     }
 }

@@ -29,7 +29,7 @@ class TranslationsDeleteCommand extends Command
         $this->managerRegistry = $managerRegistry;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('translations:delete')
             ->setDescription('Delete a translation')

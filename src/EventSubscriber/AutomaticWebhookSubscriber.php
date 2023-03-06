@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\Core\Events\DocumentUpdatedEvent;
 use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\Webhook;
@@ -20,6 +19,7 @@ use RZ\Roadiz\CoreBundle\Event\NodesSources\NodesSourcesPreUpdatedEvent;
 use RZ\Roadiz\CoreBundle\Event\Tag\TagUpdatedEvent;
 use RZ\Roadiz\CoreBundle\Webhook\Exception\TooManyWebhookTriggeredException;
 use RZ\Roadiz\CoreBundle\Webhook\WebhookDispatcher;
+use RZ\Roadiz\Documents\Events\DocumentUpdatedEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Workflow\Event\Event;
 
@@ -72,7 +72,7 @@ final class AutomaticWebhookSubscriber implements EventSubscriberInterface
      * @param mixed $event
      * @return bool
      */
-    protected function isEventRelatedToNode($event): bool
+    protected function isEventRelatedToNode(mixed $event): bool
     {
         return $event instanceof Event ||
             $event instanceof NodeVisibilityChangedEvent ||
@@ -86,7 +86,7 @@ final class AutomaticWebhookSubscriber implements EventSubscriberInterface
     /**
      * @param Event|NodeVisibilityChangedEvent|NodesSourcesPreUpdatedEvent|NodesSourcesDeletedEvent|NodeDeletedEvent|NodeTaggedEvent|TagUpdatedEvent|DocumentTranslationUpdatedEvent|DocumentUpdatedEvent $event
      */
-    public function onAutomaticWebhook($event): void
+    public function onAutomaticWebhook(mixed $event): void
     {
         /** @var Webhook[] $webhooks */
         $webhooks = $this->managerRegistry->getRepository(Webhook::class)->findBy([
@@ -107,7 +107,7 @@ final class AutomaticWebhookSubscriber implements EventSubscriberInterface
         }
     }
 
-    private function isEventSubjectInRootNode($event, ?Node $rootNode): bool
+    private function isEventSubjectInRootNode(mixed $event, ?Node $rootNode): bool
     {
         if (null === $rootNode) {
             /*

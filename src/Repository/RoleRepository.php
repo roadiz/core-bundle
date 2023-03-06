@@ -4,13 +4,22 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
+use Doctrine\ORM\OptimisticLockException;
+use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Role;
+use RZ\Roadiz\CoreBundle\Entity\SettingGroup;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Do not extend Roadiz or Service repository to prevent cyclic dependencies.
  *
+ * @method Role|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Role|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Role[]    findAll()
+ * @method Role[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  * @extends EntityRepository<Role>
  */
 final class RoleRepository extends EntityRepository
@@ -25,8 +34,10 @@ final class RoleRepository extends EntityRepository
     /**
      * @param string $roleName
      * @return int
+     * @throws NoResultException
+     * @throws NonUniqueResultException
      */
-    public function countByName($roleName): int
+    public function countByName(string $roleName): int
     {
         $roleName = Role::cleanName($roleName);
 
@@ -41,11 +52,10 @@ final class RoleRepository extends EntityRepository
     /**
      * @param string $roleName
      * @return Role
-     * @throws \Doctrine\ORM\NonUniqueResultException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Doctrine\ORM\OptimisticLockException
+     * @throws NonUniqueResultException
+     * @throws ORMException
      */
-    public function findOneByName($roleName)
+    public function findOneByName(string $roleName): Role
     {
         $roleName = Role::cleanName($roleName);
 
@@ -65,11 +75,11 @@ final class RoleRepository extends EntityRepository
     }
 
     /**
-     * Get every Roles names except for ROLE_SUPERADMIN.
+     * Get every Role names except for ROLE_SUPERADMIN.
      *
      * @return array
      */
-    public function getAllBasicRoleName()
+    public function getAllBasicRoleName(): array
     {
         $builder = $this->createQueryBuilder('r');
         $builder->select('r.name')
@@ -83,11 +93,11 @@ final class RoleRepository extends EntityRepository
     }
 
     /**
-     * Get every Roles names
+     * Get every Role names
      *
      * @return array
      */
-    public function getAllRoleName()
+    public function getAllRoleName(): array
     {
         $builder = $this->createQueryBuilder('r');
         $builder->select('r.name');

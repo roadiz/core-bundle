@@ -10,6 +10,9 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Entity\TagTranslation;
 
+/**
+ * @deprecated Use RZ\Roadiz\CoreBundle\Serializer\Normalizer\TagNormalizer
+ */
 class TagOutputDataTransformer implements DataTransformerInterface
 {
     /**

@@ -7,9 +7,11 @@ namespace RZ\Roadiz\CoreBundle\Api\DataTransformer;
 use ApiPlatform\Core\DataTransformer\DataTransformerInterface;
 use RZ\Roadiz\CoreBundle\Api\Dto\NodesSourcesDto;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
+/**
+ * @deprecated Use NodesSourcesPathNormalizer
+ */
 abstract class NodesSourcesOutputDataTransformer implements DataTransformerInterface
 {
     protected UrlGeneratorInterface $urlGenerator;
@@ -36,15 +38,6 @@ abstract class NodesSourcesOutputDataTransformer implements DataTransformerInter
         $output->slug = $data->getIdentifier();
         if ($data->isPublishable()) {
             $output->publishedAt = $data->getPublishedAt();
-        }
-        if ($data->isReachable()) {
-            $output->url = $this->urlGenerator->generate(
-                RouteObjectInterface::OBJECT_BASED_ROUTE_NAME,
-                [
-                    RouteObjectInterface::ROUTE_OBJECT => $data
-                ],
-                UrlGeneratorInterface::RELATIVE_PATH
-            );
         }
         return $output;
     }

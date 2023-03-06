@@ -9,7 +9,11 @@ use RZ\Roadiz\CoreBundle\Entity\SettingGroup;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @package RZ\Roadiz\CoreBundle\Repository
+ * @method SettingGroup|null findOneByName(string $name)
+ * @method SettingGroup|null find($id, $lockMode = null, $lockVersion = null)
+ * @method SettingGroup|null findOneBy(array $criteria, array $orderBy = null)
+ * @method SettingGroup[]    findAll()
+ * @method SettingGroup[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  * @extends EntityRepository<SettingGroup>
  */
 final class SettingGroupRepository extends EntityRepository
@@ -28,7 +32,7 @@ final class SettingGroupRepository extends EntityRepository
      * @throws \Doctrine\ORM\NoResultException
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    public function exists($name)
+    public function exists(string $name): bool
     {
         $query = $this->_em->createQuery('
             SELECT COUNT(s.id) FROM RZ\Roadiz\CoreBundle\Entity\SettingGroup s
@@ -41,7 +45,7 @@ final class SettingGroupRepository extends EntityRepository
     /**
      * @return array
      */
-    public function findAllNames()
+    public function findAllNames(): array
     {
         $query = $this->_em->createQuery('SELECT s.name FROM RZ\Roadiz\CoreBundle\Entity\SettingGroup s');
         return array_map('current', $query->getScalarResult());

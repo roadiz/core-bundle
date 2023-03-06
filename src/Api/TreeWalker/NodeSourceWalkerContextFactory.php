@@ -8,6 +8,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Psr\Cache\CacheItemPoolInterface;
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\EntityApi\NodeSourceApi;
+use RZ\Roadiz\CoreBundle\NodeType\NodeTypeResolver;
 use RZ\TreeWalker\WalkerContextInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Stopwatch\Stopwatch;
@@ -20,6 +21,7 @@ final class NodeSourceWalkerContextFactory implements WalkerContextFactoryInterf
     private RequestStack $requestStack;
     private ManagerRegistry $managerRegistry;
     private CacheItemPoolInterface $cacheAdapter;
+    private NodeTypeResolver $nodeTypeResolver;
 
     public function __construct(
         Stopwatch $stopwatch,
@@ -27,7 +29,8 @@ final class NodeSourceWalkerContextFactory implements WalkerContextFactoryInterf
         NodeSourceApi $nodeSourceApi,
         RequestStack $requestStack,
         ManagerRegistry $managerRegistry,
-        CacheItemPoolInterface $cacheAdapter
+        CacheItemPoolInterface $cacheAdapter,
+        NodeTypeResolver $nodeTypeResolver
     ) {
         $this->stopwatch = $stopwatch;
         $this->nodeTypesBag = $nodeTypesBag;
@@ -35,6 +38,7 @@ final class NodeSourceWalkerContextFactory implements WalkerContextFactoryInterf
         $this->requestStack = $requestStack;
         $this->managerRegistry = $managerRegistry;
         $this->cacheAdapter = $cacheAdapter;
+        $this->nodeTypeResolver = $nodeTypeResolver;
     }
 
     public function createWalkerContext(): WalkerContextInterface
@@ -45,7 +49,8 @@ final class NodeSourceWalkerContextFactory implements WalkerContextFactoryInterf
             $this->nodeSourceApi,
             $this->requestStack,
             $this->managerRegistry,
-            $this->cacheAdapter
+            $this->cacheAdapter,
+            $this->nodeTypeResolver
         );
     }
 }

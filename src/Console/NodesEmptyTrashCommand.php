@@ -31,7 +31,7 @@ class NodesEmptyTrashCommand extends Command
         $this->handlerFactory = $handlerFactory;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('nodes:empty-trash')

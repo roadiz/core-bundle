@@ -6,11 +6,11 @@ namespace RZ\Roadiz\CoreBundle\Document\MediaFinder;
 
 use Doctrine\Persistence\ObjectManager;
 use GuzzleHttp\Exception\ClientException;
-use RZ\Roadiz\Core\Exceptions\APINeedsAuthentificationException;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
-use RZ\Roadiz\Core\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Exceptions\APINeedsAuthentificationException;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 trait EmbedFinderTrait
 {
@@ -31,7 +31,7 @@ trait EmbedFinderTrait
     /**
      * @inheritDoc
      */
-    protected function injectMetaInDocument(ObjectManager $objectManager, DocumentInterface $document)
+    protected function injectMetaInDocument(ObjectManager $objectManager, DocumentInterface $document): DocumentInterface
     {
         $translations = $objectManager->getRepository(Translation::class)->findAll();
 

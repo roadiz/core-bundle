@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Repository;
 
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
@@ -18,7 +20,9 @@ use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @package RZ\Roadiz\CoreBundle\Repository
+ * @method Tag|null findOneByName(string $query)
+ * @method Tag|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Tag[]    findAll()
  * @extends EntityRepository<Tag>
  */
 final class TagRepository extends EntityRepository
@@ -33,25 +37,25 @@ final class TagRepository extends EntityRepository
     /**
      * Add a node filtering to queryBuilder.
      *
-     * @param array        $criteria
+     * @param array $criteria
      * @param QueryBuilder $qb
      */
-    protected function filterByNodes($criteria, QueryBuilder $qb)
+    protected function filterByNodes(array &$criteria, QueryBuilder $qb): void
     {
         if (key_exists('nodes', $criteria)) {
             if (is_array($criteria['nodes']) || $criteria['nodes'] instanceof Collection) {
                 $qb->innerJoin(
-                    'tg.nodes',
-                    static::NODE_ALIAS,
+                    'tg.nodesTags',
+                    'ntg',
                     'WITH',
-                    'n.id IN (:nodes)'
+                    'ntg.node IN (:nodes)'
                 );
             } else {
                 $qb->innerJoin(
-                    'tg.nodes',
-                    static::NODE_ALIAS,
+                    'tg.nodesTags',
+                    'ntg',
                     'WITH',
-                    'n.id = :nodes'
+                    'ntg.node = :nodes'
                 );
             }
         }
@@ -63,7 +67,7 @@ final class TagRepository extends EntityRepository
      * @param array $criteria
      * @param QueryBuilder $qb
      */
-    protected function applyFilterByNodes(array &$criteria, QueryBuilder $qb)
+    protected function applyFilterByNodes(array &$criteria, QueryBuilder $qb): void
     {
         if (key_exists('nodes', $criteria)) {
             if ($criteria['nodes'] instanceof Node) {
@@ -86,7 +90,7 @@ final class TagRepository extends EntityRepository
      * @param array $criteria
      * @param QueryBuilder $qb
      */
-    protected function applyFilterByCriteria(array &$criteria, QueryBuilder $qb)
+    protected function applyFilterByCriteria(array &$criteria, QueryBuilder $qb): void
     {
         /*
          * Reimplementing findBy features…
@@ -107,8 +111,11 @@ final class TagRepository extends EntityRepository
      * @param QueryBuilder $qb
      * @param TranslationInterface|null $translation
      */
-    protected function filterByTranslation($criteria, QueryBuilder $qb, TranslationInterface $translation = null)
-    {
+    protected function filterByTranslation(
+        array &$criteria,
+        QueryBuilder $qb,
+        TranslationInterface $translation = null
+    ): void {
         if (
             isset($criteria['translation']) ||
             isset($criteria['translation.locale']) ||
@@ -151,7 +158,7 @@ final class TagRepository extends EntityRepository
     protected function applyTranslationByTag(
         QueryBuilder $qb,
         TranslationInterface $translation = null
-    ) {
+    ): void {
         if (null !== $translation) {
             $qb->setParameter('translation', $translation);
         }
@@ -162,8 +169,8 @@ final class TagRepository extends EntityRepository
      *
      * @param array            $criteria
      * @param array|null       $orderBy
-     * @param integer|null     $limit
-     * @param integer|null     $offset
+     * @param int|null     $limit
+     * @param int|null     $offset
      * @param TranslationInterface|null $translation
      *
      * @return QueryBuilder
@@ -171,10 +178,10 @@ final class TagRepository extends EntityRepository
     protected function getContextualQueryWithTranslation(
         array &$criteria,
         array $orderBy = null,
-        $limit = null,
-        $offset = null,
+        ?int $limit = null,
+        ?int $offset = null,
         TranslationInterface $translation = null
-    ) {
+    ): QueryBuilder {
         $qb = $this->createQueryBuilder(EntityRepository::TAG_ALIAS);
         $qb->addSelect('tt');
         $this->filterByNodes($criteria, $qb);
@@ -208,7 +215,7 @@ final class TagRepository extends EntityRepository
     protected function getCountContextualQueryWithTranslation(
         array &$criteria,
         TranslationInterface $translation = null
-    ) {
+    ): QueryBuilder {
         $qb = $this->createQueryBuilder(EntityRepository::TAG_ALIAS);
         $this->filterByNodes($criteria, $qb);
         $this->filterByTranslation($criteria, $qb, $translation);
@@ -234,7 +241,7 @@ final class TagRepository extends EntityRepository
         $limit = null,
         $offset = null,
         TranslationInterface $translation = null
-    ) {
+    ): array|Paginator {
         $qb = $this->getContextualQueryWithTranslation(
             $criteria,
             $orderBy,
@@ -263,6 +270,7 @@ final class TagRepository extends EntityRepository
             return $query->getResult();
         }
     }
+
     /**
      * Just like the findOneBy method but with relational criteria.
      *
@@ -271,6 +279,7 @@ final class TagRepository extends EntityRepository
      * @param TranslationInterface|null $translation
      *
      * @return Tag|null
+     * @throws NonUniqueResultException
      */
     public function findOneBy(
         array $criteria,
@@ -294,17 +303,20 @@ final class TagRepository extends EntityRepository
 
         return $query->getOneOrNullResult();
     }
+
     /**
      * Just like the countBy method but with relational criteria.
      *
      * @param array $criteria
      * @param TranslationInterface|null $translation
      * @return int
+     * @throws NonUniqueResultException
+     * @throws NoResultException
      */
     public function countBy(
-        $criteria,
+        mixed $criteria,
         TranslationInterface $translation = null
-    ) {
+    ): int {
         $query = $this->getCountContextualQueryWithTranslation(
             $criteria,
             $translation
@@ -323,6 +335,7 @@ final class TagRepository extends EntityRepository
      * @param TranslationInterface $translation
      *
      * @return Tag|null
+     * @throws NonUniqueResultException
      */
     public function findWithTranslation($tagId, TranslationInterface $translation)
     {
@@ -425,7 +438,8 @@ final class TagRepository extends EntityRepository
         $qb->select('t')
             ->addSelect('tt')
             ->addSelect('tr')
-            ->innerJoin('t.nodes', 'n')
+            ->innerJoin('t.nodesTags', 'ntg')
+            ->innerJoin('ntg.node', 'n')
             ->innerJoin('n.parent', 'pn')
             ->leftJoin('t.translatedTags', 'tt')
             ->leftJoin('tt.translation', 'tr')
@@ -537,11 +551,11 @@ final class TagRepository extends EntityRepository
      * @return QueryBuilder
      */
     protected function createSearchBy(
-        $pattern,
+        string $pattern,
         QueryBuilder $qb,
         array &$criteria = [],
-        $alias = EntityRepository::DEFAULT_ALIAS
-    ) {
+        string $alias = EntityRepository::DEFAULT_ALIAS
+    ): QueryBuilder {
         $this->classicLikeComparison($pattern, $qb, $alias);
 
         /*

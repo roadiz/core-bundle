@@ -32,7 +32,7 @@ final class NodesCleanNamesCommand extends Command
         $this->managerRegistry = $managerRegistry;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('nodes:clean-names')
             ->setDescription('Clean every nodes names according to their default node-source title.')

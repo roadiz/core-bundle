@@ -32,7 +32,7 @@ final class UsersRolesCommand extends UsersCommand
         $this->rolesBag = $rolesBag;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('users:roles')
             ->setDescription('Manage user roles')

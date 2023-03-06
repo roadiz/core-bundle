@@ -21,12 +21,12 @@ class GroupVoter extends RoleVoter
         parent::__construct($prefix);
     }
 
-    protected function supports(string $attribute, $subject): bool
+    protected function supports(string $attribute, mixed $subject): bool
     {
         return $subject instanceof Group;
     }
 
-    protected function extractRoles(TokenInterface $token)
+    protected function extractRoles(TokenInterface $token): array
     {
         return $this->roleHierarchy->getReachableRoleNames($token->getRoleNames());
     }
@@ -83,7 +83,7 @@ class GroupVoter extends RoleVoter
      *
      * @return string[]
      */
-    protected function extractGroupRoles(Group $group)
+    protected function extractGroupRoles(Group $group): array
     {
         return $this->roleHierarchy->getReachableRoleNames($group->getRoles());
     }
@@ -94,7 +94,7 @@ class GroupVoter extends RoleVoter
      *
      * @return bool
      */
-    protected function isRoleContained(string $role, array $roles)
+    protected function isRoleContained(string $role, array $roles): bool
     {
         foreach ($roles as $singleRole) {
             if ($role === $singleRole) {

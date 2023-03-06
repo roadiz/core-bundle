@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Doctrine\ORM\Query\Expr\Join;
@@ -18,7 +19,6 @@ use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @package RZ\Roadiz\CoreBundle\Repository
  * @extends EntityRepository<Folder>
  */
 final class FolderRepository extends EntityRepository
@@ -29,17 +29,18 @@ final class FolderRepository extends EntityRepository
     ) {
         parent::__construct($registry, Folder::class, $dispatcher);
     }
-        /**
+
+    /**
      * Find a folder according to the given path or create it.
      *
-     * @param string           $folderPath
+     * @param string $folderPath
      * @param TranslationInterface|null $translation
      *
      * @return Folder|null
      * @throws ORMException
      * @throws OptimisticLockException
      */
-    public function findOrCreateByPath(string $folderPath, ?TranslationInterface $translation = null)
+    public function findOrCreateByPath(string $folderPath, ?TranslationInterface $translation = null): ?Folder
     {
         $folderPath = trim($folderPath);
         $folders = explode('/', $folderPath);
@@ -94,9 +95,9 @@ final class FolderRepository extends EntityRepository
      * @param string $folderPath
      *
      * @return Folder|null
-     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws NonUniqueResultException
      */
-    public function findByPath(string $folderPath)
+    public function findByPath(string $folderPath): ?Folder
     {
         $folderPath = trim($folderPath);
 
@@ -112,7 +113,7 @@ final class FolderRepository extends EntityRepository
      * @param TranslationInterface|null $translation
      * @return array
      */
-    public function findAllChildrenFromFolder(Folder $folder, TranslationInterface $translation = null)
+    public function findAllChildrenFromFolder(Folder $folder, TranslationInterface $translation = null): array
     {
         $ids = $this->findAllChildrenIdFromFolder($folder);
         if (count($ids) > 0) {
@@ -136,10 +137,10 @@ final class FolderRepository extends EntityRepository
      * @param string $folderName
      * @param TranslationInterface|null $translation
      *
-     * @return mixed|null
-     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @return Folder|null
+     * @throws NonUniqueResultException
      */
-    public function findOneByFolderName(string $folderName, TranslationInterface $translation = null)
+    public function findOneByFolderName(string $folderName, TranslationInterface $translation = null): ?Folder
     {
         $qb = $this->createQueryBuilder('f');
         $qb->addSelect('f')
@@ -197,11 +198,11 @@ final class FolderRepository extends EntityRepository
      * @return QueryBuilder
      */
     protected function createSearchBy(
-        $pattern,
+        string $pattern,
         QueryBuilder $qb,
         array &$criteria = [],
-        $alias = "obj"
-    ) {
+        string $alias = "obj"
+    ): QueryBuilder {
         $this->classicLikeComparison($pattern, $qb, $alias);
 
         /*
@@ -234,9 +235,9 @@ final class FolderRepository extends EntityRepository
      * @param string $alias
      * @return int
      * @throws \Doctrine\ORM\NoResultException
-     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws NonUniqueResultException
      */
-    public function countSearchBy($pattern, array $criteria = [], $alias = "obj")
+    public function countSearchBy(string $pattern, array $criteria = [], string $alias = "obj"): int
     {
         $qb = $this->createQueryBuilder($alias);
         $qb->select($qb->expr()->countDistinct($alias));
@@ -250,7 +251,7 @@ final class FolderRepository extends EntityRepository
      * @param TranslationInterface|null $translation
      * @return array
      */
-    public function findByDocumentAndTranslation(Document $document, TranslationInterface $translation = null)
+    public function findByDocumentAndTranslation(Document $document, TranslationInterface $translation = null): array
     {
         $qb = $this->createQueryBuilder('f');
         $qb->innerJoin('f.documents', 'd')
@@ -276,7 +277,7 @@ final class FolderRepository extends EntityRepository
      * @param TranslationInterface|null $translation
      * @return array
      */
-    public function findByParentAndTranslation(Folder $parent = null, TranslationInterface $translation = null)
+    public function findByParentAndTranslation(Folder $parent = null, TranslationInterface $translation = null): array
     {
         $qb = $this->createQueryBuilder('f');
         $qb->addOrderBy('f.position', 'ASC');

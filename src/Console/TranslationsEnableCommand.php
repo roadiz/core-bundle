@@ -29,7 +29,7 @@ class TranslationsEnableCommand extends Command
         $this->managerRegistry = $managerRegistry;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('translations:enable')
             ->setDescription('Enables a translation')

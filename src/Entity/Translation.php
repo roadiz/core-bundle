@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -12,6 +13,7 @@ use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Repository\TranslationRepository;
 use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
@@ -20,46 +22,44 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * Translations describe language locales to be used by Nodes,
  * Tags, UrlAliases and Documents.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\TranslationRepository")
- * @ORM\Table(name="translations", indexes={
- *     @ORM\Index(columns={"available"}),
- *     @ORM\Index(columns={"default_translation"}),
- *     @ORM\Index(columns={"created_at"}),
- *     @ORM\Index(columns={"updated_at"}),
- *     @ORM\Index(columns={"available", "default_translation"}),
- *     @ORM\Index(columns={"available", "locale"}),
- *     @ORM\Index(columns={"available", "override_locale"})
- * })
- * @ApiFilter(\ApiPlatform\Core\Serializer\Filter\PropertyFilter::class)
- * @ApiFilter(BaseFilter\OrderFilter::class, properties={
- *     "createdAt",
- *     "updatedAt",
- *     "locale",
- *     "available",
- *     "defaultTranslation"
- * })
- * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
- *     "available",
- *     "defaultTranslation"
- * })
- * @ApiFilter(BaseFilter\SearchFilter::class, properties={
- *     "locale": "exact",
- *     "name": "exact"
- * })
- * @UniqueEntity(fields={"name"})
- * @UniqueEntity(fields={"locale"})
- * @UniqueEntity(fields={"overrideLocale"})
  */
+#[
+    ORM\Entity(repositoryClass: TranslationRepository::class),
+    ORM\Table(name: "translations"),
+    ORM\Index(columns: ["available"]),
+    ORM\Index(columns: ["default_translation"]),
+    ORM\Index(columns: ["created_at"]),
+    ORM\Index(columns: ["updated_at"]),
+    ORM\Index(columns: ["available", "default_translation"]),
+    ORM\Index(columns: ["available", "locale"]),
+    ORM\Index(columns: ["available", "override_locale"]),
+    UniqueEntity(fields: ["name"]),
+    UniqueEntity(fields: ["locale"]),
+    UniqueEntity(fields: ["overrideLocale"]),
+    ApiFilter(PropertyFilter::class),
+    ApiFilter(BaseFilter\OrderFilter::class, properties: [
+        "createdAt",
+        "updatedAt",
+        "locale",
+        "available",
+        "defaultTranslation"
+    ]),
+    ApiFilter(BaseFilter\BooleanFilter::class, properties: [
+        "available",
+        "defaultTranslation"
+    ]),
+    ApiFilter(BaseFilter\SearchFilter::class, properties: [
+        "locale" => "exact",
+        "name" => "exact"
+    ])
+]
 class Translation extends AbstractDateTimed implements TranslationInterface
 {
     /**
      * Associates locales to pretty languages names.
-     *
-     * @var array
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     public static array $availableLocales = [
         'af_NA' => "Afrikaans (Namibia)",
         'af_ZA' => "Afrikaans (South Africa)",
@@ -496,11 +496,9 @@ class Translation extends AbstractDateTimed implements TranslationInterface
         'zu_ZA' => "Zulu (South Africa)",
         'zu' => "Zulu",
     ];
-    /**
-     * @var array
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
-     */
+
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     public static array $rtlLanguages = [
         'ar_DZ' => "Arabic (Algeria)",
         'ar_BH' => "Arabic (Bahrain)",
@@ -529,83 +527,101 @@ class Translation extends AbstractDateTimed implements TranslationInterface
         'fa' => "Persian",
     ];
     /**
-     * @ORM\OneToMany(targetEntity="DocumentTranslation", mappedBy="translation", orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Collection<DocumentTranslation>
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[ORM\OneToMany(mappedBy: 'translation', targetEntity: DocumentTranslation::class, fetch: 'EXTRA_LAZY', orphanRemoval: true)]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     protected Collection $documentTranslations;
+
     /**
-     * @ORM\OneToMany(targetEntity="FolderTranslation", mappedBy="translation", orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Collection<FolderTranslation>
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[ORM\OneToMany(mappedBy: 'translation', targetEntity: FolderTranslation::class, fetch: 'EXTRA_LAZY', orphanRemoval: true)]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     protected Collection $folderTranslations;
+
     /**
      * Language locale
      *
      * fr or en for example
      *
      * @var string
-     * @ORM\Column(type="string", unique=true, length=10)
      * @Serializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder", "log_sources"})
-     * @SymfonySerializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder", "log_sources"})
      * @Serializer\Type("string")
-     * @Assert\NotBlank()
-     * @Assert\NotNull()
-     * @Assert\Length(max=10)
      */
+    #[ORM\Column(type: 'string', length: 10, unique: true)]
+    #[SymfonySerializer\Ignore]
+    #[Assert\NotBlank]
+    #[Assert\NotNull]
+    #[Assert\Length(max: 10)]
     private string $locale = '';
+
     /**
      * @var string|null
-     * @ORM\Column(type="string", name="override_locale", length=10, unique=true, nullable=true)
      * @Serializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder"})
-     * @SymfonySerializer\Groups({"translation", "document", "nodes_sources", "tag", "attribute", "folder"})
      * @Serializer\Type("string")
-     * @Assert\Length(max=10)
      */
+    #[ORM\Column(name: 'override_locale', type: 'string', length: 10, unique: true, nullable: true)]
+    #[SymfonySerializer\Ignore]
+    #[Assert\Length(max: 10)]
     private ?string $overrideLocale = null;
+
     /**
      * @var string
-     * @ORM\Column(type="string", unique=true)
-     * @Serializer\Groups({"translation"})
-     * @SymfonySerializer\Groups({"translation"})
+     * @Serializer\Groups({"translation", "translation_base"})
      * @Serializer\Type("string")
-     * @Assert\NotNull()
-     * @Assert\NotBlank()
-     * @Assert\Length(max=250)
      */
+    #[ORM\Column(type: 'string', unique: true)]
+    #[SymfonySerializer\Groups(['translation', 'translation_base'])]
+    #[Assert\NotNull]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 250)]
     private string $name = '';
+
     /**
      * @var bool
-     * @ORM\Column(name="default_translation", type="boolean", nullable=false, options={"default" = false})
-     * @Serializer\Groups({"translation"})
-     * @SymfonySerializer\Groups({"translation"})
+     * @Serializer\Groups({"translation", "translation_base"})
      * @Serializer\Type("bool")
      */
+    #[ORM\Column(name: 'default_translation', type: 'boolean', nullable: false, options: ['default' => false])]
+    #[SymfonySerializer\Groups(['translation', 'translation_base'])]
     private bool $defaultTranslation = false;
+
     /**
      * @var bool
-     * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
-     * @Serializer\Groups({"translation"})
-     * @SymfonySerializer\Groups({"translation"})
+     * @Serializer\Groups({"translation", "translation_base"})
      * @Serializer\Type("bool")
      */
+    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => true])]
+    #[SymfonySerializer\Groups(['translation', 'translation_base'])]
     private bool $available = true;
+
     /**
-     * @ORM\OneToMany(targetEntity="NodesSources", mappedBy="translation", orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Collection<NodesSources>
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[ORM\OneToMany(
+        mappedBy: 'translation',
+        targetEntity: NodesSources::class,
+        fetch: 'EXTRA_LAZY',
+        orphanRemoval: true
+    )]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private Collection $nodeSources;
+
     /**
-     * @ORM\OneToMany(targetEntity="TagTranslation", mappedBy="translation", orphanRemoval=true, fetch="EXTRA_LAZY")
      * @var Collection<TagTranslation>
-     * @Serializer\Exclude
-     * @SymfonySerializer\Ignore
      */
+    #[ORM\OneToMany(
+        mappedBy: 'translation',
+        targetEntity: TagTranslation::class,
+        fetch: 'EXTRA_LAZY',
+        orphanRemoval: true
+    )]
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private Collection $tagTranslations;
 
     public function __construct()
@@ -621,8 +637,8 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      * Return available locales in an array.
      *
      * @return array
-     * @SymfonySerializer\Ignore
      */
+    #[SymfonySerializer\Ignore]
     public static function getAvailableLocales(): array
     {
         return array_keys(static::$availableLocales);
@@ -630,11 +646,13 @@ class Translation extends AbstractDateTimed implements TranslationInterface
 
     /**
      * @return string
-     * @SymfonySerializer\Ignore
      */
+    #[SymfonySerializer\Ignore]
     public function getOneLineSummary(): string
     {
-        return $this->__toString();
+        return $this->getId() . " — " . $this->getName() . " (" . $this->getLocale() . ')' .
+            " — " . ($this->isAvailable() ? 'Enabled' : 'Disabled') .
+            ($this->isDefaultTranslation() ? ' - Default' : '') .  PHP_EOL;
     }
 
     /**
@@ -642,9 +660,7 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      */
     public function __toString(): string
     {
-        return $this->getId() . " — " . $this->getName() . " (" . $this->getLocale() . ')' .
-        " — " . ($this->isAvailable() ? 'Enabled' : 'Disabled') .
-        ($this->isDefaultTranslation() ? ' - Default' : '') .  PHP_EOL;
+        return (string) $this->getId();
     }
 
     /**
@@ -776,6 +792,8 @@ class Translation extends AbstractDateTimed implements TranslationInterface
      *
      * @return string
      */
+    #[SymfonySerializer\SerializedName('locale')]
+    #[SymfonySerializer\Groups(['translation_base'])]
     public function getPreferredLocale(): string
     {
         return !empty($this->overrideLocale) ? $this->overrideLocale : $this->locale;
@@ -791,8 +809,8 @@ class Translation extends AbstractDateTimed implements TranslationInterface
 
     /**
      * @return array
-     * @SymfonySerializer\Ignore
      */
+    #[SymfonySerializer\Ignore]
     public static function getRightToLeftLocales(): array
     {
         return array_keys(static::$rtlLanguages);
@@ -800,8 +818,8 @@ class Translation extends AbstractDateTimed implements TranslationInterface
 
     /**
      * @return Collection
-     * @SymfonySerializer\Ignore
      */
+    #[SymfonySerializer\Ignore]
     public function getFolderTranslations(): Collection
     {
         return $this->folderTranslations;

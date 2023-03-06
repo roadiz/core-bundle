@@ -13,7 +13,7 @@ use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
  * Class PrefixAwareRepository for defining join-queries prefixes.
  *
  * @template TEntityClass of object
- * @extends \RZ\Roadiz\CoreBundle\Repository\EntityRepository<TEntityClass>
+ * @extends EntityRepository<TEntityClass>
  */
 abstract class PrefixAwareRepository extends EntityRepository
 {
@@ -30,12 +30,12 @@ abstract class PrefixAwareRepository extends EntityRepository
      *    ]
      * ]
      */
-    private $prefixes = [];
+    private array $prefixes = [];
 
     /**
      * @return array
      */
-    public function getPrefixes()
+    public function getPrefixes(): array
     {
         return $this->prefixes;
     }
@@ -43,7 +43,7 @@ abstract class PrefixAwareRepository extends EntityRepository
     /**
      * @return string
      */
-    public function getDefaultPrefix()
+    public function getDefaultPrefix(): string
     {
         return EntityRepository::DEFAULT_ALIAS;
     }
@@ -54,7 +54,7 @@ abstract class PrefixAwareRepository extends EntityRepository
      * @param string $type Ex. 'inner'|'left', default 'left'
      * @return $this
      */
-    public function addPrefix($prefix, array $joins, $type = 'left')
+    public function addPrefix(string $prefix, array $joins, string $type = 'left'): self
     {
         if (!in_array($type, ['left', 'inner'])) {
             throw new \InvalidArgumentException('Prefix type can only be "left" or "inner"');
@@ -70,14 +70,8 @@ abstract class PrefixAwareRepository extends EntityRepository
         return $this;
     }
 
-    /**
-     *
-     * @param  array        $criteria
-     * @param  QueryBuilder $qb
-     * @param  string       $alias
-     * @return QueryBuilder
-     */
-    protected function prepareComparisons(array &$criteria, QueryBuilder $qb, $alias)
+
+    protected function prepareComparisons(array &$criteria, QueryBuilder $qb, string $alias): QueryBuilder
     {
         $simpleQB = new SimpleQueryBuilder($qb);
         foreach ($criteria as $key => $value) {
@@ -102,7 +96,7 @@ abstract class PrefixAwareRepository extends EntityRepository
      * @param string $key
      * @return array
      */
-    protected function getRealKey(QueryBuilder $qb, $key)
+    protected function getRealKey(QueryBuilder $qb, string $key): array
     {
         $keyParts = explode('.', $key);
         if (count($keyParts) > 1) {
@@ -142,7 +136,7 @@ abstract class PrefixAwareRepository extends EntityRepository
      * @param string $prefix
      * @return bool
      */
-    protected function hasJoinedPrefix(QueryBuilder $qb, $prefix)
+    protected function hasJoinedPrefix(QueryBuilder $qb, string $prefix): bool
     {
         return $this->joinExists($qb, $this->getDefaultPrefix(), $prefix);
     }
@@ -151,7 +145,7 @@ abstract class PrefixAwareRepository extends EntityRepository
      * Count entities using a Criteria object or a simple filter array.
      *
      * @param array $criteria
-     * @param array|null $order
+     * @param array|null $orderBy
      * @param int|null $limit
      * @param int|null $offset
      * @return array|Paginator
@@ -159,17 +153,17 @@ abstract class PrefixAwareRepository extends EntityRepository
      */
     public function findBy(
         array $criteria,
-        array $order = null,
+        array $orderBy = null,
         $limit = null,
         $offset = null
-    ) {
+    ): array|Paginator {
         $qb = $this->createQueryBuilder($this->getDefaultPrefix());
         $qb->select($this->getDefaultPrefix());
         $qb = $this->prepareComparisons($criteria, $qb, $this->getDefaultPrefix());
 
         // Add ordering
-        if (null !== $order) {
-            foreach ($order as $key => $value) {
+        if (null !== $orderBy) {
+            foreach ($orderBy as $key => $value) {
                 $realKey = $this->getRealKey($qb, $key);
                 $qb->addOrderBy($realKey['prefix'] . $realKey['key'], $value);
             }
@@ -204,7 +198,7 @@ abstract class PrefixAwareRepository extends EntityRepository
      * Count entities using a Criteria object or a simple filter array.
      *
      * @param array      $criteria
-     * @param array|null $order
+     * @param array|null $orderBy
      *
      * @return Entity
      * @psalm-return TEntityClass
@@ -212,15 +206,15 @@ abstract class PrefixAwareRepository extends EntityRepository
      */
     public function findOneBy(
         array $criteria,
-        array $order = null
+        array $orderBy = null
     ) {
         $qb = $this->createQueryBuilder($this->getDefaultPrefix());
         $qb->select($this->getDefaultPrefix());
         $qb = $this->prepareComparisons($criteria, $qb, $this->getDefaultPrefix());
 
         // Add ordering
-        if (null !== $order) {
-            foreach ($order as $key => $value) {
+        if (null !== $orderBy) {
+            foreach ($orderBy as $key => $value) {
                 $realKey = $this->getRealKey($qb, $key);
                 $qb->addOrderBy($realKey['prefix'] . $realKey['key'], $value);
             }
@@ -247,13 +241,13 @@ abstract class PrefixAwareRepository extends EntityRepository
      * @psalm-return array<TEntityClass>|Paginator<TEntityClass>
      */
     public function searchBy(
-        $pattern,
+        string $pattern,
         array $criteria = [],
         array $orders = [],
         $limit = null,
         $offset = null,
-        $alias = EntityRepository::DEFAULT_ALIAS
-    ) {
+        string $alias = EntityRepository::DEFAULT_ALIAS
+    ): array|Paginator {
         $qb = $this->createQueryBuilder($alias);
         $qb->select($alias);
         $qb = $this->createSearchBy($pattern, $qb, $criteria, $alias);
@@ -292,12 +286,7 @@ abstract class PrefixAwareRepository extends EntityRepository
         }
     }
 
-    /**
-     * @param string $pattern Search pattern
-     * @param array $criteria Additionnal criteria
-     * @return int
-     */
-    public function countSearchBy($pattern, array $criteria = [])
+    public function countSearchBy(string $pattern, array $criteria = []): int
     {
         $qb = $this->createQueryBuilder($this->getDefaultPrefix());
         $qb->select($qb->expr()->countDistinct($this->getDefaultPrefix() . '.id'));
@@ -310,17 +299,18 @@ abstract class PrefixAwareRepository extends EntityRepository
     }
 
     /**
-     * Create a LIKE comparison with entity texts colunms.
+     * Create a LIKE comparison with entity texts columns.
      *
      * @param string $pattern
      * @param QueryBuilder $qb
      * @param string $alias
+     * @return QueryBuilder
      */
     protected function classicLikeComparison(
-        $pattern,
+        string $pattern,
         QueryBuilder $qb,
-        $alias = "obj"
-    ) {
+        string $alias = "obj"
+    ): QueryBuilder {
         /*
          * Get fields needed for a search query
          */
@@ -345,5 +335,6 @@ abstract class PrefixAwareRepository extends EntityRepository
             $fullKey = sprintf('LOWER(%s)', $realKey['prefix'] . $realKey['key']);
             $qb->orWhere($qb->expr()->like($fullKey, $qb->expr()->literal($value)));
         }
+        return $qb;
     }
 }

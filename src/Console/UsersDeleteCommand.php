@@ -16,7 +16,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 final class UsersDeleteCommand extends UsersCommand
 {
-    protected function configure()
+    protected function configure(): void
     {
         $this->setName('users:delete')
             ->setDescription('Delete a user permanently')

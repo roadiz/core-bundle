@@ -49,7 +49,7 @@ class NodeSourceXlsxSerializer extends AbstractXlsxSerializer
      * @param NodesSources|Collection|array|null $nodeSource
      * @return array
      */
-    public function toArray($nodeSource)
+    public function toArray($nodeSource): array
     {
         $data = [];
 
@@ -86,9 +86,9 @@ class NodeSourceXlsxSerializer extends AbstractXlsxSerializer
 
     /**
      * @param NodesSources $nodeSource
-     * @return array
+     * @return array<string, mixed>
      */
-    protected function getSourceFields(NodesSources $nodeSource)
+    protected function getSourceFields(NodesSources $nodeSource): array
     {
         $fields = $this->getFields($nodeSource->getNode()->getNodeType());
 
@@ -106,9 +106,9 @@ class NodeSourceXlsxSerializer extends AbstractXlsxSerializer
 
     /**
      * @param NodeTypeInterface $nodeType
-     * @return array
+     * @return NodeTypeField[]
      */
-    protected function getFields(NodeTypeInterface $nodeType)
+    protected function getFields(NodeTypeInterface $nodeType): array
     {
         $criteria = [
             'nodeType' => $nodeType,
@@ -157,20 +157,24 @@ class NodeSourceXlsxSerializer extends AbstractXlsxSerializer
      * Serialize only texts.
      *
      * @param bool $onlyTexts
+     * @return NodeSourceXlsxSerializer
      */
-    public function setOnlyTexts(bool $onlyTexts = true)
+    public function setOnlyTexts(bool $onlyTexts = true): self
     {
         $this->onlyTexts = $onlyTexts;
+        return $this;
     }
 
     /**
      * @param Request $request
      * @param bool $forceLocale
+     * @return NodeSourceXlsxSerializer
      */
-    public function addUrls(Request $request, bool $forceLocale = false)
+    public function addUrls(Request $request, bool $forceLocale = false): self
     {
         $this->addUrls = true;
         $this->request = $request;
         $this->forceLocale = $forceLocale;
+        return $this;
     }
 }

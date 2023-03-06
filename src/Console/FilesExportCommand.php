@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use RZ\Roadiz\Core\Models\FileAwareInterface;
+use RZ\Roadiz\Documents\Models\FileAwareInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -22,11 +22,6 @@ class FilesExportCommand extends Command
     protected string $exportDir;
     protected string $appNamespace;
 
-    /**
-     * @param FileAwareInterface $fileAware
-     * @param string $exportDir
-     * @param string $appNamespace
-     */
     public function __construct(FileAwareInterface $fileAware, string $exportDir, string $appNamespace)
     {
         parent::__construct();
@@ -35,7 +30,7 @@ class FilesExportCommand extends Command
         $this->appNamespace = $appNamespace;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('files:export')
@@ -46,7 +41,7 @@ class FilesExportCommand extends Command
      * @param string $appName
      * @return string
      */
-    protected function getArchiveFileName(string $appName = "files_export")
+    protected function getArchiveFileName(string $appName = "files_export"): string
     {
         return $appName . '_' . date('Y-m-d') . '.zip';
     }
@@ -95,7 +90,7 @@ class FilesExportCommand extends Command
      * @param string $folder
      * @param string $prefix
      */
-    protected function zipFolder(ZipArchive $zip, string $folder, string $prefix = "/public")
+    protected function zipFolder(ZipArchive $zip, string $folder, string $prefix = "/public"): void
     {
         $finder = new Finder();
         $files = $finder->files()

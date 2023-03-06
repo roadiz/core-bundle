@@ -19,7 +19,7 @@ use Symfony\Component\Yaml\Yaml;
 
 class NodeTypeFieldValidator extends ConstraintValidator
 {
-    public function validate($value, Constraint $constraint)
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if ($value instanceof NodeTypeFieldEntity) {
             if ($value->isMarkdown()) {
@@ -43,7 +43,7 @@ class NodeTypeFieldValidator extends ConstraintValidator
      * @param NodeTypeFieldEntity $value
      * @param Constraint $constraint
      */
-    protected function validateJoinTypes(NodeTypeFieldEntity $value, Constraint $constraint)
+    protected function validateJoinTypes(NodeTypeFieldEntity $value, Constraint $constraint): void
     {
         try {
             $defaultValuesParsed = Yaml::parse($value->getDefaultValues() ?? '');
@@ -116,7 +116,7 @@ class NodeTypeFieldValidator extends ConstraintValidator
      *
      * @throws \ReflectionException
      */
-    protected function validateProviderTypes(NodeTypeFieldEntity $value, Constraint $constraint)
+    protected function validateProviderTypes(NodeTypeFieldEntity $value, Constraint $constraint): void
     {
         try {
             if (null === $value->getDefaultValues()) {
@@ -163,7 +163,7 @@ class NodeTypeFieldValidator extends ConstraintValidator
      * @param NodeTypeFieldEntity $value
      * @param Constraint $constraint
      */
-    protected function validateCollectionTypes(NodeTypeFieldEntity $value, Constraint $constraint)
+    protected function validateCollectionTypes(NodeTypeFieldEntity $value, Constraint $constraint): void
     {
         try {
             $defaultValuesParsed = Yaml::parse($value->getDefaultValues() ?? '');
@@ -205,7 +205,7 @@ class NodeTypeFieldValidator extends ConstraintValidator
     /**
      * @param NodeTypeFieldEntity $value
      */
-    protected function validateMarkdownOptions(NodeTypeFieldEntity $value)
+    protected function validateMarkdownOptions(NodeTypeFieldEntity $value): void
     {
         try {
             $options = Yaml::parse($value->getDefaultValues() ?? '');

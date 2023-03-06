@@ -121,4 +121,9 @@ final class Version20210423164248 extends AbstractMigration
             $this->addSql('ALTER TABLE tags_translations_documents RENAME INDEX tagtranslation_position TO IDX_6E886F1F22010F1462CE4F5');
         }
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

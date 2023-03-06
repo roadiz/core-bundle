@@ -6,99 +6,97 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
-use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
+use RZ\Roadiz\CoreBundle\Repository\WebhookRepository;
 use RZ\Roadiz\CoreBundle\Webhook\WebhookInterface;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Validator\Constraints\Length;
 
-/**
- * @package RZ\Roadiz\CoreBundle\Webhook\Entity
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\WebhookRepository")
- * @ORM\Table(name="webhooks", indexes={
- *  @ORM\Index(name="webhook_message_type", columns={"message_type"}),
- *  @ORM\Index(name="webhook_created_at", columns={"created_at"}),
- *  @ORM\Index(name="webhook_updated_at", columns={"updated_at"}),
- *  @ORM\Index(name="webhook_automatic", columns={"automatic"}),
- *  @ORM\Index(name="webhook_root_node", columns={"root_node"}),
- *  @ORM\Index(name="webhook_last_triggered_at", columns={"last_triggered_at"})
- * })
- * @ORM\HasLifecycleCallbacks
- */
+#[
+    ORM\Entity(repositoryClass: WebhookRepository::class),
+    ORM\Table(name: "webhooks"),
+    ORM\Index(columns: ["message_type"], name: "webhook_message_type"),
+    ORM\Index(columns: ["created_at"], name: "webhook_created_at"),
+    ORM\Index(columns: ["updated_at"], name: "webhook_updated_at"),
+    ORM\Index(columns: ["automatic"], name: "webhook_automatic"),
+    ORM\Index(columns: ["root_node"], name: "webhook_root_node"),
+    ORM\Index(columns: ["last_triggered_at"], name: "webhook_last_triggered_at"),
+    ORM\HasLifecycleCallbacks
+]
 class Webhook extends AbstractDateTimed implements WebhookInterface
 {
-    /**
-     * @var string|null
-     * @ORM\Id
-     * @ORM\Column(type="string", length=36)
-     * @ORM\GeneratedValue(strategy="UUID")
-     * @Serializer\Groups({"id"})
-     * @SymfonySerializer\Groups({"id"})
-     * @Serializer\Type("string")
-     */
-    protected $id = null;
+    #[
+        ORM\Id,
+        ORM\Column(type:"string", length:36),
+        ORM\GeneratedValue(strategy: "UUID"),
+        Serializer\Groups(["id"]),
+        SymfonySerializer\Groups(["id"]),
+        Serializer\Type("string")
+    ]
+    /** @phpstan-ignore-next-line */
+    protected int|string|null $id = null;
 
     /**
      * @var string|null
-     * @ORM\Column(type="text", nullable=true)
-     * @Serializer\Type("string")
-     * @Assert\NotBlank()
-     * @Assert\Length(min=1, max=250)
      */
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[Assert\NotBlank]
+    #[Assert\Length(min: 1, max: 250)]
+    #[Serializer\Type('string')]
     protected ?string $description = null;
 
     /**
      * @var string|null
-     * @ORM\Column(type="string", length=255, nullable=true, name="message_type")
-     * @Serializer\Type("string")
      */
+    #[ORM\Column(name: 'message_type', type: 'string', length: 255, nullable: true)]
+    #[Serializer\Type('string')]
     protected ?string $messageType = null;
 
     /**
      * @var string|null
-     * @ORM\Column(type="text", nullable=true)
-     * @Serializer\Type("string")
-     * @Assert\NotBlank()
-     * @Assert\Url()
      */
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[Assert\NotBlank]
+    #[Assert\Url]
+    #[Serializer\Type('string')]
     protected ?string $uri = null;
 
     /**
      * @var array|null
-     * @ORM\Column(type="json", nullable=true)
-     * @Serializer\Type("array")
      */
+    #[ORM\Column(type: 'json', nullable: true)]
+    #[Serializer\Type('array')]
     protected ?array $payload = null;
 
     /**
      * @var int Wait between webhook call and webhook triggering request.
-     * @ORM\Column(type="integer", nullable=false, name="throttleseconds")
-     * @Serializer\Type("int")
-     * @Assert\NotNull()
-     * @Assert\GreaterThan(value=0)
      */
+    #[ORM\Column(name: 'throttleseconds', type: 'integer', nullable: false)]
+    #[Assert\NotNull]
+    #[Assert\GreaterThan(value: 0)]
+    #[Serializer\Type('int')]
     protected int $throttleSeconds = 60;
 
     /**
      * @var \DateTime|null
-     * @ORM\Column(type="datetime", nullable=true, name="last_triggered_at")
-     * @Serializer\Type("\DateTime")
      */
+    #[ORM\Column(name: 'last_triggered_at', type: 'datetime', nullable: true)]
+    #[Serializer\Type('\DateTime')]
     protected ?\DateTime $lastTriggeredAt = null;
 
     /**
      * @var bool
-     * @ORM\Column(type="boolean", nullable=false, name="automatic", options={"default" = false})
-     * @Serializer\Type("boolean")
      */
+    #[ORM\Column(name: 'automatic', type: 'boolean', nullable: false, options: ['default' => false])]
+    #[Serializer\Type('boolean')]
     protected bool $automatic = false;
 
     /**
      * @var Node|null
-     * @ORM\ManyToOne(targetEntity="Node")
-     * @ORM\JoinColumn(name="root_node", onDelete="SET NULL")
-     * @SymfonySerializer\Ignore
      */
+    #[ORM\ManyToOne(targetEntity: Node::class)]
+    #[ORM\JoinColumn(name: 'root_node', onDelete: 'SET NULL')]
+    #[SymfonySerializer\Ignore]
     protected ?Node $rootNode = null;
 
     /**
@@ -267,8 +265,8 @@ class Webhook extends AbstractDateTimed implements WebhookInterface
         return $this;
     }
 
-    public function __toString()
+    public function __toString(): string
     {
-        return $this->getDescription() ?? $this->getId() ?? substr($this->getUri() ?? '', 0, 30);
+        return (string) $this->getId();
     }
 }

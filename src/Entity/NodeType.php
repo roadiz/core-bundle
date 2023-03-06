@@ -9,75 +9,158 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\CoreBundle\Form\Constraint as RoadizAssert;
+use RZ\Roadiz\CoreBundle\Repository\NodeTypeRepository;
 use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\Validator\Constraints as Assert;
-use RZ\Roadiz\CoreBundle\Form\Constraint as RoadizAssert;
 
 /**
  * NodeType describes each node structure family,
  * They are mandatory before creating any Node.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\NodeTypeRepository")
- * @ORM\Table(name="node_types", indexes={
- *     @ORM\Index(name="node_type_name", columns={"name"}),
- *     @ORM\Index(columns={"visible"}),
- *     @ORM\Index(columns={"publishable"}),
- *     @ORM\Index(columns={"hiding_nodes"}),
- *     @ORM\Index(columns={"hiding_non_reachable_nodes"}),
- *     @ORM\Index(columns={"reachable"}),
- *     @ORM\Index(columns={"searchable"}, name="nt_searchable")
- * })
- * @UniqueEntity(fields={"name"})
- * @UniqueEntity(fields={"displayName"})
  */
+#[
+    ORM\Entity(repositoryClass: NodeTypeRepository::class),
+    ORM\Table(name: "node_types"),
+    ORM\Index(columns: ["name"], name: "node_type_name"),
+    ORM\Index(columns: ["visible"]),
+    ORM\Index(columns: ["publishable"]),
+    ORM\Index(columns: ["hiding_nodes"]),
+    ORM\Index(columns: ["hiding_non_reachable_nodes"]),
+    ORM\Index(columns: ["reachable"]),
+    ORM\Index(columns: ["searchable"], name: "nt_searchable"),
+    UniqueEntity(fields: ["name"]),
+    UniqueEntity(fields: ["displayName"])
+]
 class NodeType extends AbstractEntity implements NodeTypeInterface
 {
-    /**
-     * @var string
-     * @ORM\Column(type="string", unique=true)
-     * @Serializer\Groups({"node_type", "node"})
-     * @SymfonySerializer\Groups({"node_type", "node"})
-     * @Serializer\Type("string")
-     * @Assert\NotNull()
-     * @Assert\NotBlank()
-     * @RoadizAssert\NonSqlReservedWord()
-     * @RoadizAssert\SimpleLatinString()
-     * @Assert\Length(max=250)
-     */
+    #[
+        ORM\Column(name: "color", type: "string", unique: false, nullable: true),
+        Serializer\Groups(["node_type", "color"]),
+        SymfonySerializer\Groups(["node_type", "color"]),
+        Serializer\Type("string")
+    ]
+    protected ?string $color = '#000000';
+    #[
+        ORM\Column(type: "string", unique: true),
+        Serializer\Groups(["node_type", "node"]),
+        SymfonySerializer\Groups(["node_type", "node"]),
+        Serializer\Type("string"),
+        Assert\NotNull(),
+        Assert\NotBlank(),
+        RoadizAssert\NonSqlReservedWord(),
+        RoadizAssert\SimpleLatinString(),
+        // Limit discriminator column to 30 characters for indexing optimization
+        Assert\Length(max: 30)
+    ]
     private string $name = '';
-
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
-    }
-    /**
-     * @param string|null $name
-     * @return $this
-     */
-    public function setName(?string $name): NodeType
-    {
-        $this->name = StringHandler::classify($name ?? '');
-        return $this;
-    }
-
-    /**
-     * @var string
-     * @ORM\Column(name="display_name", type="string")
-     * @Serializer\Groups({"node_type", "node"})
-     * @SymfonySerializer\Groups({"node_type", "node"})
-     * @Serializer\Type("string")
-     * @Assert\NotNull()
-     * @Assert\NotBlank()
-     * @Assert\Length(max=250)
-     */
+    #[
+        ORM\Column(name: "display_name", type: "string"),
+        Serializer\Groups(["node_type", "node"]),
+        SymfonySerializer\Groups(["node_type", "node"]),
+        Serializer\Type("string"),
+        Assert\NotNull(),
+        Assert\NotBlank(),
+        Assert\Length(max: 250)
+    ]
     private string $displayName = '';
+    #[
+        ORM\Column(type: "text", nullable: true),
+        Serializer\Groups(["node_type"]),
+        SymfonySerializer\Groups(["node_type"]),
+        Serializer\Type("string")
+    ]
+    private ?string $description = null;
+    #[
+        ORM\Column(type: "boolean", nullable: false, options: ["default" => true]),
+        Serializer\Groups(["node_type"]),
+        SymfonySerializer\Groups(["node_type"]),
+        Serializer\Type("boolean")
+    ]
+    private bool $visible = true;
+    #[
+        ORM\Column(type: "boolean", nullable: false, options: ["default" => false]),
+        Serializer\Groups(["node_type"]),
+        SymfonySerializer\Groups(["node_type"]),
+        Serializer\Type("boolean")
+    ]
+    private bool $publishable = false;
+    /**
+     * Define if this node-type produces nodes that will be
+     * viewable from a Controller.
+     *
+     * Typically, if a node has a URL.
+     */
+    #[
+        ORM\Column(name: "reachable", type: "boolean", nullable: false, options: ["default" => true]),
+        Serializer\Groups(["node_type"]),
+        SymfonySerializer\Groups(["node_type"]),
+        Serializer\Type("boolean")
+    ]
+    private bool $reachable = true;
+    #[
+        ORM\Column(name: "hiding_nodes", type: "boolean", nullable: false, options: ["default" => false]),
+        Serializer\Groups(["node_type"]),
+        SymfonySerializer\Groups(["node_type"]),
+        Serializer\Type("boolean")
+    ]
+    private bool $hidingNodes = false;
+    #[
+        ORM\Column(name: "hiding_non_reachable_nodes", type: "boolean", nullable: false, options: ["default" => false]),
+        Serializer\Groups(["node_type"]),
+        SymfonySerializer\Groups(["node_type"]),
+        Serializer\Type("boolean")
+    ]
+    private bool $hidingNonReachableNodes = false;
+    /**
+     * @var Collection<int, NodeTypeField>
+     */
+    #[
+        ORM\OneToMany(mappedBy: "nodeType", targetEntity: NodeTypeField::class, cascade: ["persist", "merge"]),
+        ORM\OrderBy(["position" => "ASC"]),
+        Serializer\Groups(["node_type"]),
+        SymfonySerializer\Groups(["node_type"]),
+        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\NodeTypeField>"),
+        Serializer\Accessor(getter: "getFields", setter: "setFields")
+    ]
+    private Collection $fields;
+    #[
+        ORM\Column(name: "default_ttl", type: "integer", nullable: false, options: ["default" => 0]),
+        Serializer\Groups(["node_type"]),
+        SymfonySerializer\Groups(["node_type"]),
+        Serializer\Type("int"),
+        Assert\GreaterThanOrEqual(value: 0)
+    ]
+    private int $defaultTtl = 0;
+    /**
+     * Define if this node-type title will be indexed during its parent indexation.
+     */
+    #[
+        ORM\Column(name: "searchable", type: "boolean", nullable: false, options: ["default" => true]),
+        Serializer\Groups(["node_type"]),
+        SymfonySerializer\Groups(["node_type"]),
+        Serializer\Type("boolean")
+    ]
+    private bool $searchable = true;
+
+    /**
+     * Create a new NodeType.
+     */
+    public function __construct()
+    {
+        $this->fields = new ArrayCollection();
+        $this->name = 'Untitled';
+        $this->displayName = 'Untitled node-type';
+    }
+
+    public function getLabel(): string
+    {
+        return $this->getDisplayName();
+    }
 
     /**
      * @return string
@@ -85,11 +168,6 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
     public function getDisplayName(): string
     {
         return $this->displayName;
-    }
-
-    public function getLabel(): string
-    {
-        return $this->getDisplayName();
     }
 
     /**
@@ -104,15 +182,6 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
     }
 
     /**
-     * @var string|null
-     * @ORM\Column(type="text", nullable=true)
-     * @Serializer\Groups({"node_type"})
-     * @SymfonySerializer\Groups({"node_type"})
-     * @Serializer\Type("string")
-     */
-    private ?string $description = null;
-
-    /**
      * @return string|null
      */
     public function getDescription(): ?string
@@ -124,20 +193,11 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
      * @param string|null $description
      * @return $this
      */
-    public function setDescription(?string $description = null)
+    public function setDescription(?string $description = null): NodeType
     {
         $this->description = $description;
         return $this;
     }
-
-    /**
-     * @var bool
-     * @ORM\Column(type="boolean", nullable=false, options={"default" = true})
-     * @Serializer\Groups({"node_type"})
-     * @SymfonySerializer\Groups({"node_type"})
-     * @Serializer\Type("boolean")
-     */
-    private bool $visible = true;
 
     /**
      * @return boolean
@@ -158,15 +218,6 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
     }
 
     /**
-     * @var bool
-     * @ORM\Column(type="boolean", nullable=false, options={"default" = false})
-     * @Serializer\Groups({"node_type"})
-     * @SymfonySerializer\Groups({"node_type"})
-     * @Serializer\Type("boolean")
-     */
-    private bool $publishable = false;
-
-    /**
      * @return bool
      */
     public function isPublishable(): bool
@@ -183,20 +234,6 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
         $this->publishable = $publishable;
         return $this;
     }
-
-    /**
-     * Define if this node-type produces nodes that will be
-     * viewable from a Controller.
-     *
-     * Typically, if a node has a URL.
-     *
-     * @var bool
-     * @ORM\Column(name="reachable", type="boolean", nullable=false, options={"default" = true})
-     * @Serializer\Groups({"node_type"})
-     * @SymfonySerializer\Groups({"node_type"})
-     * @Serializer\Type("boolean")
-     */
-    private bool $reachable = true;
 
     /**
      * @return bool
@@ -225,20 +262,13 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
     }
 
     /**
-     * @var bool
-     * @ORM\Column(name="hiding_nodes",type="boolean", nullable=false, options={"default" = false})
-     * @Serializer\Groups({"node_type"})
-     * @SymfonySerializer\Groups({"node_type"})
-     * @Serializer\Type("boolean")
-     */
-    private bool $hidingNodes = false;
-    /**
      * @return boolean
      */
     public function isHidingNodes(): bool
     {
         return $this->hidingNodes;
     }
+
     /**
      * @param boolean $hidingNodes
      *
@@ -249,15 +279,6 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
         $this->hidingNodes = $hidingNodes;
         return $this;
     }
-
-    /**
-     * @var bool
-     * @ORM\Column(name="hiding_non_reachable_nodes",type="boolean", nullable=false, options={"default" = false})
-     * @Serializer\Groups({"node_type"})
-     * @SymfonySerializer\Groups({"node_type"})
-     * @Serializer\Type("boolean")
-     */
-    private bool $hidingNonReachableNodes = false;
 
     /**
      * @return bool
@@ -277,15 +298,6 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
         $this->hidingNonReachableNodes = $hidingNonReachableNodes;
         return $this;
     }
-
-    /**
-     * @var string|null
-     * @ORM\Column(type="string", name="color", unique=false, nullable=true)
-     * @Serializer\Groups({"node_type", "color"})
-     * @SymfonySerializer\Groups({"node_type", "color"})
-     * @Serializer\Type("string")
-     */
-    protected ?string $color = '#000000';
 
     /**
      * Gets the value of color.
@@ -312,50 +324,6 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
     }
 
     /**
-     * @var ArrayCollection<NodeTypeField>
-     * @ORM\OneToMany(targetEntity="NodeTypeField", mappedBy="nodeType", cascade={"persist", "merge"})
-     * @ORM\OrderBy({"position" = "ASC"})
-     * @Serializer\Groups({"node_type"})
-     * @SymfonySerializer\Groups({"node_type"})
-     * @Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\NodeTypeField>")
-     * @Serializer\Accessor(getter="getFields", setter="setFields")
-     */
-    private Collection $fields;
-
-    /**
-     * @return Collection<NodeTypeField>
-     */
-    public function getFields(): Collection
-    {
-        return $this->fields;
-    }
-
-    /**
-     * @param ArrayCollection<NodeTypeField> $fields
-     *
-     * @return NodeType
-     */
-    public function setFields(ArrayCollection $fields): NodeType
-    {
-        $this->fields = $fields;
-        foreach ($this->fields as $field) {
-            $field->setNodeType($this);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @var int
-     * @ORM\Column(type="integer", name="default_ttl", nullable=false, options={"default" = 0})
-     * @Serializer\Groups({"node_type"})
-     * @SymfonySerializer\Groups({"node_type"})
-     * @Serializer\Type("int")
-     * @Assert\GreaterThanOrEqual(value=0)
-     */
-    private int $defaultTtl = 0;
-
-    /**
      * @return int
      */
     public function getDefaultTtl(): int
@@ -376,35 +344,6 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
     }
 
     /**
-     * Define if this node-type title will be indexed during its parent indexation.
-     *
-     * @var bool
-     * @ORM\Column(name="searchable", type="boolean", nullable=false, options={"default" = true})
-     * @Serializer\Groups({"node_type"})
-     * @SymfonySerializer\Groups({"node_type"})
-     * @Serializer\Type("boolean")
-     */
-    private bool $searchable = true;
-
-    /**
-     * @return bool
-     */
-    public function isSearchable(): bool
-    {
-        return $this->searchable;
-    }
-
-    /**
-     * @param bool $searchable
-     * @return NodeType
-     */
-    public function setSearchable(bool $searchable): NodeType
-    {
-        $this->searchable = $searchable;
-        return $this;
-    }
-
-    /**
      * @param string $name
      *
      * @return NodeTypeField|null
@@ -417,18 +356,60 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
         $field = $this->getFields()->matching($fieldCriteria)->first();
         return $field ?: null;
     }
+
+    /**
+     * @return Collection<int, NodeTypeField>
+     */
+    public function getFields(): Collection
+    {
+        return $this->fields;
+    }
+
+    /**
+     * @param Collection<int, NodeTypeField> $fields
+     *
+     * @return NodeType
+     */
+    public function setFields(Collection $fields): NodeType
+    {
+        $this->fields = $fields;
+        foreach ($this->fields as $field) {
+            $field->setNodeType($this);
+        }
+
+        return $this;
+    }
+
     /**
      * Get every node-type fields names in
      * a simple array.
      *
      * @return array
-     * @SymfonySerializer\Ignore
      */
+    #[SymfonySerializer\Ignore]
     public function getFieldsNames(): array
     {
         return array_map(function (NodeTypeField $field) {
             return $field->getName();
         }, $this->getFields()->toArray());
+    }
+
+    /**
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    /**
+     * @param string|null $name
+     * @return $this
+     */
+    public function setName(?string $name): NodeType
+    {
+        $this->name = StringHandler::classify($name ?? '');
+        return $this;
     }
 
     /**
@@ -461,41 +442,40 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
     }
 
     /**
-     * Create a new NodeType.
-     */
-    public function __construct()
-    {
-        $this->fields = new ArrayCollection();
-        $this->name = 'Untitled';
-        $this->displayName = 'Untitled node-type';
-    }
-
-    /**
-     * Get node-source entity class name without its namespace.
-     *
-     * @return string
-     * @SymfonySerializer\Ignore
-     */
-    public function getSourceEntityClassName(): string
-    {
-        return 'NS' . ucwords($this->getName());
-    }
-
-    /**
      * @return class-string<NodesSources>
-     * @SymfonySerializer\Ignore
      */
+    #[SymfonySerializer\Ignore]
     public function getSourceEntityFullQualifiedClassName(): string
     {
         return static::getGeneratedEntitiesNamespace() . '\\' . $this->getSourceEntityClassName();
     }
 
     /**
+     * @return string
+     */
+    #[SymfonySerializer\Ignore]
+    public static function getGeneratedEntitiesNamespace(): string
+    {
+        return 'App\\GeneratedEntity';
+    }
+
+    /**
+     * Get node-source entity class name without its namespace.
+     *
+     * @return string
+     */
+    #[SymfonySerializer\Ignore]
+    public function getSourceEntityClassName(): string
+    {
+        return 'NS' . ucwords($this->getName());
+    }
+
+    /**
      * Get node-source entity database table name.
      *
      * @return string
-     * @SymfonySerializer\Ignore
      */
+    #[SymfonySerializer\Ignore]
     public function getSourceEntityTableName(): string
     {
         return 'ns_' . strtolower($this->getName());
@@ -503,31 +483,40 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
 
     /**
      * @return string
-     * @SymfonySerializer\Ignore
-     */
-    public static function getGeneratedEntitiesNamespace(): string
-    {
-        return 'App\\GeneratedEntity';
-    }
-
-    /**
-     * @return string
      */
     public function __toString(): string
     {
-        return '[#' . $this->getId() . '] ' . $this->getName() . ' (' . $this->getDisplayName() . ')';
+        return (string) $this->getId();
     }
 
     /**
      * Get every searchable node-type fields as a Doctrine ArrayCollection.
      *
      * @return Collection
-     * @SymfonySerializer\Ignore
      */
+    #[SymfonySerializer\Ignore]
     public function getSearchableFields(): Collection
     {
         return $this->getFields()->filter(function (NodeTypeField $field) {
             return $field->isSearchable();
         });
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSearchable(): bool
+    {
+        return $this->searchable;
+    }
+
+    /**
+     * @param bool $searchable
+     * @return NodeType
+     */
+    public function setSearchable(bool $searchable): NodeType
+    {
+        $this->searchable = $searchable;
+        return $this;
     }
 }

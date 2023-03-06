@@ -27,7 +27,7 @@ abstract class FilterCacheEvent extends Event
      * @param string|null $classname
      * @param string|null $description
      */
-    public function addMessage(string $message, ?string $classname = null, ?string $description = null)
+    public function addMessage(string $message, ?string $classname = null, ?string $description = null): void
     {
         $this->messageCollection->add([
             "clearer" => $classname,
@@ -41,7 +41,7 @@ abstract class FilterCacheEvent extends Event
      * @param string|null $classname
      * @param string|null $description
      */
-    public function addError(string $message, ?string $classname = null, ?string $description = null)
+    public function addError(string $message, ?string $classname = null, ?string $description = null): void
     {
         $this->errorCollection->add([
             "clearer" => $classname,

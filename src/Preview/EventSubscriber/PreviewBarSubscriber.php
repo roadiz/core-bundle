@@ -44,7 +44,7 @@ class PreviewBarSubscriber implements EventSubscriberInterface
             $this->previewResolver->isPreview() &&
             $event->isMainRequest() &&
             $response->getStatusCode() === Response::HTTP_OK &&
-            false !== strpos($response->headers->get('Content-Type'), 'text/html')
+            str_contains($response->headers->get('Content-Type'), 'text/html')
         ) {
             return true;
         }
@@ -55,13 +55,13 @@ class PreviewBarSubscriber implements EventSubscriberInterface
     /**
      * @param ResponseEvent $event
      */
-    public function onKernelResponse(ResponseEvent $event)
+    public function onKernelResponse(ResponseEvent $event): void
     {
         if ($this->supports($event)) {
             $response = $event->getResponse();
             if (
-                false !== strpos($response->getContent(), '</body>') &&
-                false !== strpos($response->getContent(), '</head>')
+                str_contains($response->getContent(), '</body>') &&
+                str_contains($response->getContent(), '</head>')
             ) {
                 $content = str_replace(
                     '</head>',

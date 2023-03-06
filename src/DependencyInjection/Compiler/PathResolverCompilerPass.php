@@ -16,7 +16,7 @@ class PathResolverCompilerPass implements CompilerPassInterface
     /**
      * @inheritDoc
      */
-    public function process(ContainerBuilder $container)
+    public function process(ContainerBuilder $container): void
     {
         if ($container->has(ChainResourcePathResolver::class)) {
             $definition = $container->findDefinition(ChainResourcePathResolver::class);

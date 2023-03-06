@@ -30,4 +30,9 @@ final class Version20220525150545 extends AbstractMigration
         $this->addSql('ALTER TABLE realms_nodes DROP FOREIGN KEY FK_A6FCC99F9DFF5F89');
         $this->addSql('ALTER TABLE realms_nodes ADD CONSTRAINT FK_A6FCC99F9DFF5F89 FOREIGN KEY (realm_id) REFERENCES realms (id) ON UPDATE NO ACTION ON DELETE SET NULL');
     }
+
+    public function isTransactional(): bool
+    {
+        return false;
+    }
 }

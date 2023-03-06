@@ -6,51 +6,42 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
+use RZ\Roadiz\CoreBundle\Repository\NodesToNodesRepository;
 
 /**
  * Describes a complex ManyToMany relation
  * between two Nodes and NodeTypeFields.
- *
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\NodesToNodesRepository")
- * @ORM\Table(name="nodes_to_nodes", indexes={
- *     @ORM\Index(columns={"position"}),
- *     @ORM\Index(columns={"node_a_id", "node_type_field_id"}, name="node_a_field"),
- *     @ORM\Index(columns={"node_a_id", "node_type_field_id", "position"}, name="node_a_field_position"),
- *     @ORM\Index(columns={"node_b_id", "node_type_field_id"}, name="node_b_field"),
- *     @ORM\Index(columns={"node_b_id", "node_type_field_id", "position"}, name="node_b_field_position")
- * })
  */
+#[
+    ORM\Entity(repositoryClass: NodesToNodesRepository::class),
+    ORM\Table(name: "nodes_to_nodes"),
+    ORM\Index(columns: ["position"]),
+    ORM\Index(columns: ["node_a_id", "node_type_field_id"], name: "node_a_field"),
+    ORM\Index(columns: ["node_a_id", "node_type_field_id", "position"], name: "node_a_field_position"),
+    ORM\Index(columns: ["node_b_id", "node_type_field_id"], name: "node_b_field"),
+    ORM\Index(columns: ["node_b_id", "node_type_field_id", "position"], name: "node_b_field_position")
+]
 class NodesToNodes extends AbstractPositioned
 {
     /**
-     * @ORM\ManyToOne(
-     *     targetEntity="RZ\Roadiz\CoreBundle\Entity\Node",
-     *     inversedBy="bNodes",
-     *     fetch="EAGER",
-     *     cascade={"persist"}
-     * )
-     * @ORM\JoinColumn(name="node_a_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Node|null
      */
+    #[ORM\ManyToOne(targetEntity: Node::class, cascade: ['persist'], fetch: 'EAGER', inversedBy: 'bNodes')]
+    #[ORM\JoinColumn(name: 'node_a_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     protected ?Node $nodeA;
 
     /**
-     * @ORM\ManyToOne(
-     *     targetEntity="RZ\Roadiz\CoreBundle\Entity\Node",
-     *     inversedBy="aNodes",
-     *     fetch="EAGER",
-     *     cascade={"persist"}
-     * )
-     * @ORM\JoinColumn(name="node_b_id", referencedColumnName="id", onDelete="CASCADE")
      * @var Node|null
      */
+    #[ORM\ManyToOne(targetEntity: Node::class, cascade: ['persist'], fetch: 'EAGER', inversedBy: 'aNodes')]
+    #[ORM\JoinColumn(name: 'node_b_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     protected ?Node $nodeB;
 
     /**
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\NodeTypeField")
-     * @ORM\JoinColumn(name="node_type_field_id", referencedColumnName="id", onDelete="CASCADE")
      * @var NodeTypeField|null
      */
+    #[ORM\ManyToOne(targetEntity: NodeTypeField::class)]
+    #[ORM\JoinColumn(name: 'node_type_field_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     protected ?NodeTypeField $field;
 
     /**

@@ -6,121 +6,85 @@ namespace RZ\Roadiz\CoreBundle\Doctrine;
 
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Cache\Clearer\OPCacheClearer;
-use Symfony\Bundle\FrameworkBundle\Console\Application;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\BufferedOutput;
-use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\Process\Process;
 
 final class SchemaUpdater
 {
-    private KernelInterface $kernel;
     private LoggerInterface $logger;
     private OPCacheClearer $opCacheClearer;
+    private string $projectDir;
 
-    /**
-     * @param KernelInterface $kernel
-     * @param OPCacheClearer $opCacheClearer
-     * @param LoggerInterface $logger
-     */
     public function __construct(
-        KernelInterface $kernel,
         OPCacheClearer $opCacheClearer,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        string $projectDir
     ) {
-        $this->kernel = $kernel;
         $this->logger = $logger;
         $this->opCacheClearer = $opCacheClearer;
+        $this->projectDir = $projectDir;
     }
 
     public function clearMetadata(): void
     {
         $this->opCacheClearer->clear();
-        $input = new ArrayInput([
-            'command' => 'cache:pool:clear',
-            'pools' => [
-                'cache.app',
-                'cache.system',
-                'cache.validator',
-                'cache.serializer',
-                'cache.annotations',
-                'cache.property_info',
-                'cache.messenger.restart_workers_signal',
-            ],
-            '--no-interaction' => true,
-        ]);
-        $output = new BufferedOutput();
-        $exitCode = $this->createApplication()->run($input, $output);
-        $content = $output->fetch();
-        if ($exitCode === 0) {
-            $this->logger->info('Cleared cache pool.');
+
+        $process = $this->runCommand(
+            'doctrine:cache:clear-metadata',
+        );
+        $process->run();
+
+        if ($process->wait() === 0) {
+            $this->logger->info('Cleared Doctrine metadata cache.');
         } else {
-            throw new \RuntimeException('Cannot clear cache pool: ' . $content);
+            throw new \RuntimeException('Cannot clear Doctrine metadata cache. ' . $process->getErrorOutput());
         }
 
-        $input = new ArrayInput([
-            'command' => 'doctrine:cache:clear-result',
-            '--no-interaction' => true,
-            '--flush' => true,
-        ]);
-        $output = new BufferedOutput();
-        $exitCode = $this->createApplication()->run($input, $output);
-        $content = $output->fetch();
-        if ($exitCode === 0) {
-            $this->logger->info('Cleared all result cache for an entity manager.');
-        } else {
-            throw new \RuntimeException('Cannot clear result cache for an entity manager: ' . $content);
-        }
+        $process = $this->runCommand(
+            'messenger:stop-workers',
+        );
+        $process->run();
 
-        $input = new ArrayInput([
-            'command' => 'doctrine:cache:clear-metadata',
-            '--no-interaction' => true,
-            '--flush' => true,
-        ]);
-        $output = new BufferedOutput();
-        $exitCode = $this->createApplication()->run($input, $output);
-        $content = $output->fetch();
-        if ($exitCode === 0) {
-            $this->logger->info('Cleared all Metadata cache entries.');
+        if ($process->wait() === 0) {
+            $this->logger->info('Stop any running messenger worker to force them to restart');
         } else {
-            throw new \RuntimeException('Cannot clear all Metadata cache entries: ' . $content);
+            throw new \RuntimeException('Cannot stop messenger workers. ' . $process->getErrorOutput());
         }
     }
 
-    protected function createApplication(): Application
+    public function clearAllCaches(): void
     {
-        /*
-         * Very important, when using standard-edition,
-         * Kernel class is AppKernel or DevAppKernel.
-         */
-        $application = new Application($this->kernel);
-        $application->setAutoExit(false);
-        return $application;
+        $this->opCacheClearer->clear();
+
+        $process = $this->runCommand(
+            'cache:clear',
+        );
+        $process->run();
+
+        if ($process->wait() === 0) {
+            $this->logger->info('Cleared all caches.');
+        } else {
+            throw new \RuntimeException('Cannot clear cache. ' . $process->getErrorOutput());
+        }
     }
 
     /**
      * Update database schema using doctrine migration.
      *
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Exception
      */
     public function updateSchema(): void
     {
         $this->clearMetadata();
 
-        /*
-         * Execute pending application migrations
-         */
-        $input = new ArrayInput([
-            'command' => 'doctrine:migrations:migrate',
-            '--no-interaction' => true,
-            '--allow-no-migration' => true
-        ]);
-        $output = new BufferedOutput();
-        $exitCode = $this->createApplication()->run($input, $output);
-        $content = $output->fetch();
-        if ($exitCode === 0) {
-            $this->logger->info('Executed pending migrations.', ['migration' => $content]);
+        $process = $this->runCommand(
+            'doctrine:migrations:migrate',
+        );
+        $process->run();
+
+        if ($process->wait() === 0) {
+            $this->logger->info('Executed pending migrations.');
         } else {
-            throw new \RuntimeException('Migrations failed: ' . $content);
+            throw new \RuntimeException('Migrations failed. ' . $process->getErrorOutput());
         }
     }
 
@@ -138,19 +102,31 @@ final class SchemaUpdater
          * Update schema with new node-types
          * without creating any migration
          */
-        $input = new ArrayInput([
-            'command' => 'doctrine:schema:update',
-            '--dump-sql' => true,
-            '--force' => true,
-        ]);
-        $output = new BufferedOutput();
-        $exitCode = $this->createApplication()->run($input, $output);
-        $content = $output->fetch();
+        $process = $this->runCommand(
+            'doctrine:schema:update',
+            '--dump-sql --force',
+        );
+        $process->run();
 
-        if ($exitCode === 0) {
-            $this->logger->info('DB schema has been updated.', ['sql' => $content]);
+        if ($process->wait() === 0) {
+            $this->logger->info('DB schema has been updated.');
         } else {
-            throw new \RuntimeException('DB schema update failed: ' . $content);
+            throw new \RuntimeException('DB schema update failed. ' . $process->getErrorOutput());
         }
+    }
+
+    private function runCommand(
+        string $command,
+        string $args = ''
+    ): Process {
+        $args .= ' --no-interaction';
+        $args .= ' --quiet';
+
+        $process = Process::fromShellCommandline(
+            'php bin/console ' . $command  . ' ' . $args
+        );
+        $process->setWorkingDirectory($this->projectDir);
+        $process->setTty(false);
+        return $process;
     }
 }

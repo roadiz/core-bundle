@@ -4,47 +4,65 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
 use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueTrait;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueTranslationInterface;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
-use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
+use RZ\Roadiz\CoreBundle\Repository\AttributeValueRepository;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
-/**
- * @package RZ\Roadiz\CoreBundle\Entity
- * @ORM\Entity(repositoryClass="RZ\Roadiz\CoreBundle\Repository\AttributeValueRepository")
- * @ORM\Table(name="attribute_values", indexes={
- *     @ORM\Index(columns={"attribute_id", "node_id"})
- * })
- * @ORM\HasLifecycleCallbacks
- */
+#[
+    ORM\Entity(repositoryClass: AttributeValueRepository::class),
+    ORM\Table(name: "attribute_values"),
+    ORM\Index(columns: ["attribute_id", "node_id"]),
+    ORM\HasLifecycleCallbacks,
+    ApiFilter(PropertyFilter::class)
+]
 class AttributeValue extends AbstractPositioned implements AttributeValueInterface
 {
     use AttributeValueTrait;
 
     /**
      * @var Node|null
-     * @ORM\ManyToOne(targetEntity="RZ\Roadiz\CoreBundle\Entity\Node", inversedBy="attributeValues")
-     * @ORM\JoinColumn(name="node_id", onDelete="CASCADE")
-     * @ApiFilter(BaseFilter\SearchFilter::class, properties={
-     *     "node.id": "exact",
-     *     "node.nodeName": "exact"
-     * })
-     * @ApiFilter(BaseFilter\BooleanFilter::class, properties={
-     *     "node.visible"
-     * })
-     * @Serializer\Exclude
      */
+    #[
+        ORM\ManyToOne(targetEntity: Node::class, inversedBy: "attributeValues"),
+        ORM\JoinColumn(name: "node_id", onDelete: "CASCADE"),
+        Serializer\Groups(["attribute_node"]),
+        SymfonySerializer\Groups(["attribute_node"]),
+        SymfonySerializer\MaxDepth(1),
+        ApiFilter(BaseFilter\SearchFilter::class, properties: [
+            "node" => "exact",
+            "node.id" => "exact",
+            "node.nodeName" => "exact"
+        ]),
+        ApiFilter(BaseFilter\BooleanFilter::class, properties: [
+            "node.visible"
+        ])
+    ]
     protected ?Node $node = null;
 
     public function __construct()
     {
         $this->attributeValueTranslations = new ArrayCollection();
+    }
+
+    /*
+     * Override method to add serialization groups and
+     * enable RZ\Roadiz\CoreBundle\Serializer\Normalizer\AttributeValueNormalizer
+     * to perform a custom serialization
+     */
+    #[SymfonySerializer\Groups(['position', 'attribute', 'node_attributes'])]
+    public function getPosition(): float
+    {
+        return $this->position;
     }
 
     /**

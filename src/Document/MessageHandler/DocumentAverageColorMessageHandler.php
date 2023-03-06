@@ -7,12 +7,12 @@ namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 use Doctrine\Persistence\ManagerRegistry;
 use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManager;
+use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
-use RZ\Roadiz\Core\Models\DocumentInterface;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
-use RZ\Roadiz\CoreBundle\Entity\Document;
-use RZ\Roadiz\Utils\Asset\Packages;
-use RZ\Roadiz\Utils\Document\AverageColorResolver;
+use RZ\Roadiz\Documents\AverageColorResolver;
+use RZ\Roadiz\Documents\Models\AdvancedDocumentInterface;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 final class DocumentAverageColorMessageHandler extends AbstractLockingDocumentMessageHandler
 {
@@ -21,10 +21,10 @@ final class DocumentAverageColorMessageHandler extends AbstractLockingDocumentMe
     public function __construct(
         ManagerRegistry $managerRegistry,
         LoggerInterface $messengerLogger,
-        Packages $packages,
+        FilesystemOperator $documentsStorage,
         ImageManager $imageManager
     ) {
-        parent::__construct($managerRegistry, $messengerLogger, $packages);
+        parent::__construct($managerRegistry, $messengerLogger, $documentsStorage);
         $this->imageManager = $imageManager;
     }
 
@@ -37,17 +37,26 @@ final class DocumentAverageColorMessageHandler extends AbstractLockingDocumentMe
         return $document->isLocal() && $document->isProcessable();
     }
 
-    protected function processMessage(AbstractDocumentMessage $message, Document $document): void
+    /**
+     * @param AbstractDocumentMessage $message
+     * @param DocumentInterface $document
+     * @return void
+     * @throws \League\Flysystem\FilesystemException
+     */
+    protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
-        $documentPath = $this->packages->getDocumentFilePath($document);
+        if (!$document instanceof AdvancedDocumentInterface) {
+            return;
+        }
+        $documentStream = $this->documentsStorage->readStream($document->getMountPath());
         try {
-            $mediumColor = (new AverageColorResolver())->getAverageColor($this->imageManager->make($documentPath));
+            $mediumColor = (new AverageColorResolver())->getAverageColor($this->imageManager->make($documentStream));
             $document->setImageAverageColor($mediumColor);
         } catch (NotReadableException $exception) {
             $this->logger->warning(
                 'Document file is not a readable image.',
                 [
-                    'path' => $documentPath,
+                    'path' => $document->getMountPath(),
                     'message' => $exception->getMessage()
                 ]
             );

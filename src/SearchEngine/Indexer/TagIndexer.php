@@ -9,7 +9,7 @@ use Solarium\Exception\HttpException;
 
 final class TagIndexer extends NodesSourcesIndexer
 {
-    public function index($id): void
+    public function index(mixed $id): void
     {
         try {
             $tag = $this->managerRegistry->getRepository(Tag::class)->find($id);
@@ -41,7 +41,7 @@ final class TagIndexer extends NodesSourcesIndexer
         }
     }
 
-    public function delete($id): void
+    public function delete(mixed $id): void
     {
         // Just reindex all linked NS to get rid of tag
         $this->index($id);
