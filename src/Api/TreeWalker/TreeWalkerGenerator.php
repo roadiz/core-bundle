@@ -54,7 +54,7 @@ final class TreeWalkerGenerator
         ]);
 
         foreach ($roots as $root) {
-            $walkerName = (new UnicodeString($root->getNode()?->getNodeName() . ' walker'))
+            $walkerName = (new UnicodeString($root->getNode()->getNodeName() . ' walker'))
                 ->trim()
                 ->camel()
                 ->toString();
