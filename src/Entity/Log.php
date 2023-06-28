@@ -16,7 +16,10 @@ use Symfony\Component\Validator\Constraints as Assert;
     ORM\Entity(repositoryClass: LogRepository::class),
     ORM\Table(name: "log"),
     ORM\Index(columns: ["datetime"]),
-    ORM\Index(columns: ["node_source_id", "datetime"], name: "log_ns_datetime"),
+    ORM\Index(columns: ["entity_class"]),
+    ORM\Index(columns: ["entity_class", "entity_id"]),
+    ORM\Index(columns: ["entity_class", "datetime"], name: "log_entity_class_datetime"),
+    ORM\Index(columns: ["entity_class", "entity_id", "datetime"], name: "log_entity_class_id_datetime"),
     ORM\Index(columns: ["username", "datetime"], name: "log_username_datetime"),
     ORM\Index(columns: ["user_id", "datetime"], name: "log_user_datetime"),
     ORM\Index(columns: ["level", "datetime"], name: "log_level_datetime"),
@@ -38,11 +41,11 @@ class Log extends AbstractEntity
     public const DEBUG =     Logger::DEBUG;
     public const LOG =       Logger::INFO;
 
-    #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', unique: false, onDelete: 'SET NULL')]
+    #[ORM\Column(name: 'user_id', type: 'string', length: 36, unique: false, nullable: true)]
     #[SymfonySerializer\Groups(['log_user'])]
     #[Serializer\Groups(['log_user'])]
-    protected ?User $user = null;
+    // @phpstan-ignore-next-line
+    protected int|string|null $userId = null;
 
     #[ORM\Column(name: 'username', type: 'string', length: 255, nullable: true)]
     #[SymfonySerializer\Groups(['log_user'])]
@@ -65,12 +68,6 @@ class Log extends AbstractEntity
     #[Serializer\Groups(['log'])]
     protected \DateTime $datetime;
 
-    #[ORM\ManyToOne(targetEntity: NodesSources::class, inversedBy: 'logs')]
-    #[ORM\JoinColumn(name: 'node_source_id', referencedColumnName: 'id', onDelete: 'SET NULL')]
-    #[SymfonySerializer\Groups(['log_sources'])]
-    #[Serializer\Groups(['log_sources'])]
-    protected ?NodesSources $nodeSource = null;
-
     #[ORM\Column(name: 'client_ip', type: 'string', length: 46, unique: false, nullable: true)]
     #[SymfonySerializer\Groups(['log'])]
     #[Serializer\Groups(['log'])]
@@ -82,6 +79,26 @@ class Log extends AbstractEntity
     #[Serializer\Groups(['log'])]
     #[Assert\Length(max: 64)]
     protected ?string $channel = null;
+
+    /**
+     * @var class-string|null
+     */
+    #[ORM\Column(name: 'entity_class', type: 'string', length: 255, unique: false, nullable: true)]
+    #[SymfonySerializer\Groups(['log'])]
+    #[Serializer\Groups(['log'])]
+    #[Assert\Length(max: 255)]
+    // @phpstan-ignore-next-line
+    protected ?string $entityClass = null;
+
+    /**
+     * @var string|int|null
+     */
+    #[ORM\Column(name: 'entity_id', type: 'string', length: 36, unique: false, nullable: true)]
+    #[SymfonySerializer\Groups(['log'])]
+    #[Serializer\Groups(['log'])]
+    #[Assert\Length(max: 36)]
+    // @phpstan-ignore-next-line
+    protected string|int|null $entityId = null;
 
     #[ORM\Column(name: 'additional_data', type: 'json', unique: false, nullable: true)]
     #[SymfonySerializer\Groups(['log'])]
@@ -101,9 +118,22 @@ class Log extends AbstractEntity
         $this->datetime = new \DateTime("now");
     }
 
-    public function getUser(): ?User
+    /**
+     * @return int|string|null
+     */
+    public function getUserId(): int|string|null
     {
-        return $this->user;
+        return $this->userId;
+    }
+
+    /**
+     * @param int|string|null $userId
+     * @return Log
+     */
+    public function setUserId(int|string|null $userId): Log
+    {
+        $this->userId = $userId;
+        return $this;
     }
 
     /**
@@ -113,7 +143,7 @@ class Log extends AbstractEntity
      */
     public function setUser(User $user): Log
     {
-        $this->user = $user;
+        $this->userId = $user->getId();
         $this->username = $user->getUsername();
         return $this;
     }
@@ -163,27 +193,22 @@ class Log extends AbstractEntity
     }
 
     /**
-     * Get log related node-source.
+     * BC setter.
      *
-     * @return NodesSources|null
-     */
-    public function getNodeSource(): ?NodesSources
-    {
-        return $this->nodeSource;
-    }
-
-    /**
      * @param NodesSources|null $nodeSource
      * @return $this
      */
     public function setNodeSource(?NodesSources $nodeSource): Log
     {
-        $this->nodeSource = $nodeSource;
+        if (null !== $nodeSource) {
+            $this->entityClass = NodesSources::class;
+            $this->entityId = $nodeSource->getId();
+        }
         return $this;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getClientIp(): ?string
     {
@@ -191,7 +216,7 @@ class Log extends AbstractEntity
     }
 
     /**
-     * @param string $clientIp
+     * @param string|null $clientIp
      * @return Log
      */
     public function setClientIp(?string $clientIp): Log
@@ -237,6 +262,42 @@ class Log extends AbstractEntity
     {
         $this->channel = $channel;
 
+        return $this;
+    }
+
+    /**
+     * @return class-string|null
+     */
+    public function getEntityClass(): ?string
+    {
+        return $this->entityClass;
+    }
+
+    /**
+     * @param class-string|null $entityClass
+     * @return Log
+     */
+    public function setEntityClass(?string $entityClass): Log
+    {
+        $this->entityClass = $entityClass;
+        return $this;
+    }
+
+    /**
+     * @return int|string|null
+     */
+    public function getEntityId(): int|string|null
+    {
+        return $this->entityId;
+    }
+
+    /**
+     * @param int|string|null $entityId
+     * @return Log
+     */
+    public function setEntityId(int|string|null $entityId): Log
+    {
+        $this->entityId = $entityId;
         return $this;
     }
 
