@@ -242,7 +242,6 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
     protected function buildQuery($q, array &$args, $searchTags = false, $proximity = 10000000)
     {
         $q = null !== $q ? trim($q) : '';
-        $singleWord = $this->isQuerySingleWord($q);
         $titleField = $this->getTitleField($args);
         $collectionField = $this->getCollectionField($args);
         $tagsField = $this->getTagsField($args);
@@ -265,13 +264,6 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
          * Only escape exact query
          */
         $exactQuery = $this->escapeQuery($q);
-        if (!$singleWord) {
-            /*
-             * adds quotes if multi word exact query
-             */
-            $exactQuery = '"' . $exactQuery . '"';
-        }
-
         /*
          * Search in node-sources tags name…
          */
