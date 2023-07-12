@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\ORM\NonUniqueResultException;
-use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\UserLogEntry;
-use RZ\Roadiz\CoreBundle\Repository\UserLogEntryRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -71,15 +68,6 @@ EOT
         return 0;
     }
 
-    private function getRepository(): UserLogEntryRepository
-    {
-        return $this->managerRegistry->getRepository(UserLogEntry::class);
-    }
-
-    /**
-     * @throws NonUniqueResultException
-     * @throws NoResultException
-     */
     private function purgeByDate(InputInterface $input, OutputInterface $output): void
     {
         $io = new SymfonyStyle($input, $output);
@@ -89,7 +77,13 @@ EOT
         if ($dateTime >= new \DateTime()) {
             throw new \InvalidArgumentException('Before date must be in the past.');
         }
-        $count = $this->getRepository()->countAllBeforeLoggedIn($dateTime);
+        $qb = $em->getRepository(UserLogEntry::class)->createQueryBuilder('l');
+        $count = $qb->select($qb->expr()->countDistinct('l'))
+            ->where($qb->expr()->lt('l.loggedAt', ':loggedAt'))
+            ->setParameter('loggedAt', $dateTime)
+            ->getQuery()
+            ->getSingleScalarResult()
+        ;
         $question = new ConfirmationQuestion(sprintf(
             'Do you want to purge <info>%s</info> version(s) before <info>%s</info>?',
             $count,
@@ -100,13 +94,20 @@ EOT
                 $question
             )
         ) {
-            $result = $this->getRepository()->deleteAllBeforeLoggedIn($dateTime);
+            $qb = $em->getRepository(UserLogEntry::class)->createQueryBuilder('l');
+            $result = $qb->delete(UserLogEntry::class, 'l')
+                ->where($qb->expr()->lt('l.loggedAt', ':loggedAt'))
+                ->setParameter('loggedAt', $dateTime)
+                ->getQuery()
+                ->execute()
+            ;
             $io->success(sprintf('%s version(s) were deleted.', $result));
         }
     }
 
     private function purgeByCount(InputInterface $input, OutputInterface $output): void
     {
+        $deleteCount = 0;
         $io = new SymfonyStyle($input, $output);
         $count = (int) $input->getOption('count');
         $em = $this->managerRegistry->getManagerForClass(UserLogEntry::class);
@@ -120,7 +121,30 @@ EOT
                 $question
             )
         ) {
-            $deleteCount = $this->getRepository()->deleteAllExceptCount($count);
+            $qb = $em->getRepository(UserLogEntry::class)->createQueryBuilder('l');
+            $objects = $qb->select('MAX(l.version) as maxVersion', 'l.objectId', 'l.objectClass')
+                ->groupBy('l.objectId', 'l.objectClass')
+                ->getQuery()
+                ->getArrayResult()
+            ;
+            $deleteQuery = $qb->delete(UserLogEntry::class, 'l')
+                ->andWhere($qb->expr()->eq('l.objectId', ':objectId'))
+                ->andWhere($qb->expr()->eq('l.objectClass', ':objectClass'))
+                ->andWhere($qb->expr()->lt('l.version', ':lowestVersion'))
+                ->getQuery()
+            ;
+
+            foreach ($objects as $object) {
+                $lowestVersion = (int) $object['maxVersion'] - $count;
+                if ($lowestVersion > 1) {
+                    $deleteCount += $deleteQuery->execute([
+                        'objectId' => $object['objectId'],
+                        'objectClass' => $object['objectClass'],
+                        'lowestVersion' => $lowestVersion
+                    ]);
+                }
+            }
+
             $io->success(sprintf('%s version(s) were deleted.', $deleteCount));
         }
     }
