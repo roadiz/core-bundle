@@ -26,6 +26,7 @@
         "api-platform/core": "~2.6.8",
         "doctrine/annotations": "^1.0",
         "doctrine/doctrine-bundle": "<2.8.1",
+        "doctrine/dbal": "<3.0.0",
         "doctrine/doctrine-migrations-bundle": "^3.1",
         "doctrine/orm": "^2.12.2",
         "gedmo/doctrine-extensions": "~3.10.0",
