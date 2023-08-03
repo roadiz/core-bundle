@@ -1,3 +1,10 @@
+## [2.0.46 (2023-08-03)](https://github.com/roadiz/core-bundle/compare/2.0.45...2.0.46)
+
+
+### Bug Fixes
+
+* **Doctrine:** Prevent upgrading `doctrine/doctrine-bundle` after 2.8.0 (https://github.com/doctrine/DoctrineBundle/issues/1693) ([5c2a422](https://github.com/roadiz/core-bundle/commit/5c2a422f890ddb04b63ba6b62155bb17b5e627ba))
+
 ## [2.0.45 (2023-07-06)](https://github.com/roadiz/core-bundle/compare/2.0.44...2.0.45)
 
 
