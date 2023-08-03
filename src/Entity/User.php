@@ -24,15 +24,10 @@ use RZ\Roadiz\CoreBundle\Form\Constraint\ValidFacebookName;
 #[
     ORM\Entity(repositoryClass: UserRepository::class),
     ORM\Table(name: "users"),
-    ORM\Index(columns: ["username"], name: "idx_users_username"),
-    ORM\Index(columns: ["email"], name: "idx_users_email"),
-    ORM\Index(columns: ["enabled"], name: "idx_users_enabled"),
-    ORM\Index(columns: ["credentials_expires_at"], name: "idx_users_credentials_expires_at"),
-    ORM\Index(columns: ["password_requested_at"], name: "idx_users_password_requested_at"),
-    ORM\Index(columns: ["expires_at"], name: "idx_users_expires_at"),
-    ORM\Index(columns: ["last_login"], name: "idx_users_last_login"),
-    ORM\Index(columns: ["locked"], name: "idx_users_locked"),
-    ORM\Index(columns: ["locale"], name: "idx_users_locale"),
+    ORM\Index(columns: ["enabled"]),
+    ORM\Index(columns: ["expired"]),
+    ORM\Index(columns: ["expires_at"]),
+    ORM\Index(columns: ["locale"]),
     ORM\HasLifecycleCallbacks,
     UniqueEntity("email"),
     UniqueEntity("username")
@@ -191,6 +186,14 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      */
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
     #[SymfonySerializer\Groups(['user_security'])]
+    private bool $expired = false;
+
+    /**
+     * @var boolean
+     * @Serializer\Groups({"user_security"})
+     */
+    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
+    #[SymfonySerializer\Groups(['user_security'])]
     private bool $locked = false;
 
     /**
@@ -200,6 +203,14 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[ORM\Column(name: 'credentials_expires_at', type: 'datetime', nullable: true)]
     #[SymfonySerializer\Groups(['user_security'])]
     private ?\DateTime $credentialsExpiresAt = null;
+
+    /**
+     * @var boolean
+     * @Serializer\Groups({"user_security"})
+     */
+    #[ORM\Column(name: 'credentials_expired', type: 'boolean', nullable: false, options: ['default' => false])]
+    #[SymfonySerializer\Groups(['user_security'])]
+    private bool $credentialsExpired = false;
 
     /**
      * @Serializer\Groups({"user_security"})
@@ -410,7 +421,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     }
 
     /**
-     * @return \DateTime|null $lastLogin
+     * @return \DateTime $lastLogin
      */
     public function getLastLogin(): ?\DateTime
     {
@@ -430,7 +441,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     /**
      * Get random string sent to the user email address in order to verify it.
      *
-     * @return string|null
+     * @return string
      */
     public function getConfirmationToken(): ?string
     {
@@ -514,7 +525,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     /**
      * Get roles entities
      *
-     * @return Collection|null
+     * @return Collection
      */
     public function getRolesEntities(): ?Collection
     {
@@ -625,6 +636,27 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     }
 
     /**
+     * Return strictly forced expiration status.
+     *
+     * @return boolean
+     */
+    public function getExpired(): bool
+    {
+        return $this->expired;
+    }
+
+    /**
+     * @param boolean $expired
+     * @return $this
+     */
+    public function setExpired(bool $expired): User
+    {
+        $this->expired = $expired;
+
+        return $this;
+    }
+
+    /**
      * Checks whether the user's account has expired.
      *
      * Combines expiresAt date-time limit AND expired boolean value.
@@ -641,7 +673,14 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[SymfonySerializer\Groups(['user_security'])]
     public function isAccountNonExpired(): bool
     {
-        return $this->expiresAt === null || $this->expiresAt->getTimestamp() > time();
+        if (
+            $this->expiresAt !== null &&
+            $this->expiresAt->getTimestamp() < time()
+        ) {
+            return false;
+        }
+
+        return !$this->expired;
     }
 
     /**
@@ -690,7 +729,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     }
 
     /**
-     * @return \DateTime|null
+     * @return \DateTime
      */
     public function getCredentialsExpiresAt(): ?\DateTime
     {
@@ -705,6 +744,47 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     public function setCredentialsExpiresAt(?\DateTime $date = null): User
     {
         $this->credentialsExpiresAt = $date;
+
+        return $this;
+    }
+
+    /**
+     * Return strictly forced credential expiration status.
+     *
+     * @return boolean
+     */
+    public function getCredentialsExpired(): bool
+    {
+        return $this->credentialsExpired;
+    }
+
+    /**
+     * @param boolean $credentialsExpired
+     * @return $this
+     */
+    public function setCredentialsExpired(bool $credentialsExpired): User
+    {
+        $this->credentialsExpired = $credentialsExpired;
+
+        return $this;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getExpiresAt(): ?\DateTime
+    {
+        return $this->expiresAt;
+    }
+
+    /**
+     * @param \DateTime|null $date
+     *
+     * @return User
+     */
+    public function setExpiresAt(?\DateTime $date = null): User
+    {
+        $this->expiresAt = $date;
 
         return $this;
     }
@@ -796,25 +876,14 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[SymfonySerializer\Ignore]
     public function isCredentialsNonExpired(): bool
     {
-        return $this->credentialsExpiresAt === null || $this->credentialsExpiresAt->getTimestamp() > time();
-    }
+        if (
+            $this->credentialsExpiresAt !== null &&
+            $this->credentialsExpiresAt->getTimestamp() < time()
+        ) {
+            return false;
+        }
 
-    /**
-     * @return \DateTime|null
-     */
-    public function getExpiresAt(): ?\DateTime
-    {
-        return $this->expiresAt;
-    }
-
-    /**
-     * @param \DateTime|null $expiresAt
-     * @return User
-     */
-    public function setExpiresAt(?\DateTime $expiresAt): User
-    {
-        $this->expiresAt = $expiresAt;
-        return $this;
+        return !$this->credentialsExpired;
     }
 
     /**
@@ -883,8 +952,10 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
             $this->roleEntities,
             $this->groups,
             // needed for advancedUserinterface
+            $this->expired,
             $this->expiresAt,
             $this->locked,
+            $this->credentialsExpired,
             $this->credentialsExpiresAt,
         ];
     }
@@ -900,8 +971,10 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
             $this->email,
             $this->roleEntities,
             $this->groups,
+            $this->expired,
             $this->expiresAt,
             $this->locked,
+            $this->credentialsExpired,
             $this->credentialsExpiresAt,
         ] = $data;
     }

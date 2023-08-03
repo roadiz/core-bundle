@@ -25,7 +25,6 @@ security:
             pattern: ^/api
             stateless: true
             provider: all_users
-            user_checker: RZ\Roadiz\CoreBundle\Security\UserChecker
             login_throttling:
                 max_attempts: 3
             json_login:
@@ -47,7 +46,6 @@ security:
         main:
             lazy: true
             provider: all_users
-            user_checker: RZ\Roadiz\CoreBundle\Security\UserChecker
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#firewalls-authentication
