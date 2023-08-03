@@ -1,3 +1,10 @@
+## [2.0.47 (2023-08-03)](https://github.com/roadiz/core-bundle/compare/2.0.46...2.0.47)
+
+
+### Bug Fixes
+
+* **Doctrine:** Do not upgrade to doctrine/dbal 3 due to UUID removal ([3e66755](https://github.com/roadiz/core-bundle/commit/3e66755ad5c8924aa5e2f2c354373e351bb9d388))
+
 ## [2.0.46 (2023-08-03)](https://github.com/roadiz/core-bundle/compare/2.0.45...2.0.46)
 
 
