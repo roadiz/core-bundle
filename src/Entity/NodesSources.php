@@ -130,6 +130,9 @@ class NodesSources extends AbstractEntity implements Loggable
     #[ApiFilter(BaseFilter\NumericFilter::class, properties: [
         "node.position",
     ])]
+    #[ApiFilter(BaseFilter\RangeFilter::class, properties: [
+        "node.position",
+    ])]
     #[ApiFilter(BaseFilter\DateFilter::class, properties: [
         "node.createdAt",
         "node.updatedAt"
@@ -638,6 +641,7 @@ class NodesSources extends AbstractEntity implements Loggable
      * @return array
      */
     #[Serializer\Groups(['node_listing'])]
+    #[SymfonySerializer\Groups(['node_listing'])]
     public function getListingSortOptions(): array
     {
         return match ($this->getNode()->getChildrenOrder()) {
