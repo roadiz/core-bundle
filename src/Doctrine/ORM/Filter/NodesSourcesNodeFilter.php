@@ -30,7 +30,7 @@ class NodesSourcesNodeFilter implements EventSubscriberInterface
      */
     protected function supports(QueryBuilderNodesSourcesBuildEvent $event): bool
     {
-        return $event->supports() && false !== strpos($event->getProperty(), 'node.');
+        return $event->supports() && false !== \mb_strpos($event->getProperty(), 'node.');
     }
 
     /**

@@ -175,10 +175,10 @@ final class DocumentRepository extends EntityRepository
             /*
              * Search in translation fields
              */
-            if (false !== strpos($key, 'translation.')) {
+            if (false !== \mb_strpos($key, 'translation.')) {
                 $prefix = 't.';
                 $key = str_replace('translation.', '', $key);
-            } elseif (false !== strpos($key, 'documentTranslations.')) {
+            } elseif (false !== \mb_strpos($key, 'documentTranslations.')) {
                 /*
                  * Search in translation fields
                  */

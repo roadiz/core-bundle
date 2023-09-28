@@ -601,19 +601,19 @@ final class TagRepository extends EntityRepository
                 // Dots are forbidden in field definitions
                 $baseKey = $simpleQB->getParameterKey($key);
 
-                if (false !== strpos($key, 'translation.')) {
+                if (false !== \mb_strpos($key, 'translation.')) {
                     /*
                      * Search in translation fields
                      */
                     $prefix = static::TRANSLATION_ALIAS . '.';
                     $key = str_replace('translation.', '', $key);
-                } elseif (false !== strpos($key, 'nodes.')) {
+                } elseif (false !== \mb_strpos($key, 'nodes.')) {
                     /*
                      * Search in node fields
                      */
                     $prefix = static::NODE_ALIAS . '.';
                     $key = str_replace('nodes.', '', $key);
-                } elseif (false !== strpos($key, 'translatedTag.')) {
+                } elseif (false !== \mb_strpos($key, 'translatedTag.')) {
                     /*
                      * Search in translatedTags fields
                      */

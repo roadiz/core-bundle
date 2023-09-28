@@ -37,7 +37,7 @@ class NodeTranslationFilter implements EventSubscriberInterface
     {
         return $event->supports() &&
             $event->getActualEntityName() === Node::class &&
-            false !== strpos($event->getProperty(), 'translation');
+            false !== \mb_strpos($event->getProperty(), 'translation');
     }
 
     /**
@@ -47,7 +47,7 @@ class NodeTranslationFilter implements EventSubscriberInterface
     {
         if ($this->supports($event)) {
             $simpleQB = new SimpleQueryBuilder($event->getQueryBuilder());
-            if (false !== strpos($event->getProperty(), 'translation.')) {
+            if (false !== \mb_strpos($event->getProperty(), 'translation.')) {
                 // Prevent other query builder filters to execute
                 $event->stopPropagation();
                 $qb = $event->getQueryBuilder();

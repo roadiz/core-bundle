@@ -255,7 +255,7 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
             /*
              * Do not fuzz short words: Solr crashes
              */
-            if (strlen($word) > 3) {
+            if (\mb_strlen($word) > 3) {
                 return $this->escapeQuery($word) . '~' . $proximity;
             }
             return $this->escapeQuery($word);

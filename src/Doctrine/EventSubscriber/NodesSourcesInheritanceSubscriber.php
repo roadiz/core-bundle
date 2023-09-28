@@ -69,7 +69,7 @@ final class NodesSourcesInheritanceSubscriber implements EventSubscriber
                 $nodeTypes = $this->nodeTypes->all();
                 $map = [];
                 foreach ($nodeTypes as $type) {
-                    $map[strtolower($type->getName())] = $type->getSourceEntityFullQualifiedClassName();
+                    $map[\mb_strtolower($type->getName())] = $type->getSourceEntityFullQualifiedClassName();
                 }
                 $metadata->setDiscriminatorMap($map);
 

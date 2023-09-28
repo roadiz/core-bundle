@@ -55,7 +55,7 @@ class ANodesFilter implements EventSubscriberInterface
     {
         if ($event->supports() && $event->getActualEntityName() === Node::class) {
             $simpleQB = new SimpleQueryBuilder($event->getQueryBuilder());
-            if (false !== strpos($event->getProperty(), $this->getProperty() . '.')) {
+            if (false !== \mb_strpos($event->getProperty(), $this->getProperty() . '.')) {
                 // Prevent other query builder filters to execute
                 $event->stopPropagation();
                 $qb = $event->getQueryBuilder();
@@ -72,7 +72,7 @@ class ANodesFilter implements EventSubscriberInterface
                         $this->getNodeJoinAlias()
                     );
                 }
-                if (false !== strpos($event->getProperty(), $this->getProperty() . '.field.')) {
+                if (false !== \mb_strpos($event->getProperty(), $this->getProperty() . '.field.')) {
                     if (
                         !$simpleQB->joinExists(
                             $simpleQB->getRootAlias(),
@@ -103,7 +103,7 @@ class ANodesFilter implements EventSubscriberInterface
     {
         if ($event->supports()) {
             $simpleQB = new SimpleQueryBuilder($event->getQueryBuilder());
-            if (false !== strpos($event->getProperty(), 'node.' . $this->getProperty() . '.')) {
+            if (false !== \mb_strpos($event->getProperty(), 'node.' . $this->getProperty() . '.')) {
                 // Prevent other query builder filters to execute
                 $event->stopPropagation();
                 $qb = $event->getQueryBuilder();
@@ -132,7 +132,7 @@ class ANodesFilter implements EventSubscriberInterface
                         $this->getNodeJoinAlias()
                     );
                 }
-                if (false !== strpos($event->getProperty(), 'node.' . $this->getProperty() . '.field.')) {
+                if (false !== \mb_strpos($event->getProperty(), 'node.' . $this->getProperty() . '.field.')) {
                     if (
                         !$simpleQB->joinExists(
                             $simpleQB->getRootAlias(),

@@ -192,7 +192,7 @@ class EntityListManager extends AbstractEntityListManager
             $this->entityName == 'RZ\Roadiz\CoreBundle\Entity\NodesSources' ||
             $this->entityName == '\RZ\Roadiz\CoreBundle\Entity\NodesSources' ||
             $this->entityName == "NodesSources" ||
-            strpos($this->entityName, NodeType::getGeneratedEntitiesNamespace()) !== false
+            \mb_strpos($this->entityName, NodeType::getGeneratedEntitiesNamespace()) !== false
         ) {
             $this->paginator = new NodesSourcesPaginator(
                 $this->entityManager,

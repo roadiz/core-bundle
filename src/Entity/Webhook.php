@@ -269,6 +269,6 @@ class Webhook extends AbstractDateTimed implements WebhookInterface
 
     public function __toString()
     {
-        return $this->getDescription() ?? $this->getId() ?? substr($this->getUri() ?? '', 0, 30);
+        return $this->getDescription() ?? $this->getId() ?? \mb_substr($this->getUri() ?? '', 0, 30);
     }
 }

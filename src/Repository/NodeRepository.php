@@ -374,9 +374,9 @@ final class NodeRepository extends StatusAwareRepository
         // Add ordering
         if (null !== $orderBy) {
             foreach ($orderBy as $key => $value) {
-                if (strpos($key, static::NODESSOURCES_ALIAS . '.') === 0) {
+                if (\mb_strpos($key, static::NODESSOURCES_ALIAS . '.') === 0) {
                     $qb->addOrderBy($key, $value);
-                } elseif (strpos($key, static::NODETYPE_ALIAS . '.') === 0) {
+                } elseif (\mb_strpos($key, static::NODETYPE_ALIAS . '.') === 0) {
                     if (!$this->hasJoinedNodeType($qb, static::NODE_ALIAS)) {
                         $qb->innerJoin(static::NODE_ALIAS . '.nodeType', static::NODETYPE_ALIAS);
                     }

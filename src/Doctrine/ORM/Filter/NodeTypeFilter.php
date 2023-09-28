@@ -29,7 +29,7 @@ class NodeTypeFilter implements EventSubscriberInterface
 
     protected function supports(QueryBuilderBuildEvent $event): bool
     {
-        return $event->supports() && false !== strpos($event->getProperty(), 'nodeType.');
+        return $event->supports() && false !== \mb_strpos($event->getProperty(), 'nodeType.');
     }
 
     /**
@@ -70,7 +70,7 @@ class NodeTypeFilter implements EventSubscriberInterface
     {
         if ($this->supports($event)) {
             $simpleQB = new SimpleQueryBuilder($event->getQueryBuilder());
-            if (false !== strpos($event->getProperty(), 'node.nodeType.')) {
+            if (false !== \mb_strpos($event->getProperty(), 'node.nodeType.')) {
                 // Prevent other query builder filters to execute
                 $event->stopPropagation();
                 $qb = $event->getQueryBuilder();

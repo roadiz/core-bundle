@@ -317,12 +317,12 @@ abstract class EntityRepository extends ServiceEntityRepository
         // Add ordering
         foreach ($orders as $key => $value) {
             if (
-                strpos($key, static::NODE_ALIAS . '.') !== false &&
+                \mb_strpos($key, static::NODE_ALIAS . '.') !== false &&
                 $this->hasJoinedNode($qb, $alias)
             ) {
                 $qb->addOrderBy($key, $value);
             } elseif (
-                strpos($key, static::NODESSOURCES_ALIAS . '.') !== false &&
+                \mb_strpos($key, static::NODESSOURCES_ALIAS . '.') !== false &&
                 $this->hasJoinedNodesSources($qb, $alias)
             ) {
                 $qb->addOrderBy($key, $value);

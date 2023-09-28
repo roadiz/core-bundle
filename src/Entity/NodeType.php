@@ -498,7 +498,7 @@ class NodeType extends AbstractEntity implements NodeTypeInterface
      */
     public function getSourceEntityTableName(): string
     {
-        return 'ns_' . strtolower($this->getName());
+        return 'ns_' . \mb_strtolower($this->getName());
     }
 
     /**
