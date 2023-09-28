@@ -1,3 +1,10 @@
+## [2.0.50 (2023-09-28)](https://github.com/roadiz/core-bundle/compare/2.0.49...2.0.50)
+
+
+### Bug Fixes
+
+* Use multibyte string functions ([6d8d183](https://github.com/roadiz/core-bundle/commit/6d8d183825531bfd6d6240d53db91ccae0c006b4))
+
 ## [2.0.49 (2023-09-13)](https://github.com/roadiz/core-bundle/compare/2.0.48...2.0.49)
 
 
