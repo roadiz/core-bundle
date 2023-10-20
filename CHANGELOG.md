@@ -1,3 +1,10 @@
+## [2.0.51 (2023-10-20)](https://github.com/roadiz/core-bundle/compare/2.0.50...2.0.51)
+
+
+### Bug Fixes
+
+* **CustomForm:** Backport: Do not fail custom-form answer response if email could not be sent but answer has been registered. ([e9cc8bb](https://github.com/roadiz/core-bundle/commit/e9cc8bba3a3389f854fe5b59f16930c1cde07898))
+
 ## [2.0.50 (2023-09-28)](https://github.com/roadiz/core-bundle/compare/2.0.49...2.0.50)
 
 
