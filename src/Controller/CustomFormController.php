@@ -30,12 +30,15 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
-use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Translation\LocaleAwareInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 
 final class CustomFormController extends AbstractController
 {
@@ -249,7 +252,10 @@ final class CustomFormController extends AbstractController
      * @param array $assignation
      * @param string|array|null $receiver
      * @return bool
-     * @throws Exception
+     * @throws TransportExceptionInterface
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
      */
     public function sendAnswer(
         CustomFormAnswer $answer,
@@ -341,17 +347,6 @@ final class CustomFormController extends AbstractController
                     $answer->toArray(false)
                 );
 
-                $msg = $this->translator->trans(
-                    'customForm.%name%.send',
-                    ['%name%' => $customFormsEntity->getDisplayName()]
-                );
-
-                $session = $request->getSession();
-                if ($session instanceof Session) {
-                    $session->getFlashBag()->add('confirm', $msg);
-                }
-                $this->logger->info($msg);
-
                 $assignation['title'] = $this->translator->trans(
                     'new.answer.form.%site%',
                     ['%site%' => $customFormsEntity->getDisplayName()]
@@ -366,25 +361,46 @@ final class CustomFormController extends AbstractController
                 /*
                  * Send answer notification
                  */
-                $receiver = array_filter(
-                    array_map('trim', explode(',', $customFormsEntity->getEmail() ?? ''))
+                try {
+                    $receiver = array_filter(
+                        array_map('trim', explode(',', $customFormsEntity->getEmail() ?? ''))
+                    );
+                    $receiver = array_map(function (string $email) {
+                        return new Address($email);
+                    }, $receiver);
+                    $this->sendAnswer(
+                        $answer,
+                        [
+                            'mailContact' => $assignation['mailContact'],
+                            'fields' => $assignation["emailFields"],
+                            'customForm' => $customFormsEntity,
+                            'title' => $this->translator->trans(
+                                'new.answer.form.%site%',
+                                ['%site%' => $customFormsEntity->getDisplayName()]
+                            ),
+                        ],
+                        $receiver
+                    );
+                } catch (TransportExceptionInterface $e) {
+                    // Do not fail if answer has been registered but email has not been sent.
+                    $this->logger->warning('Custom form answer has been registered but email could not been sent.', [
+                        'exception' => $e,
+                        'message' => $e->getMessage(),
+                        'customForm' => $customFormsEntity->getDisplayName(),
+                        'answerId' => $answer->getId()
+                    ]);
+                }
+
+                $msg = $this->translator->trans(
+                    'customForm.%name%.send',
+                    ['%name%' => $customFormsEntity->getDisplayName()]
                 );
-                $receiver = array_map(function (string $email) {
-                    return new Address($email);
-                }, $receiver);
-                $this->sendAnswer(
-                    $answer,
-                    [
-                        'mailContact' => $assignation['mailContact'],
-                        'fields' => $assignation["emailFields"],
-                        'customForm' => $customFormsEntity,
-                        'title' => $this->translator->trans(
-                            'new.answer.form.%site%',
-                            ['%site%' => $customFormsEntity->getDisplayName()]
-                        ),
-                    ],
-                    $receiver
-                );
+
+                $session = $request->getSession();
+                if ($session instanceof Session) {
+                    $session->getFlashBag()->add('confirm', $msg);
+                }
+                $this->logger->info($msg);
 
                 return $response;
             } catch (EntityAlreadyExistsException $e) {
