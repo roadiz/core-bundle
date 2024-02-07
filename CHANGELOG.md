@@ -1,3 +1,10 @@
+## [2.0.53](https://github.com/roadiz/core-bundle/compare/2.0.52...2.0.53) (2024-02-07)
+
+
+### Bug Fixes
+
+* Throw ResourceNotFoundException instead of returning null resource ([1b316a8](https://github.com/roadiz/core-bundle/commit/1b316a806788f65a7988ce03c25cf4050498db0e))
+
 ## [2.0.52](https://github.com/roadiz/core-bundle/compare/2.0.51...2.0.52) (2024-02-07)
 
 
