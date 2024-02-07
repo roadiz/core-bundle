@@ -66,9 +66,9 @@ final class GetWebResponseByPathController extends AbstractController
 
     /**
      * @param string $path
-     * @return PersistableInterface|null
+     * @return PersistableInterface
      */
-    protected function normalizeResourcePath(string $path): ?PersistableInterface
+    protected function normalizeResourcePath(string $path): PersistableInterface
     {
         /*
          * Serve any PersistableInterface Resource by implementing
@@ -82,14 +82,19 @@ final class GetWebResponseByPathController extends AbstractController
         );
         $resource = $resourceInfo->getResource();
 
+        if (null === $resource) {
+            throw new ResourceNotFoundException('Cannot resolve resource path.');
+        }
+
         /*
          * Normalize redirection
          */
         if ($resource instanceof Redirection) {
             if (null !== $nodeSource = $resource->getRedirectNodeSource()) {
-                if ($this->previewResolver->isPreview() || $nodeSource->getNode()->isPublished()) {
-                    $resource = $nodeSource;
+                if (!$this->previewResolver->isPreview() && !$nodeSource->getNode()->isPublished()) {
+                    throw new ResourceNotFoundException('Cannot resolve resource path.');
                 }
+                $resource = $nodeSource;
             } elseif (
                 null !== $resource->getRedirectUri() &&
                 (new UnicodeString($resource->getRedirectUri()))->startsWith('/')
@@ -110,10 +115,10 @@ final class GetWebResponseByPathController extends AbstractController
         return $resource;
     }
 
-    protected function addResourceToCacheTags(?PersistableInterface $resource)
+    protected function addResourceToCacheTags(PersistableInterface $resource)
     {
         $request = $this->requestStack->getMainRequest();
-        if (null !== $request && null !== $resource) {
+        if (null !== $request) {
             $iri = $this->iriConverter->getIriFromItem($resource);
             $request->attributes->set('_resources', $request->attributes->get('_resources', []) + [$iri]);
         }
