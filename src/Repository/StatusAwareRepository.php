@@ -24,7 +24,7 @@ abstract class StatusAwareRepository extends EntityRepository
 
     /**
      * @param ManagerRegistry $registry
-     * @param class-string<TEntityClass> $entityClass
+     * @param string $entityClass
      * @param PreviewResolverInterface $previewResolver
      * @param EventDispatcherInterface $dispatcher
      * @param Security $security

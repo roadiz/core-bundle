@@ -44,7 +44,7 @@ class AccessDeniedHandler implements AccessDeniedHandlerInterface
     }
 
     /**
-     * Handles access denied failure redirecting to home page
+     * Handles an access denied failure redirecting to home page
      *
      * @param Request $request
      * @param AccessDeniedException $accessDeniedException

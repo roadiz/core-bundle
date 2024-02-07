@@ -11,26 +11,22 @@ use RZ\Roadiz\CoreBundle\Exception\SolrServerNotAvailableException;
 use Solarium\Core\Client\Client;
 use Solarium\Core\Query\Helper;
 use Solarium\QueryType\Select\Query\Query;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 abstract class AbstractSearchHandler implements SearchHandlerInterface
 {
-    protected ClientRegistry $clientRegistry;
+    private ClientRegistry $clientRegistry;
     protected ObjectManager $em;
     protected LoggerInterface $logger;
-    protected EventDispatcherInterface $eventDispatcher;
     protected int $highlightingFragmentSize = 150;
 
     public function __construct(
         ClientRegistry $clientRegistry,
         ObjectManager $em,
-        LoggerInterface $searchEngineLogger,
-        EventDispatcherInterface $eventDispatcher
+        LoggerInterface $searchEngineLogger
     ) {
         $this->clientRegistry = $clientRegistry;
         $this->em = $em;
         $this->logger = $searchEngineLogger;
-        $this->eventDispatcher = $eventDispatcher;
     }
 
     public function getSolr(): Client
@@ -98,7 +94,7 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
     {
         $tmp = [];
         $tmp["hl"] = true;
-        $tmp["hl.fl"] = $this->getTitleField($args) . ' ' . $this->getCollectionField($args);
+        $tmp["hl.fl"] = $this->getCollectionField($args);
         $tmp["hl.fragsize"] = $this->getHighlightingFragmentSize();
         $tmp["hl.simple.pre"] = '<span class="solr-highlight">';
         $tmp["hl.simple.post"] = '</span>';
@@ -178,7 +174,7 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      * ### For node-sources:
      *
      * * status (int)
-     * * visible (bool)
+     * * visible (boolean)
      * * nodeType (RZ\Roadiz\CoreBundle\Entity\NodeType or string or array)
      * * tags (RZ\Roadiz\CoreBundle\Entity\Tag or array of Tag)
      * * translation (RZ\Roadiz\CoreBundle\Entity\Translation)
@@ -193,7 +189,7 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      * @param string $q
      * @param array $args
      * @param int $rows Results per page
-     * @param bool $searchTags Search in tags/folders too, even if a node don’t match
+     * @param boolean $searchTags Search in tags/folders too, even if a node don’t match
      * @param int $proximity Proximity matching: Lucene supports finding words are a within a specific distance away. Default 10000000
      * @param int $page Retrieve a specific page
      *
@@ -245,9 +241,6 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
          * @see https://lucene.apache.org/solr/guide/6_6/the-standard-query-parser.html#TheStandardQueryParser-FuzzySearches
          */
         $words = preg_split('#[\s,]+#', $q, -1, PREG_SPLIT_NO_EMPTY);
-        if (false === $words) {
-            throw new \RuntimeException('Cannot split query string.');
-        }
         $fuzzyiedQuery = implode(' ', array_map(function (string $word) use ($proximity) {
             /*
              * Do not fuzz short words: Solr crashes

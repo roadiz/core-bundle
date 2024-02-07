@@ -169,15 +169,11 @@ final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
             $this->getCloudflareCacheProxy()->getVersion(),
             $this->getCloudflareCacheProxy()->getZone()
         );
-        $body = \json_encode($body);
-        if (false === $body) {
-            throw new \RuntimeException('Unable to json_encode body');
-        }
         return new Request(
             'POST',
             $uri,
             $headers,
-            $body
+            \json_encode($body)
         );
     }
 

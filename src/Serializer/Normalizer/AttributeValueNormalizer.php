@@ -35,18 +35,9 @@ final class AttributeValueNormalizer extends AbstractPathNormalizer
             if (isset($context['translation']) && $context['translation'] instanceof TranslationInterface) {
                 $translatedData = $object->getAttributeValueTranslation($context['translation']);
                 $data['label'] = $object->getAttribute()->getLabelOrCode($context['translation']);
-                if (
-                    $translatedData instanceof AttributeValueTranslationInterface &&
-                    $translatedData->getValue() !== null
-                ) {
+                if ($translatedData instanceof AttributeValueTranslationInterface) {
                     $data['value'] = $translatedData->getValue();
-                } else {
-                    $data['value'] = $object->getAttributeValueDefaultTranslation()?->getValue();
                 }
-            }
-
-            if ($data['value'] instanceof \DateTimeInterface) {
-                $data['value'] = $data['value']->format(\DateTimeInterface::ATOM);
             }
 
             if (\in_array('attribute_documents', $serializationGroups, true)) {
