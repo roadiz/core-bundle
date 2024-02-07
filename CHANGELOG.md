@@ -1,3 +1,10 @@
+## [2.0.54](https://github.com/roadiz/core-bundle/compare/2.0.53...2.0.54) (2024-02-07)
+
+
+### Features
+
+* Use idempotent identifier for solarium documents id ([b8ddefd](https://github.com/roadiz/core-bundle/commit/b8ddefdff668a01fd11621d616ddd4d838b561d1))
+
 ## [2.0.53](https://github.com/roadiz/core-bundle/compare/2.0.52...2.0.53) (2024-02-07)
 
 
