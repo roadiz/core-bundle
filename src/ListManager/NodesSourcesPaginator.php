@@ -33,7 +33,7 @@ class NodesSourcesPaginator extends Paginator
      * @param array   $order
      * @param integer $page
      *
-     * @return array|\Doctrine\ORM\Tools\Pagination\Paginator
+     * @return array
      */
     public function findByAtPage(array $order = [], int $page = 1)
     {

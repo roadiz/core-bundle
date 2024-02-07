@@ -8,8 +8,8 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\Persistence\ObjectManager;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
-use Psr\Log\LoggerInterface;
 use RZ\Roadiz\Core\Handlers\AbstractHandler;
+use RZ\Roadiz\CoreBundle\Doctrine\SchemaUpdater;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
@@ -35,7 +35,6 @@ class NodeTypeHandler extends AbstractHandler
     private string $serializedNodeTypesDir;
     private string $importFilesConfigPath;
     private string $kernelProjectDir;
-    private LoggerInterface $logger;
 
     /**
      * @return NodeType
@@ -64,7 +63,6 @@ class NodeTypeHandler extends AbstractHandler
         HandlerFactory $handlerFactory,
         SerializerInterface $serializer,
         ApiResourceGenerator $apiResourceGenerator,
-        LoggerInterface $logger,
         string $generatedEntitiesDir,
         string $serializedNodeTypesDir,
         string $importFilesConfigPath,
@@ -79,7 +77,6 @@ class NodeTypeHandler extends AbstractHandler
         $this->importFilesConfigPath = $importFilesConfigPath;
         $this->kernelProjectDir = $kernelProjectDir;
         $this->apiResourceGenerator = $apiResourceGenerator;
-        $this->logger = $logger;
     }
 
     public function getGeneratedEntitiesFolder(): string
@@ -109,11 +106,6 @@ class NodeTypeHandler extends AbstractHandler
             if ($fileSystem->exists($repositoryFile) && is_file($repositoryFile)) {
                 $fileSystem->remove($repositoryFile);
             }
-            $this->logger->info('Entity class file and repository have been removed.', [
-                'nodeType' => $this->nodeType->getName(),
-                'file' => $file,
-                'repositoryFile' => $repositoryFile,
-            ]);
             return true;
         }
 
@@ -262,11 +254,6 @@ class NodeTypeHandler extends AbstractHandler
 
             \clearstatcache(true, $file);
             \clearstatcache(true, $repositoryFile);
-            $this->logger->info('Entity class file and repository have been generated.', [
-                'nodeType' => $this->nodeType->getName(),
-                'file' => $file,
-                'repositoryFile' => $repositoryFile,
-            ]);
 
             return true;
         }

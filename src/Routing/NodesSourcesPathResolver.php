@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Routing;
 
-use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
@@ -62,7 +61,7 @@ final class NodesSourcesPathResolver implements PathResolverInterface
         }
 
         if ($path === '/') {
-            $this->stopwatch->start('parseRootPath', 'routing');
+            $this->stopwatch->start('parseRootPath');
             $translation = $this->parseTranslation();
             $nodeSource = $this->getHome($translation);
             $this->stopwatch->stop('parseRootPath');
@@ -97,13 +96,13 @@ final class NodesSourcesPathResolver implements PathResolverInterface
                 }
             }
 
-            $this->stopwatch->start('parseTranslation', 'routing');
+            $this->stopwatch->start('parseTranslation');
             $translation = $this->parseTranslation($tokens);
             $this->stopwatch->stop('parseTranslation');
             /*
              * Try with URL Aliases OR nodeName
              */
-            $this->stopwatch->start('parseFromIdentifier', 'routing');
+            $this->stopwatch->start('parseFromIdentifier');
             $nodeSource = $this->parseFromIdentifier($tokens, $translation, $allowNonReachableNodes);
             $this->stopwatch->stop('parseFromIdentifier');
         }
@@ -157,7 +156,6 @@ final class NodesSourcesPathResolver implements PathResolverInterface
      * @param array<string> $tokens
      *
      * @return TranslationInterface|null
-     * @throws NonUniqueResultException
      */
     private function parseTranslation(array &$tokens = []): ?TranslationInterface
     {

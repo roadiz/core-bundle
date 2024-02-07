@@ -23,14 +23,4 @@ interface RealmResolverInterface
      * @throws UnauthorizedHttpException
      */
     public function denyUnlessGranted(RealmInterface $realm): void;
-
-    /**
-     * @return RealmInterface[] Return all realms granted to current user.
-     */
-    public function getGrantedRealms(): array;
-
-    /**
-     * @return RealmInterface[] Return all realms denied from current user.
-     */
-    public function getDeniedRealms(): array;
 }
