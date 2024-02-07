@@ -1,3 +1,10 @@
+## [2.0.52](https://github.com/roadiz/core-bundle/compare/2.0.51...2.0.52) (2024-02-07)
+
+
+### Bug Fixes
+
+* Redirection normalizer respects Node status according to preview mode ([aec3fb0](https://github.com/roadiz/core-bundle/commit/aec3fb055c00bb5c522ee86d3b86ad40040a215c))
+
 ## [2.0.51 (2023-10-20)](https://github.com/roadiz/core-bundle/compare/2.0.50...2.0.51)
 
 
