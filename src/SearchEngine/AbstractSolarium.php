@@ -201,7 +201,7 @@ abstract class AbstractSolarium
     public function index()
     {
         if ($this->document instanceof Document) {
-            $this->document->setKey('id', uniqid('', true));
+            $this->document->setKey('id', $this->getIdempotentIdentifier());
 
             try {
                 foreach ($this->getFieldsAssoc() as $key => $value) {
@@ -313,5 +313,17 @@ abstract class AbstractSolarium
         $content = preg_replace("[:cntrl:]", "", $content);
         $content = preg_replace('/[\x00-\x1F]/', '', $content);
         return $content;
+    }
+
+    /**
+     * You MUST override this method to provide an idempotent identifier.
+     * This identifier MUST be the same for the same entity.
+     *
+     * @return string
+     */
+    protected function getIdempotentIdentifier(): string
+    {
+        // This is a fallback for backward compatibility.
+        return uniqid('', true);
     }
 }
