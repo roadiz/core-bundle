@@ -10,6 +10,7 @@ use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\Api\DataTransformer\WebResponseDataTransformerInterface;
 use RZ\Roadiz\CoreBundle\Api\Model\WebResponseInterface;
 use RZ\Roadiz\CoreBundle\Entity\Redirection;
+use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use RZ\Roadiz\CoreBundle\Routing\PathResolverInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -23,23 +24,20 @@ final class GetWebResponseByPathController extends AbstractController
     private PathResolverInterface $pathResolver;
     private WebResponseDataTransformerInterface $webResponseDataTransformer;
     private IriConverterInterface $iriConverter;
+    private PreviewResolverInterface $previewResolver;
 
-    /**
-     * @param RequestStack $requestStack
-     * @param PathResolverInterface $pathResolver
-     * @param WebResponseDataTransformerInterface $webResponseDataTransformer
-     * @param IriConverterInterface $iriConverter
-     */
     public function __construct(
         RequestStack $requestStack,
         PathResolverInterface $pathResolver,
         WebResponseDataTransformerInterface $webResponseDataTransformer,
-        IriConverterInterface $iriConverter
+        IriConverterInterface $iriConverter,
+        PreviewResolverInterface $previewResolver
     ) {
         $this->requestStack = $requestStack;
         $this->pathResolver = $pathResolver;
         $this->webResponseDataTransformer = $webResponseDataTransformer;
         $this->iriConverter = $iriConverter;
+        $this->previewResolver = $previewResolver;
     }
 
     public function __invoke(): ?WebResponseInterface
@@ -88,8 +86,10 @@ final class GetWebResponseByPathController extends AbstractController
          * Normalize redirection
          */
         if ($resource instanceof Redirection) {
-            if (null !== $resource->getRedirectNodeSource()) {
-                $resource = $resource->getRedirectNodeSource();
+            if (null !== $nodeSource = $resource->getRedirectNodeSource()) {
+                if ($this->previewResolver->isPreview() || $nodeSource->getNode()->isPublished()) {
+                    $resource = $nodeSource;
+                }
             } elseif (
                 null !== $resource->getRedirectUri() &&
                 (new UnicodeString($resource->getRedirectUri()))->startsWith('/')
