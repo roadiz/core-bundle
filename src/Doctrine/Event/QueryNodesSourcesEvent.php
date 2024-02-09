@@ -16,7 +16,7 @@ final class QueryNodesSourcesEvent extends QueryEvent
 
     /**
      * @param Query  $query
-     * @param class-string $actualEntityName
+     * @param string $actualEntityName
      */
     public function __construct(Query $query, string $actualEntityName)
     {
@@ -25,7 +25,7 @@ final class QueryNodesSourcesEvent extends QueryEvent
     }
 
     /**
-     * @return class-string
+     * @return string
      */
     public function getActualEntityName(): string
     {

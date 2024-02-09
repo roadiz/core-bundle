@@ -96,16 +96,12 @@ class NodePathInfo
      */
     public function serialize(): string
     {
-        $json = \json_encode([
+        return \json_encode([
             'path' => $this->getPath(),
             'parameters' => $this->getParameters(),
             'is_complete' => $this->isComplete(),
             'contains_scheme' => $this->containsScheme()
         ]);
-        if (false === $json) {
-            throw new \RuntimeException('Unable to serialize NodePathInfo');
-        }
-        return $json;
     }
 
     public function __serialize(): array
