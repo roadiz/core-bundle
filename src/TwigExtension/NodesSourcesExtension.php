@@ -76,10 +76,10 @@ final class NodesSourcesExtension extends AbstractExtension
      * @param NodesSources|null $ns
      * @param array|null $criteria
      * @param array|null $order
-     * @return iterable<NodesSources>
+     * @return array
      * @throws RuntimeError
      */
-    public function getChildren(NodesSources $ns = null, array $criteria = null, array $order = null): iterable
+    public function getChildren(NodesSources $ns = null, array $criteria = null, array $order = null)
     {
         if (null === $ns) {
             if ($this->throwExceptions) {

@@ -4,25 +4,33 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Filter;
 
-use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
-use ApiPlatform\Doctrine\Orm\Filter\AbstractFilter;
-use ApiPlatform\Metadata\Operation;
-use Doctrine\ORM\Query\Expr\Join;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\AbstractContextAwareFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
-final class NotFilter extends AbstractFilter
+final class NotFilter extends AbstractContextAwareFilter
 {
     public const PARAMETER = 'not';
 
+    /**
+     * Passes a property through the filter.
+     *
+     * @param string $property
+     * @param mixed $value
+     * @param QueryBuilder $queryBuilder
+     * @param QueryNameGeneratorInterface $queryNameGenerator
+     * @param string $resourceClass
+     * @param string|null $operationName
+     * @throws \Exception
+     */
     protected function filterProperty(
         string $property,
         $value,
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
-        ?Operation $operation = null,
-        array $context = []
+        string $operationName = null
     ): void {
         if ($property !== self::PARAMETER || !\is_array($value)) {
             return;
@@ -33,14 +41,7 @@ final class NotFilter extends AbstractFilter
             $field = $property;
 
             if ($this->isPropertyNested($property, $resourceClass)) {
-                list($alias, $field) = $this->addJoinsForNestedProperty(
-                    $property,
-                    $alias,
-                    $queryBuilder,
-                    $queryNameGenerator,
-                    $resourceClass,
-                    Join::INNER_JOIN
-                );
+                list($alias, $field) = $this->addJoinsForNestedProperty($property, $alias, $queryBuilder, $queryNameGenerator);
             }
 
             $placeholder = ':' . (new AsciiSlugger())->slug($alias . '_' . $field, '_')->toString();
