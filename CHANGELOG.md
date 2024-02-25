@@ -1,3 +1,10 @@
+## [2.0.55](https://github.com/roadiz/core-bundle/compare/2.0.54...2.0.55) (2024-02-25)
+
+
+### Bug Fixes
+
+* **Search:** Missing `hl.q` Solr param for highlighting complex queries ([c37ce99](https://github.com/roadiz/core-bundle/commit/c37ce9962c922bf683795d9f140f9fda5f82a5e5))
+
 ## [2.0.54](https://github.com/roadiz/core-bundle/compare/2.0.53...2.0.54) (2024-02-07)
 
 
