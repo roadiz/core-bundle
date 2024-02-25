@@ -6,10 +6,11 @@ namespace RZ\Roadiz\CoreBundle\Security\User;
 
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
+use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\User;
 use RZ\Roadiz\CoreBundle\Mailer\EmailManager;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
-use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Mailer\Exception\TransportException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -20,6 +21,7 @@ class UserViewer
     protected TranslatorInterface $translator;
     protected EmailManager $emailManager;
     protected LoggerInterface $logger;
+    protected ?User $user = null;
 
     public function __construct(
         Settings $settingsBag,
@@ -38,20 +40,21 @@ class UserViewer
     /**
      * Send email to reset user password.
      *
-     * @param User $user
-     * @param object|string $route
+     * @param string|NodesSources $route
      * @param string $htmlTemplate
      * @param string $txtTemplate
      *
      * @return bool
-     * @throws TransportExceptionInterface
+     * @throws \Exception
      */
     public function sendPasswordResetLink(
-        User $user,
-        object|string $route = 'loginResetPage',
+        $route = 'loginResetPage',
         string $htmlTemplate = '@RoadizCore/email/users/reset_password_email.html.twig',
         string $txtTemplate = '@RoadizCore/email/users/reset_password_email.txt.twig'
     ): bool {
+        if (null === $this->user) {
+            throw new \InvalidArgumentException('User should be defined before sending email.');
+        }
         $emailContact = $this->getContactEmail();
         $siteName = $this->getSiteName();
 
@@ -59,7 +62,7 @@ class UserViewer
             $resetLink = $this->urlGenerator->generate(
                 $route,
                 [
-                    'token' => $user->getConfirmationToken(),
+                    'token' => $this->user->getConfirmationToken(),
                 ],
                 UrlGeneratorInterface::ABSOLUTE_URL
             );
@@ -68,14 +71,14 @@ class UserViewer
                 RouteObjectInterface::OBJECT_BASED_ROUTE_NAME,
                 [
                     RouteObjectInterface::ROUTE_OBJECT => $route,
-                    'token' => $user->getConfirmationToken(),
+                    'token' => $this->user->getConfirmationToken(),
                 ],
                 UrlGeneratorInterface::ABSOLUTE_URL
             );
         }
         $this->emailManager->setAssignation([
             'resetLink' => $resetLink,
-            'user' => $user,
+            'user' => $this->user,
             'site' => $siteName,
             'mailContact' => $emailContact,
         ]);
@@ -84,20 +87,18 @@ class UserViewer
         $this->emailManager->setSubject($this->translator->trans(
             'reset.password.request'
         ));
+        $this->emailManager->setReceiver($this->user->getEmail());
+        $this->emailManager->setSender([$emailContact => $siteName]);
 
         try {
-            $this->emailManager->setReceiver($user->getEmail());
-            $this->emailManager->setSender([$emailContact => $siteName]);
-
             // Send the message
             $this->emailManager->send();
             return true;
-        } catch (\Exception $e) {
+        } catch (TransportException $e) {
             // Silent error not to prevent user creation if mailer is not configured
             $this->logger->error('Unable to send password reset link', [
                 'exception' => get_class($e),
                 'message' => $e->getMessage(),
-                'entity' => $user,
             ]);
             return false;
         }
@@ -127,5 +128,23 @@ class UserViewer
         }
 
         return $siteName;
+    }
+
+    /**
+     * @return null|User
+     */
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    /**
+     * @param null|User $user
+     * @return UserViewer
+     */
+    public function setUser(?User $user)
+    {
+        $this->user = $user;
+        return $this;
     }
 }
