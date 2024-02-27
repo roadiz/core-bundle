@@ -57,7 +57,7 @@ final class OptimizedNodesSourcesGraphPathAggregator implements NodesSourcesPath
     /**
      * @param Node $parent
      *
-     * @return array<int, int|string>
+     * @return array
      */
     protected function getParentsIds(Node $parent): array
     {

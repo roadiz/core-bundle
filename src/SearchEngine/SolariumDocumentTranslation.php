@@ -46,16 +46,15 @@ class SolariumDocumentTranslation extends AbstractSolarium
     public function getFieldsAssoc(bool $subResource = false): array
     {
         $event = new DocumentTranslationIndexingEvent($this->documentTranslation, [], $this);
-        /** @var DocumentTranslationIndexingEvent $event */
-        $event = $this->dispatcher->dispatch($event);
-        return $event->getAssociations();
+
+        return $this->dispatcher->dispatch($event)->getAssociations();
     }
 
     /**
      * Remove any document linked to current node-source.
      *
      * @param Query $update
-     * @return bool
+     * @return boolean
      */
     public function clean(Query $update): bool
     {

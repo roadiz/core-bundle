@@ -321,11 +321,9 @@ abstract class PrefixAwareRepository extends EntityRepository
         }
 
         foreach ($criteriaFields as $key => $value) {
-            if (\is_string($key)) {
-                $realKey = $this->getRealKey($qb, $key);
-                $fullKey = sprintf('LOWER(%s)', $realKey['prefix'] . $realKey['key']);
-                $qb->orWhere($qb->expr()->like($fullKey, $qb->expr()->literal($value)));
-            }
+            $realKey = $this->getRealKey($qb, $key);
+            $fullKey = sprintf('LOWER(%s)', $realKey['prefix'] . $realKey['key']);
+            $qb->orWhere($qb->expr()->like($fullKey, $qb->expr()->literal($value)));
         }
         return $qb;
     }

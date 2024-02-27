@@ -23,7 +23,7 @@ abstract class FilterQueryBuilderEvent extends Event
 
     /**
      * @param QueryBuilder $queryBuilder
-     * @param class-string $entityClass
+     * @param string $entityClass
      */
     public function __construct(QueryBuilder $queryBuilder, string $entityClass)
     {
@@ -51,10 +51,10 @@ abstract class FilterQueryBuilderEvent extends Event
 
 
     /**
-     * @param class-string $entityClass
+     * @param string $entityClass
      * @return bool
      */
-    public function supports(string $entityClass): bool
+    public function supports($entityClass): bool
     {
         return $this->entityClass === $entityClass;
     }

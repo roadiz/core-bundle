@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
-use Doctrine\ORM\NonUniqueResultException;
-use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -30,21 +28,18 @@ final class UrlAliasRepository extends EntityRepository
     /**
      * Get all url aliases linked to given node.
      *
-     * @param int|string|null $nodeId
+     * @param integer $nodeId
      *
-     * @return iterable<UrlAlias>
+     * @return array
      */
-    public function findAllFromNode(int|string|null $nodeId): iterable
+    public function findAllFromNode($nodeId)
     {
-        if (null === $nodeId) {
-            return [];
-        }
         $query = $this->_em->createQuery('
             SELECT ua FROM RZ\Roadiz\CoreBundle\Entity\UrlAlias ua
             INNER JOIN ua.nodeSource ns
             INNER JOIN ns.node n
             WHERE n.id = :nodeId')
-                        ->setParameter('nodeId', $nodeId);
+                        ->setParameter('nodeId', (int) $nodeId);
 
         return $query->getResult();
     }
@@ -53,16 +48,14 @@ final class UrlAliasRepository extends EntityRepository
      * @param string $alias
      *
      * @return boolean
-     * @throws NoResultException
-     * @throws NonUniqueResultException
      */
-    public function exists(string $alias): bool
+    public function exists($alias)
     {
         $query = $this->_em->createQuery('
             SELECT COUNT(ua.alias) FROM RZ\Roadiz\CoreBundle\Entity\UrlAlias ua
             WHERE ua.alias = :alias')
                         ->setParameter('alias', $alias);
 
-        return $query->getSingleScalarResult() > 0;
+        return (bool) $query->getSingleScalarResult();
     }
 }
