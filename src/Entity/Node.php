@@ -45,6 +45,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     ORM\Index(columns: ["created_at"]),
     ORM\Index(columns: ["updated_at"]),
     ORM\Index(columns: ["hide_children"]),
+    ORM\Index(columns: ["home"]),
     ORM\Index(columns: ["node_name", "status"]),
     ORM\Index(columns: ["visible", "status"]),
     ORM\Index(columns: ["visible", "status", "parent_node_id"], name: "node_visible_status_parent"),
@@ -52,9 +53,9 @@ use Symfony\Component\Validator\Constraints as Assert;
     ORM\Index(columns: ["nodeType_id", "status", "parent_node_id"], name: "node_nodetype_status_parent"),
     ORM\Index(columns: ["nodeType_id", "status", "parent_node_id", "position"], name: "node_nodetype_status_parent_position"),
     ORM\Index(columns: ["visible", "parent_node_id"], name: "node_visible_parent"),
+    ORM\Index(columns: ["parent_node_id", "position"], name: "node_parent_position"),
     ORM\Index(columns: ["visible", "parent_node_id", "position"], name: "node_visible_parent_position"),
     ORM\Index(columns: ["status", "visible", "parent_node_id", "position"], name: "node_status_visible_parent_position"),
-    ORM\Index(columns: ["home"]),
     ORM\HasLifecycleCallbacks,
     Gedmo\Loggable(logEntryClass: UserLogEntry::class),
     // Need to override repository method to see all nodes
@@ -198,15 +199,12 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     )]
     private string $childrenOrderDirection = 'ASC';
 
-    /**
-     * @var NodeTypeInterface|null
-     */
     #[ORM\ManyToOne(targetEntity: NodeTypeInterface::class)]
-    #[ORM\JoinColumn(name: 'nodeType_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'nodeType_id', referencedColumnName: 'id', nullable:false, onDelete: 'CASCADE')]
     #[SymfonySerializer\Groups(['node'])]
     #[Serializer\Groups(['node'])]
     #[SymfonySerializer\Ignore]
-    private ?NodeTypeInterface $nodeType = null;
+    private NodeTypeInterface $nodeType;
 
     /**
      * @var Node|null
@@ -824,9 +822,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
      */
     public function setBNodes(Collection $bNodes): static
     {
-        foreach ($this->bNodes as $bNode) {
-            $bNode->setNodeA(null);
-        }
         $this->bNodes->clear();
         foreach ($bNodes as $bNode) {
             if (!$this->hasBNode($bNode)) {
@@ -866,7 +861,6 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
         /** @var NodesToNodes $toRemove */
         foreach ($toRemoveCollection as $toRemove) {
             $this->getBNodes()->removeElement($toRemove);
-            $toRemove->setNodeA(null);
         }
         return $this;
     }
@@ -909,19 +903,12 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
         return $this;
     }
 
-    /**
-     * @return NodeTypeInterface|null
-     */
-    public function getNodeType(): ?NodeTypeInterface
+    public function getNodeType(): NodeTypeInterface
     {
         return $this->nodeType;
     }
 
-    /**
-     * @param NodeTypeInterface|null $nodeType
-     * @return $this
-     */
-    public function setNodeType(?NodeTypeInterface $nodeType = null): static
+    public function setNodeType(NodeTypeInterface $nodeType): Node
     {
         $this->nodeType = $nodeType;
         return $this;
