@@ -45,24 +45,33 @@ final class UsersPasswordCommand extends UsersCommand
     {
         $io = new SymfonyStyle($input, $output);
         $name = $input->getArgument('username');
-        $user = $this->getUserForInput($input);
 
-        $confirmation = new ConfirmationQuestion(
-            '<question>Do you really want to regenerate user “' . $user->getUsername() . '” password?</question>',
-            false
-        );
-        if (
-            !$input->isInteractive() || $io->askQuestion(
-                $confirmation
-            )
-        ) {
-            $user->setPlainPassword($this->passwordGenerator->generatePassword(12));
-            $this->managerRegistry->getManagerForClass(User::class)->flush();
-            $io->success('A new password was regenerated for ' . $name . ': ' . $user->getPlainPassword());
-            return 0;
-        } else {
-            $io->warning('User password was not changed.');
-            return 1;
+        if ($name) {
+            /** @var User|null $user */
+            $user = $this->managerRegistry
+                ->getRepository(User::class)
+                ->findOneBy(['username' => $name]);
+
+            if (null !== $user) {
+                $confirmation = new ConfirmationQuestion(
+                    '<question>Do you really want to regenerate user “' . $user->getUsername() . '” password?</question>',
+                    false
+                );
+                if (
+                    !$input->isInteractive() || $io->askQuestion(
+                        $confirmation
+                    )
+                ) {
+                    $user->setPlainPassword($this->passwordGenerator->generatePassword(12));
+                    $this->managerRegistry->getManagerForClass(User::class)->flush();
+                    $io->success('A new password was regenerated for ' . $name . ': ' . $user->getPlainPassword());
+                } else {
+                    $io->warning('User password was not changed.');
+                }
+            } else {
+                throw new \InvalidArgumentException('User “' . $name . '” does not exist.');
+            }
         }
+        return 0;
     }
 }
