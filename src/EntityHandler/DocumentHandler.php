@@ -36,26 +36,22 @@ class DocumentHandler extends AbstractHandler
      * Get a Response object to force download document.
      * This method works for both private and public documents.
      *
-     * @param bool $asAttachment
      * @return StreamedResponse
      * @throws FilesystemException
      */
-    public function getDownloadResponse(bool $asAttachment = true): StreamedResponse
+    public function getDownloadResponse(): StreamedResponse
     {
         if ($this->document->isLocal()) {
             $documentPath = $this->document->getMountPath();
 
             if ($this->documentStorage->fileExists($documentPath)) {
-                $headers = [
-                    "Content-Type" => $this->documentStorage->mimeType($documentPath),
-                    "Content-Length" => $this->documentStorage->fileSize($documentPath),
-                ];
-                if ($asAttachment) {
-                    $headers["Content-disposition"] = "attachment; filename=\"" . basename($this->document->getFilename()) . "\"";
-                }
                 return new StreamedResponse(function () use ($documentPath) {
                     \fpassthru($this->documentStorage->readStream($documentPath));
-                }, Response::HTTP_OK, $headers);
+                }, Response::HTTP_OK, [
+                    "Content-Type" => $this->documentStorage->mimeType($documentPath),
+                    "Content-Length" => $this->documentStorage->fileSize($documentPath),
+                    "Content-disposition" => "attachment; filename=\"" . basename($this->document->getFilename()) . "\"",
+                ]);
             }
         }
 

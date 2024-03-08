@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Extension;
 
-use ApiPlatform\Doctrine\Orm\Extension\QueryCollectionExtensionInterface;
-use ApiPlatform\Doctrine\Orm\Extension\QueryItemExtensionInterface;
-use ApiPlatform\Doctrine\Orm\Util\QueryBuilderHelper;
-use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
-use ApiPlatform\Metadata\Operation;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Extension\QueryCollectionExtensionInterface;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Extension\QueryItemExtensionInterface;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryBuilderHelper;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use RZ\Roadiz\CoreBundle\Entity\Node;
@@ -33,26 +32,26 @@ final class NodesSourcesQueryExtension implements QueryItemExtensionInterface, Q
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
         array $identifiers,
-        ?Operation $operation = null,
+        string $operationName = null,
         array $context = []
     ): void {
-        $this->apply($queryBuilder, $queryNameGenerator, $resourceClass);
+        $this->apply($queryBuilder, $queryNameGenerator, $resourceClass, $operationName);
     }
 
     public function applyToCollection(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
-        ?Operation $operation = null,
-        array $context = []
+        string $operationName = null
     ): void {
-        $this->apply($queryBuilder, $queryNameGenerator, $resourceClass);
+        $this->apply($queryBuilder, $queryNameGenerator, $resourceClass, $operationName);
     }
 
     private function apply(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
-        string $resourceClass
+        string $resourceClass,
+        string $operationName = null
     ): void {
         if (
             $resourceClass !== NodesSources::class &&

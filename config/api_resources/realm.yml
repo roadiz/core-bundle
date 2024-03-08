@@ -1,14 +1,11 @@
 ---
 RZ\Roadiz\CoreBundle\Entity\Realm:
-    operations:
-        ApiPlatform\Metadata\GetCollection:
+    iri: Realm
+    shortName: Realm
+    collectionOperations: {}
+    itemOperations:
+        get:
             method: "GET"
-            normalizationContext:
-                groups: [ "realm" ]
-                enable_max_depth: true
-
-        ApiPlatform\Metadata\Get:
-            method: "GET"
-            normalizationContext:
-                groups: [ "realm" ]
+            normalization_context:
+                groups: [ "get", "realm" ]
                 enable_max_depth: true
