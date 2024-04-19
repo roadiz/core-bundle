@@ -14,7 +14,6 @@ use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\NodesSourcesEntitiesPathCo
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\NodeWorkflowCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\PathResolverCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\RateLimitersCompilerPass;
-use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\TreeWalkerDefinitionFactoryCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\TwigLoaderCompilerPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
@@ -41,6 +40,5 @@ class RoadizCoreBundle extends Bundle
         $container->addCompilerPass(new PathResolverCompilerPass());
         $container->addCompilerPass(new FlysystemStorageCompilerPass());
         $container->addCompilerPass(new TwigLoaderCompilerPass());
-        $container->addCompilerPass(new TreeWalkerDefinitionFactoryCompilerPass());
     }
 }

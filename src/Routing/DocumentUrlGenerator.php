@@ -16,7 +16,7 @@ final class DocumentUrlGenerator extends AbstractDocumentUrlGenerator
     public function __construct(
         FilesystemOperator $documentsStorage,
         UrlHelper $urlHelper,
-        private readonly UrlGeneratorInterface $urlGenerator,
+        private UrlGeneratorInterface $urlGenerator,
         CacheItemPoolInterface $optionsCacheAdapter
     ) {
         parent::__construct($documentsStorage, $urlHelper, $optionsCacheAdapter);
