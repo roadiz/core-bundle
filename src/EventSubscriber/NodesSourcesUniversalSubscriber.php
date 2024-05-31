@@ -33,6 +33,7 @@ class NodesSourcesUniversalSubscriber implements EventSubscriberInterface
     {
         return [
             NodesSourcesUpdatedEvent::class => 'duplicateUniversalContents',
+            '\RZ\Roadiz\Core\Events\NodesSources\NodesSourcesUpdatedEvent' => 'duplicateUniversalContents',
         ];
     }
 
