@@ -22,7 +22,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
@@ -47,7 +46,7 @@ final class CustomFormController extends AbstractController
     ) {
     }
 
-    protected function validateCustomForm(?CustomForm $customForm): void
+    private function validateCustomForm(?CustomForm $customForm): void
     {
         if (null === $customForm) {
             throw new NotFoundHttpException('Custom form not found');
@@ -144,7 +143,7 @@ final class CustomFormController extends AbstractController
      */
     public function addAction(Request $request, int $customFormId): Response
     {
-        /** @var CustomForm $customForm */
+        /** @var CustomForm|null $customForm */
         $customForm = $this->registry->getRepository(CustomForm::class)->find($customFormId);
         $this->validateCustomForm($customForm);
 
@@ -195,13 +194,13 @@ final class CustomFormController extends AbstractController
      * @param Request $request
      * @param CustomForm $customFormsEntity
      * @param Response $response
-     * @param boolean $forceExpanded
+     * @param bool $forceExpanded
      * @param string|null $emailSender
      * @param bool $prefix
      * @return array|Response
      * @throws FilesystemException
      */
-    public function prepareAndHandleCustomFormAssignation(
+    private function prepareAndHandleCustomFormAssignation(
         Request $request,
         CustomForm $customFormsEntity,
         Response $response,
@@ -250,13 +249,6 @@ final class CustomFormController extends AbstractController
                     'customForm.%name%.send',
                     ['%name%' => $customFormsEntity->getDisplayName()]
                 );
-
-                if (!$request->attributes->getBoolean('_stateless') && $request->hasPreviousSession()) {
-                    $session = $request->getSession();
-                    if ($session instanceof Session) {
-                        $session->getFlashBag()->add('confirm', $msg);
-                    }
-                }
 
                 $this->logger->info($msg);
 
