@@ -15,7 +15,7 @@ trait AttributeValueTrait
 {
     #[
         ORM\ManyToOne(targetEntity: AttributeInterface::class, fetch: "EAGER", inversedBy: "attributeValues"),
-        ORM\JoinColumn(name: "attribute_id", referencedColumnName: "id", onDelete: "CASCADE"),
+        ORM\JoinColumn(name: "attribute_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE"),
         Serializer\Groups(["attribute", "node", "nodes_sources"]),
         Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Attribute"),
         ApiFilter(BaseFilter\SearchFilter::class, properties: [
@@ -28,9 +28,12 @@ trait AttributeValueTrait
         ApiFilter(BaseFilter\BooleanFilter::class, properties: [
             "attribute.visible",
             "attribute.searchable"
+        ]),
+        ApiFilter(BaseFilter\OrderFilter::class, properties: [
+            "attribute.weight" => "DESC",
         ])
     ]
-    protected ?AttributeInterface $attribute = null;
+    protected AttributeInterface $attribute;
 
     /**
      * @var Collection<int, AttributeValueTranslationInterface>
@@ -68,8 +71,7 @@ trait AttributeValueTrait
 
     /**
      * @param AttributeInterface $attribute
-     *
-     * @return static
+     * @return self
      */
     public function setAttribute(AttributeInterface $attribute)
     {

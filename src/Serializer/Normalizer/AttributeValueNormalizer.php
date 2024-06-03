@@ -21,7 +21,7 @@ final class AttributeValueNormalizer extends AbstractPathNormalizer
      * @return array|\ArrayObject|bool|float|int|mixed|string|null
      * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
      */
-    public function normalize($object, $format = null, array $context = [])
+    public function normalize(mixed $object, ?string $format = null, array $context = []): mixed
     {
         $data = $this->decorated->normalize($object, $format, $context);
         if ($object instanceof AttributeValue && is_array($data)) {
@@ -31,6 +31,7 @@ final class AttributeValueNormalizer extends AbstractPathNormalizer
             $data['type'] = $object->getType();
             $data['code'] = $object->getAttribute()->getCode();
             $data['color'] = $object->getAttribute()->getColor();
+            $data['weight'] = $object->getAttribute()->getWeight();
 
             if (isset($context['translation']) && $context['translation'] instanceof TranslationInterface) {
                 $translatedData = $object->getAttributeValueTranslation($context['translation']);
