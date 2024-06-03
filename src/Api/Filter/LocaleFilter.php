@@ -35,7 +35,7 @@ final class LocaleFilter extends GeneratedEntityFilter
 
     protected function filterProperty(
         string $property,
-        mixed $value,
+        $value,
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,

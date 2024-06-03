@@ -33,7 +33,7 @@ final class RequestPreviewRevolver implements PreviewResolverInterface
         if (null === $request) {
             return false;
         }
-        return $request->attributes->getBoolean('preview');
+        return $request->attributes->get('preview', false);
     }
 
     public function getRequiredRole(): string

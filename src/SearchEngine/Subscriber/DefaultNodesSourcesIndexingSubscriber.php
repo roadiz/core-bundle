@@ -235,6 +235,9 @@ final class DefaultNodesSourcesIndexingSubscriber extends AbstractIndexingSubscr
             return ((bool) $source->getShowTitle());
         }
 
-        return $source->getNode()->getNodeType()->isSearchable();
+        if (null !== $source->getNode() && $source->getNode()->getNodeType()) {
+            return $source->getNode()->getNodeType()->isSearchable();
+        }
+        return true;
     }
 }

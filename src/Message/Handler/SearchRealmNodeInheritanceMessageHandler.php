@@ -21,12 +21,21 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class SearchRealmNodeInheritanceMessageHandler implements MessageHandlerInterface
 {
+    private ManagerRegistry $managerRegistry;
+    private HandlerFactoryInterface $handlerFactory;
+    private MessageBusInterface $bus;
+    private LoggerInterface $logger;
+
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly HandlerFactoryInterface $handlerFactory,
-        private readonly MessageBusInterface $bus,
-        private readonly LoggerInterface $logger
+        ManagerRegistry $managerRegistry,
+        HandlerFactoryInterface $handlerFactory,
+        MessageBusInterface $bus,
+        LoggerInterface $logger
     ) {
+        $this->managerRegistry = $managerRegistry;
+        $this->handlerFactory = $handlerFactory;
+        $this->bus = $bus;
+        $this->logger = $logger;
     }
 
     public function __invoke(SearchRealmNodeInheritanceMessage $message): void
@@ -56,7 +65,7 @@ final class SearchRealmNodeInheritanceMessageHandler implements MessageHandlerIn
             $this->logger->info('Clean existing RealmNode information');
             $this->bus->dispatch(new Envelope(new CleanRealmNodeInheritanceMessage(
                 $autoRealmNode->getNode()->getId(),
-                $autoRealmNode->getRealm()->getId()
+                null !== $autoRealmNode->getRealm() ? $autoRealmNode->getRealm()->getId() : null
             )));
         }
     }
@@ -81,7 +90,7 @@ final class SearchRealmNodeInheritanceMessageHandler implements MessageHandlerIn
                 $this->logger->info('Apply new root RealmNode information');
                 $this->bus->dispatch(new Envelope(new ApplyRealmNodeInheritanceMessage(
                     $rootRealmNode->getNode()->getId(),
-                    $rootRealmNode->getRealm()->getId()
+                    null !== $rootRealmNode->getRealm() ? $rootRealmNode->getRealm()->getId() : null
                 )));
             }
         }
