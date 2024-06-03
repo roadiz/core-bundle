@@ -12,20 +12,31 @@ use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\CliAwareIndexer;
 use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\IndexerFactoryInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\SolariumDocumentTranslation;
 use RZ\Roadiz\CoreBundle\SearchEngine\SolariumNodeSource;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Stopwatch\Stopwatch;
 
+/**
+ * Command line utils for managing nodes from terminal.
+ */
 class SolrReindexCommand extends SolrCommand implements ThemeAwareCommandInterface
 {
+    protected ?QuestionHelper $questionHelper = null;
+    protected IndexerFactoryInterface $indexerFactory;
+
+    /**
+     * @param ClientRegistry $clientRegistry
+     * @param IndexerFactoryInterface $indexerFactory
+     */
     public function __construct(
-        protected readonly IndexerFactoryInterface $indexerFactory,
         ClientRegistry $clientRegistry,
-        ?string $name = null
+        IndexerFactoryInterface $indexerFactory
     ) {
-        parent::__construct($clientRegistry, $name);
+        parent::__construct($clientRegistry);
+        $this->indexerFactory = $indexerFactory;
     }
 
     protected function configure(): void

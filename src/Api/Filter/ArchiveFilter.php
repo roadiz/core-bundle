@@ -39,7 +39,7 @@ final class ArchiveFilter extends AbstractFilter
      */
     protected function filterProperty(
         string $property,
-        mixed $value,
+        $value,
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,

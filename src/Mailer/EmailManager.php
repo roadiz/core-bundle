@@ -33,30 +33,43 @@ class EmailManager
     protected ?Address $origin = null;
     protected string $successMessage = 'email.successfully.sent';
     protected string $failMessage = 'email.has.errors';
+    protected TranslatorInterface $translator;
+    protected Environment $templating;
+    protected MailerInterface $mailer;
     protected ?string $emailTemplate = null;
     protected ?string $emailPlainTextTemplate = null;
     protected string $emailStylesheet;
+    protected RequestStack $requestStack;
     protected array $assignation;
     protected ?Email $message;
+    protected ?Settings $settingsBag;
+    protected ?DocumentUrlGeneratorInterface $documentUrlGenerator;
     /** @var File[] */
     protected array $files = [];
     /** @var array  */
     protected array $resources = [];
 
     public function __construct(
-        protected readonly RequestStack $requestStack,
-        protected readonly TranslatorInterface $translator,
-        protected readonly Environment $templating,
-        protected readonly MailerInterface $mailer,
-        protected readonly Settings $settingsBag,
-        protected readonly DocumentUrlGeneratorInterface $documentUrlGenerator
+        RequestStack $requestStack,
+        TranslatorInterface $translator,
+        Environment $templating,
+        MailerInterface $mailer,
+        ?Settings $settingsBag = null,
+        ?DocumentUrlGeneratorInterface $documentUrlGenerator = null
     ) {
+        $this->requestStack = $requestStack;
+        $this->translator = $translator;
+        $this->mailer = $mailer;
+        $this->templating = $templating;
         $this->assignation = [];
         $this->message = null;
+
         /*
          * Sets a default CSS for emails.
          */
         $this->emailStylesheet = dirname(__DIR__) . '/../css/transactionalStyles.css';
+        $this->settingsBag = $settingsBag;
+        $this->documentUrlGenerator = $documentUrlGenerator;
     }
 
     /**
@@ -265,7 +278,7 @@ class EmailManager
      * @return $this
      * @throws \Exception
      */
-    public function setReceiver(mixed $receiver): static
+    public function setReceiver($receiver): static
     {
         if ($receiver instanceof Address) {
             $this->receiver = [$receiver];
@@ -320,7 +333,7 @@ class EmailManager
      * @return $this
      * @throws \Exception
      */
-    public function setSender(mixed $sender): static
+    public function setSender($sender): static
     {
         if ($sender instanceof Address) {
             $this->sender = [$sender];
@@ -389,6 +402,16 @@ class EmailManager
     }
 
     /**
+     * @param TranslatorInterface $translator
+     * @return $this
+     */
+    public function setTranslator(TranslatorInterface $translator): static
+    {
+        $this->translator = $translator;
+        return $this;
+    }
+
+    /**
      * @return Environment
      */
     public function getTemplating(): Environment
@@ -397,11 +420,31 @@ class EmailManager
     }
 
     /**
+     * @param Environment $templating
+     * @return $this
+     */
+    public function setTemplating(Environment $templating): static
+    {
+        $this->templating = $templating;
+        return $this;
+    }
+
+    /**
      * @return MailerInterface
      */
     public function getMailer(): MailerInterface
     {
         return $this->mailer;
+    }
+
+    /**
+     * @param MailerInterface $mailer
+     * @return $this
+     */
+    public function setMailer(MailerInterface $mailer): static
+    {
+        $this->mailer = $mailer;
+        return $this;
     }
 
     /**

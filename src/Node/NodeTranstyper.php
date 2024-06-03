@@ -97,7 +97,6 @@ final class NodeTranstyper
         }
         $this->logger->debug('Get matching fields');
 
-        /** @var class-string<NodesSources> $sourceClass */
         $sourceClass = $destinationNodeType->getSourceEntityFullQualifiedClassName();
 
         /*
@@ -165,7 +164,7 @@ final class NodeTranstyper
      * @param Node $node
      * @param NodesSources $existingSource
      * @param TranslationInterface $translation
-     * @param class-string<NodesSources> $sourceClass
+     * @param string $sourceClass
      * @param array $fieldAssociations
      * @param array $existingRedirections
      * @return NodesSources
@@ -202,8 +201,7 @@ final class NodeTranstyper
                  */
                 $documents = $existingSource->getDocumentsByFieldsWithName($oldField->getName());
                 foreach ($documents as $document) {
-                    $nsDoc = new NodesSourcesDocuments($source, $document);
-                    $nsDoc->setFieldName($matchingField->getName());
+                    $nsDoc = new NodesSourcesDocuments($source, $document, $matchingField);
                     $this->getManager()->persist($nsDoc);
                     $source->getDocumentsByFields()->add($nsDoc);
                 }
@@ -216,8 +214,7 @@ final class NodeTranstyper
          */
         /** @var UrlAlias $urlAlias */
         foreach ($existingSource->getUrlAliases() as $urlAlias) {
-            $newUrlAlias = new UrlAlias();
-            $newUrlAlias->setNodeSource($source);
+            $newUrlAlias = new UrlAlias($source);
             $this->getManager()->persist($newUrlAlias);
             $newUrlAlias->setAlias($urlAlias->getAlias());
             $source->addUrlAlias($newUrlAlias);
@@ -259,7 +256,6 @@ final class NodeTranstyper
          * transtype, not to get an orphan node.
          */
         $node = new Node();
-        $node->setNodeType($nodeType);
         $node->setNodeName('testing_before_transtype' . $uniqueId);
         $this->getManager()->persist($node);
 

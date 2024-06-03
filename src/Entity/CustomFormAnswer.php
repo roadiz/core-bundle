@@ -44,8 +44,7 @@ class CustomFormAnswer extends AbstractEntity
         ORM\OneToMany(
             mappedBy: "customFormAnswer",
             targetEntity: CustomFormFieldAttribute::class,
-            cascade: ["ALL"],
-            orphanRemoval: true
+            cascade: ["ALL"]
         ),
         Serializer\Groups(["custom_form_answer"]),
         SymfonySerializer\Groups(["custom_form_answer"])
@@ -57,11 +56,11 @@ class CustomFormAnswer extends AbstractEntity
             targetEntity: CustomForm::class,
             inversedBy: "customFormAnswers"
         ),
-        ORM\JoinColumn(name: "custom_form_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE"),
+        ORM\JoinColumn(name: "custom_form_id", referencedColumnName: "id", onDelete: "CASCADE"),
         Serializer\Exclude,
         SymfonySerializer\Ignore
     ]
-    private CustomForm $customForm;
+    private ?CustomForm $customForm = null;
 
     public function __construct()
     {
