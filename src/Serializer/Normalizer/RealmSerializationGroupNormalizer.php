@@ -8,27 +8,33 @@ use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Realm;
 use RZ\Roadiz\CoreBundle\Security\Authorization\Voter\RealmVoter;
-use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Security\Core\Security;
+use Symfony\Component\Serializer\Normalizer\ContextAwareNormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerAwareInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerAwareTrait;
-use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
-final class RealmSerializationGroupNormalizer implements NormalizerInterface, NormalizerAwareInterface
+final class RealmSerializationGroupNormalizer implements ContextAwareNormalizerInterface, NormalizerAwareInterface
 {
     use NormalizerAwareTrait;
 
     private const ALREADY_CALLED = 'REALM_SERIALIZER_NORMALIZER_ALREADY_CALLED';
+    private Security $security;
+    private ManagerRegistry $managerRegistry;
 
-    public function __construct(
-        private readonly Security $security,
-        private readonly ManagerRegistry $managerRegistry
-    ) {
+    /**
+     * @param Security $security
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(Security $security, ManagerRegistry $managerRegistry)
+    {
+        $this->security = $security;
+        $this->managerRegistry = $managerRegistry;
     }
 
     /**
      * @inheritDoc
      */
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
+    public function supportsNormalization($data, string $format = null, array $context = []): bool
     {
         // Make sure we're not called twice
         if (isset($context[self::ALREADY_CALLED])) {
@@ -38,18 +44,11 @@ final class RealmSerializationGroupNormalizer implements NormalizerInterface, No
         return $data instanceof NodesSources;
     }
 
-    public function getSupportedTypes(?string $format): array
-    {
-        return [
-            '*' => false,
-        ];
-    }
-
     /**
      * @inheritDoc
      * @return array|string|int|float|bool|\ArrayObject|null
      */
-    public function normalize(mixed $object, ?string $format = null, array $context = []): mixed
+    public function normalize($object, string $format = null, array $context = [])
     {
         $realms = $this->getAuthorizedRealmsForObject($object);
 

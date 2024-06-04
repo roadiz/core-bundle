@@ -7,7 +7,6 @@ namespace RZ\Roadiz\CoreBundle\Repository;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesToNodes;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
@@ -28,35 +27,20 @@ final class NodesToNodesRepository extends EntityRepository
 
     /**
      * @param Node $node
-     * @param NodeTypeFieldInterface $field
-     * @return int
+     * @param NodeTypeField $field
+     *
+     * @return integer
      * @throws NoResultException
      * @throws NonUniqueResultException
-     * @deprecated Use getLatestPositionForFieldName instead
      */
-    public function getLatestPosition(Node $node, NodeTypeFieldInterface $field): int
+    public function getLatestPosition(Node $node, NodeTypeField $field): int
     {
         $query = $this->_em->createQuery('
             SELECT MAX(ntn.position) FROM RZ\Roadiz\CoreBundle\Entity\NodesToNodes ntn
-            WHERE ntn.nodeA = :nodeA AND ntn.fieldName = :fieldName')
+            WHERE ntn.nodeA = :nodeA AND ntn.field = :field')
                     ->setParameter('nodeA', $node)
-                    ->setParameter('fieldName', $field->getName());
+                    ->setParameter('field', $field);
 
-        $latestPosition = $query->getSingleScalarResult();
-
-        return is_numeric($latestPosition) ? (int) $latestPosition : 0;
-    }
-
-    public function getLatestPositionForFieldName(Node $node, string $fieldName): int
-    {
-        $query = $this->_em->createQuery('
-            SELECT MAX(ntn.position) FROM RZ\Roadiz\CoreBundle\Entity\NodesToNodes ntn
-            WHERE ntn.nodeA = :nodeA AND ntn.fieldName = :fieldName')
-                    ->setParameter('nodeA', $node)
-                    ->setParameter('fieldName', $fieldName);
-
-        $latestPosition = $query->getSingleScalarResult();
-
-        return is_numeric($latestPosition) ? (int) $latestPosition : 0;
+        return (int) $query->getSingleScalarResult();
     }
 }
