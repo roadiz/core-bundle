@@ -15,13 +15,18 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-final class NodeClearTagCommand extends Command
+class NodeClearTagCommand extends Command
 {
-    public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        ?string $name = null
-    ) {
-        parent::__construct($name);
+    protected SymfonyStyle $io;
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
     }
 
     protected function configure(): void
@@ -43,7 +48,7 @@ final class NodeClearTagCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $em = $this->managerRegistry->getManagerForClass(Node::class);
-        $io = new SymfonyStyle($input, $output);
+        $this->io = new SymfonyStyle($input, $output);
 
         $tagId = (int) $input->getArgument('tagId');
         if ($tagId <= 0) {
@@ -64,12 +69,12 @@ final class NodeClearTagCommand extends Command
             ->getSingleScalarResult();
 
         if ($count <= 0) {
-            $io->warning('No nodes were found linked with this tag.');
+            $this->io->warning('No nodes were found linked with this tag.');
             return 0;
         }
 
         if (
-            $io->askQuestion(new ConfirmationQuestion(
+            $this->io->askQuestion(new ConfirmationQuestion(
                 sprintf('Are you sure to delete permanently %d nodes?', $count),
                 false
             ))
@@ -79,7 +84,7 @@ final class NodeClearTagCommand extends Command
                 ->getQuery()
                 ->getResult();
 
-            $io->progressStart($count);
+            $this->io->progressStart($count);
             /** @var Node $node */
             foreach ($results as $node) {
                 $em->remove($node);
@@ -87,10 +92,10 @@ final class NodeClearTagCommand extends Command
                     $em->flush(); // Executes all updates.
                 }
                 ++$i;
-                $io->progressAdvance();
+                $this->io->progressAdvance();
             }
             $em->flush();
-            $io->progressFinish();
+            $this->io->progressFinish();
         }
 
         return 0;

@@ -24,13 +24,27 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class UserLifeCycleSubscriber implements EventSubscriber
 {
+    private UserViewer $userViewer;
+    private EventDispatcherInterface $dispatcher;
+    private PasswordHasherFactoryInterface $passwordHasherFactory;
+    private LoggerInterface $logger;
+
+    /**
+     * @param UserViewer $userViewer
+     * @param EventDispatcherInterface $dispatcher
+     * @param PasswordHasherFactoryInterface $passwordHasherFactory
+     * @param LoggerInterface $logger
+     */
     public function __construct(
-        private readonly UserViewer $userViewer,
-        private readonly EventDispatcherInterface $dispatcher,
-        private readonly PasswordHasherFactoryInterface $passwordHasherFactory,
-        private readonly LoggerInterface $logger,
-        private readonly bool $useGravatar
+        UserViewer $userViewer,
+        EventDispatcherInterface $dispatcher,
+        PasswordHasherFactoryInterface $passwordHasherFactory,
+        LoggerInterface $logger
     ) {
+        $this->userViewer = $userViewer;
+        $this->dispatcher = $dispatcher;
+        $this->logger = $logger;
+        $this->passwordHasherFactory = $passwordHasherFactory;
     }
 
     /**
@@ -80,11 +94,9 @@ final class UserLifeCycleSubscriber implements EventSubscriber
                         $user->setPictureUrl($url);
                     } catch (\Exception $e) {
                         $user->setFacebookName('');
-                        if ($this->useGravatar) {
-                            $user->setPictureUrl($user->getGravatarUrl());
-                        }
+                        $user->setPictureUrl($user->getGravatarUrl());
                     }
-                } elseif ($this->useGravatar) {
+                } else {
                     $user->setPictureUrl($user->getGravatarUrl());
                 }
             }
@@ -189,7 +201,7 @@ final class UserLifeCycleSubscriber implements EventSubscriber
             /*
              * Force a Gravatar image if not defined
              */
-            if (empty($user->getPictureUrl()) && $this->useGravatar) {
+            if (empty($user->getPictureUrl())) {
                 $user->setPictureUrl($user->getGravatarUrl());
             }
         }

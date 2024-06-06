@@ -17,8 +17,13 @@ use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
 final class ApplyRealmNodeInheritanceMessageHandler implements MessageHandlerInterface
 {
-    public function __construct(private readonly ManagerRegistry $managerRegistry)
+    private ManagerRegistry $managerRegistry;
+    private HandlerFactoryInterface $handlerFactory;
+
+    public function __construct(ManagerRegistry $managerRegistry, HandlerFactoryInterface $handlerFactory)
     {
+        $this->managerRegistry = $managerRegistry;
+        $this->handlerFactory = $handlerFactory;
     }
 
     public function __invoke(ApplyRealmNodeInheritanceMessage $message): void
@@ -48,12 +53,15 @@ final class ApplyRealmNodeInheritanceMessageHandler implements MessageHandlerInt
             return;
         }
 
-        $nodeRepository = $this->managerRegistry->getRepository(Node::class);
-        $childrenIds = $nodeRepository->findAllOffspringIdByNode($node);
+        /** @var NodeHandler $nodeHandler */
+        $nodeHandler = $this->handlerFactory->getHandler($node);
+        $childrenIds = $nodeHandler->getAllOffspringId();
 
         foreach ($childrenIds as $childId) {
             /** @var Node|null $child */
-            $child = $nodeRepository->find($childId);
+            $child = $this->managerRegistry
+                ->getRepository(Node::class)
+                ->find($childId);
             if (null === $child) {
                 continue;
             }

@@ -13,14 +13,21 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-final class SolrResetCommand extends SolrCommand
+/**
+ * Command line utils for managing nodes from terminal.
+ */
+class SolrResetCommand extends SolrCommand
 {
-    public function __construct(
-        private readonly IndexerFactoryInterface $indexerFactory,
-        ClientRegistry $clientRegistry,
-        ?string $name = null
-    ) {
-        parent::__construct($clientRegistry, $name);
+    protected IndexerFactoryInterface $indexerFactory;
+
+    /**
+     * @param ClientRegistry $clientRegistry
+     * @param IndexerFactoryInterface $indexerFactory
+     */
+    public function __construct(ClientRegistry $clientRegistry, IndexerFactoryInterface $indexerFactory)
+    {
+        parent::__construct($clientRegistry);
+        $this->indexerFactory = $indexerFactory;
     }
 
     protected function configure(): void
