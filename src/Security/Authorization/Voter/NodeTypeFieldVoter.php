@@ -15,7 +15,7 @@ final class NodeTypeFieldVoter extends Voter
     public const VIEW = 'VIEW';
 
     public function __construct(
-        private Security $security
+        private readonly Security $security
     ) {
     }
 
