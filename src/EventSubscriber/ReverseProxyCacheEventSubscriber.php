@@ -46,7 +46,9 @@ final class ReverseProxyCacheEventSubscriber implements EventSubscriberInterface
     {
         return [
             CachePurgeRequestEvent::class => ['onBanRequest', 3],
+            '\RZ\Roadiz\Core\Events\Cache\CachePurgeRequestEvent' => ['onBanRequest', 3],
             NodesSourcesUpdatedEvent::class => ['onPurgeRequest', 3],
+            '\RZ\Roadiz\Core\Events\NodesSources\NodesSourcesUpdatedEvent' => ['onPurgeRequest', 3],
             'workflow.node.completed' => ['onNodeWorkflowCompleted', 3],
         ];
     }
@@ -113,16 +115,9 @@ final class ReverseProxyCacheEventSubscriber implements EventSubscriberInterface
     {
         $requests = [];
         foreach ($this->reverseProxyCacheLocator->getFrontends() as $frontend) {
-            // Add protocol if host does not start with it
-            if (!\str_starts_with($frontend->getHost(), 'http')) {
-                // Use HTTP to be able to call Varnish from a Docker network
-                $uri = 'http://' . $frontend->getHost();
-            } else {
-                $uri = $frontend->getHost();
-            }
             $requests[$frontend->getName()] = new Request(
                 'BAN',
-                $uri,
+                'http://' . $frontend->getHost(),
                 [
                     'Host' => $frontend->getDomainName()
                 ]

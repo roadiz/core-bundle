@@ -13,7 +13,6 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Repository\DocumentTranslationRepository;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
-use Symfony\Component\Validator\Constraints as Assert;
 
 #[
     ORM\Entity(repositoryClass: DocumentTranslationRepository::class),
@@ -23,10 +22,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 ]
 class DocumentTranslation extends AbstractEntity implements Loggable
 {
-    #[ORM\Column(type: 'string', length: 250, nullable: true)]
+    #[ORM\Column(type: 'string', nullable: true)]
     #[SymfonySerializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
-    #[Assert\Length(max: 250)]
     #[Gedmo\Versioned]
     protected ?string $name = null;
 
@@ -43,16 +41,16 @@ class DocumentTranslation extends AbstractEntity implements Loggable
     protected ?string $externalUrl = null;
 
     #[ORM\ManyToOne(targetEntity: Translation::class, fetch: 'EXTRA_LAZY', inversedBy: 'documentTranslations')]
-    #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[SymfonySerializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
-    protected TranslationInterface $translation;
+    protected ?TranslationInterface $translation = null;
 
     #[ORM\ManyToOne(targetEntity: Document::class, fetch: 'EXTRA_LAZY', inversedBy: 'documentTranslations')]
-    #[ORM\JoinColumn(name: 'document_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'document_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]
-    protected DocumentInterface $document;
+    protected ?DocumentInterface $document;
 
     #[ORM\Column(type: 'text', nullable: true)]
     #[SymfonySerializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
@@ -79,11 +77,19 @@ class DocumentTranslation extends AbstractEntity implements Loggable
         return $this;
     }
 
+    /**
+     * @return string
+     */
     public function getDescription(): ?string
     {
         return $this->description;
     }
 
+    /**
+     * @param string|null $description
+     *
+     * @return $this
+     */
     public function setDescription(?string $description): DocumentTranslation
     {
         $this->description = $description;
@@ -159,7 +165,7 @@ class DocumentTranslation extends AbstractEntity implements Loggable
      * @param DocumentInterface $document
      * @return $this
      */
-    public function setDocument(DocumentInterface $document): DocumentTranslation
+    public function setDocument(DocumentInterface $document)
     {
         $this->document = $document;
         return $this;

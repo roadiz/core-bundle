@@ -7,33 +7,31 @@ namespace RZ\Roadiz\CoreBundle\Model;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use Symfony\Component\Validator\Constraints as Assert;
 
 trait AttributeGroupTranslationTrait
 {
     #[
         ORM\ManyToOne(targetEntity: "RZ\Roadiz\Core\AbstractEntities\TranslationInterface"),
-        ORM\JoinColumn(name: "translation_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE"),
+        ORM\JoinColumn(name: "translation_id", onDelete: "CASCADE"),
         Serializer\Groups(["attribute_group", "attribute", "node", "nodes_sources"]),
         Serializer\Type("RZ\Roadiz\Core\AbstractEntities\TranslationInterface"),
         Serializer\Accessor(getter: "getTranslation", setter: "setTranslation")
     ]
-    protected TranslationInterface $translation;
+    protected ?TranslationInterface $translation = null;
 
     #[
-        ORM\Column(type: "string", length: 255, unique: false, nullable: false),
+        ORM\Column(type: "string", unique: false, nullable: false),
         Serializer\Groups(["attribute_group", "attribute", "node", "nodes_sources"]),
-        Serializer\Type("string"),
-        Assert\Length(max: 255)
+        Serializer\Type("string")
     ]
     protected string $name = '';
 
     #[
         ORM\ManyToOne(targetEntity: AttributeGroupInterface::class, cascade: ["persist"], inversedBy: "attributeGroupTranslations"),
-        ORM\JoinColumn(name: "attribute_group_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE"),
+        ORM\JoinColumn(name: "attribute_group_id", referencedColumnName: "id", nullable: true, onDelete: "CASCADE"),
         Serializer\Exclude
     ]
-    protected AttributeGroupInterface $attributeGroup;
+    protected ?AttributeGroupInterface $attributeGroup = null;
 
     /**
      * @return string
@@ -45,6 +43,7 @@ trait AttributeGroupTranslationTrait
 
     /**
      * @param string $value
+     *
      * @return self
      */
     public function setName(string $value)
@@ -55,7 +54,8 @@ trait AttributeGroupTranslationTrait
 
     /**
      * @param TranslationInterface $translation
-     * @return self
+     *
+     * @return mixed
      */
     public function setTranslation(TranslationInterface $translation)
     {
@@ -63,7 +63,10 @@ trait AttributeGroupTranslationTrait
         return $this;
     }
 
-    public function getTranslation(): TranslationInterface
+    /**
+     * @return TranslationInterface|null
+     */
+    public function getTranslation(): ?TranslationInterface
     {
         return $this->translation;
     }
@@ -78,7 +81,8 @@ trait AttributeGroupTranslationTrait
 
     /**
      * @param AttributeGroupInterface $attributeGroup
-     * @return self
+     *
+     * @return mixed
      */
     public function setAttributeGroup(AttributeGroupInterface $attributeGroup)
     {

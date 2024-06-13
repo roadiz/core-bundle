@@ -129,8 +129,6 @@ interface AttributeInterface extends PersistableInterface
      */
     public function getColor(): ?string;
 
-    public function getWeight(): int;
-
     /**
      * @param string|null $color
      */
@@ -217,7 +215,4 @@ interface AttributeInterface extends PersistableInterface
      * @return bool
      */
     public function isCountry(): bool;
-
-    public function getDefaultRealm(): ?RealmInterface;
-    public function setDefaultRealm(?RealmInterface $defaultRealm): self;
 }

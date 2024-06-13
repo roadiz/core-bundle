@@ -11,7 +11,6 @@ use RZ\Roadiz\CoreBundle\Repository\RealmNodeRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
-use Symfony\Component\Validator\Constraints as Assert;
 
 #[
     ORM\Entity(repositoryClass: RealmNodeRepository::class),
@@ -42,16 +41,15 @@ class RealmNode extends AbstractEntity
         name: 'realm_id',
         referencedColumnName: 'id',
         unique: false,
-        nullable: false,
+        nullable: true,
         onDelete: 'CASCADE'
     )]
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]
-    private Realm $realm;
+    private ?Realm $realm = null;
 
     #[ORM\Column(name: 'inheritance_type', type: 'string', length: 10, nullable: false)]
     #[SymfonySerializer\Ignore]
-    #[Assert\Length(max: 10)]
     #[Serializer\Exclude]
     private string $inheritanceType = RealmInterface::INHERITANCE_AUTO;
 
@@ -74,18 +72,18 @@ class RealmNode extends AbstractEntity
     }
 
     /**
-     * @return Realm
+     * @return Realm|null
      */
-    public function getRealm(): Realm
+    public function getRealm(): ?Realm
     {
         return $this->realm;
     }
 
     /**
-     * @param Realm $realm
+     * @param Realm|null $realm
      * @return RealmNode
      */
-    public function setRealm(Realm $realm): RealmNode
+    public function setRealm(?Realm $realm): RealmNode
     {
         $this->realm = $realm;
         return $this;

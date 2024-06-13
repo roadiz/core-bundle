@@ -14,13 +14,17 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-final class NodesDetailsCommand extends Command
+class NodesDetailsCommand extends Command
 {
-    public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        ?string $name = null
-    ) {
-        parent::__construct($name);
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
     }
 
     protected function configure(): void
@@ -63,7 +67,7 @@ final class NodesDetailsCommand extends Command
                     if (is_array($data)) {
                         $data = implode(', ', $data);
                     }
-                    if ($data instanceof \DateTimeInterface) {
+                    if ($data instanceof \DateTime) {
                         $data = $data->format('c');
                     }
                     if ($data instanceof \stdClass) {

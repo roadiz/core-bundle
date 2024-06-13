@@ -4,27 +4,25 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Model;
 
-use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use Symfony\Component\Validator\Constraints as Assert;
 
 trait AttributeTranslationTrait
 {
     #[
         ORM\ManyToOne(targetEntity: TranslationInterface::class),
-        ORM\JoinColumn(name: "translation_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE"),
+        ORM\JoinColumn(onDelete: "CASCADE"),
         Serializer\Groups(["attribute", "node", "nodes_sources"]),
         Serializer\Type("RZ\Roadiz\Core\AbstractEntities\TranslationInterface"),
         Serializer\Accessor(getter: "getTranslation", setter: "setTranslation")
     ]
-    protected TranslationInterface $translation;
+    protected ?TranslationInterface $translation = null;
 
     #[
-        ORM\Column(type: "string", length: 250, unique: false, nullable: false),
+        ORM\Column(type: "string", unique: false, nullable: false),
         Serializer\Groups(["attribute", "node", "nodes_sources"]),
-        Serializer\Type("string"),
-        Assert\Length(max: 250)
+        Serializer\Type("string")
     ]
     protected string $label = '';
 
@@ -40,10 +38,10 @@ trait AttributeTranslationTrait
 
     #[
         ORM\ManyToOne(targetEntity: AttributeInterface::class, cascade: ["persist"], inversedBy: "attributeTranslations"),
-        ORM\JoinColumn(name: "attribute_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE"),
+        ORM\JoinColumn(referencedColumnName: "id", onDelete: "CASCADE"),
         Serializer\Exclude
     ]
-    protected AttributeInterface $attribute;
+    protected ?AttributeInterface $attribute = null;
 
     /**
      * @return string|null
@@ -66,6 +64,7 @@ trait AttributeTranslationTrait
 
     /**
      * @param TranslationInterface $translation
+     *
      * @return $this
      */
     public function setTranslation(TranslationInterface $translation)
@@ -74,7 +73,10 @@ trait AttributeTranslationTrait
         return $this;
     }
 
-    public function getTranslation(): TranslationInterface
+    /**
+     * @return TranslationInterface|null
+     */
+    public function getTranslation(): ?TranslationInterface
     {
         return $this->translation;
     }
@@ -89,6 +91,7 @@ trait AttributeTranslationTrait
 
     /**
      * @param AttributeInterface $attribute
+     *
      * @return $this
      */
     public function setAttribute(AttributeInterface $attribute)

@@ -4,30 +4,30 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Filter;
 
-use ApiPlatform\Doctrine\Orm\Filter\AbstractFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\AbstractContextAwareFilter;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
-abstract class GeneratedEntityFilter extends AbstractFilter
+abstract class GeneratedEntityFilter extends AbstractContextAwareFilter
 {
     private string $generatedEntityNamespacePattern;
 
     /**
      * @param ManagerRegistry $managerRegistry
+     * @param RequestStack|null $requestStack
+     * @param string $generatedEntityNamespacePattern
      * @param LoggerInterface|null $logger
      * @param array|null $properties
-     * @param NameConverterInterface|null $nameConverter
-     * @param string $generatedEntityNamespacePattern
      */
     public function __construct(
         ManagerRegistry $managerRegistry,
-        LoggerInterface $logger = null,
-        array $properties = null,
-        NameConverterInterface $nameConverter = null,
+        ?RequestStack $requestStack = null,
         string $generatedEntityNamespacePattern = '#^App\\\GeneratedEntity\\\NS(?:[a-zA-Z]+)$#',
+        LoggerInterface $logger = null,
+        array $properties = null
     ) {
-        parent::__construct($managerRegistry, $logger, $properties, $nameConverter);
+        parent::__construct($managerRegistry, $requestStack, $logger, $properties);
 
         $this->generatedEntityNamespacePattern = $generatedEntityNamespacePattern;
     }

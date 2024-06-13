@@ -11,29 +11,38 @@ use RZ\Roadiz\CoreBundle\Entity\CustomFormField;
 /**
  * Handle operations with customForms fields entities.
  */
-final class CustomFormFieldHandler extends AbstractHandler
+class CustomFormFieldHandler extends AbstractHandler
 {
     private ?CustomFormField $customFormField = null;
+    private CustomFormHandler $customFormHandler;
 
+    /**
+     * @return CustomFormField
+     */
+    public function getCustomFormField(): ?CustomFormField
+    {
+        return $this->customFormField;
+    }
     /**
      * @param CustomFormField $customFormField
      * @return $this
      */
-    public function setCustomFormField(CustomFormField $customFormField): self
+    public function setCustomFormField(CustomFormField $customFormField)
     {
         $this->customFormField = $customFormField;
         return $this;
     }
 
     /**
+     * Create a new custom-form-field handler with custom-form-field to handle.
+     *
      * @param ObjectManager $objectManager
      * @param CustomFormHandler $customFormHandler
      */
-    public function __construct(
-        ObjectManager $objectManager,
-        private readonly CustomFormHandler $customFormHandler
-    ) {
+    public function __construct(ObjectManager $objectManager, CustomFormHandler $customFormHandler)
+    {
         parent::__construct($objectManager);
+        $this->customFormHandler = $customFormHandler;
     }
 
     /**
@@ -48,7 +57,11 @@ final class CustomFormFieldHandler extends AbstractHandler
             throw new \BadMethodCallException('CustomForm is null');
         }
 
-        $this->customFormHandler->setCustomForm($this->customFormField->getCustomForm());
-        return $this->customFormHandler->cleanFieldsPositions($setPositions);
+        if ($this->customFormField->getCustomForm() !== null) {
+            $this->customFormHandler->setCustomForm($this->customFormField->getCustomForm());
+            return $this->customFormHandler->cleanFieldsPositions($setPositions);
+        }
+
+        return 1;
     }
 }

@@ -23,13 +23,21 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 class NodeTypesCreationCommand extends Command
 {
-    public function __construct(
-        protected readonly ManagerRegistry $managerRegistry,
-        protected readonly HandlerFactory $handlerFactory,
-        protected readonly SchemaUpdater $schemaUpdater,
-        ?string $name = null
-    ) {
-        parent::__construct($name);
+    protected ManagerRegistry $managerRegistry;
+    protected HandlerFactory $handlerFactory;
+    protected SchemaUpdater $schemaUpdater;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param HandlerFactory $handlerFactory
+     * @param SchemaUpdater $schemaUpdater
+     */
+    public function __construct(ManagerRegistry $managerRegistry, HandlerFactory $handlerFactory, SchemaUpdater $schemaUpdater)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+        $this->handlerFactory = $handlerFactory;
+        $this->schemaUpdater = $schemaUpdater;
     }
 
     protected function configure(): void
@@ -100,8 +108,7 @@ class NodeTypesCreationCommand extends Command
     protected function addNodeTypeField(NodeType $nodeType, int|float|string $position, SymfonyStyle $io): void
     {
         $field = new NodeTypeField();
-        $position = floatval($position);
-        $field->setPosition($position);
+        $field->setPosition((float) $position);
 
         $questionfName = new Question('[Field ' . $position . '] <question>Enter field name</question>', 'content');
         $fName = $io->askQuestion($questionfName);
