@@ -67,7 +67,7 @@ class NodesDetailsCommand extends Command
                     if (is_array($data)) {
                         $data = implode(', ', $data);
                     }
-                    if ($data instanceof \DateTimeInterface) {
+                    if ($data instanceof \DateTime) {
                         $data = $data->format('c');
                     }
                     if ($data instanceof \stdClass) {

@@ -85,10 +85,7 @@ class XlsxExporter
                 foreach ($headerkeys as $key => $value) {
                     $columnAlpha = Coordinate::stringFromColumnIndex($key + 1);
                     $activeSheet->getStyle($columnAlpha . $activeRow)->applyFromArray($headerStyles);
-                    if (\is_string($value)) {
-                        $value = $this->translator->trans($value);
-                    }
-                    $activeSheet->setCellValueByColumnAndRow($key + 1, $activeRow, $value);
+                    $activeSheet->setCellValueByColumnAndRow($key + 1, $activeRow, $this->translator->trans($value));
                 }
                 $activeRow++;
             }
@@ -107,7 +104,7 @@ class XlsxExporter
                     continue;
                 }
 
-                if ($value instanceof \DateTimeInterface) {
+                if ($value instanceof \DateTime) {
                     $value = Date::PHPToExcel($value);
                     $activeSheet->getStyle($columnAlpha . ($activeRow))
                         ->getNumberFormat()
@@ -137,11 +134,6 @@ class XlsxExporter
         $writer = new Xlsx($spreadsheet);
         ob_start();
         $writer->save('php://output');
-        $output = ob_get_clean();
-
-        if (!\is_string($output)) {
-            throw new \RuntimeException('Output is not a string.');
-        }
-        return $output;
+        return ob_get_clean();
     }
 }

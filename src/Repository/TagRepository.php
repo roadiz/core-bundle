@@ -141,7 +141,7 @@ final class TagRepository extends EntityRepository
                 $qb->leftJoin('tg.translatedTags', 'tt');
                 $qb->leftJoin(
                     'tt.translation',
-                    self::TRANSLATION_ALIAS,
+                    static::TRANSLATION_ALIAS,
                     'WITH',
                     't.defaultTranslation = true'
                 );
@@ -254,7 +254,6 @@ final class TagRepository extends EntityRepository
         $this->applyFilterByNodes($criteria, $qb);
         $this->applyFilterByCriteria($criteria, $qb);
         $this->applyTranslationByTag($qb, $translation);
-        // @phpstan-ignore-next-line
         $query = $qb->getQuery();
         $this->dispatchQueryEvent($query);
 
@@ -299,7 +298,6 @@ final class TagRepository extends EntityRepository
         $this->applyFilterByNodes($criteria, $qb);
         $this->applyFilterByCriteria($criteria, $qb);
         $this->applyTranslationByTag($qb, $translation);
-        // @phpstan-ignore-next-line
         $query = $qb->getQuery();
         $this->dispatchQueryEvent($query);
 
@@ -610,19 +608,19 @@ final class TagRepository extends EntityRepository
                 // Dots are forbidden in field definitions
                 $baseKey = $simpleQB->getParameterKey($key);
 
-                if (\str_contains($key, 'translation.')) {
+                if (false !== \mb_strpos($key, 'translation.')) {
                     /*
                      * Search in translation fields
                      */
                     $prefix = static::TRANSLATION_ALIAS . '.';
                     $key = str_replace('translation.', '', $key);
-                } elseif (\str_contains($key, 'nodes.')) {
+                } elseif (false !== \mb_strpos($key, 'nodes.')) {
                     /*
                      * Search in node fields
                      */
                     $prefix = static::NODE_ALIAS . '.';
                     $key = str_replace('nodes.', '', $key);
-                } elseif (\str_contains($key, 'translatedTag.')) {
+                } elseif (false !== \mb_strpos($key, 'translatedTag.')) {
                     /*
                      * Search in translatedTags fields
                      */
