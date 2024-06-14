@@ -13,14 +13,19 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Mime\Address;
 
-final class MailerTestCommand extends Command
+class MailerTestCommand extends Command
 {
-    public function __construct(
-        private readonly EmailManager $emailManager,
-        ?string $name = null
-    ) {
-        parent::__construct($name);
+    protected EmailManager $emailManager;
+
+    /**
+     * @param EmailManager $emailManager
+     */
+    public function __construct(EmailManager $emailManager)
+    {
+        parent::__construct();
+        $this->emailManager = $emailManager;
     }
+
 
     protected function configure(): void
     {
