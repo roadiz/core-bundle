@@ -79,8 +79,12 @@ final class NodeDuplicator
      */
     private function doDuplicate(Node &$node): Node
     {
+        $nodeSource = $node->getNodeSources()->first();
+        if (false === $nodeSource) {
+            throw new \RuntimeException('Node source is missing.');
+        }
         $node->setNodeName(
-            $this->nodeNamePolicy->getSafeNodeName($node->getNodeSources()->first())
+            $this->nodeNamePolicy->getSafeNodeName($nodeSource)
         );
 
         /** @var Node $child */
@@ -98,8 +102,7 @@ final class NodeDuplicator
                 $nsDoc->setNodeSource($nodeSource);
                 $doc = $nsDoc->getDocument();
                 $nsDoc->setDocument($doc);
-                $f = $nsDoc->getField();
-                $nsDoc->setField($f);
+                $nsDoc->setFieldName($nsDoc->getFieldName());
                 $this->objectManager->persist($nsDoc);
             }
         }
@@ -137,9 +140,11 @@ final class NodeDuplicator
      */
     private function doDuplicateNodeRelations(Node $node): Node
     {
-        $nodeRelations = new ArrayCollection($node->getBNodes()->toArray());
+        /** @var NodesToNodes[] $nodeRelations */
+        $nodeRelations = $node->getBNodes()->toArray();
         foreach ($nodeRelations as $position => $nodeRelation) {
-            $ntn = new NodesToNodes($node, $nodeRelation->getNodeB(), $nodeRelation->getField());
+            $ntn = new NodesToNodes($node, $nodeRelation->getNodeB());
+            $ntn->setFieldName($nodeRelation->getFieldName());
             $ntn->setPosition($position);
             $this->objectManager->persist($ntn);
         }
