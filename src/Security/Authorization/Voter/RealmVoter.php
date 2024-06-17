@@ -4,25 +4,26 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Security\Authorization\Voter;
 
+use RZ\Roadiz\CoreBundle\Entity\Realm;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-/**
- * @extends Voter<'read'|'password', RealmInterface>
- */
 final class RealmVoter extends Voter
 {
     public const READ = 'read';
     public const PASSWORD_QUERY_PARAMETER = 'password';
 
-    public function __construct(
-        private readonly Security $security,
-        private readonly RequestStack $requestStack
-    ) {
+    private Security $security;
+    private RequestStack $requestStack;
+
+    public function __construct(Security $security, RequestStack $requestStack)
+    {
+        $this->security = $security;
+        $this->requestStack = $requestStack;
     }
 
     public function supportsAttribute(string $attribute): bool
@@ -30,25 +31,28 @@ final class RealmVoter extends Voter
         return $attribute === self::READ;
     }
 
-    protected function supports(string $attribute, mixed $subject): bool
+    protected function supports(string $attribute, $subject): bool
     {
         return $this->supportsAttribute($attribute) && $subject instanceof RealmInterface;
     }
 
     /**
      * @param string $attribute
-     * @param RealmInterface $subject
+     * @param Realm $subject
      * @param TokenInterface $token
      * @return bool
      */
-    public function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
+    public function voteOnAttribute(string $attribute, $subject, TokenInterface $token): bool
     {
-        return match ($subject->getType()) {
-            RealmInterface::TYPE_PLAIN_PASSWORD => $this->voteForPassword($attribute, $subject, $token),
-            RealmInterface::TYPE_USER => $this->voteForUser($attribute, $subject, $token),
-            RealmInterface::TYPE_ROLE => $this->voteForRole($attribute, $subject, $token),
-            default => false,
-        };
+        switch ($subject->getType()) {
+            case RealmInterface::TYPE_PLAIN_PASSWORD:
+                return $this->voteForPassword($attribute, $subject, $token);
+            case RealmInterface::TYPE_USER:
+                return $this->voteForUser($attribute, $subject, $token);
+            case RealmInterface::TYPE_ROLE:
+                return $this->voteForRole($attribute, $subject, $token);
+        }
+        return false;
     }
 
     /**
@@ -57,7 +61,7 @@ final class RealmVoter extends Voter
      * @param TokenInterface $token
      * @return bool
      */
-    private function voteForRole(string $attribute, RealmInterface $subject, TokenInterface $token): bool
+    private function voteForRole(string $attribute, $subject, TokenInterface $token): bool
     {
         if (null === $role = $subject->getRole()) {
             return false;
@@ -71,7 +75,7 @@ final class RealmVoter extends Voter
      * @param TokenInterface $token
      * @return bool
      */
-    private function voteForUser(string $attribute, RealmInterface $subject, TokenInterface $token): bool
+    private function voteForUser(string $attribute, $subject, TokenInterface $token): bool
     {
         if ($subject->getUsers()->count() === 0 || null === $token->getUser()) {
             return false;
@@ -87,7 +91,7 @@ final class RealmVoter extends Voter
      * @param TokenInterface $token
      * @return bool
      */
-    private function voteForPassword(string $attribute, RealmInterface $subject, TokenInterface $token): bool
+    private function voteForPassword(string $attribute, $subject, TokenInterface $token): bool
     {
         $request = $this->requestStack->getCurrentRequest();
         if (null === $request || empty($subject->getPlainPassword())) {

@@ -9,7 +9,7 @@ use JMS\Serializer\Exception\ObjectConstructionException;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Repository\NodeRepository;
 
-final class NodeObjectConstructor extends AbstractTypedObjectConstructor
+class NodeObjectConstructor extends AbstractTypedObjectConstructor
 {
     /**
      * @inheritDoc
@@ -22,7 +22,7 @@ final class NodeObjectConstructor extends AbstractTypedObjectConstructor
     /**
      * @inheritDoc
      */
-    protected function findObject(mixed $data, DeserializationContext $context): ?object
+    protected function findObject($data, DeserializationContext $context): ?object
     {
         if (empty($data['nodeName']) && empty($data['node_name'])) {
             throw new ObjectConstructionException('Node name can not be empty');

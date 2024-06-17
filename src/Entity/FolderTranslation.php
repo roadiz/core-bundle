@@ -26,24 +26,28 @@ use Symfony\Component\Validator\Constraints as Assert;
 ]
 class FolderTranslation extends AbstractEntity
 {
-    #[ORM\Column(type: 'string', length: 250)]
+    #[ORM\Column(type: 'string')]
     #[SymfonySerializer\Groups(['folder', 'document'])]
     #[Serializer\Groups(['folder', 'document'])]
     #[Assert\Length(max: 250)]
     protected string $name = '';
 
     #[ORM\ManyToOne(targetEntity: Folder::class, inversedBy: 'translatedFolders')]
-    #[ORM\JoinColumn(name: 'folder_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'folder_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]
-    protected Folder $folder;
+    protected ?Folder $folder = null;
 
     #[ORM\ManyToOne(targetEntity: Translation::class, fetch: 'EXTRA_LAZY', inversedBy: 'folderTranslations')]
-    #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[SymfonySerializer\Groups(['folder', 'document'])]
     #[Serializer\Groups(['folder', 'document'])]
-    protected TranslationInterface $translation;
+    protected ?TranslationInterface $translation = null;
 
+    /**
+     * @param Folder $original
+     * @param TranslationInterface $translation
+     */
     public function __construct(Folder $original, TranslationInterface $translation)
     {
         $this->setFolder($original);
@@ -63,7 +67,7 @@ class FolderTranslation extends AbstractEntity
      * @param string $name
      * @return $this
      */
-    public function setName(string $name): FolderTranslation
+    public function setName(string $name)
     {
         $this->name = $name;
         return $this;

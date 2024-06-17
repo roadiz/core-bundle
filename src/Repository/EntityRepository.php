@@ -24,7 +24,6 @@ use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderSelectEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
-use Symfony\Contracts\EventDispatcher\Event;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -91,7 +90,6 @@ abstract class EntityRepository extends \Doctrine\ORM\EntityRepository implement
      */
     protected function dispatchQueryBuilderEvent(QueryBuilder $qb, string $entityClass): void
     {
-        // @phpstan-ignore-next-line
         $this->dispatcher->dispatch(new QueryBuilderSelectEvent($qb, $entityClass));
     }
 
@@ -100,11 +98,10 @@ abstract class EntityRepository extends \Doctrine\ORM\EntityRepository implement
      * @param string $property
      * @param mixed $value
      *
-     * @return Event
+     * @return QueryBuilderBuildEvent
      */
     protected function dispatchQueryBuilderBuildEvent(QueryBuilder $qb, string $property, mixed $value): object
     {
-        // @phpstan-ignore-next-line
         return $this->dispatcher->dispatch(new QueryBuilderBuildEvent(
             $qb,
             $this->getEntityName(),
@@ -117,11 +114,10 @@ abstract class EntityRepository extends \Doctrine\ORM\EntityRepository implement
     /**
      * @param Query $query
      *
-     * @return Event
+     * @return QueryEvent
      */
     protected function dispatchQueryEvent(Query $query): object
     {
-        // @phpstan-ignore-next-line
         return $this->dispatcher->dispatch(new QueryEvent(
             $query,
             $this->getEntityName()
@@ -133,11 +129,10 @@ abstract class EntityRepository extends \Doctrine\ORM\EntityRepository implement
      * @param string $property
      * @param mixed $value
      *
-     * @return Event
+     * @return QueryBuilderApplyEvent
      */
     protected function dispatchQueryBuilderApplyEvent(QueryBuilder $qb, string $property, mixed $value): object
     {
-        // @phpstan-ignore-next-line
         return $this->dispatcher->dispatch(new QueryBuilderApplyEvent(
             $qb,
             $this->getEntityName(),
@@ -262,6 +257,7 @@ abstract class EntityRepository extends \Doctrine\ORM\EntityRepository implement
                     'childrenOrder',
                     'childrenOrderDirection',
                     'password',
+                    'salt',
                     'token',
                     'confirmationToken'
                 ])
@@ -345,13 +341,12 @@ abstract class EntityRepository extends \Doctrine\ORM\EntityRepository implement
         // Add ordering
         foreach ($orders as $key => $value) {
             if (
-                (\str_starts_with($key, 'node.') || \str_starts_with($key, static::NODE_ALIAS . '.')) &&
+                str_contains($key, static::NODE_ALIAS . '.') &&
                 $this->hasJoinedNode($qb, $alias)
             ) {
-                $key = preg_replace('#^node\.#', static::NODE_ALIAS . '.', $key);
                 $qb->addOrderBy($key, $value);
             } elseif (
-                \str_starts_with($key, static::NODESSOURCES_ALIAS . '.') &&
+                str_contains($key, static::NODESSOURCES_ALIAS . '.') &&
                 $this->hasJoinedNodesSources($qb, $alias)
             ) {
                 $qb->addOrderBy($key, $value);
@@ -495,7 +490,7 @@ abstract class EntityRepository extends \Doctrine\ORM\EntityRepository implement
      *
      * @param  QueryBuilder $qb
      * @param  string  $alias
-     * @return bool
+     * @return boolean
      */
     protected function hasJoinedNode(QueryBuilder $qb, string $alias)
     {
@@ -507,7 +502,7 @@ abstract class EntityRepository extends \Doctrine\ORM\EntityRepository implement
      *
      * @param  QueryBuilder $qb
      * @param  string  $alias
-     * @return bool
+     * @return boolean
      */
     protected function hasJoinedNodesSources(QueryBuilder $qb, string $alias)
     {
@@ -519,7 +514,7 @@ abstract class EntityRepository extends \Doctrine\ORM\EntityRepository implement
      *
      * @param  QueryBuilder $qb
      * @param  string  $alias
-     * @return bool
+     * @return boolean
      */
     protected function hasJoinedNodeType(QueryBuilder $qb, string $alias)
     {
