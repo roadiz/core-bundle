@@ -113,6 +113,7 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
     #[Serializer\Groups(["web_response", "nodes_sources_single", "walker"])]
     public function getSiteName(): ?string
     {
+        // site_name
         return $this->settingsBag->get('site_name', null) ?? null;
     }
 
@@ -172,6 +173,9 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
         return false;
     }
 
+    /**
+     * @return string|null
+     */
     #[Serializer\Groups(["web_response", "nodes_sources_single", "walker"])]
     public function getPolicyUrl(): ?string
     {
@@ -195,60 +199,63 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
         return null;
     }
 
+    /**
+     * @return string|null
+     */
     #[Serializer\Groups(["web_response", "nodes_sources_single", "walker"])]
     public function getMainColor(): ?string
     {
         return $this->settingsBag->get('main_color', null) ?? null;
     }
 
+    /**
+     * @return string|null
+     */
     #[Serializer\Groups(["web_response", "nodes_sources_single", "walker"])]
     public function getFacebookUrl(): ?string
     {
         return $this->settingsBag->get('facebook_url', null) ?? null;
     }
 
+    /**
+     * @return string|null
+     */
     #[Serializer\Groups(["web_response", "nodes_sources_single", "walker"])]
     public function getInstagramUrl(): ?string
     {
         return $this->settingsBag->get('instagram_url', null) ?? null;
     }
 
+    /**
+     * @return string|null
+     */
     #[Serializer\Groups(["web_response", "nodes_sources_single", "walker"])]
     public function getTwitterUrl(): ?string
     {
         return $this->settingsBag->get('twitter_url', null) ?? null;
     }
 
+    /**
+     * @return string|null
+     */
     #[Serializer\Groups(["web_response", "nodes_sources_single", "walker"])]
     public function getYoutubeUrl(): ?string
     {
         return $this->settingsBag->get('youtube_url', null) ?? null;
     }
 
+    /**
+     * @return string|null
+     */
     #[Serializer\Groups(["nodes_sources_single", "walker"])]
     public function getLinkedinUrl(): ?string
     {
         return $this->settingsBag->get('linkedin_url', null) ?? null;
     }
 
-    #[Serializer\Groups(["nodes_sources_single", "walker"])]
-    public function getSpotifyUrl(): ?string
-    {
-        return $this->settingsBag->get('spotify_url', null) ?? null;
-    }
-
-    #[Serializer\Groups(["nodes_sources_single", "walker"])]
-    public function getSoundcloudUrl(): ?string
-    {
-        return $this->settingsBag->get('soundcloud_url', null) ?? null;
-    }
-
-    #[Serializer\Groups(["nodes_sources_single", "walker"])]
-    public function getTikTokUrl(): ?string
-    {
-        return $this->settingsBag->get('tiktok_url', null) ?? null;
-    }
-
+    /**
+     * @return string|null
+     */
     #[Serializer\Groups(["web_response", "nodes_sources_single", "walker"])]
     public function getHomePageUrl(): ?string
     {
@@ -261,6 +268,9 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
         return null;
     }
 
+    /**
+     * @return DocumentInterface|null
+     */
     #[Serializer\Groups(["web_response", "nodes_sources_single"])]
     public function getShareImage(): ?DocumentInterface
     {
@@ -281,6 +291,9 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
         return $this->settingsBag->getDocument('share_image') ?? null;
     }
 
+    /**
+     * @return TranslationInterface
+     */
     #[Serializer\Ignore()]
     public function getTranslation(): TranslationInterface
     {
@@ -290,6 +303,9 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
         return $this->defaultTranslation;
     }
 
+    /**
+     * @return NodesSources|null
+     */
     #[Serializer\Ignore()]
     public function getHomePage(): ?NodesSources
     {

@@ -8,7 +8,7 @@ use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\Exception\ObjectConstructionException;
 use RZ\Roadiz\CoreBundle\Entity\SettingGroup;
 
-final class SettingGroupObjectConstructor extends AbstractTypedObjectConstructor
+class SettingGroupObjectConstructor extends AbstractTypedObjectConstructor
 {
     /**
      * @inheritDoc
@@ -21,7 +21,7 @@ final class SettingGroupObjectConstructor extends AbstractTypedObjectConstructor
     /**
      * @inheritDoc
      */
-    protected function findObject(mixed $data, DeserializationContext $context): ?object
+    protected function findObject($data, DeserializationContext $context): ?object
     {
         if (null === $data['name'] || $data['name'] === '') {
             throw new ObjectConstructionException('SettingGroup name can not be empty');

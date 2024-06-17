@@ -108,12 +108,7 @@ class CustomForm extends AbstractDateTimed
      * @var Collection<int, CustomFormField>
      */
     #[
-        ORM\OneToMany(
-            mappedBy: "customForm",
-            targetEntity: CustomFormField::class,
-            cascade: ["ALL"],
-            orphanRemoval: true
-        ),
+        ORM\OneToMany(mappedBy: "customForm", targetEntity: CustomFormField::class, cascade: ["ALL"]),
         ORM\OrderBy(["position" => "ASC"]),
         Serializer\Groups(["custom_form"]),
         SymfonySerializer\Groups(["custom_form"]),
@@ -128,8 +123,7 @@ class CustomForm extends AbstractDateTimed
         ORM\OneToMany(
             mappedBy: "customForm",
             targetEntity: CustomFormAnswer::class,
-            cascade: ["ALL"],
-            orphanRemoval: true
+            cascade: ["ALL"]
         ),
         Serializer\Exclude,
         SymfonySerializer\Ignore
@@ -345,6 +339,7 @@ class CustomForm extends AbstractDateTimed
     {
         if ($this->getFields()->contains($field)) {
             $this->getFields()->removeElement($field);
+            $field->setCustomForm(null);
         }
 
         return $this;
