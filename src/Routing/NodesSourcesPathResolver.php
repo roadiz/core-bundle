@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Routing;
 
+use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
@@ -19,28 +20,16 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
 final class NodesSourcesPathResolver implements PathResolverInterface
 {
-    private ManagerRegistry $managerRegistry;
-    private Stopwatch $stopwatch;
     private static string $nodeNamePattern = '[a-zA-Z0-9\-\_\.]+';
-    private PreviewResolverInterface $previewResolver;
-    private Settings $settingsBag;
-    private RequestStack $requestStack;
-    private bool $useAcceptLanguageHeader;
 
     public function __construct(
-        ManagerRegistry $managerRegistry,
-        PreviewResolverInterface $previewResolver,
-        Stopwatch $stopwatch,
-        Settings $settingsBag,
-        RequestStack $requestStack,
-        bool $useAcceptLanguageHeader
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly PreviewResolverInterface $previewResolver,
+        private readonly Stopwatch $stopwatch,
+        private readonly Settings $settingsBag,
+        private readonly RequestStack $requestStack,
+        private readonly bool $useAcceptLanguageHeader
     ) {
-        $this->stopwatch = $stopwatch;
-        $this->previewResolver = $previewResolver;
-        $this->managerRegistry = $managerRegistry;
-        $this->settingsBag = $settingsBag;
-        $this->requestStack = $requestStack;
-        $this->useAcceptLanguageHeader = $useAcceptLanguageHeader;
     }
 
     /**
@@ -61,7 +50,7 @@ final class NodesSourcesPathResolver implements PathResolverInterface
         }
 
         if ($path === '/') {
-            $this->stopwatch->start('parseRootPath');
+            $this->stopwatch->start('parseRootPath', 'routing');
             $translation = $this->parseTranslation();
             $nodeSource = $this->getHome($translation);
             $this->stopwatch->stop('parseRootPath');
@@ -96,13 +85,13 @@ final class NodesSourcesPathResolver implements PathResolverInterface
                 }
             }
 
-            $this->stopwatch->start('parseTranslation');
+            $this->stopwatch->start('parseTranslation', 'routing');
             $translation = $this->parseTranslation($tokens);
             $this->stopwatch->stop('parseTranslation');
             /*
              * Try with URL Aliases OR nodeName
              */
-            $this->stopwatch->start('parseFromIdentifier');
+            $this->stopwatch->start('parseFromIdentifier', 'routing');
             $nodeSource = $this->parseFromIdentifier($tokens, $translation, $allowNonReachableNodes);
             $this->stopwatch->stop('parseFromIdentifier');
         }
@@ -156,6 +145,7 @@ final class NodesSourcesPathResolver implements PathResolverInterface
      * @param array<string> $tokens
      *
      * @return TranslationInterface|null
+     * @throws NonUniqueResultException
      */
     private function parseTranslation(array &$tokens = []): ?TranslationInterface
     {

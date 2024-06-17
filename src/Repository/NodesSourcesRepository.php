@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
+use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
@@ -14,24 +15,25 @@ use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderNodesSourcesApp
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderNodesSourcesBuildEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryNodesSourcesEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
-use RZ\Roadiz\CoreBundle\Entity\Log;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Exception\SolrServerNotAvailableException;
+use RZ\Roadiz\CoreBundle\Logger\Entity\Log;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\NodeSourceSearchHandlerInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\SearchResultsInterface;
+use RZ\Roadiz\CoreBundle\SearchEngine\SolrSearchResultItem;
 use RZ\Roadiz\CoreBundle\SearchEngine\SolrSearchResults;
-use Symfony\Component\Security\Core\Security;
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Contracts\EventDispatcher\Event;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * EntityRepository that implements search engine query with Solr.
  *
  * @template T of NodesSources
- * @extends StatusAwareRepository<T>
- * @template-extends StatusAwareRepository<T>
+ * @extends StatusAwareRepository<T|NodesSources>
+ * @template-extends StatusAwareRepository<T|NodesSources>
  */
 class NodesSourcesRepository extends StatusAwareRepository
 {
@@ -60,10 +62,11 @@ class NodesSourcesRepository extends StatusAwareRepository
      * @param string $property
      * @param mixed $value
      *
-     * @return object|QueryBuilderNodesSourcesBuildEvent
+     * @return Event
      */
     protected function dispatchQueryBuilderBuildEvent(QueryBuilder $qb, string $property, mixed $value): object
     {
+        // @phpstan-ignore-next-line
         return $this->dispatcher->dispatch(
             new QueryBuilderNodesSourcesBuildEvent($qb, $property, $value, $this->getEntityName())
         );
@@ -74,10 +77,11 @@ class NodesSourcesRepository extends StatusAwareRepository
      * @param string $property
      * @param mixed $value
      *
-     * @return object|QueryBuilderNodesSourcesApplyEvent
+     * @return Event
      */
     protected function dispatchQueryBuilderApplyEvent(QueryBuilder $qb, string $property, mixed $value): object
     {
+        // @phpstan-ignore-next-line
         return $this->dispatcher->dispatch(
             new QueryBuilderNodesSourcesApplyEvent($qb, $property, $value, $this->getEntityName())
         );
@@ -86,10 +90,11 @@ class NodesSourcesRepository extends StatusAwareRepository
     /**
      * @param Query  $query
      *
-     * @return object|QueryNodesSourcesEvent
+     * @return Event
      */
     protected function dispatchQueryEvent(Query $query): object
     {
+        // @phpstan-ignore-next-line
         return $this->dispatcher->dispatch(
             new QueryNodesSourcesEvent($query, $this->getEntityName())
         );
@@ -147,9 +152,10 @@ class NodesSourcesRepository extends StatusAwareRepository
             if ($key == "tags" || $key == "tagExclusive") {
                 continue;
             }
-            /*
+            /**
              * Main QueryBuilder dispatch loop for
              * custom properties criteria.
+             * @var QueryBuilderNodesSourcesBuildEvent $event
              */
             $event = $this->dispatchQueryBuilderBuildEvent($qb, $key, $value);
 
@@ -183,6 +189,7 @@ class NodesSourcesRepository extends StatusAwareRepository
                 continue;
             }
 
+            /** @var QueryBuilderNodesSourcesApplyEvent $event */
             $event = $this->dispatchQueryBuilderApplyEvent($qb, $key, $value);
             if (!$event->isPropagationStopped()) {
                 $simpleQB->bindValue($key, $value);
@@ -212,29 +219,17 @@ class NodesSourcesRepository extends StatusAwareRepository
              * Forbid deleted node for backend user when authorizationChecker not null.
              */
             if (!$this->hasJoinedNode($qb, $prefix)) {
-                $qb->innerJoin(
-                    $prefix . '.node',
-                    static::NODE_ALIAS,
-                    'WITH',
-                    $qb->expr()->lte(static::NODE_ALIAS . '.status', Node::PUBLISHED)
-                );
-            } else {
-                $qb->andWhere($qb->expr()->lte(static::NODE_ALIAS . '.status', Node::PUBLISHED));
+                $qb->innerJoin($prefix . '.node', static::NODE_ALIAS);
             }
+            $qb->andWhere($qb->expr()->lte(static::NODE_ALIAS . '.status', Node::PUBLISHED));
         } else {
             /*
              * Forbid unpublished node for anonymous and not backend users.
              */
             if (!$this->hasJoinedNode($qb, $prefix)) {
-                $qb->innerJoin(
-                    $prefix . '.node',
-                    static::NODE_ALIAS,
-                    'WITH',
-                    $qb->expr()->eq(static::NODE_ALIAS . '.status', Node::PUBLISHED)
-                );
-            } else {
-                $qb->andWhere($qb->expr()->eq(static::NODE_ALIAS . '.status', Node::PUBLISHED));
+                $qb->innerJoin($prefix . '.node', static::NODE_ALIAS);
             }
+            $qb->andWhere($qb->expr()->eq(static::NODE_ALIAS . '.status', Node::PUBLISHED));
         }
         return $qb;
     }
@@ -245,8 +240,8 @@ class NodesSourcesRepository extends StatusAwareRepository
      *
      * @param array $criteria
      * @param array|null $orderBy
-     * @param integer|null $limit
-     * @param integer|null $offset
+     * @param int|null $limit
+     * @param int|null $offset
      * @return QueryBuilder
      */
     protected function getContextualQuery(
@@ -254,7 +249,7 @@ class NodesSourcesRepository extends StatusAwareRepository
         array $orderBy = null,
         $limit = null,
         $offset = null
-    ) {
+    ): QueryBuilder {
         $qb = $this->createQueryBuilder(static::NODESSOURCES_ALIAS);
         $this->alterQueryBuilderWithAuthorizationChecker($qb, static::NODESSOURCES_ALIAS);
         $qb->addSelect(static::NODE_ALIAS);
@@ -267,7 +262,7 @@ class NodesSourcesRepository extends StatusAwareRepository
         // Add ordering
         if (null !== $orderBy) {
             foreach ($orderBy as $key => $value) {
-                if (false !== \mb_strpos($key, 'node.')) {
+                if (\str_contains($key, 'node.')) {
                     $simpleKey = str_replace('node.', '', $key);
                     $qb->addOrderBy(static::NODE_ALIAS . '.' . $simpleKey, $value);
                 } else {
@@ -357,7 +352,7 @@ class NodesSourcesRepository extends StatusAwareRepository
      * @param array|null $orderBy
      * @param int|null $limit
      * @param int|null $offset
-     * @return array|Paginator
+     * @return array<NodesSources>|Paginator<NodesSources>
      */
     public function findBy(
         array $criteria,
@@ -412,7 +407,7 @@ class NodesSourcesRepository extends StatusAwareRepository
     public function findOneBy(
         array $criteria,
         array $orderBy = null
-    ) {
+    ): ?NodesSources {
         $qb = $this->getContextualQuery(
             $criteria,
             $orderBy,
@@ -441,7 +436,7 @@ class NodesSourcesRepository extends StatusAwareRepository
      *
      * @param string $query Solr query string (for example: `text:Lorem Ipsum`)
      * @param int $limit Result number to fetch (default: all)
-     * @return array
+     * @return array<SolrSearchResultItem<NodesSources>>
      */
     public function findBySearchQuery(string $query, int $limit = 25): array
     {
@@ -521,7 +516,6 @@ class NodesSourcesRepository extends StatusAwareRepository
             ->andWhere($qb->expr()->orX(
                 $qb->expr()->like(static::NODESSOURCES_ALIAS . '.title', ':query'),
                 $qb->expr()->like(static::NODESSOURCES_ALIAS . '.metaTitle', ':query'),
-                $qb->expr()->like(static::NODESSOURCES_ALIAS . '.metaKeywords', ':query'),
                 $qb->expr()->like(static::NODESSOURCES_ALIAS . '.metaDescription', ':query')
             ))
             ->orderBy(static::NODESSOURCES_ALIAS . '.title', 'ASC')
@@ -563,18 +557,20 @@ class NodesSourcesRepository extends StatusAwareRepository
      * @param int $maxResult
      * @return Paginator
      */
-    public function findByLatestUpdated($maxResult = 5)
+    public function findByLatestUpdated(int $maxResult = 5): Paginator
     {
         $subQuery = $this->_em->createQueryBuilder();
-        $subQuery->select('sns.id')
+        $subQuery->select('slog.entityId')
             ->from(Log::class, 'slog')
-            ->innerJoin(NodesSources::class, 'sns')
-            ->andWhere($subQuery->expr()->isNotNull('slog.nodeSource'))
+            ->andWhere($subQuery->expr()->eq('slog.entityClass', ':entityClass'))
             ->orderBy('slog.datetime', 'DESC');
 
         $query = $this->createQueryBuilder(static::NODESSOURCES_ALIAS);
-        $query->andWhere($query->expr()->in(static::NODESSOURCES_ALIAS . '.id', $subQuery->getQuery()->getDQL()));
-        $query->setMaxResults($maxResult);
+        $query
+            ->andWhere($query->expr()->in(static::NODESSOURCES_ALIAS . '.id', $subQuery->getQuery()->getDQL()))
+            ->setParameter(':entityClass', NodesSources::class)
+            ->setMaxResults($maxResult)
+        ;
 
         return new Paginator($query->getQuery());
     }
@@ -646,7 +642,7 @@ class NodesSourcesRepository extends StatusAwareRepository
 
             if (!$event->isPropagationStopped()) {
                 $baseKey = $simpleQB->getParameterKey($key);
-                if (false !== \mb_strpos($key, 'node.nodeType.')) {
+                if (\str_contains($key, 'node.nodeType.')) {
                     if (!$this->hasJoinedNode($qb, $alias)) {
                         $qb->innerJoin($alias . '.node', static::NODE_ALIAS);
                     }
@@ -656,7 +652,7 @@ class NodesSourcesRepository extends StatusAwareRepository
                     $prefix = static::NODETYPE_ALIAS . '.';
                     $simpleKey = str_replace('node.nodeType.', '', $key);
                     $qb->andWhere($simpleQB->buildExpressionWithoutBinding($value, $prefix, $simpleKey, $baseKey));
-                } elseif (false !== \mb_strpos($key, 'node.')) {
+                } elseif (\str_contains($key, 'node.')) {
                     if (!$this->hasJoinedNode($qb, $alias)) {
                         $qb->innerJoin($alias . '.node', static::NODE_ALIAS);
                     }
@@ -704,7 +700,7 @@ class NodesSourcesRepository extends StatusAwareRepository
     /**
      * @param NodesSources  $nodesSources
      * @param NodeTypeFieldInterface $field
-     *
+     * @deprecated Use findByNodesSourcesAndFieldNameAndTranslation instead
      * @return array|null
      */
     public function findByNodesSourcesAndFieldAndTranslation(
@@ -716,7 +712,7 @@ class NodesSourcesRepository extends StatusAwareRepository
             ->innerJoin('ns.node', static::NODE_ALIAS)
             ->leftJoin('ns.urlAliases', 'ua')
             ->innerJoin('n.aNodes', 'ntn')
-            ->andWhere($qb->expr()->eq('ntn.field', ':field'))
+            ->andWhere($qb->expr()->eq('ntn.fieldName', ':fieldName'))
             ->andWhere($qb->expr()->eq('ntn.nodeA', ':nodeA'))
             ->andWhere($qb->expr()->eq('ns.translation', ':translation'))
             ->addOrderBy('ntn.position', 'ASC')
@@ -724,7 +720,37 @@ class NodesSourcesRepository extends StatusAwareRepository
 
         $this->alterQueryBuilderWithAuthorizationChecker($qb);
 
-        $qb->setParameter('field', $field)
+        $qb->setParameter('fieldName', $field->getName())
+            ->setParameter('nodeA', $nodesSources->getNode())
+            ->setParameter('translation', $nodesSources->getTranslation());
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * @param NodesSources  $nodesSources
+     * @param string $fieldName
+     *
+     * @return array|null
+     */
+    public function findByNodesSourcesAndFieldNameAndTranslation(
+        NodesSources $nodesSources,
+        string $fieldName
+    ): ?array {
+        $qb = $this->createQueryBuilder(static::NODESSOURCES_ALIAS);
+        $qb->select('ns, n, ua')
+            ->innerJoin('ns.node', static::NODE_ALIAS)
+            ->leftJoin('ns.urlAliases', 'ua')
+            ->innerJoin('n.aNodes', 'ntn')
+            ->andWhere($qb->expr()->eq('ntn.fieldName', ':fieldName'))
+            ->andWhere($qb->expr()->eq('ntn.nodeA', ':nodeA'))
+            ->andWhere($qb->expr()->eq('ns.translation', ':translation'))
+            ->addOrderBy('ntn.position', 'ASC')
+            ->setCacheable(true);
+
+        $this->alterQueryBuilderWithAuthorizationChecker($qb);
+
+        $qb->setParameter('fieldName', $fieldName)
             ->setParameter('nodeA', $nodesSources->getNode())
             ->setParameter('translation', $nodesSources->getTranslation());
 
@@ -751,5 +777,320 @@ class NodesSourcesRepository extends StatusAwareRepository
         }
 
         return $qb->getQuery()->getResult();
+    }
+
+    protected function classicLikeComparison(
+        string $pattern,
+        QueryBuilder $qb,
+        string $alias = EntityRepository::DEFAULT_ALIAS
+    ): QueryBuilder {
+        $qb = parent::classicLikeComparison($pattern, $qb, $alias);
+        $qb
+            ->innerJoin($alias . '.node', static::NODE_ALIAS)
+            ->leftJoin(static::NODE_ALIAS . '.attributeValues', 'av')
+            ->leftJoin('av.attributeValueTranslations', 'avt')
+        ;
+        $value =  '%' . strip_tags(\mb_strtolower($pattern)) . '%';
+        $qb->orWhere($qb->expr()->like('LOWER(avt.value)', $qb->expr()->literal($value)));
+        $qb->orWhere($qb->expr()->like('LOWER(' . static::NODE_ALIAS . '.nodeName)', $qb->expr()->literal($value)));
+        return $qb;
+    }
+
+    /**
+     * Get every nodeSources parents from direct parent to farthest ancestor.
+     *
+     * @param NodesSources $nodeSource
+     * @param array|null $criteria
+     * @return array<NodesSources>
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function findParents(
+        NodesSources $nodeSource,
+        ?array $criteria = null
+    ): array {
+        $parentsNodeSources = [];
+
+        if (null === $criteria) {
+            $criteria = [];
+        }
+
+        $parent = $nodeSource;
+
+        while (null !== $parent) {
+            $criteria = array_merge(
+                $criteria,
+                [
+                    'node' => $parent->getNode()->getParent(),
+                    'translation' => $nodeSource->getTranslation(),
+                ]
+            );
+            $currentParent = $this->findOneBy(
+                $criteria,
+                []
+            );
+
+            if (null !== $currentParent) {
+                $parentsNodeSources[] = $currentParent;
+            }
+
+            $parent = $currentParent;
+        }
+
+        return $parentsNodeSources;
+    }
+
+    /**
+     * Get children nodes sources to lock with current translation.
+     *
+     * @param NodesSources $nodeSource
+     * @param array|null $criteria Additional criteria
+     * @param array|null $order Non default ordering
+     *
+     * @return Paginator<NodesSources>|array<NodesSources>
+     */
+    public function findChildren(
+        NodesSources $nodeSource,
+        array $criteria = null,
+        array $order = null
+    ): Paginator|array {
+        $defaultCriteria = [
+            'node.parent' => $nodeSource->getNode(),
+            'translation' => $nodeSource->getTranslation(),
+        ];
+
+        if (null !== $order) {
+            $defaultOrder = $order;
+        } else {
+            $defaultOrder = [
+                'node.position' => 'ASC',
+            ];
+        }
+
+        if (null !== $criteria) {
+            $defaultCriteria = array_merge($defaultCriteria, $criteria);
+        }
+
+        return $this->findBy(
+            $defaultCriteria,
+            $defaultOrder
+        );
+    }
+
+    /**
+     * Get first node-source among current node-source children.
+     *
+     * @param NodesSources|null $nodeSource
+     * @param array|null $criteria
+     * @param array|null $order
+     *
+     * @return NodesSources|null
+     * @throws NonUniqueResultException
+     */
+    public function findFirstChild(
+        ?NodesSources $nodeSource,
+        array $criteria = null,
+        array $order = null
+    ): ?NodesSources {
+        $defaultCriteria = [
+            'node.parent' => $nodeSource?->getNode() ?? null,
+        ];
+
+        if (null !== $nodeSource) {
+            $defaultCriteria['translation'] = $nodeSource->getTranslation();
+        }
+
+        if (null !== $order) {
+            $defaultOrder = $order;
+        } else {
+            $defaultOrder = [
+                'node.position' => 'ASC',
+            ];
+        }
+
+        if (null !== $criteria) {
+            $defaultCriteria = array_merge($defaultCriteria, $criteria);
+        }
+
+        return $this->findOneBy(
+            $defaultCriteria,
+            $defaultOrder
+        );
+    }
+
+    /**
+     * Get last node-source among current node-source children.
+     *
+     * @param NodesSources|null $nodeSource
+     * @param array|null $criteria
+     * @param array|null $order
+     *
+     * @return NodesSources|null
+     * @throws NonUniqueResultException
+     */
+    public function findLastChild(
+        ?NodesSources $nodeSource,
+        array $criteria = null,
+        array $order = null
+    ): ?NodesSources {
+        $defaultCriteria = [
+            'node.parent' => $nodeSource?->getNode() ?? null,
+        ];
+
+        if (null !== $nodeSource) {
+            $defaultCriteria['translation'] = $nodeSource->getTranslation();
+        }
+
+        if (null !== $order) {
+            $defaultOrder = $order;
+        } else {
+            $defaultOrder = [
+                'node.position' => 'DESC',
+            ];
+        }
+
+        if (null !== $criteria) {
+            $defaultCriteria = array_merge($defaultCriteria, $criteria);
+        }
+
+        return $this->findOneBy(
+            $defaultCriteria,
+            $defaultOrder
+        );
+    }
+
+    /**
+     * Get first node-source in the same parent as current node-source.
+     *
+     * @param NodesSources $nodeSource
+     * @param array|null $criteria
+     * @param array|null $order
+     *
+     * @return NodesSources|null
+     * @throws NonUniqueResultException
+     */
+    public function findFirstSibling(
+        NodesSources $nodeSource,
+        array $criteria = null,
+        array $order = null
+    ): ?NodesSources {
+        if (null !== $nodeSource->getParent()) {
+            return $this->findFirstChild($nodeSource->getParent(), $criteria, $order);
+        }
+        return $this->findFirstChild(null, $criteria, $order);
+    }
+
+    /**
+     * Get last node-source in the same parent as current node-source.
+     *
+     * @param NodesSources $nodeSource
+     * @param array|null $criteria
+     * @param array|null $order
+     *
+     * @return NodesSources|null
+     * @throws NonUniqueResultException
+     */
+    public function findLastSibling(
+        NodesSources $nodeSource,
+        array $criteria = null,
+        array $order = null
+    ): ?NodesSources {
+        if (null !== $nodeSource->getParent()) {
+            return $this->findLastChild($nodeSource->getParent(), $criteria, $order);
+        }
+        return $this->findLastChild(null, $criteria, $order);
+    }
+
+    /**
+     * Get previous node-source from hierarchy.
+     *
+     * @param NodesSources $nodeSource
+     * @param array|null $criteria
+     * @param array|null $order
+     *
+     * @return NodesSources|null
+     * @throws NonUniqueResultException
+     */
+    public function findPrevious(
+        NodesSources $nodeSource,
+        array $criteria = null,
+        array $order = null
+    ): ?NodesSources {
+        if ($nodeSource->getNode()->getPosition() <= 1) {
+            return null;
+        }
+
+        $defaultCriteria = [
+            /*
+             * Use < operator to get first next nodeSource
+             * even if it’s not the next position index
+             */
+            'node.position' => [
+                '<',
+                $nodeSource
+                    ->getNode()
+                    ->getPosition(),
+            ],
+            'node.parent' => $nodeSource->getNode()->getParent(),
+            'translation' => $nodeSource->getTranslation(),
+        ];
+        if (null !== $criteria) {
+            $defaultCriteria = array_merge($defaultCriteria, $criteria);
+        }
+
+        if (null === $order) {
+            $order = [];
+        }
+
+        $order['node.position'] = 'DESC';
+
+        return $this->findOneBy(
+            $defaultCriteria,
+            $order
+        );
+    }
+
+    /**
+     * Get next node-source from hierarchy.
+     *
+     * @param NodesSources $nodeSource
+     * @param array|null $criteria
+     * @param array|null $order
+     *
+     * @return NodesSources|null
+     * @throws NonUniqueResultException
+     */
+    public function findNext(
+        NodesSources $nodeSource,
+        array $criteria = null,
+        array $order = null
+    ): ?NodesSources {
+        $defaultCriteria = [
+            /*
+             * Use > operator to get first next nodeSource
+             * even if it’s not the next position index
+             */
+            'node.position' => [
+                '>',
+                $nodeSource
+                    ->getNode()
+                    ->getPosition(),
+            ],
+            'node.parent' => $nodeSource->getNode()->getParent(),
+            'translation' => $nodeSource->getTranslation(),
+        ];
+        if (null !== $criteria) {
+            $defaultCriteria = array_merge($defaultCriteria, $criteria);
+        }
+
+        if (null === $order) {
+            $order = [];
+        }
+
+        $order['node.position'] = 'ASC';
+
+        return $this->findOneBy(
+            $defaultCriteria,
+            $order
+        );
     }
 }
