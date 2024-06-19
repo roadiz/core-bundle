@@ -21,17 +21,10 @@ final class ClientRegistry
 
     public function getClient(): ?Client
     {
-        $client = $this->container->get(
+        return $this->container->get(
             'roadiz_core.solr.client',
             ContainerInterface::NULL_ON_INVALID_REFERENCE
         );
-        if (null === $client) {
-            return null;
-        }
-        if (!($client instanceof Client)) {
-            throw new \RuntimeException('Solr client must be an instance of ' . Client::class);
-        }
-        return $client;
     }
 
     public function isClientReady(?Client $client): bool

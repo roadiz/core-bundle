@@ -105,12 +105,11 @@ class CustomFormsType extends AbstractType
 
         /** @var CustomFormField $field */
         foreach ($fields as $field) {
-            $groupName = $field->getGroupName();
-            if (\is_string($groupName) && $groupName !== '') {
-                if (!isset($fieldsArray[$groupName]) || !\is_array($fieldsArray[$groupName])) {
-                    $fieldsArray[$groupName] = [];
+            if ($field->getGroupName() != '') {
+                if (!isset($fieldsArray[$field->getGroupName()])) {
+                    $fieldsArray[$field->getGroupName()] = [];
                 }
-                $fieldsArray[$groupName][] = $field;
+                $fieldsArray[$field->getGroupName()][] = $field;
             } else {
                 $fieldsArray[] = $field;
             }
