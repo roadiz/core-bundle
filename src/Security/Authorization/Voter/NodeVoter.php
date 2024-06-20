@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Security\Authorization\Voter;
 
+use Psr\Cache\CacheItemPoolInterface;
+use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\Node\NodeOffspringResolverInterface;
+use RZ\Roadiz\CoreBundle\EntityHandler\NodeHandler;
 use RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\NodeChrootResolver;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-/**
- * @extends Voter<'CREATE'|'DUPLICATE'|'CREATE_AT_ROOT'|'SEARCH'|'READ'|'READ_AT_ROOT'|'EMPTY_TRASH'|'READ_LOGS'|'EDIT_CONTENT'|'EDIT_TAGS'|'EDIT_REALMS'|'EDIT_SETTING'|'EDIT_STATUS'|'EDIT_ATTRIBUTE'|'DELETE', Node>
- */
 final class NodeVoter extends Voter
 {
     public const CREATE = 'CREATE';
@@ -35,13 +34,14 @@ final class NodeVoter extends Voter
     public const DELETE = 'DELETE';
 
     public function __construct(
-        private readonly NodeChrootResolver $chrootResolver,
-        private readonly Security $security,
-        private readonly NodeOffspringResolverInterface $nodeOffspringResolver,
+        private NodeChrootResolver $chrootResolver,
+        private Security $security,
+        private HandlerFactoryInterface $handlerFactory,
+        private CacheItemPoolInterface $cache
     ) {
     }
 
-    protected function supports(string $attribute, mixed $subject): bool
+    protected function supports(string $attribute, $subject): bool
     {
         if (
             \in_array($attribute, [
@@ -79,7 +79,7 @@ final class NodeVoter extends Voter
         return false;
     }
 
-    protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
+    protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token): bool
     {
         $user = $token->getUser();
 
@@ -122,7 +122,18 @@ final class NodeVoter extends Voter
          * Test if node is inside user chroot using all Chroot node offspring ids
          * to be able to cache all results.
          */
-        return \in_array($node->getId(), $this->nodeOffspringResolver->getAllOffspringIds($chroot), true);
+        $cacheItem = $this->cache->getItem('node_offspring_ids_' . $chroot->getId());
+        if (!$cacheItem->isHit()) {
+            /** @var NodeHandler $nodeHandler */
+            $nodeHandler = $this->handlerFactory->getHandler($chroot);
+            $offspringIds = $nodeHandler->getAllOffspringId();
+            $cacheItem->set($offspringIds);
+            $this->cache->save($cacheItem);
+        } else {
+            $offspringIds = $cacheItem->get();
+        }
+
+        return \in_array($node->getId(), $offspringIds, true);
     }
 
     private function isGrantedWithUserChroot(Node $node, UserInterface $user, array|string $roles, bool $includeChroot): bool

@@ -14,10 +14,6 @@ class QueryBuilderListManager extends AbstractEntityListManager
     protected ?Paginator $paginator = null;
     protected string $identifier;
     protected bool $debug = false;
-    /**
-     * @var null|callable
-     */
-    protected $searchingCallable = null;
 
     /**
      * @param Request|null $request
@@ -38,39 +34,56 @@ class QueryBuilderListManager extends AbstractEntityListManager
     }
 
     /**
-     * @param callable|null $searchingCallable
-     * @return QueryBuilderListManager
-     */
-    public function setSearchingCallable(?callable $searchingCallable): QueryBuilderListManager
-    {
-        $this->searchingCallable = $searchingCallable;
-        return $this;
-    }
-
-    /**
      * @param string $search
      */
     protected function handleSearchParam(string $search): void
     {
-        parent::handleSearchParam($search);
-
-        if (\is_callable($this->searchingCallable)) {
-            \call_user_func($this->searchingCallable, $this->queryBuilder, $search);
-        }
+        // Implement your custom logic
     }
 
     public function handle(bool $disabled = false)
     {
-        $this->handleRequestQuery($disabled);
-    }
+        if (false === $disabled && null !== $this->request) {
+            if (
+                $this->allowRequestSorting &&
+                $this->request->query->get('field') &&
+                $this->request->query->get('ordering')
+            ) {
+                $this->validateOrderingFieldName($this->request->query->get('field'));
+                $this->queryBuilder->addOrderBy(
+                    sprintf('%s.%s', $this->identifier, $this->request->query->get('field')),
+                    $this->request->query->get('ordering')
+                );
+                $this->queryArray['field'] = $this->request->query->get('field');
+                $this->queryArray['ordering'] = $this->request->query->get('ordering');
+            }
 
-    protected function handleOrderingParam(string $field, string $ordering): void
-    {
-        $this->validateOrderingFieldName($field);
-        $this->queryBuilder->addOrderBy(
-            sprintf('%s.%s', $this->identifier, $field),
-            $ordering
-        );
+            if ($this->allowRequestSearching && $this->request->query->get('search') != "") {
+                $this->handleSearchParam($this->request->query->get('search'));
+                $this->queryArray['search'] = $this->request->query->get('search');
+            }
+
+            if (
+                $this->request->query->has('item_per_page') &&
+                $this->request->query->get('item_per_page') > 0
+            ) {
+                $this->setItemPerPage((int) $this->request->query->get('item_per_page'));
+            }
+
+            if (
+                $this->request->query->has('page') &&
+                $this->request->query->get('page') > 1
+            ) {
+                $this->setPage((int) $this->request->query->get('page'));
+            } else {
+                $this->setPage(1);
+            }
+        } else {
+            /*
+             * Disable pagination and paginator
+             */
+            $this->disablePagination();
+        }
     }
 
     /**

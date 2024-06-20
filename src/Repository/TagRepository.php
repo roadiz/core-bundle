@@ -13,7 +13,6 @@ use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
 use RZ\Roadiz\CoreBundle\Entity\Node;
-use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Entity\TagTranslation;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
@@ -142,7 +141,7 @@ final class TagRepository extends EntityRepository
                 $qb->leftJoin('tg.translatedTags', 'tt');
                 $qb->leftJoin(
                     'tt.translation',
-                    self::TRANSLATION_ALIAS,
+                    static::TRANSLATION_ALIAS,
                     'WITH',
                     't.defaultTranslation = true'
                 );
@@ -234,7 +233,7 @@ final class TagRepository extends EntityRepository
      * @param integer|null                            $offset
      * @param TranslationInterface|null               $translation
      *
-     * @return array<Tag>|Paginator<Tag>
+     * @return array|Paginator
      */
     public function findBy(
         array $criteria,
@@ -255,7 +254,6 @@ final class TagRepository extends EntityRepository
         $this->applyFilterByNodes($criteria, $qb);
         $this->applyFilterByCriteria($criteria, $qb);
         $this->applyTranslationByTag($qb, $translation);
-        // @phpstan-ignore-next-line
         $query = $qb->getQuery();
         $this->dispatchQueryEvent($query);
 
@@ -300,7 +298,6 @@ final class TagRepository extends EntityRepository
         $this->applyFilterByNodes($criteria, $qb);
         $this->applyFilterByCriteria($criteria, $qb);
         $this->applyTranslationByTag($qb, $translation);
-        // @phpstan-ignore-next-line
         $query = $qb->getQuery();
         $this->dispatchQueryEvent($query);
 
@@ -611,19 +608,19 @@ final class TagRepository extends EntityRepository
                 // Dots are forbidden in field definitions
                 $baseKey = $simpleQB->getParameterKey($key);
 
-                if (\str_contains($key, 'translation.')) {
+                if (false !== \mb_strpos($key, 'translation.')) {
                     /*
                      * Search in translation fields
                      */
                     $prefix = static::TRANSLATION_ALIAS . '.';
                     $key = str_replace('translation.', '', $key);
-                } elseif (\str_contains($key, 'nodes.')) {
+                } elseif (false !== \mb_strpos($key, 'nodes.')) {
                     /*
                      * Search in node fields
                      */
                     $prefix = static::NODE_ALIAS . '.';
                     $key = str_replace('nodes.', '', $key);
-                } elseif (\str_contains($key, 'translatedTag.')) {
+                } elseif (false !== \mb_strpos($key, 'translatedTag.')) {
                     /*
                      * Search in translatedTags fields
                      */
@@ -721,7 +718,7 @@ final class TagRepository extends EntityRepository
      *
      * @return Tag|null
      */
-    public function findByPath(string $tagPath): ?Tag
+    public function findByPath(string $tagPath)
     {
         $tagPath = trim($tagPath);
         $tags = explode('/', $tagPath);
@@ -746,12 +743,10 @@ final class TagRepository extends EntityRepository
      *
      * Parent can be null for tag root
      *
-     * @param Tag|null $parent
+     * @param  Tag|null $parent
      * @return int
-     * @throws NoResultException
-     * @throws NonUniqueResultException
      */
-    public function findLatestPositionInParent(Tag $parent = null): int
+    public function findLatestPositionInParent(Tag $parent = null)
     {
         $qb = $this->createQueryBuilder('t');
         $qb->select($qb->expr()->max('t.position'));
@@ -764,16 +759,5 @@ final class TagRepository extends EntityRepository
         }
 
         return (int) $qb->getQuery()->getSingleScalarResult();
-    }
-
-    public function findByNodesSources(NodesSources $nodesSources): array|Paginator
-    {
-        // @phpstan-ignore-next-line
-        return $this->findBy([
-            "nodes" => $nodesSources->getNode(),
-            "translation" => $nodesSources->getTranslation(),
-        ], [
-            'position' => 'ASC',
-        ]);
     }
 }

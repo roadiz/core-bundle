@@ -12,14 +12,18 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-final class GenerateApiResourceCommand extends Command
+class GenerateApiResourceCommand extends Command
 {
+    protected ManagerRegistry $managerRegistry;
+    protected ApiResourceGenerator $apiResourceGenerator;
+
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly ApiResourceGenerator $apiResourceGenerator,
-        ?string $name = null
+        ManagerRegistry $managerRegistry,
+        ApiResourceGenerator $apiResourceGenerator
     ) {
-        parent::__construct($name);
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+        $this->apiResourceGenerator = $apiResourceGenerator;
     }
 
     protected function configure(): void
