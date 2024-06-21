@@ -17,11 +17,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 trait AttributeGroupTrait
 {
     #[
-        ORM\Column(name: "canonical_name", type: "string", length: 255, unique: true, nullable: false),
+        ORM\Column(name: "canonical_name", type: "string", unique: true, nullable: false),
         Serializer\Groups(["attribute_group", "attribute", "node", "nodes_sources"]),
         Serializer\Type("string"),
         Assert\NotNull(),
-        Assert\Length(max: 255),
         Assert\NotBlank()
     ]
     protected string $canonicalName = '';
@@ -32,7 +31,7 @@ trait AttributeGroupTrait
     #[
         ORM\OneToMany(mappedBy: "group", targetEntity: AttributeInterface::class),
         Serializer\Groups(["attribute_group"]),
-        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Attribute>")
+        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Model\AttributeInterface>")
     ]
     protected Collection $attributes;
 
@@ -40,14 +39,9 @@ trait AttributeGroupTrait
      * @var Collection<int, AttributeGroupTranslationInterface>
      */
     #[
-        ORM\OneToMany(
-            mappedBy: "attributeGroup",
-            targetEntity: AttributeGroupTranslationInterface::class,
-            cascade: ["all"],
-            orphanRemoval: true
-        ),
+        ORM\OneToMany(mappedBy: "attributeGroup", targetEntity: AttributeGroupTranslationInterface::class, cascade: ["all"]),
         Serializer\Groups(["attribute_group", "attribute", "node", "nodes_sources"]),
-        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\AttributeGroupTranslation>"),
+        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Model\AttributeGroupTranslationInterface>"),
         Serializer\Accessor(getter: "getAttributeGroupTranslations", setter: "setAttributeGroupTranslations")
     ]
     protected Collection $attributeGroupTranslations;

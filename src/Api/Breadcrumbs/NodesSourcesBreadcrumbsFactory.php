@@ -20,6 +20,8 @@ final class NodesSourcesBreadcrumbsFactory implements BreadcrumbsFactoryInterfac
         }
 
         if (
+            null === $entity->getNode() ||
+            null === $entity->getNode()->getNodeType() ||
             !$entity->isReachable()
         ) {
             return null;

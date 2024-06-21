@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\TwigExtension;
 
-use Doctrine\ORM\NonUniqueResultException;
-use Doctrine\Persistence\ManagerRegistry;
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\Entity\Tag;
+use RZ\Roadiz\CoreBundle\EntityApi\NodeSourceApi;
+use RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory;
+use RZ\Roadiz\CoreBundle\EntityHandler\NodesSourcesHandler;
 use Twig\Error\RuntimeError;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
@@ -21,11 +19,27 @@ use Twig\TwigTest;
  */
 final class NodesSourcesExtension extends AbstractExtension
 {
+    protected NodeSourceApi $nodeSourceApi;
+    protected HandlerFactory $handlerFactory;
+    private bool $throwExceptions;
+    private NodeTypes $nodeTypesBag;
+
+    /**
+     * @param NodeSourceApi $nodeSourceApi
+     * @param HandlerFactory $handlerFactory
+     * @param NodeTypes $nodeTypesBag
+     * @param bool $throwExceptions
+     */
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly NodeTypes $nodeTypesBag,
-        private readonly bool $throwExceptions = false
+        NodeSourceApi $nodeSourceApi,
+        HandlerFactory $handlerFactory,
+        NodeTypes $nodeTypesBag,
+        bool $throwExceptions = false
     ) {
+        $this->throwExceptions = $throwExceptions;
+        $this->handlerFactory = $handlerFactory;
+        $this->nodeTypesBag = $nodeTypesBag;
+        $this->nodeSourceApi = $nodeSourceApi;
     }
 
     public function getFilters(): array
@@ -62,10 +76,10 @@ final class NodesSourcesExtension extends AbstractExtension
      * @param NodesSources|null $ns
      * @param array|null $criteria
      * @param array|null $order
-     * @return iterable<NodesSources>
+     * @return array
      * @throws RuntimeError
      */
-    public function getChildren(NodesSources $ns = null, array $criteria = null, array $order = null): iterable
+    public function getChildren(NodesSources $ns = null, array $criteria = null, array $order = null)
     {
         if (null === $ns) {
             if ($this->throwExceptions) {
@@ -74,10 +88,24 @@ final class NodesSourcesExtension extends AbstractExtension
                 return [];
             }
         }
+        $defaultCrit = [
+            'node.parent' => $ns->getNode(),
+            'translation' => $ns->getTranslation(),
+        ];
 
-        return $this->managerRegistry
-            ->getRepository(NodesSources::class)
-            ->findChildren($ns, $criteria, $order);
+        if (null !== $order) {
+            $defaultOrder = $order;
+        } else {
+            $defaultOrder = [
+                'node.position' => 'ASC',
+            ];
+        }
+
+        if (null !== $criteria) {
+            $defaultCrit = array_merge($defaultCrit, $criteria);
+        }
+
+        return $this->nodeSourceApi->getBy($defaultCrit, $defaultOrder);
     }
 
     /**
@@ -87,7 +115,7 @@ final class NodesSourcesExtension extends AbstractExtension
      * @return NodesSources|null
      * @throws RuntimeError
      */
-    public function getNext(NodesSources $ns = null, array $criteria = null, array $order = null): ?NodesSources
+    public function getNext(NodesSources $ns = null, array $criteria = null, array $order = null)
     {
         if (null === $ns) {
             if ($this->throwExceptions) {
@@ -96,10 +124,9 @@ final class NodesSourcesExtension extends AbstractExtension
                 return null;
             }
         }
-
-        return $this->managerRegistry
-            ->getRepository(NodesSources::class)
-            ->findNext($ns, $criteria, $order);
+        /** @var NodesSourcesHandler $nodeSourceHandler */
+        $nodeSourceHandler = $this->handlerFactory->getHandler($ns);
+        return $nodeSourceHandler->getNext($criteria, $order);
     }
 
     /**
@@ -109,7 +136,7 @@ final class NodesSourcesExtension extends AbstractExtension
      * @return NodesSources|null
      * @throws RuntimeError
      */
-    public function getPrevious(NodesSources $ns = null, array $criteria = null, array $order = null): ?NodesSources
+    public function getPrevious(NodesSources $ns = null, array $criteria = null, array $order = null)
     {
         if (null === $ns) {
             if ($this->throwExceptions) {
@@ -118,10 +145,9 @@ final class NodesSourcesExtension extends AbstractExtension
                 return null;
             }
         }
-
-        return $this->managerRegistry
-            ->getRepository(NodesSources::class)
-            ->findPrevious($ns, $criteria, $order);
+        /** @var NodesSourcesHandler $nodeSourceHandler */
+        $nodeSourceHandler = $this->handlerFactory->getHandler($ns);
+        return $nodeSourceHandler->getPrevious($criteria, $order);
     }
 
     /**
@@ -131,7 +157,7 @@ final class NodesSourcesExtension extends AbstractExtension
      * @return NodesSources|null
      * @throws RuntimeError
      */
-    public function getLastSibling(NodesSources $ns = null, array $criteria = null, array $order = null): ?NodesSources
+    public function getLastSibling(NodesSources $ns = null, array $criteria = null, array $order = null)
     {
         if (null === $ns) {
             if ($this->throwExceptions) {
@@ -140,10 +166,9 @@ final class NodesSourcesExtension extends AbstractExtension
                 return null;
             }
         }
-
-        return $this->managerRegistry
-            ->getRepository(NodesSources::class)
-            ->findLastSibling($ns, $criteria, $order);
+        /** @var NodesSourcesHandler $nodeSourceHandler */
+        $nodeSourceHandler = $this->handlerFactory->getHandler($ns);
+        return $nodeSourceHandler->getLastSibling($criteria, $order);
     }
 
     /**
@@ -153,7 +178,7 @@ final class NodesSourcesExtension extends AbstractExtension
      * @return NodesSources|null
      * @throws RuntimeError
      */
-    public function getFirstSibling(NodesSources $ns = null, array $criteria = null, array $order = null): ?NodesSources
+    public function getFirstSibling(NodesSources $ns = null, array $criteria = null, array $order = null)
     {
         if (null === $ns) {
             if ($this->throwExceptions) {
@@ -162,10 +187,9 @@ final class NodesSourcesExtension extends AbstractExtension
                 return null;
             }
         }
-
-        return $this->managerRegistry
-            ->getRepository(NodesSources::class)
-            ->findFirstSibling($ns, $criteria, $order);
+        /** @var NodesSourcesHandler $nodeSourceHandler */
+        $nodeSourceHandler = $this->handlerFactory->getHandler($ns);
+        return $nodeSourceHandler->getFirstSibling($criteria, $order);
     }
 
     /**
@@ -173,7 +197,7 @@ final class NodesSourcesExtension extends AbstractExtension
      * @return NodesSources|null
      * @throws RuntimeError
      */
-    public function getParent(NodesSources $ns = null): ?NodesSources
+    public function getParent(NodesSources $ns = null)
     {
         if (null === $ns) {
             if ($this->throwExceptions) {
@@ -190,12 +214,9 @@ final class NodesSourcesExtension extends AbstractExtension
      * @param NodesSources|null $ns
      * @param array|null $criteria
      * @return array
-     * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
      * @throws RuntimeError
-     * @throws NonUniqueResultException
      */
-    public function getParents(NodesSources $ns = null, array $criteria = null): array
+    public function getParents(NodesSources $ns = null, array $criteria = null)
     {
         if (null === $ns) {
             if ($this->throwExceptions) {
@@ -204,20 +225,17 @@ final class NodesSourcesExtension extends AbstractExtension
                 return [];
             }
         }
-
-        return $this->managerRegistry
-            ->getRepository(NodesSources::class)
-            ->findParents($ns, $criteria);
+        /** @var NodesSourcesHandler $nodeSourceHandler */
+        $nodeSourceHandler = $this->handlerFactory->getHandler($ns);
+        return $nodeSourceHandler->getParents($criteria);
     }
 
     /**
      * @param NodesSources|null $ns
-     * @return iterable<Tag>
+     * @return array
      * @throws RuntimeError
-     * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
      */
-    public function getTags(NodesSources $ns = null): iterable
+    public function getTags(NodesSources $ns = null)
     {
         if (null === $ns) {
             if ($this->throwExceptions) {
@@ -226,9 +244,8 @@ final class NodesSourcesExtension extends AbstractExtension
                 return [];
             }
         }
-
-        return $this->managerRegistry
-            ->getRepository(Tag::class)
-            ->findByNodesSources($ns);
+        /** @var NodesSourcesHandler $nodeSourceHandler */
+        $nodeSourceHandler = $this->handlerFactory->getHandler($ns);
+        return $nodeSourceHandler->getTags();
     }
 }

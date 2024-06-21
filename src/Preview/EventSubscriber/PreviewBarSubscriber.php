@@ -10,10 +10,16 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
-final class PreviewBarSubscriber implements EventSubscriberInterface
+class PreviewBarSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private readonly PreviewResolverInterface $previewResolver)
+    protected PreviewResolverInterface $previewResolver;
+
+    /**
+     * @param PreviewResolverInterface $previewResolver
+     */
+    public function __construct(PreviewResolverInterface $previewResolver)
     {
+        $this->previewResolver = $previewResolver;
     }
 
     /**

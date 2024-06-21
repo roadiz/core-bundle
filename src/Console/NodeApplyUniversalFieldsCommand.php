@@ -15,14 +15,20 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-final class NodeApplyUniversalFieldsCommand extends Command
+class NodeApplyUniversalFieldsCommand extends Command
 {
-    public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly UniversalDataDuplicator $universalDataDuplicator,
-        ?string $name = null
-    ) {
-        parent::__construct($name);
+    protected ManagerRegistry $managerRegistry;
+    protected UniversalDataDuplicator $universalDataDuplicator;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param UniversalDataDuplicator $universalDataDuplicator
+     */
+    public function __construct(ManagerRegistry $managerRegistry, UniversalDataDuplicator $universalDataDuplicator)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+        $this->universalDataDuplicator = $universalDataDuplicator;
     }
 
     protected function configure(): void
