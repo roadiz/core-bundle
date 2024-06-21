@@ -14,12 +14,21 @@ use Twig\TwigFunction;
 /**
  * Override Symfony RoutingExtension to support object url generation.
  */
-final class RoutingExtension extends AbstractExtension
+class RoutingExtension extends AbstractExtension
 {
+    private UrlGeneratorInterface $generator;
+    private \Symfony\Bridge\Twig\Extension\RoutingExtension $decorated;
+
+    /**
+     * @param UrlGeneratorInterface $generator
+     * @param \Symfony\Bridge\Twig\Extension\RoutingExtension $decorated
+     */
     public function __construct(
-        private readonly \Symfony\Bridge\Twig\Extension\RoutingExtension $decorated,
-        private readonly UrlGeneratorInterface $generator
+        \Symfony\Bridge\Twig\Extension\RoutingExtension $decorated,
+        UrlGeneratorInterface $generator
     ) {
+        $this->generator = $generator;
+        $this->decorated = $decorated;
     }
 
     /**
@@ -40,7 +49,7 @@ final class RoutingExtension extends AbstractExtension
      * @return string
      * @throws RuntimeError
      */
-    public function getPath(string|object|null $name, array $parameters = [], bool $relative = false): string
+    public function getPath($name, array $parameters = [], bool $relative = false): string
     {
         if (is_string($name)) {
             return $this->decorated->getPath(
@@ -66,7 +75,7 @@ final class RoutingExtension extends AbstractExtension
      * @return string
      * @throws RuntimeError
      */
-    public function getUrl(string|object|null $name, array $parameters = [], bool $schemeRelative = false): string
+    public function getUrl($name, array $parameters = [], bool $schemeRelative = false): string
     {
         if (is_string($name)) {
             return $this->decorated->getUrl(

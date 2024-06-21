@@ -6,8 +6,6 @@ namespace RZ\Roadiz\CoreBundle\Model;
 
 use Doctrine\Common\Collections\Collection;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use RZ\Roadiz\CoreBundle\Entity\AttributeGroup;
-use RZ\Roadiz\CoreBundle\Entity\AttributeTranslation;
 use RZ\Roadiz\Utils\StringHandler;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
@@ -62,12 +60,12 @@ trait AttributeTrait
         ORM\JoinColumn(name: "group_id", onDelete: "SET NULL"),
         Serializer\Groups(["attribute", "node", "nodes_sources"]),
         SymfonySerializer\Groups(["attribute", "node", "nodes_sources"]),
-        Serializer\Type(AttributeGroup::class)
+        Serializer\Type("RZ\Roadiz\CoreBundle\Model\AttributeGroupInterface")
     ]
     protected ?AttributeGroupInterface $group = null;
 
     /**
-     * @var Collection<int, AttributeTranslation>
+     * @var Collection<int, AttributeTranslationInterface>
      */
     #[
         ORM\OneToMany(
@@ -79,7 +77,7 @@ trait AttributeTrait
         ),
         Serializer\Groups(["attribute", "node", "nodes_sources"]),
         SymfonySerializer\Groups(["attribute", "node", "nodes_sources"]),
-        Serializer\Type("ArrayCollection<" . AttributeTranslation::class . ">"),
+        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Model\AttributeTranslationInterface>"),
         Serializer\Accessor(getter: "getAttributeTranslations", setter: "setAttributeTranslations")
     ]
     protected Collection $attributeTranslations;

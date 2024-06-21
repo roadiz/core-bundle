@@ -11,12 +11,15 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 final class DocumentSourcesNormalizer extends AbstractPathNormalizer
 {
+    protected DocumentFinderInterface $documentFinder;
+
     public function __construct(
         NormalizerInterface $decorated,
         UrlGeneratorInterface $urlGenerator,
-        private readonly DocumentFinderInterface $documentFinder
+        DocumentFinderInterface $documentFinder
     ) {
         parent::__construct($decorated, $urlGenerator);
+        $this->documentFinder = $documentFinder;
     }
 
     /**
@@ -26,7 +29,7 @@ final class DocumentSourcesNormalizer extends AbstractPathNormalizer
      * @return array|\ArrayObject|bool|float|int|mixed|string|null
      * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
      */
-    public function normalize(mixed $object, ?string $format = null, array $context = []): mixed
+    public function normalize($object, $format = null, array $context = [])
     {
         $data = $this->decorated->normalize($object, $format, $context);
         if ($object instanceof Document && is_array($data)) {

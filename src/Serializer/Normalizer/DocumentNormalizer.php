@@ -18,13 +18,18 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
  */
 final class DocumentNormalizer extends AbstractPathNormalizer
 {
+    private FilesystemOperator $documentsStorage;
+    private EmbedFinderFactory $embedFinderFactory;
+
     public function __construct(
+        FilesystemOperator $documentsStorage,
         NormalizerInterface $decorated,
         UrlGeneratorInterface $urlGenerator,
-        private readonly FilesystemOperator $documentsStorage,
-        private readonly EmbedFinderFactory $embedFinderFactory
+        EmbedFinderFactory $embedFinderFactory
     ) {
         parent::__construct($decorated, $urlGenerator);
+        $this->documentsStorage = $documentsStorage;
+        $this->embedFinderFactory = $embedFinderFactory;
     }
 
     /**
@@ -34,7 +39,7 @@ final class DocumentNormalizer extends AbstractPathNormalizer
      * @return array|\ArrayObject|bool|float|int|string|null
      * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
      */
-    public function normalize(mixed $object, ?string $format = null, array $context = []): mixed
+    public function normalize($object, $format = null, array $context = [])
     {
         $data = $this->decorated->normalize($object, $format, $context);
         if (

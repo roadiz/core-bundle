@@ -12,13 +12,20 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
 final class RedirectionPathResolver implements PathResolverInterface
 {
+    private ManagerRegistry $managerRegistry;
+    private Stopwatch $stopwatch;
+    private CacheItemPoolInterface $cacheAdapter;
+
     public const CACHE_KEY = 'redirection_path_resolver_cache';
 
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly CacheItemPoolInterface $cacheAdapter,
-        private readonly Stopwatch $stopwatch,
+        ManagerRegistry $managerRegistry,
+        CacheItemPoolInterface $cacheAdapter,
+        Stopwatch $stopwatch,
     ) {
+        $this->managerRegistry = $managerRegistry;
+        $this->stopwatch = $stopwatch;
+        $this->cacheAdapter = $cacheAdapter;
     }
 
     public function resolvePath(
