@@ -6,8 +6,6 @@ namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
 use Doctrine\ORM\EntityRepository;
 use Doctrine\Persistence\ObjectManager;
-use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
-use RZ\Roadiz\Core\Handlers\AbstractHandler;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\Node;
@@ -15,21 +13,32 @@ use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
+use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
+use RZ\Roadiz\Core\Handlers\AbstractHandler;
 
 /**
  * Handle operations with node-sources entities.
  */
-final class NodesSourcesHandler extends AbstractHandler
+class NodesSourcesHandler extends AbstractHandler
 {
-    private ?NodesSources $nodeSource = null;
+    protected ?NodesSources $nodeSource = null;
     /**
      * @var array<NodesSources>|null
      */
-    private ?array $parentsNodeSources = null;
+    protected ?array $parentsNodeSources = null;
+    protected Settings $settingsBag;
 
-    public function __construct(ObjectManager $objectManager, private readonly Settings $settingsBag)
+    /**
+     * Create a new node-source handler with node-source to handle.
+     *
+     * @param ObjectManager $objectManager
+     * @param Settings $settingsBag
+     */
+    public function __construct(ObjectManager $objectManager, Settings $settingsBag)
     {
         parent::__construct($objectManager);
+
+        $this->settingsBag = $settingsBag;
     }
 
     /**
@@ -53,9 +62,9 @@ final class NodesSourcesHandler extends AbstractHandler
 
     /**
      * @param NodesSources $nodeSource
-     * @return $this
+     * @return NodesSourcesHandler
      */
-    public function setNodeSource(NodesSources $nodeSource): self
+    public function setNodeSource(NodesSources $nodeSource)
     {
         $this->nodeSource = $nodeSource;
         return $this;
@@ -68,7 +77,7 @@ final class NodesSourcesHandler extends AbstractHandler
      * @param bool $flush
      * @return $this
      */
-    public function cleanDocumentsFromField(NodeTypeFieldInterface $field, bool $flush = true): self
+    public function cleanDocumentsFromField(NodeTypeField $field, bool $flush = true)
     {
         $this->nodeSource->clearDocumentsByFields($field);
 
@@ -90,17 +99,17 @@ final class NodesSourcesHandler extends AbstractHandler
      */
     public function addDocumentForField(
         Document $document,
-        NodeTypeFieldInterface $field,
+        NodeTypeField $field,
         bool $flush = true,
         ?float $position = null
-    ): self {
+    ) {
         $nsDoc = new NodesSourcesDocuments($this->nodeSource, $document, $field);
 
         if (!$this->nodeSource->hasNodesSourcesDocuments($nsDoc)) {
             if (null === $position) {
                 $latestPosition = $this->objectManager
                     ->getRepository(NodesSourcesDocuments::class)
-                    ->getLatestPositionForFieldName($this->nodeSource, $field->getName());
+                    ->getLatestPosition($this->nodeSource, $field);
 
                 $nsDoc->setPosition($latestPosition + 1);
             } else {
@@ -121,16 +130,19 @@ final class NodesSourcesHandler extends AbstractHandler
      *
      * @param string $fieldName Name of the node-type field
      * @return array<Document>
-     * @deprecated Use directly NodesSources::getDocumentsByFieldsWithName
      */
     public function getDocumentsFromFieldName(string $fieldName): array
     {
-        return $this->objectManager
-            ->getRepository(Document::class)
-            ->findByNodeSourceAndFieldName(
-                $this->nodeSource,
-                $fieldName
-            );
+        $field = $this->nodeSource->getNode()->getNodeType()->getFieldByName($fieldName);
+        if (null !== $field) {
+            return $this->objectManager
+                ->getRepository(Document::class)
+                ->findByNodeSourceAndField(
+                    $this->nodeSource,
+                    $field
+                );
+        }
+        return [];
     }
 
     /**
@@ -166,7 +178,7 @@ final class NodesSourcesHandler extends AbstractHandler
      *
      * @param array|null $criteria
      * @return array<NodesSources>
-     * @deprecated Use NodesSourcesRepository::findParents
+     * @throws \Doctrine\ORM\NonUniqueResultException
      */
     public function getParents(
         array $criteria = null
@@ -211,7 +223,6 @@ final class NodesSourcesHandler extends AbstractHandler
      * @param array|null $order Non default ordering
      *
      * @return array<object|NodesSources>
-     * @deprecated Use TreeWalker or NodesSourcesRepository::findChildren
      */
     public function getChildren(
         array $criteria = null,
@@ -247,7 +258,6 @@ final class NodesSourcesHandler extends AbstractHandler
      * @param array|null $order
      *
      * @return NodesSources|null
-     * @deprecated Use NodesSourcesRepository::findFirstChild
      */
     public function getFirstChild(
         array $criteria = null,
@@ -282,7 +292,6 @@ final class NodesSourcesHandler extends AbstractHandler
      * @param  array|null $order
      *
      * @return NodesSources|null
-     * @deprecated Use NodesSourcesRepository::findLastChild
      */
     public function getLastChild(
         array $criteria = null,
@@ -318,7 +327,6 @@ final class NodesSourcesHandler extends AbstractHandler
      * @param  array|null $order
      *
      * @return NodesSources|null
-     * @deprecated Use NodesSourcesRepository::findFirstSibling
      */
     public function getFirstSibling(
         array $criteria = null,
@@ -341,7 +349,6 @@ final class NodesSourcesHandler extends AbstractHandler
      * @param array|null $order
      *
      * @return NodesSources|null
-     * @deprecated Use NodesSourcesRepository::findLastSibling
      */
     public function getLastSibling(
         array $criteria = null,
@@ -364,7 +371,6 @@ final class NodesSourcesHandler extends AbstractHandler
      * @param array|null $order
      *
      * @return NodesSources|null
-     * @deprecated Use NodesSourcesRepository::findPrevious
      */
     public function getPrevious(
         array $criteria = null,
@@ -411,7 +417,6 @@ final class NodesSourcesHandler extends AbstractHandler
      * @param array|null $order
      *
      * @return NodesSources|null
-     * @deprecated Use NodesSourcesRepository::findNext
      */
     public function getNext(
         array $criteria = null,
@@ -450,10 +455,9 @@ final class NodesSourcesHandler extends AbstractHandler
     /**
      * Get node tags with current source translation.
      *
-     * @return iterable<Tag>
-     * @deprecated Use TagRepository::findByNodesSources
+     * @return array<Tag>
      */
-    public function getTags(): iterable
+    public function getTags()
     {
         /**
          * @phpstan-ignore-next-line
@@ -486,6 +490,7 @@ final class NodesSourcesHandler extends AbstractHandler
             'description' => ($this->nodeSource->getMetaDescription() != "") ?
             $this->nodeSource->getMetaDescription() :
             $this->nodeSource->getTitle() . ', ' . $this->settingsBag->get('seo_description'),
+            'keywords' => $this->nodeSource->getMetaKeywords(),
         ];
     }
 
@@ -496,7 +501,7 @@ final class NodesSourcesHandler extends AbstractHandler
      *
      * @return array<Node> Collection of nodes
      */
-    public function getNodesFromFieldName(string $fieldName): array
+    public function getNodesFromFieldName(string $fieldName)
     {
         $field = $this->nodeSource->getNode()->getNodeType()->getFieldByName($fieldName);
         if (null !== $field) {
@@ -518,7 +523,7 @@ final class NodesSourcesHandler extends AbstractHandler
      *
      * @return array<Node> Collection of nodes
      */
-    public function getReverseNodesFromFieldName(string $fieldName): array
+    public function getReverseNodesFromFieldName(string $fieldName)
     {
         $field = $this->nodeSource->getNode()->getNodeType()->getFieldByName($fieldName);
         if (null !== $field) {

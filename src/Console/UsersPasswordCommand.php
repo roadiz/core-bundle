@@ -13,14 +13,21 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * Command line utils for managing users from terminal.
+ */
 final class UsersPasswordCommand extends UsersCommand
 {
-    public function __construct(
-        private readonly PasswordGenerator $passwordGenerator,
-        ManagerRegistry $managerRegistry,
-        ?string $name = null
-    ) {
-        parent::__construct($managerRegistry, $name);
+    private PasswordGenerator $passwordGenerator;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param PasswordGenerator $passwordGenerator
+     */
+    public function __construct(ManagerRegistry $managerRegistry, PasswordGenerator $passwordGenerator)
+    {
+        parent::__construct($managerRegistry);
+        $this->passwordGenerator = $passwordGenerator;
     }
 
     protected function configure(): void

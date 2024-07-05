@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\TwigExtension;
 
-use Psr\Container\ContainerExceptionInterface;
-use Psr\Container\NotFoundExceptionInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Core\Handlers\AbstractHandler;
 use RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory;
@@ -15,8 +13,14 @@ use Twig\TwigFilter;
 
 final class HandlerExtension extends AbstractExtension
 {
-    public function __construct(private readonly HandlerFactory $handlerFactory)
+    private HandlerFactory $handlerFactory;
+
+    /**
+     * @param HandlerFactory $handlerFactory
+     */
+    public function __construct(HandlerFactory $handlerFactory)
     {
+        $this->handlerFactory = $handlerFactory;
     }
 
     public function getFilters(): array
@@ -30,10 +34,8 @@ final class HandlerExtension extends AbstractExtension
      * @param mixed $mixed
      * @return AbstractHandler|null
      * @throws RuntimeError
-     * @throws ContainerExceptionInterface
-     * @throws NotFoundExceptionInterface
      */
-    public function getHandler(mixed $mixed): ?AbstractHandler
+    public function getHandler($mixed)
     {
         if (null === $mixed) {
             return null;
