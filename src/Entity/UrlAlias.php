@@ -22,29 +22,20 @@ use RZ\Roadiz\CoreBundle\Form\Constraint as RoadizAssert;
 ]
 class UrlAlias extends AbstractEntity
 {
-    #[ORM\Column(type: 'string', unique: true)]
+    #[ORM\Column(type: 'string', length: 250, unique: true)]
     #[SymfonySerializer\Groups(['url_alias'])]
     #[Serializer\Groups(['url_alias'])]
     #[Assert\NotNull]
     #[Assert\NotBlank]
+    #[Assert\Length(max: 250)]
     #[RoadizAssert\UniqueNodeName]
     private string $alias = '';
 
     #[ORM\ManyToOne(targetEntity: NodesSources::class, inversedBy: 'urlAliases')]
-    #[ORM\JoinColumn(name: 'ns_id', referencedColumnName: 'id')]
+    #[ORM\JoinColumn(name: 'ns_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]
-    private ?NodesSources $nodeSource = null;
-
-    /**
-     * Create a new UrlAlias linked to a NodeSource.
-     *
-     * @param NodesSources|null $nodeSource
-     */
-    public function __construct(?NodesSources $nodeSource = null)
-    {
-        $this->setNodeSource($nodeSource);
-    }
+    private NodesSources $nodeSource;
 
     /**
      * @return string
@@ -65,19 +56,12 @@ class UrlAlias extends AbstractEntity
         return $this;
     }
 
-    /**
-     * @return NodesSources|null
-     */
-    public function getNodeSource(): ?NodesSources
+    public function getNodeSource(): NodesSources
     {
         return $this->nodeSource;
     }
 
-    /**
-     * @param NodesSources|null $nodeSource
-     * @return $this
-     */
-    public function setNodeSource(?NodesSources $nodeSource): UrlAlias
+    public function setNodeSource(NodesSources $nodeSource): UrlAlias
     {
         $this->nodeSource = $nodeSource;
         return $this;

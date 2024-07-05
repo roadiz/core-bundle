@@ -15,20 +15,16 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 use ZipArchive;
 
-class FilesImportCommand extends Command
+final class FilesImportCommand extends Command
 {
     use FilesCommandTrait;
 
-    protected FileAwareInterface $fileAware;
-    protected string $exportDir;
-    protected string $appNamespace;
-
-    public function __construct(FileAwareInterface $fileAware, string $exportDir, string $appNamespace)
-    {
-        parent::__construct();
-        $this->fileAware = $fileAware;
-        $this->exportDir = $exportDir;
-        $this->appNamespace = $appNamespace;
+    public function __construct(
+        private readonly FileAwareInterface $fileAware,
+        private readonly string $appNamespace,
+        ?string $name = null
+    ) {
+        parent::__construct($name);
     }
 
     protected function configure(): void
@@ -57,6 +53,9 @@ class FilesImportCommand extends Command
 
         $appNamespace = (new AsciiSlugger())->slug($this->appNamespace, '_');
         $tempDir = tempnam(sys_get_temp_dir(), $appNamespace . '_files');
+        if (false === $tempDir) {
+            throw new \RuntimeException('Cannot create temporary directory.');
+        }
         if (file_exists($tempDir)) {
             unlink($tempDir);
         }
