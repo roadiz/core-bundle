@@ -82,15 +82,13 @@ final class TranslationAwareNormalizer implements ContextAwareNormalizerInterfac
     private function getTranslationFromRequest(): ?TranslationInterface
     {
         $request = $this->requestStack->getMainRequest();
-
-        if (null !== $request) {
-            $locale = $request->query->get('_locale', $request->getLocale());
-            if (
-                \is_string($locale) &&
-                null !== $translation = $this->getTranslationFromLocale($locale)
-            ) {
-                return $translation;
-            }
+        if (
+            null !== $request &&
+            null !== $translation = $this->getTranslationFromLocale(
+                $request->query->get('_locale', $request->getLocale())
+            )
+        ) {
+            return $translation;
         }
 
         return $this->managerRegistry

@@ -12,10 +12,8 @@ use RZ\Roadiz\CoreBundle\Api\Model\NodesSourcesHeadFactoryInterface;
 use RZ\Roadiz\CoreBundle\Api\Model\WebResponse;
 use RZ\Roadiz\CoreBundle\Api\Model\WebResponseInterface;
 use RZ\Roadiz\CoreBundle\Api\TreeWalker\AutoChildrenNodeSourceWalker;
-use RZ\Roadiz\CoreBundle\Api\TreeWalker\TreeWalkerGenerator;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Realm\RealmResolverInterface;
-use RZ\TreeWalker\AbstractWalker;
 use RZ\TreeWalker\WalkerContextInterface;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -31,7 +29,6 @@ class WebResponseOutputDataTransformer implements WebResponseDataTransformerInte
     private CacheItemPoolInterface $cacheItemPool;
     private UrlGeneratorInterface $urlGenerator;
     private RealmResolverInterface $realmResolver;
-    private TreeWalkerGenerator $treeWalkerGenerator;
 
     public function __construct(
         NodesSourcesHeadFactoryInterface $nodesSourcesHeadFactory,
@@ -39,8 +36,7 @@ class WebResponseOutputDataTransformer implements WebResponseDataTransformerInte
         WalkerContextInterface $walkerContext,
         CacheItemPoolInterface $cacheItemPool,
         UrlGeneratorInterface $urlGenerator,
-        RealmResolverInterface $realmResolver,
-        TreeWalkerGenerator $treeWalkerGenerator
+        RealmResolverInterface $realmResolver
     ) {
         $this->nodesSourcesHeadFactory = $nodesSourcesHeadFactory;
         $this->breadcrumbsFactory = $breadcrumbsFactory;
@@ -48,7 +44,6 @@ class WebResponseOutputDataTransformer implements WebResponseDataTransformerInte
         $this->cacheItemPool = $cacheItemPool;
         $this->urlGenerator = $urlGenerator;
         $this->realmResolver = $realmResolver;
-        $this->treeWalkerGenerator = $treeWalkerGenerator;
     }
 
     protected function getWalkerContext(): WalkerContextInterface
@@ -66,14 +61,6 @@ class WebResponseOutputDataTransformer implements WebResponseDataTransformerInte
         return 5;
     }
 
-    public function getTreeWalkerGenerator(): TreeWalkerGenerator
-    {
-        return $this->treeWalkerGenerator;
-    }
-
-    /**
-     * @return class-string<AbstractWalker>
-     */
     protected function getChildrenNodeSourceWalkerClassname(): string
     {
         return AutoChildrenNodeSourceWalker::class;

@@ -54,7 +54,7 @@ class Setting extends AbstractEntity
         AbstractField::MULTIPLE_T => 'multiple-choice.type',
     ];
 
-    #[ORM\Column(type: 'string', length: 250, unique: true)]
+    #[ORM\Column(type: 'string', unique: true)]
     #[SymfonySerializer\Groups(['setting', 'nodes_sources'])]
     #[Serializer\Groups(['setting', 'nodes_sources'])]
     #[Assert\NotBlank]
@@ -93,6 +93,7 @@ class Setting extends AbstractEntity
     #[ORM\ManyToOne(
         targetEntity: SettingGroup::class,
         cascade: ['persist', 'merge'],
+        fetch: 'EAGER',
         inversedBy: 'settings'
     )]
     #[ORM\JoinColumn(name: 'setting_group_id', referencedColumnName: 'id', onDelete: 'SET NULL')]
@@ -215,7 +216,7 @@ class Setting extends AbstractEntity
             ($this->getType() === AbstractField::DATETIME_T || $this->getType() === AbstractField::DATE_T) &&
             $value instanceof \DateTimeInterface
         ) {
-            $this->value = $value->format('c'); // $value is instance of \DateTime
+            $this->value = $value->format('c');
         } else {
             $this->value = (string) $value;
         }

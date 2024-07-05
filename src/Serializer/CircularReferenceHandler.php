@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Serializer;
 
-use ApiPlatform\Api\IriConverterInterface;
-use ApiPlatform\Api\UrlGeneratorInterface;
-use ApiPlatform\Metadata\Operation;
+use ApiPlatform\Core\Api\IriConverterInterface;
 
 final class CircularReferenceHandler
 {
@@ -20,15 +18,14 @@ final class CircularReferenceHandler
         $this->iriConverter = $iriConverter;
     }
 
-    public function __invoke(mixed $object, string $format, array $context): ?string
+    /**
+     * @param mixed $object
+     * @return string
+     */
+    public function __invoke($object, string $format = null, array $context = [])
     {
         try {
-            return $this->iriConverter->getIriFromResource(
-                $object,
-                UrlGeneratorInterface::ABS_PATH,
-                null,
-                $context
-            );
+            return $this->iriConverter->getIriFromItem($object);
         } catch (\InvalidArgumentException $exception) {
             if (is_object($object) && method_exists($object, 'getId')) {
                 return (string) $object->getId();

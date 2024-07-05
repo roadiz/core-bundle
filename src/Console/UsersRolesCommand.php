@@ -58,43 +58,53 @@ final class UsersRolesCommand extends UsersCommand
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $user = $this->getUserForInput($input);
+        $name = $input->getArgument('username');
 
-        if ($input->getOption('add')) {
-            $roles = $this->managerRegistry
-                ->getRepository(Role::class)
-                ->getAllRoleName();
+        if ($name) {
+            /** @var User|null $user */
+            $user = $this->managerRegistry
+                ->getRepository(User::class)
+                ->findOneBy(['username' => $name]);
 
-            $question = new Question(
-                'Enter the role name to add'
-            );
-            $question->setAutocompleterValues($roles);
+            if (null !== $user) {
+                if ($input->getOption('add')) {
+                    $roles = $this->managerRegistry
+                        ->getRepository(Role::class)
+                        ->getAllRoleName();
 
-            do {
-                $role = $io->askQuestion($question);
-                if ($role != "") {
-                    $user->addRoleEntity($this->rolesBag->get($role));
-                    $this->managerRegistry->getManagerForClass(User::class)->flush();
-                    $io->success('Role: ' . $role . ' added.');
+                    $question = new Question(
+                        'Enter the role name to add'
+                    );
+                    $question->setAutocompleterValues($roles);
+
+                    do {
+                        $role = $io->askQuestion($question);
+                        if ($role != "") {
+                            $user->addRoleEntity($this->rolesBag->get($role));
+                            $this->managerRegistry->getManagerForClass(User::class)->flush();
+                            $io->success('Role: ' . $role . ' added.');
+                        }
+                    } while ($role != "");
+                } elseif ($input->getOption('remove')) {
+                    do {
+                        $roles = $user->getRoles();
+                        $question = new Question(
+                            'Enter the role name to remove'
+                        );
+                        $question->setAutocompleterValues($roles);
+
+                        $role = $io->askQuestion($question);
+                        if (in_array($role, $roles)) {
+                            $user->removeRoleEntity($this->rolesBag->get($role));
+                            $this->managerRegistry->getManagerForClass(User::class)->flush();
+                            $io->success('Role: ' . $role . ' removed.');
+                        }
+                    } while ($role != "");
                 }
-            } while ($role != "");
-        } elseif ($input->getOption('remove')) {
-            do {
-                $roles = $user->getRoles();
-                $question = new Question(
-                    'Enter the role name to remove'
-                );
-                $question->setAutocompleterValues($roles);
-
-                $role = $io->askQuestion($question);
-                if (in_array($role, $roles)) {
-                    $user->removeRoleEntity($this->rolesBag->get($role));
-                    $this->managerRegistry->getManagerForClass(User::class)->flush();
-                    $io->success('Role: ' . $role . ' removed.');
-                }
-            } while ($role != "");
+            } else {
+                throw new \InvalidArgumentException('User “' . $name . '” does not exist.');
+            }
         }
-
         return 0;
     }
 }

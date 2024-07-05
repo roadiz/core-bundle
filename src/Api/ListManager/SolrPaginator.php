@@ -62,10 +62,6 @@ final class SolrPaginator implements PaginatorInterface, \IteratorAggregate
     public function getIterator(): \Traversable
     {
         $this->handleOnce();
-        $entities = $this->listManager->getEntities();
-        if (\is_array($entities)) {
-            return new \ArrayIterator($entities);
-        }
-        return $entities->getIterator();
+        return new ArrayCollection($this->listManager->getEntities());
     }
 }

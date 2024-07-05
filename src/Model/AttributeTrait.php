@@ -15,13 +15,12 @@ use Symfony\Component\Validator\Constraints as Assert;
 trait AttributeTrait
 {
     #[
-        ORM\Column(type: "string", length: 255, unique: true, nullable: false),
+        ORM\Column(type: "string", unique: true, nullable: false),
         Serializer\Groups(["attribute", "node", "nodes_sources"]),
         SymfonySerializer\Groups(["attribute", "node", "nodes_sources"]),
         Serializer\Type("string"),
         Assert\NotNull(),
-        Assert\NotBlank(),
-        Assert\Length(max: 255)
+        Assert\NotBlank()
     ]
     protected string $code = '';
 
@@ -45,8 +44,7 @@ trait AttributeTrait
         ORM\Column(type: "string", length: 7, unique: false, nullable: true),
         Serializer\Groups(["attribute", "node", "nodes_sources"]),
         SymfonySerializer\Groups(["attribute", "node", "nodes_sources"]),
-        Serializer\Type("string"),
-        Assert\Length(max: 7)
+        Serializer\Type("string")
     ]
     protected ?string $color = null;
 
@@ -229,9 +227,9 @@ trait AttributeTrait
             function (AttributeTranslationInterface $attributeTranslation) use ($translation) {
                 return $attributeTranslation->getTranslation() === $translation;
             }
-        )->first();
-        if (false !== $attributeTranslation) {
-            return $attributeTranslation->getOptions();
+        );
+        if ($attributeTranslation->count() > 0) {
+            return $attributeTranslation->first()->getOptions();
         }
 
         return null;
@@ -345,27 +343,5 @@ trait AttributeTrait
     public function isCountry(): bool
     {
         return $this->getType() === AttributeInterface::COUNTRY_T;
-    }
-
-    public function getTypeLabel(): string
-    {
-        return match ($this->getType()) {
-             AttributeInterface::DATETIME_T => 'attributes.form.type.datetime',
-             AttributeInterface::BOOLEAN_T => 'attributes.form.type.boolean',
-             AttributeInterface::INTEGER_T => 'attributes.form.type.integer',
-             AttributeInterface::DECIMAL_T => 'attributes.form.type.decimal',
-             AttributeInterface::PERCENT_T => 'attributes.form.type.percent',
-             AttributeInterface::EMAIL_T => 'attributes.form.type.email',
-             AttributeInterface::COLOUR_T => 'attributes.form.type.colour',
-             AttributeInterface::ENUM_T => 'attributes.form.type.enum',
-             AttributeInterface::DATE_T => 'attributes.form.type.date',
-             AttributeInterface::COUNTRY_T => 'attributes.form.type.country',
-             default => 'attributes.form.type.string',
-        };
-    }
-
-    public function getAttributeValues(): Collection
-    {
-        return $this->attributeValues;
     }
 }

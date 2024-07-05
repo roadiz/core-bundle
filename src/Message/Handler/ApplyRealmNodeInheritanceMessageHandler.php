@@ -5,21 +5,25 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Message\Handler;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\Realm;
 use RZ\Roadiz\CoreBundle\Entity\RealmNode;
+use RZ\Roadiz\CoreBundle\EntityHandler\NodeHandler;
 use RZ\Roadiz\CoreBundle\Message\ApplyRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
-use RZ\Roadiz\CoreBundle\Node\NodeOffspringResolverInterface;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
 final class ApplyRealmNodeInheritanceMessageHandler implements MessageHandlerInterface
 {
-    public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly NodeOffspringResolverInterface $nodeOffspringResolver
-    ) {
+    private ManagerRegistry $managerRegistry;
+    private HandlerFactoryInterface $handlerFactory;
+
+    public function __construct(ManagerRegistry $managerRegistry, HandlerFactoryInterface $handlerFactory)
+    {
+        $this->managerRegistry = $managerRegistry;
+        $this->handlerFactory = $handlerFactory;
     }
 
     public function __invoke(ApplyRealmNodeInheritanceMessage $message): void
@@ -49,8 +53,9 @@ final class ApplyRealmNodeInheritanceMessageHandler implements MessageHandlerInt
             return;
         }
 
-        $nodeRepository = $this->managerRegistry->getRepository(Node::class);
-        $childrenIds = $this->nodeOffspringResolver->getAllOffspringIds($node);
+        /** @var NodeHandler $nodeHandler */
+        $nodeHandler = $this->handlerFactory->getHandler($node);
+        $childrenIds = $nodeHandler->getAllOffspringId();
 
         foreach ($childrenIds as $childId) {
             /** @var Node|null $child */
