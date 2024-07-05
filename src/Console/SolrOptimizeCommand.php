@@ -12,14 +12,21 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-final class SolrOptimizeCommand extends SolrCommand
+/**
+ * Command line utils for managing nodes from terminal.
+ */
+class SolrOptimizeCommand extends SolrCommand
 {
-    public function __construct(
-        protected readonly IndexerFactoryInterface $indexerFactory,
-        ClientRegistry $clientRegistry,
-        ?string $name = null
-    ) {
-        parent::__construct($clientRegistry, $name);
+    protected IndexerFactoryInterface $indexerFactory;
+
+    /**
+     * @param ClientRegistry $clientRegistry
+     * @param IndexerFactoryInterface $indexerFactory
+     */
+    public function __construct(ClientRegistry $clientRegistry, IndexerFactoryInterface $indexerFactory)
+    {
+        parent::__construct($clientRegistry);
+        $this->indexerFactory = $indexerFactory;
     }
 
     protected function configure(): void

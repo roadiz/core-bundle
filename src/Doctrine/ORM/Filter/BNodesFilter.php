@@ -35,4 +35,12 @@ class BNodesFilter extends ANodesFilter
     {
         return 'b_n';
     }
+
+    /**
+     * @return string
+     */
+    protected function getNodeFieldJoinAlias(): string
+    {
+        return 'b_n_f';
+    }
 }

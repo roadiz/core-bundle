@@ -18,7 +18,7 @@ use RZ\Roadiz\CoreBundle\Security\Authorization\Voter\NodeVoter;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Security\Core\Security;
 
 class UniqueNodeGenerator
 {
@@ -49,8 +49,7 @@ class UniqueNodeGenerator
         bool $pushToTop = false
     ): NodesSources {
         $name = $nodeType->getDisplayName() . " " . uniqid();
-        $node = new Node();
-        $node->setNodeType($nodeType);
+        $node = new Node($nodeType);
         $node->setTtl($nodeType->getDefaultTtl());
 
         if (null !== $tag) {

@@ -13,13 +13,20 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-final class NodesOrphansCommand extends Command
+/**
+ * @package RZ\Roadiz\CoreBundle\Console
+ */
+class NodesOrphansCommand extends Command
 {
-    public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        ?string $name = null
-    ) {
-        parent::__construct($name);
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
     }
 
     protected function configure(): void

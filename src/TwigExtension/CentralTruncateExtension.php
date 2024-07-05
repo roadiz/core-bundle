@@ -9,7 +9,7 @@ use Twig\TwigFilter;
 
 use function Symfony\Component\String\u;
 
-final class CentralTruncateExtension extends AbstractExtension
+class CentralTruncateExtension extends AbstractExtension
 {
     public function getFilters(): array
     {

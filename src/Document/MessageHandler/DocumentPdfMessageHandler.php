@@ -105,13 +105,12 @@ final class DocumentPdfMessageHandler extends AbstractLockingDocumentMessageHand
                 }
             }
         } catch (\ImagickException $exception) {
-            // Silent fail to avoid issue with message handling
-            $this->messengerLogger->warning(
+            throw new UnrecoverableMessageHandlingException(
                 sprintf(
                     'Cannot extract thumbnail from %s PDF file : %s',
                     $localPdfPath,
                     $exception->getMessage()
-                )
+                ),
             );
         }
     }
