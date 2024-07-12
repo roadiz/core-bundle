@@ -8,11 +8,14 @@ use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Node\NodeOffspringResolverInterface;
 use RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\NodeChrootResolver;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
-use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\User\UserInterface;
 
+/**
+ * @extends Voter<'CREATE'|'DUPLICATE'|'CREATE_AT_ROOT'|'SEARCH'|'READ'|'READ_AT_ROOT'|'EMPTY_TRASH'|'READ_LOGS'|'EDIT_CONTENT'|'EDIT_TAGS'|'EDIT_REALMS'|'EDIT_SETTING'|'EDIT_STATUS'|'EDIT_ATTRIBUTE'|'DELETE', Node>
+ */
 final class NodeVoter extends Voter
 {
     public const CREATE = 'CREATE';
@@ -38,7 +41,7 @@ final class NodeVoter extends Voter
     ) {
     }
 
-    protected function supports(string $attribute, $subject): bool
+    protected function supports(string $attribute, mixed $subject): bool
     {
         if (
             \in_array($attribute, [
@@ -76,7 +79,7 @@ final class NodeVoter extends Voter
         return false;
     }
 
-    protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token): bool
+    protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
     {
         $user = $token->getUser();
 

@@ -10,17 +10,14 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Security\Core\Security;
+use Symfony\Bundle\SecurityBundle\Security;
 
 final class RoleEntityType extends AbstractType
 {
-    private ManagerRegistry $managerRegistry;
-    private Security $security;
-
-    public function __construct(ManagerRegistry $managerRegistry, Security $security)
-    {
-        $this->managerRegistry = $managerRegistry;
-        $this->security = $security;
+    public function __construct(
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly Security $security
+    ) {
     }
 
     /**
