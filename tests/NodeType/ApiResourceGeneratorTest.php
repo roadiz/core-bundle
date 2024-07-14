@@ -21,6 +21,8 @@ class ApiResourceGeneratorTest extends KernelTestCase
 
     protected function getApiResourceGenerator(): ApiResourceGenerator
     {
+        $this->bootKernel();
+        $this->assertTrue($this->getContainer()->has(ApiResourceOperationNameGenerator::class));
         /** @var ApiResourceOperationNameGenerator $apiResourceOperationNameGenerator */
         $apiResourceOperationNameGenerator = $this->getContainer()->get(ApiResourceOperationNameGenerator::class);
 
