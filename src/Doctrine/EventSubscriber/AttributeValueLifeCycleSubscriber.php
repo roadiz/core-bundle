@@ -32,13 +32,6 @@ final class AttributeValueLifeCycleSubscriber implements EventSubscriber
     {
         $entity = $event->getObject();
         if ($entity instanceof AttributeValueInterface) {
-            if (
-                null !== $entity->getAttribute() &&
-                null !== $entity->getAttribute()->getDefaultRealm()
-            ) {
-                $entity->setRealm($entity->getAttribute()->getDefaultRealm());
-            }
-
             /*
              * Automatically set position only if not manually set before.
              */

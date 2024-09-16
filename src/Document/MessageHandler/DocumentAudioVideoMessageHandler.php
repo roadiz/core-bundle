@@ -29,15 +29,22 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  */
 final class DocumentAudioVideoMessageHandler extends AbstractLockingDocumentMessageHandler
 {
+    private DocumentFactory $documentFactory;
+    private EventDispatcherInterface $eventDispatcher;
+    private ?string $ffmpegPath;
+
     public function __construct(
-        private readonly DocumentFactory $documentFactory,
-        private readonly EventDispatcherInterface $eventDispatcher,
-        private readonly ?string $ffmpegPath,
+        DocumentFactory $documentFactory,
+        EventDispatcherInterface $eventDispatcher,
+        ?string $ffmpegPath,
         ManagerRegistry $managerRegistry,
         LoggerInterface $messengerLogger,
         FilesystemOperator $documentsStorage
     ) {
         parent::__construct($managerRegistry, $messengerLogger, $documentsStorage);
+        $this->ffmpegPath = $ffmpegPath;
+        $this->documentFactory = $documentFactory;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
@@ -60,18 +67,12 @@ final class DocumentAudioVideoMessageHandler extends AbstractLockingDocumentMess
          * This process requires document files to be locally stored!
          */
         $videoPath = \tempnam(\sys_get_temp_dir(), 'video_');
-        if (false === $videoPath) {
-            throw new UnrecoverableMessageHandlingException('Unable to create temporary file for video processing.');
-        }
         \rename($videoPath, $videoPath .= $document->getFilename());
 
         /*
         * Copy AV locally
         */
         $videoPathResource = \fopen($videoPath, 'w');
-        if (false === $videoPathResource) {
-            throw new UnrecoverableMessageHandlingException('Unable to open temporary file for video processing.');
-        }
         \stream_copy_to_stream($this->documentsStorage->readStream($document->getMountPath()), $videoPathResource);
         \fclose($videoPathResource);
 
@@ -113,9 +114,6 @@ final class DocumentAudioVideoMessageHandler extends AbstractLockingDocumentMess
         }
 
         $thumbnailPath = \tempnam(\sys_get_temp_dir(), 'thumbnail_');
-        if (false === $thumbnailPath) {
-            throw new UnrecoverableMessageHandlingException('Unable to create temporary file for thumbnail processing.');
-        }
         \rename($thumbnailPath, $thumbnailPath .= '.jpg');
 
         $process = new Process([$this->ffmpegPath, '-y', '-i', $localMediaPath, '-vframes', '1', $thumbnailPath]);

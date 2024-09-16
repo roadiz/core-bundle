@@ -15,13 +15,16 @@ use RZ\Roadiz\Documents\Models\SizeableInterface;
 
 final class DocumentSizeMessageHandler extends AbstractLockingDocumentMessageHandler
 {
+    private ImageManager $imageManager;
+
     public function __construct(
         ManagerRegistry $managerRegistry,
         LoggerInterface $messengerLogger,
         FilesystemOperator $documentsStorage,
-        private readonly ImageManager $imageManager
+        ImageManager $imageManager
     ) {
         parent::__construct($managerRegistry, $messengerLogger, $documentsStorage);
+        $this->imageManager = $imageManager;
     }
 
     /**
@@ -43,7 +46,7 @@ final class DocumentSizeMessageHandler extends AbstractLockingDocumentMessageHan
             $document->setImageWidth($imageProcess->width());
             $document->setImageHeight($imageProcess->height());
         } catch (NotReadableException $exception) {
-            $this->messengerLogger->warning(
+            $this->logger->warning(
                 'Document file is not a readable image.',
                 [
                     'path' => $document->getMountPath(),

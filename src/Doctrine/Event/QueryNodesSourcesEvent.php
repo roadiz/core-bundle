@@ -10,16 +10,22 @@ use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 final class QueryNodesSourcesEvent extends QueryEvent
 {
     /**
-     * @param Query  $query
-     * @param class-string $actualEntityName
+     * @var class-string
      */
-    public function __construct(Query $query, private readonly string $actualEntityName)
+    protected string $actualEntityName;
+
+    /**
+     * @param Query  $query
+     * @param string $actualEntityName
+     */
+    public function __construct(Query $query, string $actualEntityName)
     {
         parent::__construct($query, NodesSources::class);
+        $this->actualEntityName = $actualEntityName;
     }
 
     /**
-     * @return class-string
+     * @return string
      */
     public function getActualEntityName(): string
     {

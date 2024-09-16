@@ -28,7 +28,7 @@ final class DocumentFilesizeMessageHandler extends AbstractLockingDocumentMessag
         try {
             $document->setFilesize($this->documentsStorage->fileSize($document->getMountPath()));
         } catch (FilesystemException $exception) {
-            $this->messengerLogger->warning($exception->getMessage());
+            $this->logger->warning($exception->getMessage());
         }
     }
 }

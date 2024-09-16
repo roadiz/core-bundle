@@ -13,10 +13,8 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  */
 final class AttributeValueTranslationRepository extends EntityRepository
 {
-    public function __construct(
-        ManagerRegistry $registry,
-        EventDispatcherInterface $dispatcher
-    ) {
+    public function __construct(ManagerRegistry $registry, EventDispatcherInterface $dispatcher)
+    {
         parent::__construct($registry, AttributeValueTranslation::class, $dispatcher);
     }
 }

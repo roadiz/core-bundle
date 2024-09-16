@@ -6,24 +6,27 @@ namespace RZ\Roadiz\CoreBundle\Message;
 
 final class ApplyRealmNodeInheritanceMessage implements AsyncMessage
 {
-    public function __construct(
-        private readonly int|string|null $nodeId,
-        private readonly int|string|null $realmId
-    ) {
+    private int $nodeId;
+    private ?int $realmId;
+
+    public function __construct(int $nodeId, ?int $realmId)
+    {
+        $this->nodeId = $nodeId;
+        $this->realmId = $realmId;
     }
 
     /**
-     * @return int|string|null
+     * @return int
      */
-    public function getNodeId(): int|string|null
+    public function getNodeId(): int
     {
         return $this->nodeId;
     }
 
     /**
-     * @return int|string|null
+     * @return int|null
      */
-    public function getRealmId(): int|string|null
+    public function getRealmId(): ?int
     {
         return $this->realmId;
     }

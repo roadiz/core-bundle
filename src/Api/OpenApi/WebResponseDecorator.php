@@ -10,19 +10,18 @@ use ApiPlatform\OpenApi\OpenApi;
 
 final class WebResponseDecorator implements OpenApiFactoryInterface
 {
+    private OpenApiFactoryInterface $decorated;
+
     public function __construct(
-        private readonly OpenApiFactoryInterface $decorated
+        OpenApiFactoryInterface $decorated
     ) {
+        $this->decorated = $decorated;
     }
 
     public function __invoke(array $context = []): OpenApi
     {
         $openApi = ($this->decorated)($context);
         $pathItem = $openApi->getPaths()->getPath('/api/web_response_by_path');
-        if (null === $pathItem) {
-            return $openApi;
-        }
-
         $operation = $pathItem->getGet();
 
         $openApi->getPaths()->addPath('/api/web_response_by_path', $pathItem->withGet(

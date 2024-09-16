@@ -7,13 +7,18 @@ namespace RZ\Roadiz\CoreBundle\Xlsx;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * @deprecated XLSX serialization is deprecated and will be removed in next major version.
  * Define basic serialize operations for XLSX data type.
  */
 abstract class AbstractXlsxSerializer implements SerializerInterface
 {
-    public function __construct(protected readonly TranslatorInterface $translator)
+    protected TranslatorInterface $translator;
+
+    /**
+     * @param TranslatorInterface $translator
+     */
+    public function __construct(TranslatorInterface $translator)
     {
+        $this->translator = $translator;
     }
 
     /**

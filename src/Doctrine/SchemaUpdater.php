@@ -11,12 +11,21 @@ use Symfony\Component\Process\Process;
 
 final class SchemaUpdater
 {
+    private LoggerInterface $logger;
+    private OPCacheClearer $opCacheClearer;
+    private string $projectDir;
+    private CacheClearerInterface $cacheClearer;
+
     public function __construct(
-        private readonly CacheClearerInterface $cacheClearer,
-        private readonly OPCacheClearer $opCacheClearer,
-        private readonly LoggerInterface $logger,
-        private readonly string $projectDir
+        CacheClearerInterface $cacheClearer,
+        OPCacheClearer $opCacheClearer,
+        LoggerInterface $logger,
+        string $projectDir
     ) {
+        $this->logger = $logger;
+        $this->opCacheClearer = $opCacheClearer;
+        $this->projectDir = $projectDir;
+        $this->cacheClearer = $cacheClearer;
     }
 
     public function clearMetadata(): void
@@ -89,15 +98,23 @@ final class SchemaUpdater
      */
     public function updateNodeTypesSchema(): void
     {
-        $this->clearMetadata();
+        /*
+         * Execute pending application migrations
+         */
+        $this->updateSchema();
+
+        /*
+         * Update schema with new node-types
+         * without creating any migration
+         */
         $process = $this->runCommand(
-            'doctrine:migrations:diff',
-            '--namespace=DoctrineMigrations --quiet --allow-empty-diff',
+            'doctrine:schema:update',
+            '--dump-sql --force',
         );
         $process->run();
+
         if ($process->wait() === 0) {
-            $this->logger->info('New migration has been generated.');
-            $this->updateSchema();
+            $this->logger->info('DB schema has been updated.');
         } else {
             throw new \RuntimeException('DB schema update failed. ' . $process->getErrorOutput());
         }

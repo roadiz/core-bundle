@@ -17,11 +17,15 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class UpdateNodeTypeSchemaMessageHandler implements MessageHandlerInterface
 {
-    public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly HandlerFactoryInterface $handlerFactory,
-        private readonly MessageBusInterface $messageBus
-    ) {
+    private ManagerRegistry $managerRegistry;
+    private HandlerFactoryInterface $handlerFactory;
+    private MessageBusInterface $messageBus;
+
+    public function __construct(ManagerRegistry $managerRegistry, HandlerFactoryInterface $handlerFactory, MessageBusInterface $messageBus)
+    {
+        $this->managerRegistry = $managerRegistry;
+        $this->handlerFactory = $handlerFactory;
+        $this->messageBus = $messageBus;
     }
 
     public function __invoke(UpdateNodeTypeSchemaMessage $message): void

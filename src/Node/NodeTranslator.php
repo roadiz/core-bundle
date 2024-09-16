@@ -13,10 +13,17 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class NodeTranslator
 {
-    public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly EventDispatcherInterface $dispatcher
-    ) {
+    private ManagerRegistry $managerRegistry;
+    private EventDispatcherInterface $dispatcher;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param EventDispatcherInterface $dispatcher
+     */
+    public function __construct(ManagerRegistry $managerRegistry, EventDispatcherInterface $dispatcher)
+    {
+        $this->managerRegistry = $managerRegistry;
+        $this->dispatcher = $dispatcher;
     }
 
     public function translateNode(

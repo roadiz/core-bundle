@@ -21,14 +21,28 @@ use Symfony\Component\Routing\RouterInterface;
 
 final class TranslationViewer
 {
+    private Settings $settingsBag;
+    private ManagerRegistry $managerRegistry;
+    private RouterInterface $router;
+    private PreviewResolverInterface $previewResolver;
     private ?TranslationInterface $translation = null;
 
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param Settings $settingsBag
+     * @param RouterInterface $router
+     * @param PreviewResolverInterface $previewResolver
+     */
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly Settings $settingsBag,
-        private readonly RouterInterface $router,
-        private readonly PreviewResolverInterface $previewResolver
+        ManagerRegistry $managerRegistry,
+        Settings $settingsBag,
+        RouterInterface $router,
+        PreviewResolverInterface $previewResolver
     ) {
+        $this->settingsBag = $settingsBag;
+        $this->router = $router;
+        $this->previewResolver = $previewResolver;
+        $this->managerRegistry = $managerRegistry;
     }
 
     /**

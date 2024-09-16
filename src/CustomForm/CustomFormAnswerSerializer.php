@@ -11,27 +11,38 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class CustomFormAnswerSerializer
 {
-    public function __construct(protected readonly UrlGeneratorInterface $urlGenerator)
+    /**
+     * @var UrlGeneratorInterface
+     */
+    protected UrlGeneratorInterface $urlGenerator;
+
+    /**
+     * @param UrlGeneratorInterface $urlGenerator
+     */
+    public function __construct(UrlGeneratorInterface $urlGenerator)
     {
+        $this->urlGenerator = $urlGenerator;
     }
 
+    /**
+     * @param CustomFormAnswer $answer
+     *
+     * @return array
+     */
     public function toSimpleArray(CustomFormAnswer $answer): array
     {
-        $answers = [
-            'ip' => $answer->getIp(),
-            'submitted.date' => $answer->getSubmittedAt()
-        ];
+        $answers = [];
         /** @var CustomFormFieldAttribute $answerAttr */
         foreach ($answer->getAnswerFields() as $answerAttr) {
             $field = $answerAttr->getCustomFormField();
             if ($field->isDocuments()) {
-                $answers[$field->getLabel()] = implode(PHP_EOL, $answerAttr->getDocuments()->map(function (Document $document) {
+                $answers[$field->getName()] = implode(PHP_EOL, $answerAttr->getDocuments()->map(function (Document $document) {
                     return $this->urlGenerator->generate('documentsDownloadPage', [
                         'documentId' => $document->getId()
                     ], UrlGeneratorInterface::ABSOLUTE_URL);
                 })->toArray());
             } else {
-                $answers[$field->getLabel()] = $answerAttr->getValue();
+                $answers[$field->getName()] = $answerAttr->getValue();
             }
         }
         return $answers;

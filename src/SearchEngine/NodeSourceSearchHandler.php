@@ -9,7 +9,6 @@ use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
-use RZ\Roadiz\CoreBundle\SearchEngine\Event\NodeSourceSearchQueryEvent;
 
 /**
  * @package RZ\Roadiz\CoreBundle\SearchEngine
@@ -25,6 +24,7 @@ class NodeSourceSearchHandler extends AbstractSearchHandler implements NodeSourc
      * @param array   $args
      * @param integer $rows
      * @param bool $searchTags
+     * @param int $proximity Proximity matching: Lucene supports finding words are a within a specific distance away.
      * @param int $page
      *
      * @return array|null
@@ -34,56 +34,52 @@ class NodeSourceSearchHandler extends AbstractSearchHandler implements NodeSourc
         array $args = [],
         int $rows = 20,
         bool $searchTags = false,
+        int $proximity = 1,
         int $page = 1
     ): ?array {
-        if (empty($q)) {
+        if (!empty($q)) {
+            $query = $this->createSolrQuery($args, $rows, $page);
+            $queryTxt = $this->buildQuery($q, $args, $searchTags, $proximity);
+
+            if ($this->boostByPublicationDate) {
+                $boost = '{!boost b=recip(ms(NOW,published_at_dt),3.16e-11,1,1)}';
+                $queryTxt = $boost . $queryTxt;
+            }
+            if ($this->boostByUpdateDate) {
+                $boost = '{!boost b=recip(ms(NOW,updated_at_dt),3.16e-11,1,1)}';
+                $queryTxt = $boost . $queryTxt;
+            }
+            if ($this->boostByCreationDate) {
+                $boost = '{!boost b=recip(ms(NOW,created_at_dt),3.16e-11,1,1)}';
+                $queryTxt = $boost . $queryTxt;
+            }
+
+            $query->setQuery($queryTxt);
+
+            /*
+             * Only need these fields as Doctrine
+             * will do the rest.
+             */
+            $query->setFields([
+                'score',
+                'id',
+                'document_type_s',
+                SolariumNodeSource::IDENTIFIER_KEY,
+                'node_name_s',
+                'locale_s',
+            ]);
+
+            $this->logger->debug('[Solr] Request node-sources search…', [
+                'query' => $queryTxt,
+                'fq' => $args["fq"] ?? [],
+                'params' => $query->getParams(),
+            ]);
+
+            $solrRequest = $this->getSolr()->execute($query);
+            return $solrRequest->getData();
+        } else {
             return null;
         }
-        $query = $this->createSolrQuery($args, $rows, $page);
-        $queryTxt = $this->buildQuery($q, $args, $searchTags);
-
-        if ($this->boostByPublicationDate) {
-            $boost = '{!boost b=recip(ms(NOW,published_at_dt),3.16e-11,1,1)}';
-            $queryTxt = $boost . $queryTxt;
-        }
-        if ($this->boostByUpdateDate) {
-            $boost = '{!boost b=recip(ms(NOW,updated_at_dt),3.16e-11,1,1)}';
-            $queryTxt = $boost . $queryTxt;
-        }
-        if ($this->boostByCreationDate) {
-            $boost = '{!boost b=recip(ms(NOW,created_at_dt),3.16e-11,1,1)}';
-            $queryTxt = $boost . $queryTxt;
-        }
-
-        $query->setQuery($queryTxt);
-
-        /*
-         * Only need these fields as Doctrine
-         * will do the rest.
-         */
-        $query->setFields([
-            'score',
-            'id',
-            'document_type_s',
-            SolariumNodeSource::IDENTIFIER_KEY,
-            'node_name_s',
-            'locale_s',
-        ]);
-
-        $this->logger->debug('[Solr] Request node-sources search…', [
-            'query' => $queryTxt,
-            'fq' => $args["fq"] ?? [],
-            'params' => $query->getParams(),
-        ]);
-
-        /** @var NodeSourceSearchQueryEvent $event */
-        $event = $this->eventDispatcher->dispatch(
-            new NodeSourceSearchQueryEvent($query, $args)
-        );
-        $query = $event->getQuery();
-
-        $solrRequest = $this->getSolr()->execute($query);
-        return $solrRequest->getData();
     }
 
     /**
@@ -166,15 +162,15 @@ class NodeSourceSearchHandler extends AbstractSearchHandler implements NodeSourc
          */
         if (isset($args['publishedAt'])) {
             $tmp = "published_at_dt:";
-            if (!is_array($args['publishedAt']) && $args['publishedAt'] instanceof \DateTimeInterface) {
+            if (!is_array($args['publishedAt']) && $args['publishedAt'] instanceof \DateTime) {
                 $tmp .= $this->formatDateTimeToUTC($args['publishedAt']);
             } elseif (
                 isset($args['publishedAt'][0]) &&
                 $args['publishedAt'][0] === "BETWEEN" &&
                 isset($args['publishedAt'][1]) &&
-                $args['publishedAt'][1] instanceof \DateTimeInterface &&
+                $args['publishedAt'][1] instanceof \DateTime &&
                 isset($args['publishedAt'][2]) &&
-                $args['publishedAt'][2] instanceof \DateTimeInterface
+                $args['publishedAt'][2] instanceof \DateTime
             ) {
                 $tmp .= "[" .
                     $this->formatDateTimeToUTC($args['publishedAt'][1]) .
@@ -184,14 +180,14 @@ class NodeSourceSearchHandler extends AbstractSearchHandler implements NodeSourc
                 isset($args['publishedAt'][0]) &&
                 $args['publishedAt'][0] === "<=" &&
                 isset($args['publishedAt'][1]) &&
-                $args['publishedAt'][1] instanceof \DateTimeInterface
+                $args['publishedAt'][1] instanceof \DateTime
             ) {
                 $tmp .= "[* TO " . $this->formatDateTimeToUTC($args['publishedAt'][1]) . "]";
             } elseif (
                 isset($args['publishedAt'][0]) &&
                 $args['publishedAt'][0] === ">=" &&
                 isset($args['publishedAt'][1]) &&
-                $args['publishedAt'][1] instanceof \DateTimeInterface
+                $args['publishedAt'][1] instanceof \DateTime
             ) {
                 $tmp .= "[" . $this->formatDateTimeToUTC($args['publishedAt'][1]) . " TO *]";
             }

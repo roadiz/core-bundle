@@ -12,8 +12,14 @@ use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 final class DocumentFinder extends AbstractDocumentFinder
 {
-    public function __construct(private readonly ManagerRegistry $managerRegistry)
+    private ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
     {
+        $this->managerRegistry = $managerRegistry;
     }
 
     /**

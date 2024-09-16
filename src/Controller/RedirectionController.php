@@ -14,10 +14,21 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 final class RedirectionController
 {
-    public function __construct(private readonly UrlGeneratorInterface $urlGenerator)
+    private UrlGeneratorInterface $urlGenerator;
+
+    /**
+     * @param UrlGeneratorInterface $urlGenerator
+     */
+    public function __construct(UrlGeneratorInterface $urlGenerator)
     {
+        $this->urlGenerator = $urlGenerator;
     }
 
+    /**
+     * @param Request $request
+     * @param Redirection $redirection
+     * @return RedirectResponse
+     */
     public function redirectAction(Request $request, Redirection $redirection): RedirectResponse
     {
         if (null !== $redirection->getRedirectNodeSource()) {
