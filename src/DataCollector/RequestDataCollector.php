@@ -4,16 +4,20 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\DataCollector;
 
+use PackageVersions\Versions;
 use Symfony\Bundle\FrameworkBundle\DataCollector\AbstractDataCollector;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 final class RequestDataCollector extends AbstractDataCollector
 {
-    public function __construct(
-        private readonly string $cmsVersion,
-        private readonly string $cmsVersionPrefix
-    ) {
+    private ?string $cmsVersion = null;
+    private ?string $cmsVersionPrefix = null;
+
+    public function __construct(string $cmsVersion, string $cmsVersionPrefix)
+    {
+        $this->cmsVersion = $cmsVersion;
+        $this->cmsVersionPrefix = $cmsVersionPrefix;
     }
 
     /**
@@ -21,14 +25,20 @@ final class RequestDataCollector extends AbstractDataCollector
      */
     public function collect(Request $request, Response $response, \Throwable $exception = null): void
     {
-        $this->data = [
-            'version' => implode(' - ', array_filter([$this->cmsVersionPrefix, $this->cmsVersion])),
-        ];
+        $this->data = [];
     }
 
-    public function getVersion(): string
+    public function getVersion(): ?string
     {
-        return $this->data['version'];
+        $fallback = implode(' - ', array_filter([$this->cmsVersionPrefix, $this->cmsVersion]));
+        if (!class_exists(Versions::class)) {
+            return $fallback;
+        }
+
+        $version = Versions::getVersion('roadiz/core-bundle');
+        preg_match('/^v(.*?)@/', $version, $output);
+
+        return $output[1] ?? strtok($version, '@') ?: $fallback;
     }
 
     public static function getTemplate(): ?string

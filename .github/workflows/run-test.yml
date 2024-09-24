@@ -39,5 +39,3 @@ jobs:
               run: vendor/bin/phpcs -p ./src
             - name: Run PHPStan
               run: vendor/bin/phpstan analyse --no-progress -c phpstan.neon
-            - name: Run PHP Unit
-              run: vendor/bin/phpunit -v

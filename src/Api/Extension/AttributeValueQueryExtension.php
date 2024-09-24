@@ -16,9 +16,12 @@ use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 
 final class AttributeValueQueryExtension implements QueryItemExtensionInterface, QueryCollectionExtensionInterface
 {
+    private PreviewResolverInterface $previewResolver;
+
     public function __construct(
-        private readonly PreviewResolverInterface $previewResolver
+        PreviewResolverInterface $previewResolver
     ) {
+        $this->previewResolver = $previewResolver;
     }
 
     public function applyToItem(

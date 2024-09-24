@@ -38,7 +38,7 @@ final class DocumentSvgMessageHandler extends AbstractLockingDocumentMessageHand
         // Load the dirty svg
         $dirtySVG = $this->documentsStorage->read($document->getMountPath());
         $this->documentsStorage->write($document->getMountPath(), $sanitizer->sanitize($dirtySVG));
-        $this->messengerLogger->info('Svg document sanitized.');
+        $this->logger->info('Svg document sanitized.');
 
         /*
          * Resolve SVG size
@@ -48,7 +48,7 @@ final class DocumentSvgMessageHandler extends AbstractLockingDocumentMessageHand
             $document->setImageWidth($svgSizeResolver->getWidth());
             $document->setImageHeight($svgSizeResolver->getHeight());
         } catch (\RuntimeException $exception) {
-            $this->messengerLogger->error($exception->getMessage());
+            $this->logger->error($exception->getMessage());
         }
     }
 }

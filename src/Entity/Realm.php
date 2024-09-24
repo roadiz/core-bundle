@@ -150,7 +150,7 @@ class Realm extends AbstractEntity implements RealmInterface
     {
         $this->serializationGroup = null !== $serializationGroup ?
             (new AsciiSlugger())->slug($serializationGroup, '_')->lower()->toString() :
-            null;
+            (new AsciiSlugger())->slug($this->getName(), '_')->lower()->toString();
         return $this;
     }
 

@@ -18,13 +18,19 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 final class NodesSourcesReachableFilter implements EventSubscriberInterface
 {
+    private NodeTypes $nodeTypesBag;
+
     public const PARAMETER = [
         'node.nodeType.reachable',
         'reachable'
     ];
 
-    public function __construct(private readonly NodeTypes $nodeTypesBag)
+    /**
+     * @param NodeTypes $nodeTypesBag
+     */
+    public function __construct(NodeTypes $nodeTypesBag)
     {
+        $this->nodeTypesBag = $nodeTypesBag;
     }
 
     public static function getSubscribedEvents(): array

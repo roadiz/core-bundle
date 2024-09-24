@@ -12,10 +12,13 @@ use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
 final class SolrReindexMessageHandler implements MessageHandlerInterface
 {
-    public function __construct(
-        private readonly IndexerFactoryInterface $indexerFactory,
-        private readonly LoggerInterface $searchEngineLogger
-    ) {
+    private LoggerInterface $logger;
+    private IndexerFactoryInterface $indexerFactory;
+
+    public function __construct(IndexerFactoryInterface $indexerFactory, LoggerInterface $searchEngineLogger)
+    {
+        $this->logger = $searchEngineLogger;
+        $this->indexerFactory = $indexerFactory;
     }
 
     public function __invoke(SolrReindexMessage $message): void
@@ -29,7 +32,7 @@ final class SolrReindexMessageHandler implements MessageHandlerInterface
         } catch (SolrServerNotAvailableException $exception) {
             return;
         } catch (\LogicException $exception) {
-            $this->searchEngineLogger->error($exception->getMessage());
+            $this->logger->error($exception->getMessage());
         }
     }
 }

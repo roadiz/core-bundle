@@ -11,7 +11,6 @@ use Doctrine\ORM\NoResultException;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\CoreBundle\Entity\CustomFormFieldAttribute;
 use RZ\Roadiz\Documents\Repository\DocumentRepositoryInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
@@ -529,8 +528,7 @@ final class DocumentRepository extends EntityRepository implements DocumentRepos
     /**
      * @param NodesSources  $nodeSource
      * @param NodeTypeFieldInterface $field
-     * @return array<Document>
-     * @deprecated Use findByNodeSourceAndFieldName instead
+     * @return array
      */
     public function findByNodeSourceAndField(
         NodesSources $nodeSource,
@@ -540,35 +538,10 @@ final class DocumentRepository extends EntityRepository implements DocumentRepos
         $qb->addSelect('dt')
             ->leftJoin('d.documentTranslations', 'dt', 'WITH', 'dt.translation = :translation')
             ->innerJoin('d.nodesSourcesByFields', 'nsf', 'WITH', 'nsf.nodeSource = :nodeSource')
-            ->andWhere($qb->expr()->eq('nsf.fieldName', ':fieldName'))
+            ->andWhere($qb->expr()->eq('nsf.field', ':field'))
             ->andWhere($qb->expr()->eq('d.raw', ':raw'))
             ->addOrderBy('nsf.position', 'ASC')
-            ->setParameter('fieldName', $field->getName())
-            ->setParameter('nodeSource', $nodeSource)
-            ->setParameter('translation', $nodeSource->getTranslation())
-            ->setParameter('raw', false)
-            ->setCacheable(true);
-
-        return $qb->getQuery()->getResult();
-    }
-
-    /**
-     * @param NodesSources  $nodeSource
-     * @param string $fieldName
-     * @return array<Document>
-     */
-    public function findByNodeSourceAndFieldName(
-        NodesSources $nodeSource,
-        string $fieldName
-    ): array {
-        $qb = $this->createQueryBuilder('d');
-        $qb->addSelect('dt')
-            ->leftJoin('d.documentTranslations', 'dt', 'WITH', 'dt.translation = :translation')
-            ->innerJoin('d.nodesSourcesByFields', 'nsf', 'WITH', 'nsf.nodeSource = :nodeSource')
-            ->andWhere($qb->expr()->eq('nsf.fieldName', ':fieldName'))
-            ->andWhere($qb->expr()->eq('d.raw', ':raw'))
-            ->addOrderBy('nsf.position', 'ASC')
-            ->setParameter('fieldName', $fieldName)
+            ->setParameter('field', $field)
             ->setParameter('nodeSource', $nodeSource)
             ->setParameter('translation', $nodeSource->getTranslation())
             ->setParameter('raw', false)
@@ -606,8 +579,12 @@ final class DocumentRepository extends EntityRepository implements DocumentRepos
         return $this->getAllUnusedQueryBuilder()->getQuery()->getResult();
     }
 
-    protected function getAllDocumentsIdUsedInSettings(): array
+    /**
+     * @return QueryBuilder
+     */
+    public function getAllUnusedQueryBuilder(): QueryBuilder
     {
+        $qb1 = $this->createQueryBuilder('d1');
         $qb2 = $this->_em->createQueryBuilder();
 
         /*
@@ -626,43 +603,6 @@ final class DocumentRepository extends EntityRepository implements DocumentRepos
         foreach ($array as $value) {
             $idArray[] = (int) $value['value'];
         }
-
-        return $idArray;
-    }
-
-    protected function getAllDocumentsIdUsedInCustomFormAnswers(): array
-    {
-        $qb2 = $this->_em->createQueryBuilder();
-
-        /*
-         * Get documents used by settings
-         */
-        $qb2->select('d.id')
-            ->from(CustomFormFieldAttribute::class, 'cffa')
-            ->innerJoin('cffa.documents', 'd')
-        ;
-
-        $subQuery = $qb2->getQuery();
-        $array = $subQuery->getScalarResult();
-        $idArray = [];
-
-        foreach ($array as $value) {
-            $idArray[] = (int) $value['id'];
-        }
-
-        return $idArray;
-    }
-
-    /**
-     * @return QueryBuilder
-     */
-    public function getAllUnusedQueryBuilder(): QueryBuilder
-    {
-        $qb1 = $this->createQueryBuilder('d1');
-
-        $idArray = [];
-        $idArray = array_merge($idArray, $this->getAllDocumentsIdUsedInSettings());
-        $idArray = array_merge($idArray, $this->getAllDocumentsIdUsedInCustomFormAnswers());
 
         /*
          * Get unused documents

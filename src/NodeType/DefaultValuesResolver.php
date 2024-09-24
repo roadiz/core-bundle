@@ -12,10 +12,15 @@ use RZ\Roadiz\EntityGenerator\Field\DefaultValuesResolverInterface;
 
 final class DefaultValuesResolver implements DefaultValuesResolverInterface
 {
+    private ManagerRegistry $managerRegistry;
+    private string $inheritanceType;
+
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly string $inheritanceType
+        ManagerRegistry $managerRegistry,
+        string $inheritanceType
     ) {
+        $this->managerRegistry = $managerRegistry;
+        $this->inheritanceType = $inheritanceType;
     }
 
     public function getDefaultValuesAmongAllFields(NodeTypeFieldInterface $field): array

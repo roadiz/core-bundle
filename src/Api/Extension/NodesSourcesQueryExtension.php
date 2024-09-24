@@ -17,10 +17,15 @@ use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 
 final class NodesSourcesQueryExtension implements QueryItemExtensionInterface, QueryCollectionExtensionInterface
 {
+    private PreviewResolverInterface $previewResolver;
+    private string $generatedEntityNamespacePattern;
+
     public function __construct(
-        private readonly PreviewResolverInterface $previewResolver,
-        private readonly string $generatedEntityNamespacePattern = '#^App\\\GeneratedEntity\\\NS(?:[a-zA-Z]+)$#'
+        PreviewResolverInterface $previewResolver,
+        string $generatedEntityNamespacePattern = '#^App\\\GeneratedEntity\\\NS(?:[a-zA-Z]+)$#'
     ) {
+        $this->previewResolver = $previewResolver;
+        $this->generatedEntityNamespacePattern = $generatedEntityNamespacePattern;
     }
 
     public function applyToItem(

@@ -8,10 +8,17 @@ use Doctrine\Persistence\ManagerRegistry;
 
 final class NodeNamePolicyFactory
 {
-    public function __construct(
-        private readonly ManagerRegistry $registry,
-        private readonly bool $useTypedNodeNames
-    ) {
+    private ManagerRegistry $registry;
+    private bool $useTypedNodeNames;
+
+    /**
+     * @param ManagerRegistry $registry
+     * @param bool $useTypedNodeNames
+     */
+    public function __construct(ManagerRegistry $registry, bool $useTypedNodeNames)
+    {
+        $this->registry = $registry;
+        $this->useTypedNodeNames = $useTypedNodeNames;
     }
 
     public function create(): NodeNamePolicyInterface

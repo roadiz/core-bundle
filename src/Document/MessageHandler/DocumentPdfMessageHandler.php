@@ -18,14 +18,19 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class DocumentPdfMessageHandler extends AbstractLockingDocumentMessageHandler
 {
+    private DocumentFactory $documentFactory;
+    private EventDispatcherInterface $eventDispatcher;
+
     public function __construct(
-        private readonly DocumentFactory $documentFactory,
-        private readonly EventDispatcherInterface $eventDispatcher,
+        DocumentFactory $documentFactory,
+        EventDispatcherInterface $eventDispatcher,
         ManagerRegistry $managerRegistry,
         LoggerInterface $messengerLogger,
         FilesystemOperator $documentsStorage
     ) {
         parent::__construct($managerRegistry, $messengerLogger, $documentsStorage);
+        $this->documentFactory = $documentFactory;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
@@ -100,13 +105,12 @@ final class DocumentPdfMessageHandler extends AbstractLockingDocumentMessageHand
                 }
             }
         } catch (\ImagickException $exception) {
-            // Silent fail to avoid issue with message handling
-            $this->messengerLogger->warning(
+            throw new UnrecoverableMessageHandlingException(
                 sprintf(
                     'Cannot extract thumbnail from %s PDF file : %s',
                     $localPdfPath,
                     $exception->getMessage()
-                )
+                ),
             );
         }
     }

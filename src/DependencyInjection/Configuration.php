@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\DependencyInjection;
 
-use RZ\Roadiz\CoreBundle\Api\Model\WebResponse;
 use RZ\Roadiz\CoreBundle\Controller\DefaultNodeSourceController;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
@@ -45,17 +44,11 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('defaultNodeSourceController')
                 ->defaultValue(DefaultNodeSourceController::class)
             ->end()
-            ->scalarNode('webResponseClass')
-                ->defaultValue(WebResponse::class)
-            ->end()
             ->booleanNode('useNativeJsonColumnType')
                 ->defaultValue(true)
             ->end()
             ->booleanNode('hideRoadizVersion')
                 ->defaultValue(false)
-            ->end()
-            ->booleanNode('useGravatar')
-                ->defaultTrue()
             ->end()
             ->scalarNode('documentsLibDir')->defaultValue(
                 'vendor/roadiz/documents/src'
@@ -75,6 +68,19 @@ EOT)
 When enabled, this option will suffix each name for unreachable nodes (blocks) with
 their node-type to avoid name conflicts with reachable nodes (pages).
 EOT)
+            ->end()
+            ->arrayNode('security')
+                ->addDefaultsIfNotSet()
+                ->children()
+                    ->scalarNode('private_key_dir')
+                        ->defaultValue('%kernel.project_dir%/var/secret')
+                        ->info('Asymmetric cryptographic key directory.')
+                    ->end()
+                    ->scalarNode('private_key_name')
+                        ->defaultValue('default')
+                        ->info('Asymmetric cryptographic key name.')
+                    ->end()
+                ->end()
             ->end()
             ->append($this->addSolrNode())
             ->append($this->addInheritanceNode())

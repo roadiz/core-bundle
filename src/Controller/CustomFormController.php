@@ -9,12 +9,15 @@ use Exception;
 use League\Flysystem\FilesystemException;
 use Limenius\Liform\LiformInterface;
 use Psr\Log\LoggerInterface;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\CustomForm\CustomFormHelperFactory;
 use RZ\Roadiz\CoreBundle\CustomForm\Message\CustomFormAnswerNotifyMessage;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Exception\EntityAlreadyExistsException;
 use RZ\Roadiz\CoreBundle\Form\Error\FormErrorSerializerInterface;
+use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
+use RZ\Roadiz\CoreBundle\Repository\TranslationRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormInterface;
@@ -29,22 +32,47 @@ use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Contracts\Translation\LocaleAwareInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class CustomFormController extends AbstractController
 {
+    private Settings $settingsBag;
+    private LoggerInterface $logger;
+    private TranslatorInterface $translator;
+    private CustomFormHelperFactory $customFormHelperFactory;
+    private LiformInterface $liform;
+    private SerializerInterface $serializer;
+    private FormErrorSerializerInterface $formErrorSerializer;
+    private ManagerRegistry $registry;
+    private RateLimiterFactory $customFormLimiter;
+    private PreviewResolverInterface $previewResolver;
+    private MessageBusInterface $messageBus;
+
     public function __construct(
-        private readonly Settings $settingsBag,
-        private readonly LoggerInterface $logger,
-        private readonly TranslatorInterface $translator,
-        private readonly CustomFormHelperFactory $customFormHelperFactory,
-        private readonly LiformInterface $liform,
-        private readonly SerializerInterface $serializer,
-        private readonly FormErrorSerializerInterface $formErrorSerializer,
-        private readonly ManagerRegistry $registry,
-        private readonly RateLimiterFactory $customFormLimiter,
-        private readonly MessageBusInterface $messageBus,
+        Settings $settingsBag,
+        LoggerInterface $logger,
+        TranslatorInterface $translator,
+        CustomFormHelperFactory $customFormHelperFactory,
+        LiformInterface $liform,
+        SerializerInterface $serializer,
+        FormErrorSerializerInterface $formErrorSerializer,
+        ManagerRegistry $registry,
+        RateLimiterFactory $customFormLimiter,
+        PreviewResolverInterface $previewResolver,
+        MessageBusInterface $messageBus,
     ) {
+        $this->settingsBag = $settingsBag;
+        $this->logger = $logger;
+        $this->translator = $translator;
+        $this->customFormHelperFactory = $customFormHelperFactory;
+        $this->liform = $liform;
+        $this->serializer = $serializer;
+        $this->formErrorSerializer = $formErrorSerializer;
+        $this->registry = $registry;
+        $this->customFormLimiter = $customFormLimiter;
+        $this->previewResolver = $previewResolver;
+        $this->messageBus = $messageBus;
     }
 
     protected function validateCustomForm(?CustomForm $customForm): void
@@ -55,6 +83,38 @@ final class CustomFormController extends AbstractController
         if (!$customForm->isFormStillOpen()) {
             throw new NotFoundHttpException('Custom form is closed');
         }
+    }
+
+    protected function getTranslationFromRequest(?Request $request): TranslationInterface
+    {
+        $locale = null;
+
+        if (null !== $request) {
+            $locale = $request->query->get('_locale');
+
+            /*
+             * If no _locale query param is defined check Accept-Language header
+             */
+            if (null === $locale) {
+                $locale = $request->getPreferredLanguage($this->getTranslationRepository()->getAllLocales());
+            }
+        }
+        /*
+         * Then fallback to default CMS locale
+         */
+        if (null === $locale) {
+            $translation = $this->getTranslationRepository()->findDefault();
+        } elseif ($this->previewResolver->isPreview()) {
+            $translation = $this->getTranslationRepository()
+                ->findOneByLocaleOrOverrideLocale((string) $locale);
+        } else {
+            $translation = $this->getTranslationRepository()
+                ->findOneAvailableByLocaleOrOverrideLocale((string) $locale);
+        }
+        if (null === $translation) {
+            throw new NotFoundHttpException('No translation for locale ' . $locale);
+        }
+        return $translation;
     }
 
     /**
@@ -69,6 +129,11 @@ final class CustomFormController extends AbstractController
         $this->validateCustomForm($customForm);
 
         $helper = $this->customFormHelperFactory->createHelper($customForm);
+        $translation = $this->getTranslationFromRequest($request);
+        $request->setLocale($translation->getPreferredLocale());
+        if ($this->translator instanceof LocaleAwareInterface) {
+            $this->translator->setLocale($translation->getPreferredLocale());
+        }
         $schema = json_encode($this->liform->transform($helper->getForm($request, false, false)));
 
         return new JsonResponse(
@@ -103,6 +168,12 @@ final class CustomFormController extends AbstractController
         /** @var CustomForm|null $customForm */
         $customForm = $this->registry->getRepository(CustomForm::class)->find($id);
         $this->validateCustomForm($customForm);
+
+        $translation = $this->getTranslationFromRequest($request);
+        $request->setLocale($translation->getPreferredLocale());
+        if ($this->translator instanceof LocaleAwareInterface) {
+            $this->translator->setLocale($translation->getPreferredLocale());
+        }
 
         $mixed = $this->prepareAndHandleCustomFormAssignation(
             $request,
@@ -160,7 +231,8 @@ final class CustomFormController extends AbstractController
         );
 
         if ($mixed instanceof Response) {
-            return $mixed;
+            $mixed->prepare($request);
+            return $mixed->send();
         } else {
             return $this->render('@RoadizCore/customForm/customForm.html.twig', $mixed);
         }
@@ -208,14 +280,9 @@ final class CustomFormController extends AbstractController
         ?string $emailSender = null,
         bool $prefix = true
     ) {
-        $assignation = [
-            'customForm' => $customFormsEntity,
-            'fields' => $customFormsEntity->getFields(),
-            'head' => [
-                'siteTitle' => $this->settingsBag->get('site_name'),
-                'mainColor' => $this->settingsBag->get('main_color'),
-            ]
-        ];
+        $assignation = [];
+        $assignation['customForm'] = $customFormsEntity;
+        $assignation['fields'] = $customFormsEntity->getFields();
         $helper = $this->customFormHelperFactory->createHelper($customFormsEntity);
         $form = $helper->getForm(
             $request,
@@ -236,9 +303,6 @@ final class CustomFormController extends AbstractController
                     throw new \RuntimeException('Answer ID is null');
                 }
 
-                if (null === $emailSender || false === filter_var($answer->getEmail(), FILTER_VALIDATE_EMAIL)) {
-                    $emailSender = $answer->getEmail();
-                }
                 if (null === $emailSender || false === filter_var($emailSender, FILTER_VALIDATE_EMAIL)) {
                     $emailSender = $this->settingsBag->get('email_sender');
                 }
@@ -258,13 +322,10 @@ final class CustomFormController extends AbstractController
                     ['%name%' => $customFormsEntity->getDisplayName()]
                 );
 
-                if (!$request->attributes->getBoolean('_stateless') && $request->hasPreviousSession()) {
-                    $session = $request->getSession();
-                    if ($session instanceof Session) {
-                        $session->getFlashBag()->add('confirm', $msg);
-                    }
+                $session = $request->getSession();
+                if ($session instanceof Session) {
+                    $session->getFlashBag()->add('confirm', $msg);
                 }
-
                 $this->logger->info($msg);
 
                 return $response;
@@ -276,5 +337,17 @@ final class CustomFormController extends AbstractController
         $assignation['form'] = $form->createView();
         $assignation['formObject'] = $form;
         return $assignation;
+    }
+
+    protected function getTranslationRepository(): TranslationRepository
+    {
+        $repository = $this->registry->getRepository(TranslationInterface::class);
+        if (!$repository instanceof TranslationRepository) {
+            throw new \RuntimeException(
+                'Translation repository must be instance of ' .
+                TranslationRepository::class
+            );
+        }
+        return $repository;
     }
 }

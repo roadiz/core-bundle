@@ -6,15 +6,22 @@ namespace RZ\Roadiz\CoreBundle\Preview\User;
 
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 final class PreviewUserProvider implements PreviewUserProviderInterface
 {
-    public function __construct(
-        private readonly PreviewResolverInterface $previewResolver,
-        private readonly Security $security
-    ) {
+    private PreviewResolverInterface $previewResolver;
+    private Security $security;
+
+    /**
+     * @param PreviewResolverInterface $previewResolver
+     * @param Security $security
+     */
+    public function __construct(PreviewResolverInterface $previewResolver, Security $security)
+    {
+        $this->previewResolver = $previewResolver;
+        $this->security = $security;
     }
 
     public function createFromSecurity(): UserInterface
