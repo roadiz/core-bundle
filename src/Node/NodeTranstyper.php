@@ -13,7 +13,6 @@ use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use RZ\Roadiz\CoreBundle\Entity\Log;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments;
@@ -98,6 +97,7 @@ final class NodeTranstyper
         }
         $this->logger->debug('Get matching fields');
 
+        /** @var class-string<NodesSources> $sourceClass */
         $sourceClass = $destinationNodeType->getSourceEntityFullQualifiedClassName();
 
         /*
@@ -113,14 +113,6 @@ final class NodeTranstyper
          * Perform actual trans-typing
          */
         $existingSources = $node->getNodeSources()->toArray();
-        $existingLogs = [];
-        /** @var NodesSources $existingSource */
-        foreach ($existingSources as $existingSource) {
-            $existingLogs[$existingSource->getTranslation()->getLocale()] = array_map(function (Log $log) {
-                $this->managerRegistry->getManager()->detach($log);
-                return $log;
-            }, $existingSource->getLogs()->toArray());
-        }
         $existingRedirections = [];
         /** @var NodesSources $existingSource */
         foreach ($existingSources as $existingSource) {
@@ -141,7 +133,6 @@ final class NodeTranstyper
                 $existingSource->getTranslation(),
                 $sourceClass,
                 $fieldAssociations,
-                $existingLogs,
                 $existingRedirections
             );
             $this->logger->debug('Transtyped: ' . $existingSource->getTranslation()->getLocale());
@@ -174,9 +165,8 @@ final class NodeTranstyper
      * @param Node $node
      * @param NodesSources $existingSource
      * @param TranslationInterface $translation
-     * @param string $sourceClass
+     * @param class-string<NodesSources> $sourceClass
      * @param array $fieldAssociations
-     * @param array $existingLogs
      * @param array $existingRedirections
      * @return NodesSources
      */
@@ -186,7 +176,6 @@ final class NodeTranstyper
         TranslationInterface $translation,
         string $sourceClass,
         array &$fieldAssociations,
-        array &$existingLogs,
         array &$existingRedirections
     ): NodesSources {
         /** @var NodesSources $source */
@@ -213,7 +202,8 @@ final class NodeTranstyper
                  */
                 $documents = $existingSource->getDocumentsByFieldsWithName($oldField->getName());
                 foreach ($documents as $document) {
-                    $nsDoc = new NodesSourcesDocuments($source, $document, $matchingField);
+                    $nsDoc = new NodesSourcesDocuments($source, $document);
+                    $nsDoc->setFieldName($matchingField->getName());
                     $this->getManager()->persist($nsDoc);
                     $source->getDocumentsByFields()->add($nsDoc);
                 }
@@ -221,26 +211,13 @@ final class NodeTranstyper
         }
         $this->logger->debug('Fill existing data');
 
-
-        /** @var Log $log */
-        foreach ($existingLogs[$translation->getLocale()] as $log) {
-            $newLog = clone $log;
-            $newLog->setAdditionalData($log->getAdditionalData());
-            $newLog->setChannel($log->getChannel());
-            $newLog->setClientIp($log->getClientIp());
-            $newLog->setUser($log->getUser());
-            $newLog->setUsername($log->getUsername());
-            $this->getManager()->persist($newLog);
-            $newLog->setNodeSource($source);
-        }
-        $this->logger->debug('Recreate logs');
-
         /*
          * Recreate url-aliases too.
          */
         /** @var UrlAlias $urlAlias */
         foreach ($existingSource->getUrlAliases() as $urlAlias) {
-            $newUrlAlias = new UrlAlias($source);
+            $newUrlAlias = new UrlAlias();
+            $newUrlAlias->setNodeSource($source);
             $this->getManager()->persist($newUrlAlias);
             $newUrlAlias->setAlias($urlAlias->getAlias());
             $source->addUrlAlias($newUrlAlias);
@@ -282,6 +259,7 @@ final class NodeTranstyper
          * transtype, not to get an orphan node.
          */
         $node = new Node();
+        $node->setNodeType($nodeType);
         $node->setNodeName('testing_before_transtype' . $uniqueId);
         $this->getManager()->persist($node);
 

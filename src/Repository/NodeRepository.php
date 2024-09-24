@@ -20,10 +20,10 @@ use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderBuildEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
-use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
-use Symfony\Component\Security\Core\Security;
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\String\Slugger\AsciiSlugger;
+use Symfony\Contracts\EventDispatcher\Event;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -45,10 +45,11 @@ final class NodeRepository extends StatusAwareRepository
      * @param string $property
      * @param mixed $value
      *
-     * @return object|QueryBuilderBuildEvent
+     * @return Event
      */
     protected function dispatchQueryBuilderBuildEvent(QueryBuilder $qb, string $property, mixed $value): object
     {
+        // @phpstan-ignore-next-line
         return $this->dispatcher->dispatch(
             new QueryBuilderBuildEvent($qb, Node::class, $property, $value, $this->getEntityName())
         );
@@ -59,10 +60,11 @@ final class NodeRepository extends StatusAwareRepository
      * @param string $property
      * @param mixed $value
      *
-     * @return object|QueryBuilderApplyEvent
+     * @return Event
      */
     protected function dispatchQueryBuilderApplyEvent(QueryBuilder $qb, string $property, mixed $value): object
     {
+        // @phpstan-ignore-next-line
         return $this->dispatcher->dispatch(
             new QueryBuilderApplyEvent($qb, Node::class, $property, $value, $this->getEntityName())
         );
@@ -328,6 +330,7 @@ final class NodeRepository extends StatusAwareRepository
         $this->applyFilterByTag($criteria, $qb);
         $this->applyFilterByCriteria($criteria, $qb);
         $this->applyTranslationByTag($qb, $translation);
+        // @phpstan-ignore-next-line
         $query = $qb->getQuery();
         $this->dispatchQueryEvent($query);
 
@@ -451,6 +454,7 @@ final class NodeRepository extends StatusAwareRepository
         $this->applyFilterByTag($criteria, $qb);
         $this->applyFilterByCriteria($criteria, $qb);
         $this->applyTranslationByTag($qb, $translation);
+        // @phpstan-ignore-next-line
         $query = $qb->getQuery();
         $this->dispatchQueryEvent($query);
 
@@ -805,14 +809,14 @@ final class NodeRepository extends StatusAwareRepository
         $qb = $this->createQueryBuilder(self::NODE_ALIAS);
         $qb->select(self::NODE_ALIAS)
             ->innerJoin('n.aNodes', 'ntn')
-            ->andWhere($qb->expr()->eq('ntn.field', ':field'))
+            ->andWhere($qb->expr()->eq('ntn.fieldName', ':fieldName'))
             ->andWhere($qb->expr()->eq('ntn.nodeA', ':nodeA'))
             ->addOrderBy('ntn.position', 'ASC')
             ->setCacheable(true);
 
         $this->alterQueryBuilderWithAuthorizationChecker($qb);
 
-        $qb->setParameter('field', $field)
+        $qb->setParameter('fieldName', $field->getName())
             ->setParameter('nodeA', $node);
 
         return $qb->getQuery()->getResult();
@@ -833,7 +837,7 @@ final class NodeRepository extends StatusAwareRepository
         $qb->select('n, ns')
             ->innerJoin('n.aNodes', 'ntn')
             ->innerJoin('n.nodeSources', self::NODESSOURCES_ALIAS)
-            ->andWhere($qb->expr()->eq('ntn.field', ':field'))
+            ->andWhere($qb->expr()->eq('ntn.fieldName', ':fieldName'))
             ->andWhere($qb->expr()->eq('ntn.nodeA', ':nodeA'))
             ->andWhere($qb->expr()->eq('ns.translation', ':translation'))
             ->addOrderBy('ntn.position', 'ASC')
@@ -841,7 +845,7 @@ final class NodeRepository extends StatusAwareRepository
 
         $this->alterQueryBuilderWithAuthorizationChecker($qb);
 
-        $qb->setParameter('field', $field)
+        $qb->setParameter('fieldName', $field->getName())
             ->setParameter('nodeA', $node)
             ->setParameter('translation', $translation);
 
@@ -860,14 +864,14 @@ final class NodeRepository extends StatusAwareRepository
         $qb = $this->createQueryBuilder(self::NODE_ALIAS);
         $qb->select(self::NODE_ALIAS)
             ->innerJoin('n.bNodes', 'ntn')
-            ->andWhere($qb->expr()->eq('ntn.field', ':field'))
+            ->andWhere($qb->expr()->eq('ntn.fieldName', ':fieldName'))
             ->andWhere($qb->expr()->eq('ntn.nodeB', ':nodeB'))
             ->addOrderBy('ntn.position', 'ASC')
             ->setCacheable(true);
 
         $this->alterQueryBuilderWithAuthorizationChecker($qb);
 
-        $qb->setParameter('field', $field)
+        $qb->setParameter('fieldName', $field->getName())
             ->setParameter('nodeB', $node);
 
         return $qb->getQuery()->getResult();
@@ -888,7 +892,7 @@ final class NodeRepository extends StatusAwareRepository
         $qb->select('n, ns')
             ->innerJoin('n.bNodes', 'ntn')
             ->innerJoin('n.nodeSources', self::NODESSOURCES_ALIAS)
-            ->andWhere($qb->expr()->eq('ntn.field', ':field'))
+            ->andWhere($qb->expr()->eq('ntn.fieldName', ':fieldName'))
             ->andWhere($qb->expr()->eq('ns.translation', ':translation'))
             ->andWhere($qb->expr()->eq('ntn.nodeB', ':nodeB'))
             ->addOrderBy('ntn.position', 'ASC')
@@ -896,7 +900,7 @@ final class NodeRepository extends StatusAwareRepository
 
         $this->alterQueryBuilderWithAuthorizationChecker($qb);
 
-        $qb->setParameter('field', $field)
+        $qb->setParameter('fieldName', $field->getName())
             ->setParameter('translation', $translation)
             ->setParameter('nodeB', $node);
 
@@ -905,15 +909,16 @@ final class NodeRepository extends StatusAwareRepository
 
     /**
      * @param Node $node
-     * @return array
+     * @return array<int>
+     * @internal Use NodeOffspringResolverInterface service instead
      */
-    public function findAllOffspringIdByNode(Node $node)
+    public function findAllOffspringIdByNode(Node $node): array
     {
-        $theOffprings = [];
-        $in = [$node->getId()];
+        $theOffsprings = [];
+        $in = \array_filter([(int) $node->getId()]);
 
         do {
-            $theOffprings = array_merge($theOffprings, $in);
+            $theOffsprings = array_merge($theOffsprings, $in);
             $subQb = $this->createQueryBuilder('n');
             $subQb->select('n.id')
                 ->andWhere($subQb->expr()->in('n.parent', ':tab'))
@@ -927,7 +932,7 @@ final class NodeRepository extends StatusAwareRepository
                 $in[] = (int) $item['id'];
             }
         } while (!empty($in));
-        return $theOffprings;
+        return $theOffsprings;
     }
 
     /**
@@ -965,6 +970,10 @@ final class NodeRepository extends StatusAwareRepository
         );
     }
 
+    /**
+     * @param Node $node
+     * @return array<int|string>
+     */
     public function findAllParentsIdByNode(Node $node): array
     {
         $theParents = [];
@@ -975,7 +984,7 @@ final class NodeRepository extends StatusAwareRepository
             $parent = $parent->getParent();
         }
 
-        return $theParents;
+        return array_filter($theParents);
     }
 
     /**
@@ -1106,5 +1115,123 @@ final class NodeRepository extends StatusAwareRepository
         }
 
         return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * Use by UniqueEntity Validator to bypass node status query filtering.
+     *
+     * @param array $criteria
+     * @return Node|null
+     * @throws NonUniqueResultException
+     */
+    public function findOneWithoutSecurity(array $criteria): ?Node
+    {
+        $this->setDisplayingAllNodesStatuses(true);
+        if (count($criteria) === 1 && !empty($criteria['nodeName'])) {
+            /*
+             * Test if nodeName is used as an url-alias too
+             */
+            $nodeName = (new AsciiSlugger())->slug($criteria['nodeName'])->lower()->trim()->toString();
+
+            $qb = $this->createQueryBuilder('o');
+            $qb->leftJoin('o.nodeSources', 'ns')
+                ->leftJoin('ns.urlAliases', 'ua')
+                ->andWhere($qb->expr()->orX(
+                    $qb->expr()->eq('ua.alias', ':nodeName'),
+                    $qb->expr()->eq('o.nodeName', ':nodeName')
+                ))
+                ->setParameter('nodeName', $nodeName)
+                ->setMaxResults(1)
+                ->setCacheable(true);
+            ;
+            return $qb->getQuery()->getOneOrNullResult();
+        }
+        return $this->findOneBy($criteria);
+    }
+
+    protected function classicLikeComparison(
+        string $pattern,
+        QueryBuilder $qb,
+        string $alias = EntityRepository::DEFAULT_ALIAS
+    ): QueryBuilder {
+        $qb = parent::classicLikeComparison($pattern, $qb, $alias);
+        $qb
+            ->leftJoin($alias . '.attributeValues', 'av')
+            ->leftJoin('av.attributeValueTranslations', 'avt')
+        ;
+        $value =  '%' . strip_tags(\mb_strtolower($pattern)) . '%';
+        $qb->orWhere($qb->expr()->like('LOWER(avt.value)', $qb->expr()->literal($value)));
+        $qb->orWhere($qb->expr()->like('LOWER(' . $alias . '.nodeName)', $qb->expr()->literal($value)));
+        return $qb;
+    }
+
+    /**
+     * Get previous node from hierarchy
+     */
+    public function findPreviousNode(
+        Node $node,
+        ?array $criteria = null,
+        ?array $order = null
+    ): ?Node {
+        if ($node->getPosition() <= 1) {
+            return null;
+        }
+        if (null === $order) {
+            $order = [];
+        }
+
+        if (null === $criteria) {
+            $criteria = [];
+        }
+
+        $criteria['parent'] = $node->getParent();
+        /*
+         * Use < operator to get first previous nodeSource
+         * even if it’s not the previous position index
+         */
+        $criteria['position'] = [
+            '<',
+            $node->getPosition(),
+        ];
+
+        $order['position'] = 'DESC';
+
+        return $this->findOneBy(
+            $criteria,
+            $order
+        );
+    }
+
+    /**
+     * Get next node from hierarchy.
+     */
+    public function findNextNode(
+        Node $node,
+        ?array $criteria = null,
+        ?array $order = null
+    ): ?Node {
+        if (null === $criteria) {
+            $criteria = [];
+        }
+        if (null === $order) {
+            $order = [];
+        }
+
+        $criteria['parent'] = $node->getParent();
+
+        /*
+         * Use > operator to get first next nodeSource
+         * even if it’s not the next position index
+         */
+        $criteria['position'] = [
+            '>',
+            $node->getPosition(),
+        ];
+        $order['position'] = 'ASC';
+
+        return $this->findOneBy(
+            $criteria,
+            $order
+        );
     }
 }

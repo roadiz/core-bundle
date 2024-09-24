@@ -11,16 +11,13 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
+/**
+ * @deprecated XLSX serialization is deprecated and will be removed in next major version.
+ */
 class XlsxExporter
 {
-    protected TranslatorInterface $translator;
-
-    /**
-     * @param TranslatorInterface $translator
-     */
-    public function __construct(TranslatorInterface $translator)
+    public function __construct(protected readonly TranslatorInterface $translator)
     {
-        $this->translator = $translator;
     }
 
     /**
@@ -85,7 +82,10 @@ class XlsxExporter
                 foreach ($headerkeys as $key => $value) {
                     $columnAlpha = Coordinate::stringFromColumnIndex($key + 1);
                     $activeSheet->getStyle($columnAlpha . $activeRow)->applyFromArray($headerStyles);
-                    $activeSheet->setCellValueByColumnAndRow($key + 1, $activeRow, $this->translator->trans($value));
+                    if (\is_string($value)) {
+                        $value = $this->translator->trans($value);
+                    }
+                    $activeSheet->setCellValueByColumnAndRow($key + 1, $activeRow, $value);
                 }
                 $activeRow++;
             }
@@ -104,7 +104,7 @@ class XlsxExporter
                     continue;
                 }
 
-                if ($value instanceof \DateTime) {
+                if ($value instanceof \DateTimeInterface) {
                     $value = Date::PHPToExcel($value);
                     $activeSheet->getStyle($columnAlpha . ($activeRow))
                         ->getNumberFormat()
@@ -134,6 +134,11 @@ class XlsxExporter
         $writer = new Xlsx($spreadsheet);
         ob_start();
         $writer->save('php://output');
-        return ob_get_clean();
+        $output = ob_get_clean();
+
+        if (!\is_string($output)) {
+            throw new \RuntimeException('Output is not a string.');
+        }
+        return $output;
     }
 }
