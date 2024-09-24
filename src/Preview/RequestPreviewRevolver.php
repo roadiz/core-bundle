@@ -13,15 +13,10 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 final class RequestPreviewRevolver implements PreviewResolverInterface
 {
-    private RequestStack $requestStack;
-    private string $requiredRole;
-
     public function __construct(
-        RequestStack $requestStack,
-        string $requiredRole
+        private readonly RequestStack $requestStack,
+        private readonly string $requiredRole
     ) {
-        $this->requestStack = $requestStack;
-        $this->requiredRole = $requiredRole;
     }
 
     /**
@@ -33,7 +28,7 @@ final class RequestPreviewRevolver implements PreviewResolverInterface
         if (null === $request) {
             return false;
         }
-        return $request->attributes->get('preview', false);
+        return $request->attributes->getBoolean('preview');
     }
 
     public function getRequiredRole(): string

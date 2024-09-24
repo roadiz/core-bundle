@@ -6,38 +6,18 @@ namespace RZ\Roadiz\CoreBundle\Routing;
 
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Theme;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Do not extend this class, use NodesSourcesPathGeneratingEvent::class event.
  */
 final class NodesSourcesUrlGenerator
 {
-    protected ?Request $request;
-    protected ?NodesSources $nodeSource;
-    protected bool $forceLocale;
-    protected bool $forceLocaleWithUrlAlias;
-    protected NodesSourcesPathAggregator $pathAggregator;
-
-    /**
-     * @param NodesSourcesPathAggregator $pathAggregator
-     * @param Request|null               $request
-     * @param NodesSources|null          $nodeSource
-     * @param bool                       $forceLocale
-     * @param bool                       $forceLocaleWithUrlAlias
-     */
     public function __construct(
-        NodesSourcesPathAggregator $pathAggregator,
-        Request $request = null,
-        NodesSources $nodeSource = null,
-        bool $forceLocale = false,
-        bool $forceLocaleWithUrlAlias = false
+        private readonly NodesSourcesPathAggregator $pathAggregator,
+        private readonly ?NodesSources $nodeSource = null,
+        private readonly bool $forceLocale = false,
+        private readonly bool $forceLocaleWithUrlAlias = false
     ) {
-        $this->pathAggregator = $pathAggregator;
-        $this->request = $request;
-        $this->nodeSource = $nodeSource;
-        $this->forceLocale = $forceLocale;
-        $this->forceLocaleWithUrlAlias = $forceLocaleWithUrlAlias;
     }
 
     /**
