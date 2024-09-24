@@ -14,13 +14,20 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * Command line utils for managing users from terminal.
+ */
 class UsersCommand extends Command
 {
-    public function __construct(
-        protected readonly ManagerRegistry $managerRegistry,
-        string $name = null
-    ) {
-        parent::__construct($name);
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
     }
 
     protected function configure(): void
@@ -61,9 +68,7 @@ class UsersCommand extends Command
             if ($user === null) {
                 $io->error('User “' . $name . '” does not exist… use users:create to add a new user.');
             } else {
-                $tableContent = [
-                    $this->getUserTableRow($user),
-                ];
+                $tableContent = [$this->getUserTableRow($user)];
                 $io->table(
                     array_keys($tableContent[0]),
                     $tableContent
@@ -115,9 +120,10 @@ class UsersCommand extends Command
      * Get role by name, and create it if it does not exist.
      *
      * @param string $roleName
+     *
      * @return Role
      */
-    public function getRole(string $roleName = Role::ROLE_SUPERADMIN): Role
+    public function getRole(string $roleName = Role::ROLE_SUPERADMIN)
     {
         $role = $this->managerRegistry
             ->getRepository(Role::class)

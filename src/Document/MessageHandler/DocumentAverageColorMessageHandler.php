@@ -16,13 +16,16 @@ use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 final class DocumentAverageColorMessageHandler extends AbstractLockingDocumentMessageHandler
 {
+    private ImageManager $imageManager;
+
     public function __construct(
         ManagerRegistry $managerRegistry,
         LoggerInterface $messengerLogger,
         FilesystemOperator $documentsStorage,
-        private readonly ImageManager $imageManager
+        ImageManager $imageManager
     ) {
         parent::__construct($managerRegistry, $messengerLogger, $documentsStorage);
+        $this->imageManager = $imageManager;
     }
 
     /**
@@ -50,7 +53,7 @@ final class DocumentAverageColorMessageHandler extends AbstractLockingDocumentMe
             $mediumColor = (new AverageColorResolver())->getAverageColor($this->imageManager->make($documentStream));
             $document->setImageAverageColor($mediumColor);
         } catch (NotReadableException $exception) {
-            $this->messengerLogger->warning(
+            $this->logger->warning(
                 'Document file is not a readable image.',
                 [
                     'path' => $document->getMountPath(),

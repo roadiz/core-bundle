@@ -12,24 +12,25 @@ use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
 final class SolrDeleteMessageHandler implements MessageHandlerInterface
 {
-    public function __construct(
-        private readonly IndexerFactoryInterface $indexerFactory,
-        private readonly LoggerInterface $searchEngineLogger
-    ) {
+    private LoggerInterface $logger;
+    private IndexerFactoryInterface $indexerFactory;
+
+    public function __construct(IndexerFactoryInterface $indexerFactory, LoggerInterface $searchEngineLogger)
+    {
+        $this->logger = $searchEngineLogger;
+        $this->indexerFactory = $indexerFactory;
     }
 
     public function __invoke(SolrDeleteMessage $message): void
     {
         try {
             if (!empty($message->getIdentifier())) {
-                // Cannot typehint with class-string: breaks Symfony Serializer 5.4
-                // @phpstan-ignore-next-line
                 $this->indexerFactory->getIndexerFor($message->getClassname())->delete($message->getIdentifier());
             }
         } catch (SolrServerNotAvailableException $exception) {
             return;
         } catch (\LogicException $exception) {
-            $this->searchEngineLogger->error($exception->getMessage());
+            $this->logger->error($exception->getMessage());
         }
     }
 }

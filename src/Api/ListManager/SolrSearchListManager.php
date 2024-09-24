@@ -7,22 +7,25 @@ namespace RZ\Roadiz\CoreBundle\Api\ListManager;
 use RZ\Roadiz\CoreBundle\ListManager\AbstractEntityListManager;
 use RZ\Roadiz\CoreBundle\SearchEngine\SearchHandlerInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\SearchResultsInterface;
-use Symfony\Component\DependencyInjection\Attribute\Exclude;
 use Symfony\Component\HttpFoundation\Request;
 
-#[Exclude]
 final class SolrSearchListManager extends AbstractEntityListManager
 {
-    private ?SearchResultsInterface $searchResults;
-    private ?string $query = null;
+    protected SearchHandlerInterface $searchHandler;
+    protected ?SearchResultsInterface $searchResults;
+    private array $criteria;
+    private bool $searchInTags;
 
     public function __construct(
         ?Request $request,
-        private readonly SearchHandlerInterface $searchHandler,
-        private readonly array $criteria = [],
-        private readonly bool $searchInTags = true
+        SearchHandlerInterface $searchHandler,
+        array $criteria = [],
+        bool $searchInTags = true
     ) {
         parent::__construct($request);
+        $this->searchHandler = $searchHandler;
+        $this->criteria = $criteria;
+        $this->searchInTags = $searchInTags;
     }
 
     public function handle(bool $disabled = false)
@@ -31,38 +34,47 @@ final class SolrSearchListManager extends AbstractEntityListManager
             throw new \InvalidArgumentException('Cannot handle a NULL request.');
         }
 
-        $this->handleRequestQuery($disabled);
+        $query = trim($this->request->query->get('search') ?? '');
 
-        if (null === $this->query) {
-            throw new \InvalidArgumentException('Cannot handle a NULL query.');
+        if (
+            $this->request->query->has('page') &&
+            $this->request->query->get('page') > 1
+        ) {
+            $this->setPage((int) $this->request->query->get('page'));
+        } else {
+            $this->setPage(1);
         }
+
+        if (
+            $this->request->query->has('itemsPerPage') &&
+            $this->request->query->get('itemsPerPage') > 0
+        ) {
+            $this->setItemPerPage((int) $this->request->query->get('itemsPerPage'));
+        }
+
         /*
          * Query must be longer than 3 chars or Solr might crash
          * on highlighting fields.
          */
-        if (\mb_strlen($this->query) > 3) {
+        if (\mb_strlen($query) > 3) {
             $this->searchResults = $this->searchHandler->searchWithHighlight(
-                $this->query, # Use ?q query parameter to search with
+                $query, # Use ?q query parameter to search with
                 $this->criteria, # a simple criteria array to filter search results
                 $this->getItemPerPage(), # result count
                 $this->searchInTags, # Search in tags too,
+                1,
                 $this->getPage()
             );
         } else {
             $this->searchResults = $this->searchHandler->search(
-                $this->query, # Use ?q query parameter to search with
+                $query, # Use ?q query parameter to search with
                 $this->criteria, # a simple criteria array to filter search results
                 $this->getItemPerPage(), # result count
                 $this->searchInTags, # Search in tags too,
+                2,
                 $this->getPage()
             );
         }
-    }
-
-    protected function handleSearchParam(string $search): void
-    {
-        parent::handleSearchParam($search);
-        $this->query = trim($search);
     }
 
     /**
@@ -79,7 +91,7 @@ final class SolrSearchListManager extends AbstractEntityListManager
     /**
      * @inheritDoc
      */
-    public function getEntities(): array
+    public function getEntities()
     {
         if (null !== $this->searchResults) {
             return $this->searchResults->getResultItems();

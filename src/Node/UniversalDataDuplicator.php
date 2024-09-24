@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Node;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments;
@@ -16,8 +15,14 @@ use RZ\Roadiz\CoreBundle\Repository\TranslationRepository;
 
 final class UniversalDataDuplicator
 {
-    public function __construct(private readonly ManagerRegistry $managerRegistry)
+    private ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
     {
+        $this->managerRegistry = $managerRegistry;
     }
 
     /**
@@ -105,10 +110,15 @@ final class UniversalDataDuplicator
         return $sourceCount === 1;
     }
 
+    /**
+     * @param NodesSources $universalSource
+     * @param NodesSources $destSource
+     * @param NodeTypeField $field
+     */
     protected function duplicateNonVirtualField(
         NodesSources $universalSource,
         NodesSources $destSource,
-        NodeTypeFieldInterface $field
+        NodeTypeField $field
     ): void {
         $getter = $field->getGetterName();
         $setter = $field->getSetterName();
@@ -116,18 +126,23 @@ final class UniversalDataDuplicator
         $destSource->$setter($universalSource->$getter());
     }
 
+    /**
+     * @param NodesSources  $universalSource
+     * @param NodesSources  $destSource
+     * @param NodeTypeField $field
+     */
     protected function duplicateDocumentsField(
         NodesSources $universalSource,
         NodesSources $destSource,
-        NodeTypeFieldInterface $field
+        NodeTypeField $field
     ): void {
         $newDocuments = $this->managerRegistry
             ->getRepository(NodesSourcesDocuments::class)
-            ->findBy(['nodeSource' => $universalSource, 'fieldName' => $field->getName()]);
+            ->findBy(['nodeSource' => $universalSource, 'field' => $field]);
 
         $formerDocuments = $this->managerRegistry
             ->getRepository(NodesSourcesDocuments::class)
-            ->findBy(['nodeSource' => $destSource, 'fieldName' => $field->getName()]);
+            ->findBy(['nodeSource' => $destSource, 'field' => $field]);
 
         $manager = $this->managerRegistry->getManagerForClass(NodesSourcesDocuments::class);
         if (null === $manager) {

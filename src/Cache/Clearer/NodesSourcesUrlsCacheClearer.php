@@ -8,9 +8,12 @@ use Psr\Cache\CacheItemPoolInterface;
 
 final class NodesSourcesUrlsCacheClearer extends FileClearer
 {
-    public function __construct(private readonly CacheItemPoolInterface $cacheProvider)
+    private CacheItemPoolInterface $cacheProvider;
+
+    public function __construct(CacheItemPoolInterface $cacheProvider)
     {
         parent::__construct('');
+        $this->cacheProvider = $cacheProvider;
     }
 
     public function clear(): bool

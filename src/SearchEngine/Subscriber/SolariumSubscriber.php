@@ -36,8 +36,11 @@ use Symfony\Component\Workflow\Event\Event;
 
 final class SolariumSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private readonly MessageBusInterface $messageBus)
+    protected MessageBusInterface $messageBus;
+
+    public function __construct(MessageBusInterface $messageBus)
     {
+        $this->messageBus = $messageBus;
     }
 
     public static function getSubscribedEvents(): array

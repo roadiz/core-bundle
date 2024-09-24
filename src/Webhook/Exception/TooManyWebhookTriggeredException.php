@@ -8,13 +8,16 @@ use Throwable;
 
 final class TooManyWebhookTriggeredException extends \RuntimeException
 {
+    private ?\DateTimeImmutable $doNotTriggerBefore;
+
     public function __construct(
-        private readonly ?\DateTimeImmutable $doNotTriggerBefore = null,
+        ?\DateTimeImmutable $doNotTriggerBefore = null,
         string $message = "",
         int $code = 0,
         Throwable $previous = null
     ) {
         parent::__construct($message, $code, $previous);
+        $this->doNotTriggerBefore = $doNotTriggerBefore;
     }
 
     /**

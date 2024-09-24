@@ -18,10 +18,8 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  */
 final class GroupRepository extends EntityRepository
 {
-    public function __construct(
-        ManagerRegistry $registry,
-        EventDispatcherInterface $dispatcher
-    ) {
+    public function __construct(ManagerRegistry $registry, EventDispatcherInterface $dispatcher)
+    {
         parent::__construct($registry, Group::class, $dispatcher);
     }
 }
