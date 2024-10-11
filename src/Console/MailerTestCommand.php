@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use RZ\Roadiz\CoreBundle\Mailer\EmailManagerFactory;
+use RZ\Roadiz\CoreBundle\Mailer\EmailManager;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -15,15 +15,15 @@ use Symfony\Component\Mime\Address;
 
 class MailerTestCommand extends Command
 {
-    protected EmailManagerFactory $emailManagerFactory;
+    protected EmailManager $emailManager;
 
     /**
-     * @param EmailManagerFactory $emailManagerFactory
+     * @param EmailManager $emailManager
      */
-    public function __construct(EmailManagerFactory $emailManagerFactory)
+    public function __construct(EmailManager $emailManager)
     {
         parent::__construct();
-        $this->emailManagerFactory = $emailManagerFactory;
+        $this->emailManager = $emailManager;
     }
 
 
@@ -42,7 +42,7 @@ class MailerTestCommand extends Command
         $to = Address::create($input->getArgument('email'));
         $from = Address::create($input->getOption('from') ?? 'test@roadiz.io');
 
-        $this->emailManagerFactory->create()
+        $this->emailManager
             ->setReceiver($to)
             ->setSender($from)
             // Uses email_sender customizable setting

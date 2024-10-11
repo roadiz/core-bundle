@@ -1,4 +1,5 @@
 ---
 RZ\Roadiz\CoreBundle\Entity\Attribute:
-    operations: []
+    collectionOperations: []
+    itemOperations: []
 

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Doctrine\Orm\Filter as BaseFilter;
-use ApiPlatform\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
+use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -103,6 +103,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
         mappedBy: 'tag',
         targetEntity: TagTranslation::class,
         cascade: ['all'],
+        fetch: 'EAGER',
         orphanRemoval: true
     )]
     #[SymfonySerializer\Groups(['translated_tag'])]
@@ -110,7 +111,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     protected Collection $translatedTags;
 
     #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
-    #[ORM\Column(name: 'tag_name', type: 'string', length: 250, unique: true)]
+    #[ORM\Column(name: 'tag_name', type: 'string', unique: true)]
     #[SymfonySerializer\Ignore]
     #[Serializer\Groups(['tag'])]
     #[Serializer\Accessor(getter: "getTagName", setter: "setTagName")]
@@ -129,7 +130,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     #[Serializer\Groups(['tag', 'tag_base', 'node', 'nodes_sources'])]
     private bool $visible = true;
 
-    #[ORM\Column(name: 'children_order', type: 'string', length: 60, options: ['default' => 'position'])]
+    #[ORM\Column(name: 'children_order', type: 'string', options: ['default' => 'position'])]
     #[SymfonySerializer\Ignore]
     #[Serializer\Groups(["tag", "tag_children_order"])]
     #[Assert\Length(max: 60)]

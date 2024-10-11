@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Node;
 
-use DateTime;
-use Doctrine\ORM\OptimisticLockException;
-use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
@@ -14,19 +11,22 @@ use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
-use RZ\Roadiz\CoreBundle\Security\Authorization\Voter\NodeVoter;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Symfony\Component\Security\Core\Security;
 
 class UniqueNodeGenerator
 {
-    public function __construct(
-        protected ManagerRegistry $managerRegistry,
-        protected NodeNamePolicyInterface $nodeNamePolicy,
-        protected Security $security,
-    ) {
+    protected NodeNamePolicyInterface $nodeNamePolicy;
+    private ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param NodeNamePolicyInterface $nodeNamePolicy
+     */
+    public function __construct(ManagerRegistry $managerRegistry, NodeNamePolicyInterface $nodeNamePolicy)
+    {
+        $this->nodeNamePolicy = $nodeNamePolicy;
+        $this->managerRegistry = $managerRegistry;
     }
 
     /**
@@ -55,7 +55,9 @@ class UniqueNodeGenerator
         if (null !== $tag) {
             $node->addTag($tag);
         }
-        $parent?->addChild($node);
+        if (null !== $parent) {
+            $parent->addChild($node);
+        }
 
         if ($pushToTop) {
             /*
@@ -64,12 +66,11 @@ class UniqueNodeGenerator
             $node->setPosition(0.5);
         }
 
-        /** @var class-string<NodesSources> $sourceClass */ # phpstan hint
         $sourceClass = NodeType::getGeneratedEntitiesNamespace() . "\\" . $nodeType->getSourceEntityClassName();
 
         $source = new $sourceClass($node, $translation);
         $source->setTitle($name);
-        $source->setPublishedAt(new DateTime());
+        $source->setPublishedAt(new \DateTime());
         $node->setNodeName($this->nodeNamePolicy->getCanonicalNodeName($source));
 
         $manager = $this->managerRegistry->getManagerForClass(Node::class);
@@ -88,8 +89,8 @@ class UniqueNodeGenerator
      * @param Request $request
      *
      * @return NodesSources
-     * @throws ORMException
-     * @throws OptimisticLockException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
      */
     public function generateFromRequest(Request $request): NodesSources
     {
@@ -111,13 +112,7 @@ class UniqueNodeGenerator
             $parent = $this->managerRegistry
                 ->getRepository(Node::class)
                 ->find((int) $request->get('parentNodeId'));
-            if (null === $parent || !$this->security->isGranted(NodeVoter::CREATE, $parent)) {
-                throw new BadRequestHttpException("Parent node does not exist.");
-            }
         } else {
-            if (!$this->security->isGranted(NodeVoter::CREATE_AT_ROOT)) {
-                throw new AccessDeniedException('You are not allowed to create a node at root.');
-            }
             $parent = null;
         }
 
@@ -144,8 +139,8 @@ class UniqueNodeGenerator
             /*
              * If parent has only on translation, use parent translation instead of default one.
              */
-            if (null !== $parent && false !== $parentNodeSource = $parent->getNodeSources()->first()) {
-                $translation = $parentNodeSource->getTranslation();
+            if (null !== $parent && $parent->getNodeSources()->count() === 1) {
+                $translation = $parent->getNodeSources()->first()->getTranslation();
             } else {
                 /** @var Translation $translation */
                 $translation = $this->managerRegistry

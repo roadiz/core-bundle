@@ -55,17 +55,13 @@ final class AttributeChoiceType extends AbstractType
                 ['code' => 'ASC']
             );
             foreach ($attributes as $attribute) {
-                $label = $attribute->getLabelOrCode($options['translation']);
-                if (
-                    null !== $attribute->getGroup() &&
-                    null !== $groupName = $attribute->getGroup()->getName()
-                ) {
-                    if (!isset($choices[$groupName]) || !is_array($choices[$groupName])) {
-                        $choices[$groupName] = [];
+                if (null !== $attribute->getGroup()) {
+                    if (!isset($choices[$attribute->getGroup()->getName()])) {
+                        $choices[$attribute->getGroup()->getName()] = [];
                     }
-                    $choices[$groupName][$label] = $attribute->getId();
+                    $choices[$attribute->getGroup()->getName()][$attribute->getLabelOrCode($options['translation'])] = $attribute->getId();
                 } else {
-                    $choices[$label] = $attribute->getId();
+                    $choices[$attribute->getLabelOrCode($options['translation'])] = $attribute->getId();
                 }
             }
             return $choices;
