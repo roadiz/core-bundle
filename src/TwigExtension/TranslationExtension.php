@@ -34,7 +34,7 @@ final class TranslationExtension extends AbstractExtension
      *
      * @return bool
      */
-    public function isLocaleRtl(mixed $mixed): bool
+    public function isLocaleRtl($mixed)
     {
         if ($mixed instanceof TranslationInterface) {
             return $mixed->isRtl();

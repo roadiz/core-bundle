@@ -22,8 +22,14 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 final class DocumentMessageDispatchSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private readonly MessageBusInterface $bus)
+    private MessageBusInterface $bus;
+
+    /**
+     * @param MessageBusInterface $bus
+     */
+    public function __construct(MessageBusInterface $bus)
     {
+        $this->bus = $bus;
     }
 
     /**

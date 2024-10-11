@@ -13,8 +13,14 @@ use RZ\Roadiz\Utils\StringHandler;
 
 final class TagFactory
 {
-    public function __construct(private readonly ManagerRegistry $managerRegistry)
+    private ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
     {
+        $this->managerRegistry = $managerRegistry;
     }
 
     /**

@@ -11,12 +11,21 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 final class HealthCheckController
 {
+    private ?string $healthCheckToken;
+    private ?string $appVersion;
+    private ?string $cmsVersion;
+    private ?string $cmsVersionPrefix;
+
     public function __construct(
-        private readonly ?string $healthCheckToken,
-        private readonly ?string $appVersion,
-        private readonly ?string $cmsVersion,
-        private readonly ?string $cmsVersionPrefix
+        ?string $healthCheckToken,
+        ?string $appVersion,
+        ?string $cmsVersion,
+        ?string $cmsVersionPrefix
     ) {
+        $this->healthCheckToken = $healthCheckToken;
+        $this->appVersion = $appVersion;
+        $this->cmsVersion = $cmsVersion;
+        $this->cmsVersionPrefix = $cmsVersionPrefix;
     }
 
     public function __invoke(Request $request): JsonResponse

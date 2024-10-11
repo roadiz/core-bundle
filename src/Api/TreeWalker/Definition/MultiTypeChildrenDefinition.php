@@ -14,16 +14,19 @@ final class MultiTypeChildrenDefinition
 {
     use ContextualDefinitionTrait;
 
+    private array $types;
+    private bool $onlyVisible;
+
     /**
      * @param WalkerContextInterface $context
      * @param array<string> $types
      * @param bool $onlyVisible
      */
-    public function __construct(
-        private readonly WalkerContextInterface $context,
-        private readonly array $types,
-        private readonly bool $onlyVisible = true
-    ) {
+    public function __construct(WalkerContextInterface $context, array $types, bool $onlyVisible = true)
+    {
+        $this->context = $context;
+        $this->types = $types;
+        $this->onlyVisible = $onlyVisible;
     }
 
     /**
@@ -32,27 +35,26 @@ final class MultiTypeChildrenDefinition
      */
     public function __invoke(NodesSources $source)
     {
-        if (!($this->context instanceof NodeSourceWalkerContext)) {
-            throw new \InvalidArgumentException('Context should be instance of ' . NodeSourceWalkerContext::class);
-        }
+        if ($this->context instanceof NodeSourceWalkerContext) {
+            $this->context->getStopwatch()->start(self::class);
+            $bag = $this->context->getNodeTypesBag();
+            $criteria = [
+                'node.parent' => $source->getNode(),
+                'translation' => $source->getTranslation(),
+                'node.nodeType' => array_map(function (string $singleType) use ($bag) {
+                    return $bag->get($singleType);
+                }, $this->types)
+            ];
+            if ($this->onlyVisible) {
+                $criteria['node.visible'] = true;
+            }
+            $children = $this->context->getNodeSourceApi()->getBy($criteria, [
+                'node.position' => 'ASC',
+            ]);
+            $this->context->getStopwatch()->stop(self::class);
 
-        $this->context->getStopwatch()->start(self::class);
-        $bag = $this->context->getNodeTypesBag();
-        $criteria = [
-            'node.parent' => $source->getNode(),
-            'translation' => $source->getTranslation(),
-            'node.nodeType' => array_map(function (string $singleType) use ($bag) {
-                return $bag->get($singleType);
-            }, $this->types)
-        ];
-        if ($this->onlyVisible) {
-            $criteria['node.visible'] = true;
+            return $children;
         }
-        $children = $this->context->getNodeSourceApi()->getBy($criteria, [
-            'node.position' => 'ASC',
-        ]);
-        $this->context->getStopwatch()->stop(self::class);
-
-        return $children;
+        throw new \InvalidArgumentException('Context should be instance of ' . NodeSourceWalkerContext::class);
     }
 }

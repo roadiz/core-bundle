@@ -54,7 +54,9 @@ final class ApplyRealmNodeInheritanceMessageHandler implements MessageHandlerInt
 
         foreach ($childrenIds as $childId) {
             /** @var Node|null $child */
-            $child = $nodeRepository->find($childId);
+            $child = $this->managerRegistry
+                ->getRepository(Node::class)
+                ->find($childId);
             if (null === $child) {
                 continue;
             }

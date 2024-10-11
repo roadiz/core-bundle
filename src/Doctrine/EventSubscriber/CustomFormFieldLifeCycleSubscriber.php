@@ -12,8 +12,14 @@ use RZ\Roadiz\CoreBundle\EntityHandler\CustomFormFieldHandler;
 
 final class CustomFormFieldLifeCycleSubscriber implements EventSubscriber
 {
-    public function __construct(private readonly CustomFormFieldHandler $customFormFieldHandler)
+    private CustomFormFieldHandler $customFormFieldHandler;
+
+    /**
+     * @param CustomFormFieldHandler $customFormFieldHandler
+     */
+    public function __construct(CustomFormFieldHandler $customFormFieldHandler)
     {
+        $this->customFormFieldHandler = $customFormFieldHandler;
     }
 
     /**

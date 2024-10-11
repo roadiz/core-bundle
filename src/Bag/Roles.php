@@ -9,15 +9,23 @@ use RZ\Roadiz\Bag\LazyParameterBag;
 use RZ\Roadiz\CoreBundle\Entity\Role;
 use RZ\Roadiz\CoreBundle\Repository\RoleRepository;
 
-final class Roles extends LazyParameterBag
+class Roles extends LazyParameterBag
 {
+    private ManagerRegistry $managerRegistry;
     private ?RoleRepository $repository = null;
 
-    public function __construct(private readonly ManagerRegistry $managerRegistry)
+    /**
+     * @param ManagerRegistry $managerRegistry;
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
     {
         parent::__construct();
+        $this->managerRegistry = $managerRegistry;
     }
 
+    /**
+     * @return RoleRepository
+     */
     public function getRepository(): RoleRepository
     {
         if (null === $this->repository) {
@@ -49,15 +57,14 @@ final class Roles extends LazyParameterBag
      *
      * @return Role
      */
-    public function get(string $key, $default = null): Role
+    public function get($key, $default = null): Role
     {
         $role = parent::get($key, $default);
 
         if (null === $role) {
             $role = new Role($key);
-            $roleManager = $this->managerRegistry->getManagerForClass(Role::class);
-            $roleManager->persist($role);
-            $roleManager->flush();
+            $this->managerRegistry->getManagerForClass(Role::class)->persist($role);
+            $this->managerRegistry->getManagerForClass(Role::class)->flush();
         }
 
         return $role;

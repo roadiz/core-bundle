@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Xlsx;
 
 /**
- * @deprecated XLSX serialization is deprecated and will be removed in next major version.
  * EntitySerializer that implements simple serialization/deserialization methods.
  */
 interface SerializerInterface

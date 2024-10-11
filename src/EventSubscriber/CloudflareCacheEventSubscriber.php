@@ -24,12 +24,27 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
 {
+    private LoggerInterface $logger;
+    private MessageBusInterface $bus;
+    private UrlGeneratorInterface $urlGenerator;
+    private ReverseProxyCacheLocator $reverseProxyCacheLocator;
+
+    /**
+     * @param MessageBusInterface $bus
+     * @param ReverseProxyCacheLocator $reverseProxyCacheLocator
+     * @param UrlGeneratorInterface $urlGenerator
+     * @param LoggerInterface $logger
+     */
     public function __construct(
-        private readonly MessageBusInterface $bus,
-        private readonly ReverseProxyCacheLocator $reverseProxyCacheLocator,
-        private readonly UrlGeneratorInterface $urlGenerator,
-        private readonly LoggerInterface $logger
+        MessageBusInterface $bus,
+        ReverseProxyCacheLocator $reverseProxyCacheLocator,
+        UrlGeneratorInterface $urlGenerator,
+        LoggerInterface $logger
     ) {
+        $this->logger = $logger;
+        $this->bus = $bus;
+        $this->reverseProxyCacheLocator = $reverseProxyCacheLocator;
+        $this->urlGenerator = $urlGenerator;
     }
     /**
      * @inheritDoc
@@ -38,15 +53,25 @@ final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
     {
         return [
             CachePurgeRequestEvent::class => ['onBanRequest', 3],
+            '\RZ\Roadiz\Core\Events\Cache\CachePurgeRequestEvent' => ['onBanRequest', 3],
             NodesSourcesUpdatedEvent::class => ['onPurgeRequest', 3],
+            '\RZ\Roadiz\Core\Events\NodesSources\NodesSourcesUpdatedEvent' => ['onPurgeRequest', 3],
         ];
     }
 
+    /**
+     * @return bool
+     */
     protected function supportConfig(): bool
     {
         return null !== $this->reverseProxyCacheLocator->getCloudflareProxyCache();
     }
 
+    /**
+     * @param CachePurgeRequestEvent $event
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @return void
+     */
     public function onBanRequest(CachePurgeRequestEvent $event): void
     {
         if (!$this->supportConfig()) {
@@ -84,6 +109,11 @@ final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
         }
     }
 
+    /**
+     * @param NodesSourcesUpdatedEvent $event
+     *
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
     public function onPurgeRequest(NodesSourcesUpdatedEvent $event): void
     {
         if (!$this->supportConfig()) {
@@ -124,7 +154,6 @@ final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
     /**
      * @param array $body
      * @return Request
-     * @throws \JsonException
      */
     protected function createRequest(array $body): Request
     {
@@ -140,7 +169,10 @@ final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
             $this->getCloudflareCacheProxy()->getVersion(),
             $this->getCloudflareCacheProxy()->getZone()
         );
-        $body = \json_encode($body, JSON_THROW_ON_ERROR);
+        $body = \json_encode($body);
+        if (false === $body) {
+            throw new \RuntimeException('Unable to json_encode body');
+        }
         return new Request(
             'POST',
             $uri,
@@ -151,7 +183,6 @@ final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
 
     /**
      * @return Request
-     * @throws \JsonException
      */
     protected function createBanRequest(): Request
     {
@@ -162,8 +193,8 @@ final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
 
     /**
      * @param string[] $uris
+     *
      * @return Request
-     * @throws \JsonException
      */
     protected function createPurgeRequest(array $uris = []): Request
     {

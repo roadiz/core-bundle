@@ -10,8 +10,11 @@ use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
 final class UpdateDoctrineSchemaMessageHandler implements MessageHandlerInterface
 {
-    public function __construct(private readonly SchemaUpdater $schemaUpdater)
+    private SchemaUpdater $schemaUpdater;
+
+    public function __construct(SchemaUpdater $schemaUpdater)
     {
+        $this->schemaUpdater = $schemaUpdater;
     }
 
     /**

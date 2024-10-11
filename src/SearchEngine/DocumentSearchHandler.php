@@ -18,6 +18,7 @@ class DocumentSearchHandler extends AbstractSearchHandler
      * @param array   $args
      * @param integer $rows
      * @param bool $searchTags
+     * @param integer $proximity Proximity matching: Lucene supports finding words are a within a specific distance away.
      * @param integer $page
      *
      * @return array|null
@@ -27,13 +28,14 @@ class DocumentSearchHandler extends AbstractSearchHandler
         array $args = [],
         int $rows = 20,
         bool $searchTags = false,
+        int $proximity = 1,
         int $page = 1
     ): ?array {
         if (empty($q)) {
             return null;
         }
         $query = $this->createSolrQuery($args, $rows, $page);
-        $queryTxt = $this->buildQuery($q, $args, $searchTags);
+        $queryTxt = $this->buildQuery($q, $args, $searchTags, $proximity);
         $query->setQuery($queryTxt);
 
         /*

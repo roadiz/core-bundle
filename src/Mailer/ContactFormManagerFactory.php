@@ -17,12 +17,12 @@ final class ContactFormManagerFactory
 {
     public function __construct(
         private readonly RequestStack $requestStack,
+        private readonly FormFactoryInterface $formFactory,
         private readonly TranslatorInterface $translator,
         private readonly Environment $templating,
         private readonly MailerInterface $mailer,
         private readonly Settings $settingsBag,
         private readonly DocumentUrlGeneratorInterface $documentUrlGenerator,
-        private readonly FormFactoryInterface $formFactory,
         private readonly FormErrorSerializerInterface $formErrorSerializer,
         private readonly ?string $recaptchaPrivateKey,
         private readonly ?string $recaptchaPublicKey
@@ -33,12 +33,12 @@ final class ContactFormManagerFactory
     {
         return new ContactFormManager(
             $this->requestStack,
+            $this->formFactory,
             $this->translator,
             $this->templating,
             $this->mailer,
             $this->settingsBag,
             $this->documentUrlGenerator,
-            $this->formFactory,
             $this->formErrorSerializer,
             $this->recaptchaPrivateKey,
             $this->recaptchaPublicKey

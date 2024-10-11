@@ -43,10 +43,15 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 final class ArchiveExtension implements QueryResultCollectionExtensionInterface
 {
+    private RequestStack $requestStack;
+    private string $defaultPublicationFieldName;
+
     public function __construct(
-        private readonly RequestStack $requestStack,
-        private readonly string $defaultPublicationFieldName = 'publishedAt'
+        RequestStack $requestStack,
+        string $defaultPublicationFieldName = 'publishedAt'
     ) {
+        $this->requestStack = $requestStack;
+        $this->defaultPublicationFieldName = $defaultPublicationFieldName;
     }
 
     public function applyToCollection(

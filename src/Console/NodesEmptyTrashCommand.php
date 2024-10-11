@@ -15,14 +15,20 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-final class NodesEmptyTrashCommand extends Command
+class NodesEmptyTrashCommand extends Command
 {
-    public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly HandlerFactory $handlerFactory,
-        ?string $name = null
-    ) {
-        parent::__construct($name);
+    protected ManagerRegistry $managerRegistry;
+    protected HandlerFactory $handlerFactory;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param HandlerFactory $handlerFactory
+     */
+    public function __construct(ManagerRegistry $managerRegistry, HandlerFactory $handlerFactory)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+        $this->handlerFactory = $handlerFactory;
     }
 
     protected function configure(): void

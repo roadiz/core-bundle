@@ -9,8 +9,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 final class ClientRegistry
 {
-    public function __construct(private readonly ContainerInterface $container)
+    protected ContainerInterface $container;
+
+    /**
+     * @param ContainerInterface $container
+     */
+    public function __construct(ContainerInterface $container)
     {
+        $this->container = $container;
     }
 
     public function getClient(): ?Client
