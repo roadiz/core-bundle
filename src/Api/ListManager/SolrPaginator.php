@@ -5,19 +5,15 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Api\ListManager;
 
 use ApiPlatform\State\Pagination\PaginatorInterface;
-use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
+#[Exclude]
 final class SolrPaginator implements PaginatorInterface, \IteratorAggregate
 {
     private bool $handled = false;
-    private SolrSearchListManager $listManager;
 
-    /**
-     * @param SolrSearchListManager $listManager
-     */
-    public function __construct(SolrSearchListManager $listManager)
+    public function __construct(private readonly SolrSearchListManager $listManager)
     {
-        $this->listManager = $listManager;
     }
 
     protected function handleOnce(): void
@@ -62,6 +58,10 @@ final class SolrPaginator implements PaginatorInterface, \IteratorAggregate
     public function getIterator(): \Traversable
     {
         $this->handleOnce();
-        return new ArrayCollection($this->listManager->getEntities());
+        $entities = $this->listManager->getEntities();
+        if (\is_array($entities)) {
+            return new \ArrayIterator($entities);
+        }
+        return $entities->getIterator();
     }
 }

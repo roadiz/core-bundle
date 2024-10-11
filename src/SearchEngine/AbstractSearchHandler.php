@@ -11,22 +11,26 @@ use RZ\Roadiz\CoreBundle\Exception\SolrServerNotAvailableException;
 use Solarium\Core\Client\Client;
 use Solarium\Core\Query\Helper;
 use Solarium\QueryType\Select\Query\Query;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 abstract class AbstractSearchHandler implements SearchHandlerInterface
 {
-    private ClientRegistry $clientRegistry;
+    protected ClientRegistry $clientRegistry;
     protected ObjectManager $em;
     protected LoggerInterface $logger;
+    protected EventDispatcherInterface $eventDispatcher;
     protected int $highlightingFragmentSize = 150;
 
     public function __construct(
         ClientRegistry $clientRegistry,
         ObjectManager $em,
-        LoggerInterface $searchEngineLogger
+        LoggerInterface $searchEngineLogger,
+        EventDispatcherInterface $eventDispatcher
     ) {
         $this->clientRegistry = $clientRegistry;
         $this->em = $em;
         $this->logger = $searchEngineLogger;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     public function getSolr(): Client
@@ -50,7 +54,6 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      * @param array $args
      * @param int $rows
      * @param bool $searchTags Search in tags/folders too, even if a node don’t match
-     * @param int $proximity Proximity matching: Lucene supports finding words are a within a specific distance away.
      * @param int $page
      *
      * @return SearchResultsInterface Return a SearchResultsInterface iterable object.
@@ -60,14 +63,13 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         array $args = [],
         int $rows = 20,
         bool $searchTags = false,
-        int $proximity = 1,
         int $page = 1
     ): SearchResultsInterface {
         $args = $this->argFqProcess($args);
         $args["fq"][] = "document_type_s:" . $this->getDocumentType();
-        $args["hl.q"] = $this->escapeQuery(trim($q));
+        $args["hl.q"] = $this->buildHighlightingQuery($q);
         $args = array_merge($this->getHighlightingOptions($args), $args);
-        $response = $this->nativeSearch($q, $args, $rows, $searchTags, $proximity, $page);
+        $response = $this->nativeSearch($q, $args, $rows, $searchTags, $page);
         return $this->createSearchResultsFromResponse($response);
     }
 
@@ -95,7 +97,7 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
     {
         $tmp = [];
         $tmp["hl"] = true;
-        $tmp["hl.fl"] = $this->getCollectionField($args);
+        $tmp["hl.fl"] = $this->getTitleField($args) . ' ' . $this->getCollectionField($args);
         $tmp["hl.fragsize"] = $this->getHighlightingFragmentSize();
         $tmp["hl.simple.pre"] = '<span class="solr-highlight">';
         $tmp["hl.simple.post"] = '</span>';
@@ -148,7 +150,6 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      * @param array $args
      * @param int $rows
      * @param bool $searchTags
-     * @param int $proximity Proximity matching: Lucene supports finding words are a within a specific distance away.
      * @param int $page
      *
      * @return array|null
@@ -158,7 +159,6 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         array $args = [],
         int $rows = 20,
         bool $searchTags = false,
-        int $proximity = 1,
         int $page = 1
     ): ?array;
 
@@ -175,7 +175,7 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      * ### For node-sources:
      *
      * * status (int)
-     * * visible (boolean)
+     * * visible (bool)
      * * nodeType (RZ\Roadiz\CoreBundle\Entity\NodeType or string or array)
      * * tags (RZ\Roadiz\CoreBundle\Entity\Tag or array of Tag)
      * * translation (RZ\Roadiz\CoreBundle\Entity\Translation)
@@ -190,8 +190,7 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      * @param string $q
      * @param array $args
      * @param int $rows Results per page
-     * @param boolean $searchTags Search in tags/folders too, even if a node don’t match
-     * @param int $proximity Proximity matching: Lucene supports finding words are a within a specific distance away. Default 10000000
+     * @param bool $searchTags Search in tags/folders too, even if a node don’t match
      * @param int $page Retrieve a specific page
      *
      * @return SearchResultsInterface Return an array of doctrine Entities (Document, NodesSources)
@@ -201,7 +200,6 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         array $args = [],
         int $rows = 20,
         bool $searchTags = false,
-        int $proximity = 1,
         int $page = 1
     ): SearchResultsInterface {
         $args = $this->argFqProcess($args);
@@ -209,7 +207,7 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         $tmp = [];
         $args = array_merge($tmp, $args);
 
-        $response = $this->nativeSearch($q, $args, $rows, $searchTags, $proximity, $page);
+        $response = $this->nativeSearch($q, $args, $rows, $searchTags, $page);
         return $this->createSearchResultsFromResponse($response);
     }
 
@@ -231,10 +229,9 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
 
     /**
      * @param string $q
-     * @param int $proximity
      * @return array [$exactQuery, $fuzzyQuery, $wildcardQuery]
      */
-    protected function getFormattedQuery(string $q, int $proximity = 1): array
+    protected function getFormattedQuery(string $q): array
     {
         $q = trim($q);
         /**
@@ -242,13 +239,16 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
          * @see https://lucene.apache.org/solr/guide/6_6/the-standard-query-parser.html#TheStandardQueryParser-FuzzySearches
          */
         $words = preg_split('#[\s,]+#', $q, -1, PREG_SPLIT_NO_EMPTY);
-        $fuzzyiedQuery = implode(' ', array_map(function (string $word) use ($proximity) {
+        if (false === $words) {
+            throw new \RuntimeException('Cannot split query string.');
+        }
+        $fuzzyiedQuery = implode(' ', array_map(function (string $word) {
             /*
              * Do not fuzz short words: Solr crashes
              * Proximity is set to 1 by default for single-words
              */
             if (\mb_strlen($word) > 3) {
-                return $this->escapeQuery($word) . '~' . $proximity;
+                return $this->escapeQuery($word) . '~2';
             }
             return $this->escapeQuery($word);
         }, $words));
@@ -259,7 +259,7 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         /*
          * Wildcard search for allowing autocomplete
          */
-        $wildcardQuery = $this->escapeQuery($q) . '*~' . $proximity;
+        $wildcardQuery = $this->escapeQuery($q) . '*~2';
 
         return [$exactQuery, $fuzzyiedQuery, $wildcardQuery];
     }
@@ -272,15 +272,14 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      * @param string $q
      * @param array $args
      * @param bool $searchTags
-     * @param int $proximity
      * @return string
      */
-    protected function buildQuery(string $q, array &$args, bool $searchTags = false, int $proximity = 1): string
+    protected function buildQuery(string $q, array &$args, bool $searchTags = false): string
     {
         $titleField = $this->getTitleField($args);
         $collectionField = $this->getCollectionField($args);
         $tagsField = $this->getTagsField($args);
-        [$exactQuery, $fuzzyiedQuery, $wildcardQuery] = $this->getFormattedQuery($q, $proximity);
+        [$exactQuery, $fuzzyiedQuery, $wildcardQuery] = $this->getFormattedQuery($q);
 
         /*
          * Search in node-sources tags name…
@@ -307,6 +306,35 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
                 $fuzzyiedQuery
             );
         }
+    }
+
+    protected function buildHighlightingQuery(string $q): string
+    {
+        $q = trim($q);
+        $words = preg_split('#[\s,]+#', $q, -1, PREG_SPLIT_NO_EMPTY);
+        if (\is_array($words) && \count($words) > 1) {
+            return $this->escapeQuery($q);
+        }
+
+        $q = $this->escapeQuery($q);
+        return sprintf('%s~2', $q);
+    }
+
+    /**
+     * @param array $args
+     * @param bool $searchTags
+     * @return string
+     */
+    protected function buildQueryFields(array &$args, bool $searchTags = true): string
+    {
+        $titleField = $this->getTitleField($args);
+        $collectionField = $this->getCollectionField($args);
+        $tagsField = $this->getTagsField($args);
+
+        if ($searchTags) {
+            return $titleField . '^10 ' . $collectionField . '^2 ' . $tagsField . ' slug_s';
+        }
+        return $titleField . ' ' . $collectionField . ' slug_s';
     }
 
     /**
