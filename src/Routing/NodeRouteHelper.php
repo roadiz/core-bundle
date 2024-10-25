@@ -13,17 +13,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 final class NodeRouteHelper
 {
-    private Node $node;
-    private ?Theme $theme;
-    private PreviewResolverInterface $previewResolver;
-    private LoggerInterface $logger;
-    private string $defaultControllerNamespace;
     /**
-     * @var class-string
-     */
-    private string $defaultControllerClass;
-    /**
-     * @var class-string|null
+     * @var class-string<AbstractController>|null
      */
     private ?string $controller = null;
 
@@ -36,42 +27,47 @@ final class NodeRouteHelper
      * @param string $defaultControllerNamespace
      */
     public function __construct(
-        Node $node,
-        ?Theme $theme,
-        PreviewResolverInterface $previewResolver,
-        LoggerInterface $logger,
-        string $defaultControllerClass,
-        string $defaultControllerNamespace = '\\App\\Controller'
+        private readonly Node $node,
+        private readonly ?Theme $theme,
+        private readonly PreviewResolverInterface $previewResolver,
+        private readonly LoggerInterface $logger,
+        private readonly string $defaultControllerClass,
+        private readonly string $defaultControllerNamespace = '\\App\\Controller'
     ) {
-        $this->node = $node;
-        $this->theme = $theme;
-        $this->previewResolver = $previewResolver;
-        $this->defaultControllerClass = $defaultControllerClass;
-        $this->logger = $logger;
-        $this->defaultControllerNamespace = $defaultControllerNamespace;
     }
 
     /**
      * Get controller class path for a given node.
      *
-     * @return string
+     * @return class-string<AbstractController>|null
      */
-    public function getController(): string
+    public function getController(): ?string
     {
         if (null === $this->controller) {
-            $namespace = $this->getControllerNamespace();
-            $this->controller = $namespace . '\\' .
+            if (!$this->node->getNodeType()->isReachable()) {
+                return null;
+            }
+            $controllerClassName = $this->getControllerNamespace() . '\\' .
                 StringHandler::classify($this->node->getNodeType()->getName()) .
                 'Controller';
 
-            /*
-             * Use a default controller if no controller was found in Theme.
-             */
-            if (!class_exists($this->controller) && $this->node->getNodeType()->isReachable()) {
+            if (\class_exists($controllerClassName)) {
+                $reflection = new \ReflectionClass($controllerClassName);
+                if (!$reflection->isSubclassOf(AbstractController::class)) {
+                    throw new \InvalidArgumentException(
+                        'Controller class ' . $controllerClassName . ' must extends ' . AbstractController::class
+                    );
+                }
+                // @phpstan-ignore-next-line
+                $this->controller = $controllerClassName;
+            } else {
+                /*
+                 * Use a default controller if no controller was found in Theme.
+                 */
                 $this->controller = $this->defaultControllerClass;
             }
         }
-
+        // @phpstan-ignore-next-line
         return $this->controller;
     }
 
@@ -79,8 +75,8 @@ final class NodeRouteHelper
     {
         $namespace = $this->defaultControllerNamespace;
         if (null !== $this->theme) {
-            $refl = new \ReflectionClass($this->theme->getClassName());
-            $namespace = $refl->getNamespaceName() . '\\Controllers';
+            $reflection = new \ReflectionClass($this->theme->getClassName());
+            $namespace = $reflection->getNamespaceName() . '\\Controllers';
         }
         return $namespace;
     }
@@ -94,7 +90,6 @@ final class NodeRouteHelper
      * Return FALSE or TRUE if node is viewable.
      *
      * @return bool
-     * @throws \ReflectionException
      */
     public function isViewable(): bool
     {
@@ -109,33 +104,14 @@ final class NodeRouteHelper
             );
             return false;
         }
-        /*
-         * For archived and deleted nodes
-         */
-        if ($this->node->getStatus() > Node::PUBLISHED) {
-            /*
-             * Not allowed to see deleted and archived nodes
-             * even for Admins
-             */
-            return false;
-        }
 
-        /*
-         * For unpublished nodes
-         */
-        if ($this->node->getStatus() < Node::PUBLISHED) {
-            if (true === $this->previewResolver->isPreview()) {
-                return true;
-            }
-            /*
-             * Not allowed to see unpublished nodes
-             */
-            return false;
+        if ($this->previewResolver->isPreview()) {
+            return $this->node->isDraft() || $this->node->isPending() || $this->node->isPublished();
         }
 
         /*
          * Everyone can view published nodes.
          */
-        return true;
+        return $this->node->isPublished();
     }
 }

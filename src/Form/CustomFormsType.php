@@ -105,11 +105,12 @@ class CustomFormsType extends AbstractType
 
         /** @var CustomFormField $field */
         foreach ($fields as $field) {
-            if ($field->getGroupName() != '') {
-                if (!isset($fieldsArray[$field->getGroupName()])) {
-                    $fieldsArray[$field->getGroupName()] = [];
+            $groupName = $field->getGroupName();
+            if (\is_string($groupName) && $groupName !== '') {
+                if (!isset($fieldsArray[$groupName]) || !\is_array($fieldsArray[$groupName])) {
+                    $fieldsArray[$groupName] = [];
                 }
-                $fieldsArray[$field->getGroupName()][] = $field;
+                $fieldsArray[$groupName][] = $field;
             } else {
                 $fieldsArray[] = $field;
             }
@@ -172,8 +173,12 @@ class CustomFormsType extends AbstractType
             ],
         ];
 
-        if ($field->getPlaceholder() !== '') {
+        if (!empty($field->getPlaceholder())) {
             $option['attr']['placeholder'] = $field->getPlaceholder();
+        }
+
+        if ($field->getAutocomplete() !== null) {
+            $option['attr']['autocomplete'] = $field->getAutocomplete();
         }
 
         if ($field->isRequired()) {
@@ -197,7 +202,7 @@ class CustomFormsType extends AbstractType
                 $option["format"] = DateType::HTML5_FORMAT;
                 break;
             case AbstractField::ENUM_T:
-                if ($field->getPlaceholder() !== '') {
+                if (!empty($field->getPlaceholder())) {
                     $option['placeholder'] = $field->getPlaceholder();
                 }
                 $option["choices"] = $this->getChoices($field);
@@ -211,7 +216,7 @@ class CustomFormsType extends AbstractType
                 }
                 break;
             case AbstractField::MULTIPLE_T:
-                if ($field->getPlaceholder() !== '') {
+                if (!empty($field->getPlaceholder())) {
                     $option['placeholder'] = $field->getPlaceholder();
                 }
                 $option["choices"] = $this->getChoices($field);
@@ -254,7 +259,7 @@ class CustomFormsType extends AbstractType
                 break;
             case AbstractField::COUNTRY_T:
                 $option["expanded"] = $field->isExpanded();
-                if ($field->getPlaceholder() !== '') {
+                if (!empty($field->getPlaceholder())) {
                     $option['placeholder'] = $field->getPlaceholder();
                 }
                 if (!empty($field->getDefaultValues())) {

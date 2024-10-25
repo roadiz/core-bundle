@@ -18,33 +18,16 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Yaml\Yaml;
 
-/**
- * Command line utils for installing RZ-CMS v3 from terminal.
- */
-class InstallCommand extends Command
+final class InstallCommand extends Command
 {
-    protected ManagerRegistry $managerRegistry;
-    protected RolesImporter $rolesImporter;
-    protected GroupsImporter $groupsImporter;
-    protected SettingsImporter $settingsImporter;
-
-    /**
-     * @param ManagerRegistry $managerRegistry
-     * @param RolesImporter $rolesImporter
-     * @param GroupsImporter $groupsImporter
-     * @param SettingsImporter $settingsImporter
-     */
     public function __construct(
-        ManagerRegistry $managerRegistry,
-        RolesImporter $rolesImporter,
-        GroupsImporter $groupsImporter,
-        SettingsImporter $settingsImporter
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly RolesImporter $rolesImporter,
+        private readonly GroupsImporter $groupsImporter,
+        private readonly SettingsImporter $settingsImporter,
+        ?string $name = null
     ) {
-        parent::__construct();
-        $this->managerRegistry = $managerRegistry;
-        $this->rolesImporter = $rolesImporter;
-        $this->groupsImporter = $groupsImporter;
-        $this->settingsImporter = $settingsImporter;
+        parent::__construct($name);
     }
 
     protected function configure(): void
@@ -70,26 +53,48 @@ class InstallCommand extends Command
             $io->askQuestion($question)
         ) {
             $fixturesRoot = dirname(__DIR__) . '/../config';
-            $data = Yaml::parse(file_get_contents($fixturesRoot . "/fixtures.yaml"));
+            $fixtureFile = file_get_contents($fixturesRoot . "/fixtures.yaml");
+
+            if (false === $fixtureFile) {
+                $io->error('No fixtures.yaml file found in ' . $fixturesRoot);
+                return 1;
+            }
+
+            $data = Yaml::parse($fixtureFile);
 
             if (isset($data["importFiles"]['roles'])) {
                 foreach ($data["importFiles"]['roles'] as $filename) {
                     $filePath = $fixturesRoot . "/" . $filename;
-                    $this->rolesImporter->import(file_get_contents($filePath));
+                    $fileContents = file_get_contents($filePath);
+                    if (false === $fileContents) {
+                        $io->error('No file found in ' . $filePath);
+                        return 1;
+                    }
+                    $this->rolesImporter->import($fileContents);
                     $io->success('Theme file “' . $filePath . '” has been imported.');
                 }
             }
             if (isset($data["importFiles"]['groups'])) {
                 foreach ($data["importFiles"]['groups'] as $filename) {
                     $filePath = $fixturesRoot . "/" . $filename;
-                    $this->groupsImporter->import(file_get_contents($filePath));
+                    $fileContents = file_get_contents($filePath);
+                    if (false === $fileContents) {
+                        $io->error('No file found in ' . $filePath);
+                        return 1;
+                    }
+                    $this->groupsImporter->import($fileContents);
                     $io->success('Theme file “' . $filePath . '” has been imported.');
                 }
             }
             if (isset($data["importFiles"]['settings'])) {
                 foreach ($data["importFiles"]['settings'] as $filename) {
                     $filePath = $fixturesRoot . "/" . $filename;
-                    $this->settingsImporter->import(file_get_contents($filePath));
+                    $fileContents = file_get_contents($filePath);
+                    if (false === $fileContents) {
+                        $io->error('No file found in ' . $filePath);
+                        return 1;
+                    }
+                    $this->settingsImporter->import($fileContents);
                     $io->success('Theme files “' . $filePath . '” has been imported.');
                 }
             }
