@@ -1,6 +1,6 @@
 ---
 parameters:
-    roadiz_core.cms_version: '2.1.72'
+    roadiz_core.cms_version: '2.2.31'
     roadiz_core.cms_version_prefix: 'main'
     env(APP_NAMESPACE): "roadiz"
     env(APP_VERSION): "0.1.0"
@@ -42,6 +42,7 @@ services:
             $apiResourcesDir: '%kernel.project_dir%/config/api_resources'
             $debug: '%kernel.debug%'
             $defaultControllerClass: '%roadiz_core.default_node_source_controller%'
+            $defaultLocale: '%kernel.default_locale%'
             $webhookMessageTypes: '%roadiz_core.webhook.message_types%'
             $useAcceptLanguageHeader: '%roadiz_core.use_accept_language_header%'
             $healthCheckToken: '%roadiz_core.health_check_token%'
@@ -112,6 +113,21 @@ services:
     RZ\Roadiz\CoreBundle\Api\Extension\ArchiveExtension:
         # Extension must be called after all filtering BUT before default pagination extension
         tags: [ { name: 'api_platform.doctrine.orm.query_extension.collection', priority: -40 } ]
+
+    #
+    # These API doctrine extension must be called last before pagination
+    # to perform on existing JOIN with node entities (found after filtering)
+    #
+    RZ\Roadiz\CoreBundle\Api\Extension\AttributeValueQueryExtension:
+        tags: [
+            { name: 'api_platform.doctrine.orm.query_extension.collection', priority: -40 },
+            { name: 'api_platform.doctrine.orm.query_extension.item', priority: -40 },
+        ]
+    RZ\Roadiz\CoreBundle\Api\Extension\NodesTagsQueryExtension:
+        tags: [
+            { name: 'api_platform.doctrine.orm.query_extension.collection', priority: -40 },
+            { name: 'api_platform.doctrine.orm.query_extension.item', priority: -40 },
+        ]
 
     RZ\Roadiz\CoreBundle\Bag\:
         resource: '../src/Bag/'
@@ -330,6 +346,18 @@ services:
     RZ\Roadiz\CoreBundle\Mailer\EmailManager:
         # Recreate manager for each usage
         shared: false
+        deprecated:
+            message: 'The "%service_id%" service is deprecated and will be removed in Roadiz 3.0. Use RZ\Roadiz\CoreBundle\Mailer\EmailManagerFactory instead.'
+            package: roadiz/core-bundle
+            version: '2.2.28'
+
+    RZ\Roadiz\CoreBundle\Mailer\ContactFormManager:
+        # Recreate manager for each usage
+        shared: false
+        deprecated:
+            message: 'The "%service_id%" service is deprecated and will be removed in Roadiz 3.0. Use RZ\Roadiz\CoreBundle\Mailer\ContactFormManagerFactory instead.'
+            package: roadiz/core-bundle
+            version: '2.2.28'
 
     RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber\:
         resource: '../src/Doctrine/EventSubscriber'
@@ -370,10 +398,15 @@ services:
     RZ\Roadiz\CoreBundle\Preview\RequestPreviewRevolver:
         arguments:
             - '@Symfony\Component\HttpFoundation\RequestStack'
-            - 'ROLE_BACKEND_USER'
+            - '%roadiz_core.preview_required_role_name%'
 
     RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry:
         arguments: ['@service_container']
+
+    RZ\Roadiz\CoreBundle\SearchEngine\SolariumLogger:
+        tags:
+            - { name: data_collector, template: '@RoadizCore/DataCollector/solarium.html.twig', id: 'solarium' }
+            - { name: monolog.logger, channel: solr }
 
     RZ\Roadiz\CoreBundle\SearchEngine\Indexer\IndexerFactory:
         arguments: ['@service_container']
@@ -444,7 +477,6 @@ services:
     Solarium\Core\Client\Client:
         factory: ['RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry', 'getClient']
 
-    # Provides LoginAttemptManager aware authentication
     RZ\Roadiz\CoreBundle\Security\Authentication\JwtAuthenticationSuccessHandler:
         decorates: 'lexik_jwt_authentication.handler.authentication_success'
 

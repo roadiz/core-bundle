@@ -21,6 +21,7 @@ use RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
+use RZ\Roadiz\CoreBundle\SearchEngine\SolariumLogger;
 use RZ\Roadiz\CoreBundle\Webhook\Message\GenericJsonPostMessage;
 use RZ\Roadiz\CoreBundle\Webhook\Message\GitlabPipelineTriggerMessage;
 use RZ\Roadiz\CoreBundle\Webhook\Message\NetlifyBuildHookMessage;
@@ -74,6 +75,7 @@ class RoadizCoreExtension extends Extension
         $container->setParameter('roadiz_core.use_typed_node_names', $config['useTypedNodeNames']);
         $container->setParameter('roadiz_core.hide_roadiz_version', $config['hideRoadizVersion']);
         $container->setParameter('roadiz_core.use_accept_language_header', $config['useAcceptLanguageHeader']);
+        $container->setParameter('roadiz_core.preview_required_role_name', $config['previewRequiredRoleName']);
 
         /*
          * Assets config
@@ -85,9 +87,11 @@ class RoadizCoreExtension extends Extension
             $container->setParameter('roadiz_core.assets_processing.supports_webp', false);
         }
 
+        /** @var string $projectDir */
+        $projectDir = $container->getParameter('kernel.project_dir');
         $container->setParameter(
             'roadiz_core.documents_lib_dir',
-            $container->getParameter('kernel.project_dir') . DIRECTORY_SEPARATOR . trim($config['documentsLibDir'], "/ \t\n\r\0\x0B")
+            $projectDir . DIRECTORY_SEPARATOR . trim($config['documentsLibDir'], "/ \t\n\r\0\x0B")
         );
         /*
          * Media config
@@ -258,6 +262,7 @@ class RoadizCoreExtension extends Extension
             }
         }
         if (count($solrEndpoints) > 0) {
+            $logger = new Reference(SolariumLogger::class);
             $container->setDefinition(
                 'roadiz_core.solr.client',
                 (new Definition())
@@ -269,6 +274,7 @@ class RoadizCoreExtension extends Extension
                         new Reference('roadiz_core.solr.adapter'),
                         new Reference(EventDispatcherInterface::class)
                     ])
+                    ->addMethodCall('registerPlugin', ['roadiz_core.solr.client.logger', $logger])
                     ->addMethodCall('setEndpoints', [array_map(function (string $endpointId) {
                         return new Reference($endpointId);
                     }, $solrEndpoints)])
@@ -286,21 +292,23 @@ class RoadizCoreExtension extends Extension
                 'noreferrer' => 'external',
             ]
         ]);
+        /** @var array $defaultConfig */
+        $defaultConfig = $container->getParameter('roadiz_core.markdown_config_default');
         $container->setParameter(
             'roadiz_core.markdown_config_text_converter',
-            array_merge($container->getParameter('roadiz_core.markdown_config_default'), [
+            array_merge($defaultConfig, [
                 'html_input' => 'allow'
             ])
         );
         $container->setParameter(
             'roadiz_core.markdown_config_text_extra_converter',
-            array_merge($container->getParameter('roadiz_core.markdown_config_default'), [
+            array_merge($defaultConfig, [
                 'html_input' => 'allow'
             ])
         );
         $container->setParameter(
             'roadiz_core.markdown_config_line_converter',
-            array_merge($container->getParameter('roadiz_core.markdown_config_default'), [
+            array_merge($defaultConfig, [
                 'html_input' => 'escape'
             ])
         );

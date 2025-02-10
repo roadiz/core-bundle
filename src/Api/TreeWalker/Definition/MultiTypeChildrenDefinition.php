@@ -20,9 +20,9 @@ final class MultiTypeChildrenDefinition
      * @param array<string> $types
      */
     public function __construct(
-        private WalkerContextInterface $context,
-        private array $types,
-        private bool $onlyVisible = true,
+        private readonly WalkerContextInterface $context,
+        private readonly array $types,
+        private readonly bool $onlyVisible = true,
     ) {
     }
 
