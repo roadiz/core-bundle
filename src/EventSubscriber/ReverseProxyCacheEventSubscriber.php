@@ -21,23 +21,11 @@ use Symfony\Component\Workflow\Event\Event;
 
 final class ReverseProxyCacheEventSubscriber implements EventSubscriberInterface
 {
-    private ReverseProxyCacheLocator $reverseProxyCacheLocator;
-    private LoggerInterface $logger;
-    private MessageBusInterface $bus;
-
-    /**
-     * @param ReverseProxyCacheLocator $reverseProxyCacheLocator
-     * @param MessageBusInterface $bus
-     * @param LoggerInterface $logger
-     */
     public function __construct(
-        ReverseProxyCacheLocator $reverseProxyCacheLocator,
-        MessageBusInterface $bus,
-        LoggerInterface $logger
+        private readonly ReverseProxyCacheLocator $reverseProxyCacheLocator,
+        private readonly MessageBusInterface $bus,
+        private readonly LoggerInterface $logger
     ) {
-        $this->logger = $logger;
-        $this->bus = $bus;
-        $this->reverseProxyCacheLocator = $reverseProxyCacheLocator;
     }
     /**
      * @inheritDoc
@@ -46,9 +34,7 @@ final class ReverseProxyCacheEventSubscriber implements EventSubscriberInterface
     {
         return [
             CachePurgeRequestEvent::class => ['onBanRequest', 3],
-            '\RZ\Roadiz\Core\Events\Cache\CachePurgeRequestEvent' => ['onBanRequest', 3],
             NodesSourcesUpdatedEvent::class => ['onPurgeRequest', 3],
-            '\RZ\Roadiz\Core\Events\NodesSources\NodesSourcesUpdatedEvent' => ['onPurgeRequest', 3],
             'workflow.node.completed' => ['onNodeWorkflowCompleted', 3],
         ];
     }
