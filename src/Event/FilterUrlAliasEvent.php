@@ -7,10 +7,16 @@ namespace RZ\Roadiz\CoreBundle\Event;
 use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
 use Symfony\Contracts\EventDispatcher\Event;
 
+/**
+ * @package RZ\Roadiz\CoreBundle\Event
+ */
 abstract class FilterUrlAliasEvent extends Event
 {
-    public function __construct(protected readonly UrlAlias $urlAlias)
+    protected UrlAlias $urlAlias;
+
+    public function __construct(UrlAlias $urlAlias)
     {
+        $this->urlAlias = $urlAlias;
     }
 
     public function getUrlAlias(): UrlAlias

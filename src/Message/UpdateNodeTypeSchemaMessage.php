@@ -7,13 +7,22 @@ namespace RZ\Roadiz\CoreBundle\Message;
 /*
  * UpdateNodeTypeSchemaMessage must be handled synchronous
  */
-final readonly class UpdateNodeTypeSchemaMessage
+final class UpdateNodeTypeSchemaMessage
 {
-    public function __construct(private int|string|null $nodeTypeId)
+    private int $nodeTypeId;
+
+    /**
+     * @param int $nodeTypeId
+     */
+    public function __construct(int $nodeTypeId)
     {
+        $this->nodeTypeId = $nodeTypeId;
     }
 
-    public function getNodeTypeId(): int|string|null
+    /**
+     * @return int
+     */
+    public function getNodeTypeId(): int
     {
         return $this->nodeTypeId;
     }

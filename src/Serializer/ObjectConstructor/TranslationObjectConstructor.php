@@ -6,30 +6,35 @@ namespace RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor;
 
 use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\Exception\ObjectConstructionException;
-use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Entity\Translation;
 
-final class TranslationObjectConstructor extends AbstractTypedObjectConstructor
+class TranslationObjectConstructor extends AbstractTypedObjectConstructor
 {
+    /**
+     * @inheritDoc
+     */
     public function supports(string $className, array $data): bool
     {
-        return \is_subclass_of($className, TranslationInterface::class)
-            && array_key_exists('locale', $data);
+        return $className === Translation::class && array_key_exists('locale', $data);
     }
 
-    protected function findObject(mixed $data, DeserializationContext $context): ?object
+    /**
+     * @inheritDoc
+     */
+    protected function findObject($data, DeserializationContext $context): ?object
     {
-        if (null === $data['locale'] || '' === $data['locale']) {
+        if (null === $data['locale'] || $data['locale'] === '') {
             throw new ObjectConstructionException('Translation locale can not be empty');
         }
 
         return $this->entityManager
-            ->getRepository(TranslationInterface::class)
+            ->getRepository(Translation::class)
             ->findOneByLocale($data['locale']);
     }
 
     protected function fillIdentifier(object $object, array $data): void
     {
-        if ($object instanceof TranslationInterface) {
+        if ($object instanceof Translation) {
             $object->setLocale($data['locale']);
             $object->setName($data['locale']);
         }

@@ -10,12 +10,16 @@ use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
 
 /**
- * Class AttributeGroupTransformer.
+ * Class AttributeGroupTransformer
+ * @package RZ\Roadiz\CoreBundle\Form\DataTransformer
  */
 class AttributeGroupTransformer implements DataTransformerInterface
 {
     private ObjectManager $manager;
 
+    /**
+     * @param ObjectManager $manager
+     */
     public function __construct(ObjectManager $manager)
     {
         $this->manager = $manager;
@@ -23,16 +27,20 @@ class AttributeGroupTransformer implements DataTransformerInterface
 
     /**
      * @param AttributeGroup|null $value
+     * @return int|string
      */
     public function transform(mixed $value): int|string
     {
         if (!$value instanceof AttributeGroup) {
             return '';
         }
-
         return $value->getId();
     }
 
+    /**
+     * @param mixed $value
+     * @return null|AttributeGroup
+     */
     public function reverseTransform(mixed $value): ?AttributeGroup
     {
         if (!$value) {
@@ -48,7 +56,10 @@ class AttributeGroupTransformer implements DataTransformerInterface
             // causes a validation error
             // this message is not shown to the user
             // see the invalid_message option
-            throw new TransformationFailedException(sprintf('A attribute-group with id "%s" does not exist!', $value));
+            throw new TransformationFailedException(sprintf(
+                'A attribute-group with id "%s" does not exist!',
+                $value
+            ));
         }
 
         return $attributeGroup;

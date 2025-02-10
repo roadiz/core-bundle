@@ -6,52 +6,66 @@ namespace RZ\Roadiz\CoreBundle\Repository;
 
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\CoreBundle\Enum\NodeStatus;
+use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
-use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @template TEntityClass of object
- *
  * @extends EntityRepository<TEntityClass>
  */
 abstract class StatusAwareRepository extends EntityRepository
 {
     private bool $displayNotPublishedNodes;
     private bool $displayAllNodesStatuses;
+    protected Security $security;
+    protected PreviewResolverInterface $previewResolver;
 
     /**
-     * @param class-string<TEntityClass> $entityClass
+     * @param ManagerRegistry $registry
+     * @param string $entityClass
+     * @param PreviewResolverInterface $previewResolver
+     * @param EventDispatcherInterface $dispatcher
+     * @param Security $security
      */
     public function __construct(
         ManagerRegistry $registry,
         string $entityClass,
-        protected readonly PreviewResolverInterface $previewResolver,
+        PreviewResolverInterface $previewResolver,
         EventDispatcherInterface $dispatcher,
-        protected readonly Security $security,
+        Security $security
     ) {
         parent::__construct($registry, $entityClass, $dispatcher);
 
         $this->displayNotPublishedNodes = false;
         $this->displayAllNodesStatuses = false;
+        $this->security = $security;
+        $this->previewResolver = $previewResolver;
     }
 
+
+    /**
+     * @return bool
+     */
     public function isDisplayingNotPublishedNodes(): bool
     {
         return $this->displayNotPublishedNodes;
     }
 
     /**
-     * @return $this
+     * @param bool $displayNotPublishedNodes
+     * @return static
      */
-    public function setDisplayingNotPublishedNodes(bool $displayNotPublishedNodes): self
+    public function setDisplayingNotPublishedNodes(bool $displayNotPublishedNodes)
     {
         $this->displayNotPublishedNodes = $displayNotPublishedNodes;
-
         return $this;
     }
 
+    /**
+     * @return bool
+     */
     public function isDisplayingAllNodesStatuses(): bool
     {
         return $this->displayAllNodesStatuses;
@@ -61,18 +75,24 @@ abstract class StatusAwareRepository extends EntityRepository
      * Switch repository to disable any security on Node status. To use ONLY in order to
      * view deleted and archived nodes.
      *
-     * @return $this
+     * @param bool $displayAllNodesStatuses
+     *
+     * @return static
      */
-    public function setDisplayingAllNodesStatuses(bool $displayAllNodesStatuses): self
+    public function setDisplayingAllNodesStatuses(bool $displayAllNodesStatuses)
     {
         $this->displayAllNodesStatuses = $displayAllNodesStatuses;
-
         return $this;
     }
 
+    /**
+     * @param QueryBuilder $qb
+     * @param string $prefix
+     * @return QueryBuilder
+     */
     public function alterQueryBuilderWithAuthorizationChecker(
         QueryBuilder $qb,
-        string $prefix = EntityRepository::NODE_ALIAS,
+        string $prefix = EntityRepository::NODE_ALIAS
     ): QueryBuilder {
         if (true === $this->isDisplayingAllNodesStatuses()) {
             // do not filter on status
@@ -83,11 +103,10 @@ abstract class StatusAwareRepository extends EntityRepository
          * and context.
          */
         if (true === $this->isDisplayingNotPublishedNodes() || $this->previewResolver->isPreview()) {
-            $qb->andWhere($qb->expr()->lte($prefix.'.status', ':status'));
+            $qb->andWhere($qb->expr()->lte($prefix . '.status', Node::PUBLISHED));
         } else {
-            $qb->andWhere($qb->expr()->eq($prefix.'.status', ':status'));
+            $qb->andWhere($qb->expr()->eq($prefix . '.status', Node::PUBLISHED));
         }
-        $qb->setParameter('status', NodeStatus::PUBLISHED);
 
         return $qb;
     }

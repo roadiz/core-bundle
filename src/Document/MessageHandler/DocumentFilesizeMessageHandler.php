@@ -11,6 +11,10 @@ use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 final class DocumentFilesizeMessageHandler extends AbstractLockingDocumentMessageHandler
 {
+    /**
+     * @param  DocumentInterface $document
+     * @return bool
+     */
     protected function supports(DocumentInterface $document): bool
     {
         return $document->isLocal() && null !== $document->getRelativePath();
@@ -24,7 +28,7 @@ final class DocumentFilesizeMessageHandler extends AbstractLockingDocumentMessag
         try {
             $document->setFilesize($this->documentsStorage->fileSize($document->getMountPath()));
         } catch (FilesystemException $exception) {
-            $this->messengerLogger->warning($exception->getMessage());
+            $this->logger->warning($exception->getMessage());
         }
     }
 }

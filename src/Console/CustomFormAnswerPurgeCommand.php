@@ -19,13 +19,20 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class CustomFormAnswerPurgeCommand extends Command
 {
+    private ManagerRegistry $managerRegistry;
+    private EventDispatcherInterface $eventDispatcher;
+    private LoggerInterface $logger;
+
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly EventDispatcherInterface $eventDispatcher,
-        private readonly LoggerInterface $logger,
-        ?string $name = null,
+        ManagerRegistry $managerRegistry,
+        EventDispatcherInterface $eventDispatcher,
+        LoggerInterface $logger,
+        string $name = null
     ) {
         parent::__construct($name);
+        $this->managerRegistry = $managerRegistry;
+        $this->eventDispatcher = $eventDispatcher;
+        $this->logger = $logger;
     }
 
     protected function configure(): void
@@ -44,85 +51,74 @@ final class CustomFormAnswerPurgeCommand extends Command
             ->findAllWithRetentionTime();
 
         foreach ($customForms as $customForm) {
-            $this->purgeCustomFormAnswers($customForm, $input, $output);
+            if (null !== $interval = $customForm->getRetentionTimeInterval()) {
+                $purgeBefore = (new \DateTime())->sub($interval);
+                $customFormAnswers = $this->managerRegistry
+                    ->getRepository(CustomFormAnswer::class)
+                    ->findByCustomFormSubmittedBefore($customForm, $purgeBefore);
+                $count = count($customFormAnswers);
+
+                $documents = $this->managerRegistry
+                    ->getRepository(Document::class)
+                    ->findByCustomFormSubmittedBefore($customForm, $purgeBefore);
+                $documentsCount = count($documents);
+
+                if ($output->isVeryVerbose()) {
+                    $io->info(\sprintf(
+                        'Checking if “%s” custom-form has answers before %s',
+                        $customForm->getName(),
+                        $purgeBefore->format('Y-m-d H:i')
+                    ));
+                }
+
+                if ($count > 0) {
+                    $io->info(\sprintf(
+                        'Purge %d custom-form answer(s) with %d documents(s) from “%s” before %s',
+                        $count,
+                        $documentsCount,
+                        $customForm->getName(),
+                        $purgeBefore->format('Y-m-d H:i')
+                    ));
+
+                    if (
+                        !$input->getOption('dry-run') &&
+                        (!$input->isInteractive() || $io->confirm(\sprintf(
+                            'Are you sure you want to delete %d custom-form answer(s) and %d document(s) from “%s” before %s',
+                            $count,
+                            $documentsCount,
+                            $customForm->getName(),
+                            $purgeBefore->format('Y-m-d H:i')
+                        ), false))
+                    ) {
+                        $this->managerRegistry
+                            ->getRepository(CustomFormAnswer::class)
+                            ->deleteByCustomFormSubmittedBefore($customForm, $purgeBefore);
+
+                        foreach ($documents as $document) {
+                            $this->eventDispatcher->dispatch(
+                                new DocumentDeletedEvent($document)
+                            );
+                            if ($output->isVeryVerbose()) {
+                                $io->info(\sprintf(
+                                    '“%s” document has been deleted',
+                                    $document->getRelativePath()
+                                ));
+                            }
+                            $this->managerRegistry->getManager()->remove($document);
+                        }
+                        $this->managerRegistry->getManager()->flush();
+                        $this->logger->info(\sprintf(
+                            '%d answer(s) and %d document(s) were deleted from “%s” custom-form before %s',
+                            $count,
+                            $documentsCount,
+                            $customForm->getName(),
+                            $purgeBefore->format('Y-m-d H:i')
+                        ));
+                    }
+                }
+            }
         }
 
         return 0;
-    }
-
-    protected function purgeCustomFormAnswers(CustomForm $customForm, InputInterface $input, OutputInterface $output): void
-    {
-        $io = new SymfonyStyle($input, $output);
-
-        if (null === $interval = $customForm->getRetentionTimeInterval()) {
-            return;
-        }
-
-        $purgeBefore = (new \DateTime())->sub($interval);
-        $customFormAnswers = $this->managerRegistry
-            ->getRepository(CustomFormAnswer::class)
-            ->findByCustomFormSubmittedBefore($customForm, $purgeBefore);
-        $count = count($customFormAnswers);
-
-        $documents = $this->managerRegistry
-            ->getRepository(Document::class)
-            ->findByCustomFormSubmittedBefore($customForm, $purgeBefore);
-        $documentsCount = count($documents);
-
-        if ($output->isVeryVerbose()) {
-            $io->info(\sprintf(
-                'Checking if “%s” custom-form has answers before %s',
-                $customForm->getName(),
-                $purgeBefore->format('Y-m-d H:i')
-            ));
-        }
-
-        if ($count <= 0) {
-            return;
-        }
-
-        $io->info(\sprintf(
-            'Purge %d custom-form answer(s) with %d documents(s) from “%s” before %s',
-            $count,
-            $documentsCount,
-            $customForm->getName(),
-            $purgeBefore->format('Y-m-d H:i')
-        ));
-
-        if (
-            !$input->getOption('dry-run')
-            && (!$input->isInteractive() || $io->confirm(\sprintf(
-                'Are you sure you want to delete %d custom-form answer(s) and %d document(s) from “%s” before %s',
-                $count,
-                $documentsCount,
-                $customForm->getName(),
-                $purgeBefore->format('Y-m-d H:i')
-            ), false))
-        ) {
-            $this->managerRegistry
-                ->getRepository(CustomFormAnswer::class)
-                ->deleteByCustomFormSubmittedBefore($customForm, $purgeBefore);
-
-            foreach ($documents as $document) {
-                $this->eventDispatcher->dispatch(
-                    new DocumentDeletedEvent($document)
-                );
-                if ($output->isVeryVerbose()) {
-                    $io->info(\sprintf(
-                        '“%s” document has been deleted',
-                        $document->getRelativePath()
-                    ));
-                }
-                $this->managerRegistry->getManager()->remove($document);
-            }
-            $this->managerRegistry->getManager()->flush();
-            $this->logger->info(\sprintf(
-                '%d answer(s) and %d document(s) were deleted from “%s” custom-form before %s',
-                $count,
-                $documentsCount,
-                $customForm->getName(),
-                $purgeBefore->format('Y-m-d H:i')
-            ));
-        }
     }
 }

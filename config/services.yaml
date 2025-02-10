@@ -1,6 +1,6 @@
 ---
 parameters:
-    roadiz_core.cms_version: '2.4.10'
+    roadiz_core.cms_version: '2.1.72'
     roadiz_core.cms_version_prefix: 'main'
     env(APP_NAMESPACE): "roadiz"
     env(APP_VERSION): "0.1.0"
@@ -27,21 +27,21 @@ services:
             $cmsVersion: '%roadiz_core.cms_version%'
             $appVersion: '%roadiz_core.app_version%'
             $cmsVersionPrefix: '%roadiz_core.cms_version_prefix%'
+            $staticDomain: '%roadiz_core.static_domain_name%'
             $hideRoadizVersion: '%roadiz_core.hide_roadiz_version%'
             $inheritanceType: '%roadiz_core.inheritance_type%'
             $maxPixelSize: '%rz_intervention_request.max_pixel_size%'
             $appNamespace: '%roadiz_core.app_namespace%'
             $projectDir: '%kernel.project_dir%'
             $exportDir: '%kernel.project_dir%/var/export'
+            $privateKeyName: '%roadiz_core.private_key_name%'
             $generatedEntitiesDir: '%roadiz_core.generated_entities_dir%'
             $serializedNodeTypesDir: '%roadiz_core.serialized_node_types_dir%'
             $importFilesConfigPath: '%roadiz_core.import_files_config_path%'
             $kernelProjectDir: '%kernel.project_dir%'
             $apiResourcesDir: '%kernel.project_dir%/config/api_resources'
             $debug: '%kernel.debug%'
-            $kernelEnvironment: '%kernel.environment%'
             $defaultControllerClass: '%roadiz_core.default_node_source_controller%'
-            $defaultLocale: '%kernel.default_locale%'
             $webhookMessageTypes: '%roadiz_core.webhook.message_types%'
             $useAcceptLanguageHeader: '%roadiz_core.use_accept_language_header%'
             $healthCheckToken: '%roadiz_core.health_check_token%'
@@ -50,8 +50,6 @@ services:
             $maxVersionsShowed: '%roadiz_core.max_versions_showed%'
             $recaptchaPublicKey: '%roadiz_core.medias.recaptcha_public_key%'
             $recaptchaPrivateKey: '%roadiz_core.medias.recaptcha_private_key%'
-            $webResponseClass: '%roadiz_core.web_response_class%'
-            $useGravatar: '%roadiz_core.use_gravatar%'
 
     RZ\Roadiz\CoreBundle\:
         resource: '../src/'
@@ -62,23 +60,12 @@ services:
             - '../src/Kernel.php'
             - '../src/Tests/'
             - '../src/Event/'
-            - '../src/Model/'
-            - '../src/ListManager/'
-            - '../src/Serializer/Normalizer/'
-            - '../src/Importer/'
 
     RZ\Roadiz\CoreBundle\EntityHandler\:
         resource: '../src/EntityHandler/'
         # Recreate handlers for each usage
         shared: false
         public: true
-
-    RZ\Roadiz\CoreBundle\Xlsx\:
-        resource: '../src/Xlsx/'
-        deprecated:
-            message: 'The "%service_id%" service is deprecated and will be removed in Roadiz 2.4. Use CSV serialization instead.'
-            package: roadiz/core-bundle
-            version: '2.3.19'
 
     RZ\Roadiz\CoreBundle\Document\MediaFinder\YoutubeEmbedFinder:
         tags: [ { name: 'roadiz_core.media_finder', platform: 'youtube' } ]
@@ -98,6 +85,8 @@ services:
         tags: [ { name: 'roadiz_core.media_finder', platform: 'ted' } ]
     RZ\Roadiz\CoreBundle\Document\MediaFinder\PodcastFinder:
         tags: [ { name: 'roadiz_core.media_finder', platform: 'podcast' } ]
+    RZ\Roadiz\CoreBundle\Document\MediaFinder\TwitchEmbedFinder:
+        tags: [ { name: 'roadiz_core.media_finder', platform: 'twitch' } ]
 
     # Removed DataTransformers
     RZ\Roadiz\CoreBundle\Api\DataTransformer\:
@@ -123,21 +112,6 @@ services:
     RZ\Roadiz\CoreBundle\Api\Extension\ArchiveExtension:
         # Extension must be called after all filtering BUT before default pagination extension
         tags: [ { name: 'api_platform.doctrine.orm.query_extension.collection', priority: -40 } ]
-
-    #
-    # These API doctrine extension must be called last before pagination
-    # to perform on existing JOIN with node entities (found after filtering)
-    #
-    RZ\Roadiz\CoreBundle\Api\Extension\AttributeValueQueryExtension:
-        tags: [
-            { name: 'api_platform.doctrine.orm.query_extension.collection', priority: -40 },
-            { name: 'api_platform.doctrine.orm.query_extension.item', priority: -40 },
-        ]
-    RZ\Roadiz\CoreBundle\Api\Extension\NodesTagsQueryExtension:
-        tags: [
-            { name: 'api_platform.doctrine.orm.query_extension.collection', priority: -40 },
-            { name: 'api_platform.doctrine.orm.query_extension.item', priority: -40 },
-        ]
 
     RZ\Roadiz\CoreBundle\Bag\:
         resource: '../src/Bag/'
@@ -178,6 +152,16 @@ services:
         class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\FolderNormalizer'
         decorates: 'api_platform.serializer.normalizer.item'
         decoration_priority: 21
+
+    RZ\Roadiz\CoreBundle\DataCollector\RequestDataCollector:
+        autoconfigure: false
+        arguments: [ '%roadiz_core.cms_version%', '%roadiz_core.cms_version_prefix%']
+        tags:
+            -   name: data_collector
+                template: '@RoadizCore/DataCollector/request.html.twig'
+                # must match the value returned by the getName() method
+                id: 'roadiz.data_collector.request'
+                priority: 400
 
     # Document
     RZ\Roadiz\CoreBundle\Serializer\Normalizer\DocumentNormalizer:
@@ -346,18 +330,6 @@ services:
     RZ\Roadiz\CoreBundle\Mailer\EmailManager:
         # Recreate manager for each usage
         shared: false
-        deprecated:
-            message: 'The "%service_id%" service is deprecated and will be removed in Roadiz 2.4. Use RZ\Roadiz\CoreBundle\Mailer\EmailManagerFactory instead.'
-            package: roadiz/core-bundle
-            version: '2.3.18'
-
-    RZ\Roadiz\CoreBundle\Mailer\ContactFormManager:
-        # Recreate manager for each usage
-        shared: false
-        deprecated:
-            message: 'The "%service_id%" service is deprecated and will be removed in Roadiz 2.4. Use RZ\Roadiz\CoreBundle\Mailer\ContactFormManagerFactory instead.'
-            package: roadiz/core-bundle
-            version: '2.3.18'
 
     RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber\:
         resource: '../src/Doctrine/EventSubscriber'
@@ -398,7 +370,7 @@ services:
     RZ\Roadiz\CoreBundle\Preview\RequestPreviewRevolver:
         arguments:
             - '@Symfony\Component\HttpFoundation\RequestStack'
-            - '%roadiz_core.preview_required_role_name%'
+            - 'ROLE_BACKEND_USER'
 
     RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry:
         arguments: ['@service_container']
@@ -441,12 +413,13 @@ services:
         arguments: ['%kernel.project_dir%']
         public: true
 
-    RZ\Roadiz\Random\PasswordGeneratorInterface:
-        class: RZ\Roadiz\Random\PasswordGenerator
-    RZ\Roadiz\Random\SaltGeneratorInterface:
-        class: RZ\Roadiz\Random\SaltGenerator
-    RZ\Roadiz\Random\TokenGeneratorInterface:
-        class: RZ\Roadiz\Random\TokenGenerator
+    RZ\Roadiz\Random\PasswordGenerator: ~
+
+    RZ\Crypto\KeyChain\KeyChainInterface:
+        alias: RZ\Crypto\KeyChain\AsymmetricFilesystemKeyChain
+
+    RZ\Crypto\KeyChain\AsymmetricFilesystemKeyChain:
+        arguments: ['%kernel.project_dir%/var/secret', true]
 
     JMS\Serializer\Construction\ObjectConstructorInterface:
         alias: RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\ObjectConstructor
@@ -458,10 +431,10 @@ services:
             - '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\ObjectConstructor'
             - [
                     '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TranslationObjectConstructor',
-                    '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\AttributeObjectConstructor',
                     '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TagObjectConstructor',
                     '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\NodeObjectConstructor',
                     '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\NodeTypeObjectConstructor',
+                    '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\NodeTypeFieldObjectConstructor',
                     '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\RoleObjectConstructor',
                     '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\GroupObjectConstructor',
                     '@RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\SettingObjectConstructor',
@@ -470,6 +443,10 @@ services:
 
     Solarium\Core\Client\Client:
         factory: ['RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry', 'getClient']
+
+    # Provides LoginAttemptManager aware authentication
+    RZ\Roadiz\CoreBundle\Security\Authentication\JwtAuthenticationSuccessHandler:
+        decorates: 'lexik_jwt_authentication.handler.authentication_success'
 
     RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\NodeChrootResolver:
         alias: RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\NodeChrootChainResolver
@@ -522,7 +499,6 @@ services:
     #
     RZ\Roadiz\CoreBundle\Document\MediaFinder\UnsplashPictureFinder:
         arguments:
-            - '@http_client'
             - '%roadiz_core.medias.unsplash_client_id%'
     RZ\Roadiz\Documents\MediaFinders\RandomImageFinder:
         alias: RZ\Roadiz\CoreBundle\Document\MediaFinder\UnsplashPictureFinder
@@ -537,16 +513,15 @@ services:
     RZ\Roadiz\Documents\Renderer\PdfRenderer:
         tags: [ 'roadiz_core.document_renderer' ]
     RZ\Roadiz\Documents\Renderer\SvgRenderer:
-        tags: [ { name: 'roadiz_core.document_renderer', priority: 10 } ]
+        tags: [ 'roadiz_core.document_renderer' ]
     RZ\Roadiz\Documents\Renderer\InlineSvgRenderer:
-        tags: [ { name: 'roadiz_core.document_renderer', priority: 11 } ]
+        tags: [ 'roadiz_core.document_renderer' ]
     RZ\Roadiz\Documents\Renderer\EmbedRenderer:
         tags: [ { name: 'roadiz_core.document_renderer', priority: -128 } ]
     RZ\Roadiz\Documents\Renderer\ThumbnailRenderer:
         tags: [ 'roadiz_core.document_renderer' ]
     RZ\Roadiz\Documents\Renderer\RendererInterface:
         alias: RZ\Roadiz\Documents\Renderer\ChainRenderer
-    RZ\Roadiz\Documents\MediaFinders\FacebookPictureFinder:
 
     # Default AbstractDocumentFactory is the public one.
     RZ\Roadiz\Documents\AbstractDocumentFactory:
@@ -556,6 +531,7 @@ services:
         alias: RZ\Roadiz\CoreBundle\Filesystem\RoadizFileDirectories
         public: true
 
+    RZ\Roadiz\Documents\Packages: ~
     RZ\Roadiz\Documents\DownscaleImageManager: ~
     RZ\Roadiz\Documents\DocumentArchiver: ~
     #
@@ -645,7 +621,6 @@ services:
 
     RZ\Roadiz\Documents\MediaFinders\EmbedFinderFactory:
         arguments:
-            - '@http_client'
             - '%roadiz_core.medias.supported_platforms%'
 
     RZ\Roadiz\Documents\Renderer\ChainRenderer:

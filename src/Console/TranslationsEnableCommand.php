@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -14,8 +16,19 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 /**
  * Command line utils for managing translations.
  */
-final class TranslationsEnableCommand extends TranslationsCommand
+class TranslationsEnableCommand extends Command
 {
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+    }
+
     protected function configure(): void
     {
         $this->setName('translations:enable')
@@ -36,26 +49,24 @@ final class TranslationsEnableCommand extends TranslationsCommand
             ->getRepository(Translation::class)
             ->findOneByLocale($locale);
 
-        if (null === $translation) {
-            $io->error('Translation for locale '.$locale.' does not exist.');
-
+        if ($translation !== null) {
+            $confirmation = new ConfirmationQuestion(
+                '<question>Are you sure to enable ' . $translation->getName() . ' (' . $translation->getLocale() . ') translation?</question>',
+                false
+            );
+            if (
+                $io->askQuestion(
+                    $confirmation
+                )
+            ) {
+                $translation->setAvailable(true);
+                $this->managerRegistry->getManagerForClass(Translation::class)->flush();
+                $io->success('Translation enabled.');
+            }
+        } else {
+            $io->error('Translation for locale ' . $locale . ' does not exist.');
             return 1;
         }
-
-        $confirmation = new ConfirmationQuestion(
-            '<question>Are you sure to enable '.$translation->getName().' ('.$translation->getLocale().') translation?</question>',
-            false
-        );
-        if (
-            $io->askQuestion(
-                $confirmation
-            )
-        ) {
-            $translation->setAvailable(true);
-            $this->managerRegistry->getManagerForClass(Translation::class)->flush();
-            $io->success('Translation enabled.');
-        }
-
         return 0;
     }
 }

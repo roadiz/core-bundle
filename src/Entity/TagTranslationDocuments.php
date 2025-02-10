@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
+use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\CoreBundle\Repository\TagTranslationDocumentsRepository;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
@@ -16,9 +16,9 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
  */
 #[
     ORM\Entity(repositoryClass: TagTranslationDocumentsRepository::class),
-    ORM\Table(name: 'tags_translations_documents'),
-    ORM\Index(columns: ['position']),
-    ORM\Index(columns: ['tag_translation_id', 'position'], name: 'tagtranslation_position')
+    ORM\Table(name: "tags_translations_documents"),
+    ORM\Index(columns: ["position"]),
+    ORM\Index(columns: ["tag_translation_id", "position"], name: "tagtranslation_position")
 ]
 class TagTranslationDocuments extends AbstractPositioned
 {
@@ -28,10 +28,10 @@ class TagTranslationDocuments extends AbstractPositioned
         fetch: 'EAGER',
         inversedBy: 'tagTranslationDocuments'
     )]
-    #[ORM\JoinColumn(name: 'tag_translation_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'tag_translation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]
-    protected TagTranslation $tagTranslation;
+    protected ?TagTranslation $tagTranslation = null;
 
     #[ORM\ManyToOne(
         targetEntity: Document::class,
@@ -39,15 +39,18 @@ class TagTranslationDocuments extends AbstractPositioned
         fetch: 'EAGER',
         inversedBy: 'tagTranslations'
     )]
-    #[ORM\JoinColumn(name: 'document_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'document_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     #[SymfonySerializer\Groups(['tag'])]
     #[Serializer\Groups(['tag'])]
-    protected Document $document;
+    protected ?Document $document = null;
 
     /**
      * Create a new relation between NodeSource, a Document and a NodeTypeField.
+     *
+     * @param TagTranslation|null $tagTranslation
+     * @param Document|null $document
      */
-    public function __construct(TagTranslation $tagTranslation, Document $document)
+    public function __construct(TagTranslation $tagTranslation = null, Document $document = null)
     {
         $this->document = $document;
         $this->tagTranslation = $tagTranslation;
@@ -57,30 +60,46 @@ class TagTranslationDocuments extends AbstractPositioned
     {
         if ($this->id) {
             $this->id = null;
+            $this->tagTranslation = null;
         }
     }
 
-    public function getDocument(): Document
+    /**
+     * Gets the value of document.
+     *
+     * @return Document|null
+     */
+    public function getDocument(): ?Document
     {
         return $this->document;
     }
 
-    public function setDocument(Document $document): TagTranslationDocuments
+    /**
+     * Sets the value of document.
+     *
+     * @param Document|null $document the document
+     *
+     * @return self
+     */
+    public function setDocument(?Document $document): TagTranslationDocuments
     {
         $this->document = $document;
 
         return $this;
     }
 
-    public function getTagTranslation(): TagTranslation
+    public function getTagTranslation(): ?TagTranslation
     {
         return $this->tagTranslation;
     }
 
-    public function setTagTranslation(TagTranslation $tagTranslation): TagTranslationDocuments
+    /**
+     * @param TagTranslation|null $tagTranslation
+     * @return TagTranslationDocuments
+     */
+    public function setTagTranslation(?TagTranslation $tagTranslation): TagTranslationDocuments
     {
         $this->tagTranslation = $tagTranslation;
-
         return $this;
     }
 }

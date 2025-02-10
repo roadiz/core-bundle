@@ -11,14 +11,29 @@ use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\EntityApi\NodeSourceApi;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-final readonly class NodesSourcesHeadFactory implements NodesSourcesHeadFactoryInterface
+final class NodesSourcesHeadFactory implements NodesSourcesHeadFactoryInterface
 {
+    private Settings $settingsBag;
+    private UrlGeneratorInterface $urlGenerator;
+    private NodeSourceApi $nodeSourceApi;
+    private HandlerFactoryInterface $handlerFactory;
+
+    /**
+     * @param Settings $settingsBag
+     * @param UrlGeneratorInterface $urlGenerator
+     * @param NodeSourceApi $nodeSourceApi
+     * @param HandlerFactoryInterface $handlerFactory
+     */
     public function __construct(
-        private Settings $settingsBag,
-        private UrlGeneratorInterface $urlGenerator,
-        private NodeSourceApi $nodeSourceApi,
-        private HandlerFactoryInterface $handlerFactory,
+        Settings $settingsBag,
+        UrlGeneratorInterface $urlGenerator,
+        NodeSourceApi $nodeSourceApi,
+        HandlerFactoryInterface $handlerFactory
     ) {
+        $this->settingsBag = $settingsBag;
+        $this->urlGenerator = $urlGenerator;
+        $this->nodeSourceApi = $nodeSourceApi;
+        $this->handlerFactory = $handlerFactory;
     }
 
     public function createForNodeSource(NodesSources $nodesSources): NodesSourcesHeadInterface

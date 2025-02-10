@@ -9,18 +9,25 @@ use RZ\Roadiz\CoreBundle\Cache\Clearer\AssetsFileClearer;
 use RZ\Roadiz\Documents\Events\CachePurgeAssetsRequestEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-final readonly class AssetsCacheEventSubscriber implements EventSubscriberInterface
+final class AssetsCacheEventSubscriber implements EventSubscriberInterface
 {
-    public function __construct(
-        private AssetsFileClearer $assetsClearer,
-        private LoggerInterface $logger,
-    ) {
+    private AssetsFileClearer $assetsClearer;
+    private LoggerInterface $logger;
+
+    public function __construct(AssetsFileClearer $assetsClearer, LoggerInterface $logger)
+    {
+        $this->assetsClearer = $assetsClearer;
+        $this->logger = $logger;
     }
 
+    /**
+     * @inheritDoc
+     */
     public static function getSubscribedEvents(): array
     {
         return [
             CachePurgeAssetsRequestEvent::class => ['onPurgeAssetsRequest', 0],
+            '\RZ\Roadiz\Core\Events\Cache\CachePurgeAssetsRequestEvent' => ['onPurgeAssetsRequest', 0],
         ];
     }
 

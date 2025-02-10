@@ -6,22 +6,30 @@ namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
-use RZ\Roadiz\CoreBundle\EntityHandler\NodeHandler;
 use RZ\Roadiz\CoreBundle\Event\Node\NodeDuplicatedEvent;
+use RZ\Roadiz\CoreBundle\EntityHandler\NodeHandler;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-final readonly class NodeDuplicationSubscriber implements EventSubscriberInterface
+class NodeDuplicationSubscriber implements EventSubscriberInterface
 {
-    public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private HandlerFactoryInterface $handlerFactory,
-    ) {
+    protected HandlerFactoryInterface $handlerFactory;
+    private ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param HandlerFactoryInterface $handlerFactory
+     */
+    public function __construct(ManagerRegistry $managerRegistry, HandlerFactoryInterface $handlerFactory)
+    {
+        $this->handlerFactory = $handlerFactory;
+        $this->managerRegistry = $managerRegistry;
     }
 
     public static function getSubscribedEvents(): array
     {
         return [
             NodeDuplicatedEvent::class => 'cleanPosition',
+            '\RZ\Roadiz\Core\Events\Node\NodeDuplicatedEvent' => 'cleanPosition',
         ];
     }
 

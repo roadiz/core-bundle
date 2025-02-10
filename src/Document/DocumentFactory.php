@@ -19,13 +19,16 @@ use RZ\Roadiz\Documents\Models\DocumentInterface;
  */
 final class DocumentFactory extends AbstractDocumentFactory
 {
+    private ManagerRegistry $managerRegistry;
+
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
+        ManagerRegistry $managerRegistry,
         FilesystemOperator $documentsStorage,
         DocumentFinderInterface $documentFinder,
-        ?LoggerInterface $logger = null,
+        ?LoggerInterface $logger = null
     ) {
         parent::__construct($documentsStorage, $documentFinder, $logger);
+        $this->managerRegistry = $managerRegistry;
     }
 
     protected function persistDocument(DocumentInterface $document): void
@@ -33,6 +36,9 @@ final class DocumentFactory extends AbstractDocumentFactory
         $this->managerRegistry->getManagerForClass(Document::class)->persist($document);
     }
 
+    /**
+     * @inheritDoc
+     */
     protected function createDocument(): DocumentInterface
     {
         return new Document();

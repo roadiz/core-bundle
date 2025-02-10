@@ -10,13 +10,20 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 final class OPCacheEventSubscriber implements EventSubscriberInterface
 {
+    /**
+     * @inheritDoc
+     */
     public static function getSubscribedEvents(): array
     {
         return [
             CachePurgeRequestEvent::class => ['onPurgeRequest', 3],
+            '\RZ\Roadiz\Core\Events\Cache\CachePurgeRequestEvent' => ['onPurgeRequest', 3],
         ];
     }
 
+    /**
+     * @param CachePurgeRequestEvent $event
+     */
     public function onPurgeRequest(CachePurgeRequestEvent $event): void
     {
         try {

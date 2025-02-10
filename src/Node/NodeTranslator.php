@@ -13,17 +13,24 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class NodeTranslator
 {
-    public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly EventDispatcherInterface $dispatcher,
-    ) {
+    private ManagerRegistry $managerRegistry;
+    private EventDispatcherInterface $dispatcher;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param EventDispatcherInterface $dispatcher
+     */
+    public function __construct(ManagerRegistry $managerRegistry, EventDispatcherInterface $dispatcher)
+    {
+        $this->managerRegistry = $managerRegistry;
+        $this->dispatcher = $dispatcher;
     }
 
     public function translateNode(
         ?Translation $sourceTranslation,
         Translation $destinationTranslation,
         Node $node,
-        bool $translateChildren = false,
+        bool $translateChildren = false
     ): Node {
         $this->translateSingleNode($sourceTranslation, $destinationTranslation, $node);
 
@@ -40,7 +47,7 @@ final class NodeTranslator
     private function translateSingleNode(
         ?Translation $sourceTranslation,
         Translation $destinationTranslation,
-        Node $node,
+        Node $node
     ): NodesSources {
         /** @var NodesSources|null $existing */
         $existing = $this->managerRegistry

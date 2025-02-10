@@ -5,26 +5,29 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Message\Handler;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\Realm;
 use RZ\Roadiz\CoreBundle\Entity\RealmNode;
+use RZ\Roadiz\CoreBundle\EntityHandler\NodeHandler;
 use RZ\Roadiz\CoreBundle\Message\CleanRealmNodeInheritanceMessage;
-use RZ\Roadiz\CoreBundle\Node\NodeOffspringResolverInterface;
-use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
+use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
-#[AsMessageHandler]
-final readonly class CleanRealmNodeInheritanceMessageHandler
+final class CleanRealmNodeInheritanceMessageHandler implements MessageHandlerInterface
 {
-    public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private NodeOffspringResolverInterface $nodeOffspringResolver,
-    ) {
+    private ManagerRegistry $managerRegistry;
+    private HandlerFactoryInterface $handlerFactory;
+
+    public function __construct(ManagerRegistry $managerRegistry, HandlerFactoryInterface $handlerFactory)
+    {
+        $this->managerRegistry = $managerRegistry;
+        $this->handlerFactory = $handlerFactory;
     }
 
     public function __invoke(CleanRealmNodeInheritanceMessage $message): void
     {
-        if (null === $message->getRealmId()) {
+        if ($message->getRealmId() === null) {
             return;
         }
         $node = $this->managerRegistry->getRepository(Node::class)->find($message->getNodeId());
@@ -37,7 +40,9 @@ final readonly class CleanRealmNodeInheritanceMessageHandler
             throw new UnrecoverableMessageHandlingException('Realm does not exist');
         }
 
-        $childrenIds = $this->nodeOffspringResolver->getAllOffspringIds($node);
+        /** @var NodeHandler $nodeHandler */
+        $nodeHandler = $this->handlerFactory->getHandler($node);
+        $childrenIds = $nodeHandler->getAllOffspringId();
 
         $realmNodes = $this->managerRegistry
             ->getRepository(RealmNode::class)

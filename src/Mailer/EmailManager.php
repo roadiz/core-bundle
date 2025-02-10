@@ -21,51 +21,59 @@ use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
-/**
- * @internal use EmailManagerFactory to create a new instance
- */
 class EmailManager
 {
     protected ?string $subject = null;
     protected ?string $emailTitle = null;
     protected ?string $emailType = null;
-    /** @var Address[]|null */
+    /** @var Address[]|null  */
     protected ?array $receiver = null;
-    /** @var Address[]|null */
+    /** @var Address[]|null  */
     protected ?array $sender = null;
     protected ?Address $origin = null;
     protected string $successMessage = 'email.successfully.sent';
     protected string $failMessage = 'email.has.errors';
+    protected TranslatorInterface $translator;
+    protected Environment $templating;
+    protected MailerInterface $mailer;
     protected ?string $emailTemplate = null;
     protected ?string $emailPlainTextTemplate = null;
     protected string $emailStylesheet;
+    protected RequestStack $requestStack;
     protected array $assignation;
     protected ?Email $message;
+    protected ?Settings $settingsBag;
+    protected ?DocumentUrlGeneratorInterface $documentUrlGenerator;
     /** @var File[] */
     protected array $files = [];
+    /** @var array  */
     protected array $resources = [];
 
-    /*
-     * DO NOT DIRECTLY USE THIS CONSTRUCTOR
-     * USE 'EmailManagerFactory' Factory Service
-     */
     public function __construct(
-        protected readonly RequestStack $requestStack,
-        protected readonly TranslatorInterface $translator,
-        protected readonly Environment $templating,
-        protected readonly MailerInterface $mailer,
-        protected readonly Settings $settingsBag,
-        protected readonly DocumentUrlGeneratorInterface $documentUrlGenerator,
+        RequestStack $requestStack,
+        TranslatorInterface $translator,
+        Environment $templating,
+        MailerInterface $mailer,
+        ?Settings $settingsBag = null,
+        ?DocumentUrlGeneratorInterface $documentUrlGenerator = null
     ) {
+        $this->requestStack = $requestStack;
+        $this->translator = $translator;
+        $this->mailer = $mailer;
+        $this->templating = $templating;
         $this->assignation = [];
         $this->message = null;
+
         /*
          * Sets a default CSS for emails.
          */
-        $this->emailStylesheet = dirname(__DIR__).'/../css/transactionalStyles.css';
+        $this->emailStylesheet = dirname(__DIR__) . '/../css/transactionalStyles.css';
+        $this->settingsBag = $settingsBag;
+        $this->documentUrlGenerator = $documentUrlGenerator;
     }
 
     /**
+     * @return string
      * @throws LoaderError
      * @throws RuntimeError
      * @throws SyntaxError
@@ -76,6 +84,7 @@ class EmailManager
     }
 
     /**
+     * @return string
      * @throws LoaderError
      * @throws RuntimeError
      * @throws SyntaxError
@@ -84,13 +93,9 @@ class EmailManager
     {
         if (null !== $this->getEmailStylesheet()) {
             $htmldoc = new InlineStyle($this->renderHtmlEmailBody());
-            $css = file_get_contents(
+            $htmldoc->applyStylesheet(file_get_contents(
                 $this->getEmailStylesheet()
-            );
-            if (false === $css) {
-                throw new \RuntimeException('Unable to read email stylesheet file.');
-            }
-            $htmldoc->applyStylesheet($css);
+            ));
 
             return $htmldoc->getHTML();
         }
@@ -99,6 +104,7 @@ class EmailManager
     }
 
     /**
+     * @return string
      * @throws LoaderError
      * @throws RuntimeError
      * @throws SyntaxError
@@ -109,12 +115,17 @@ class EmailManager
     }
 
     /**
-     * Added headerImageSrc assignation to display email header.
+     * Added mainColor and headerImageSrc assignation
+     * to display email header.
      *
      * @return $this
      */
     public function appendWebsiteIcon(): static
     {
+        if (empty($this->assignation['mainColor']) && null !== $this->settingsBag) {
+            $this->assignation['mainColor'] = $this->settingsBag->get('main_color');
+        }
+
         if (empty($this->assignation['headerImageSrc']) && null !== $this->settingsBag) {
             $adminImage = $this->settingsBag->getDocument('admin_image');
             if ($adminImage instanceof DocumentInterface && null !== $this->documentUrlGenerator) {
@@ -127,6 +138,7 @@ class EmailManager
     }
 
     /**
+     * @return Email
      * @throws LoaderError
      * @throws RuntimeError
      * @throws SyntaxError
@@ -163,6 +175,7 @@ class EmailManager
     /**
      * Send email.
      *
+     * @return void
      * @throws TransportExceptionInterface
      * @throws LoaderError
      * @throws RuntimeError
@@ -171,7 +184,7 @@ class EmailManager
     public function send(): void
     {
         if (empty($this->assignation)) {
-            throw new \RuntimeException('Can’t send a contact form without data.');
+            throw new \RuntimeException("Can’t send a contact form without data.");
         }
 
         if (null === $this->message) {
@@ -193,40 +206,46 @@ class EmailManager
         $this->mailer->send($this->message);
     }
 
+    /**
+     * @return null|string
+     */
     public function getSubject(): ?string
     {
         return null !== $this->subject ? trim(strip_tags($this->subject)) : null;
     }
 
     /**
+     * @param null|string $subject
      * @return $this
      */
     public function setSubject(?string $subject): static
     {
         $this->subject = $subject;
-
         return $this;
     }
 
+    /**
+     * @return null|string
+     */
     public function getEmailTitle(): ?string
     {
         return null !== $this->emailTitle ? trim(strip_tags($this->emailTitle)) : null;
     }
 
     /**
+     * @param null|string $emailTitle
      * @return $this
      */
     public function setEmailTitle(?string $emailTitle): static
     {
         $this->emailTitle = $emailTitle;
-
         return $this;
     }
 
     /**
      * Message destination email(s).
      *
-     * @return Address[]|null
+     * @return null|Address[]
      */
     public function getReceiver(): ?array
     {
@@ -235,6 +254,8 @@ class EmailManager
 
     /**
      * Return only one email as string.
+     *
+     * @return null|string
      */
     public function getReceiverEmail(): ?string
     {
@@ -251,10 +272,9 @@ class EmailManager
      * @param Address|string|array<string, string>|array<Address> $receiver the receiver
      *
      * @return $this
-     *
      * @throws \Exception
      */
-    public function setReceiver(mixed $receiver): static
+    public function setReceiver($receiver): static
     {
         if ($receiver instanceof Address) {
             $this->receiver = [$receiver];
@@ -281,7 +301,7 @@ class EmailManager
      *
      * This email will be used as ReplyTo: and ReturnPath:
      *
-     * @return Address[]|null
+     * @return null|Address[]
      */
     public function getSender(): ?array
     {
@@ -290,6 +310,8 @@ class EmailManager
 
     /**
      * Return only one email as string.
+     *
+     * @return null|string
      */
     public function getSenderEmail(): ?string
     {
@@ -304,12 +326,10 @@ class EmailManager
      * Sets the value of sender.
      *
      * @param Address|string|array<string|int, string>|array<string|int, Address> $sender
-     *
      * @return $this
-     *
      * @throws \Exception
      */
-    public function setSender(mixed $sender): static
+    public function setSender($sender): static
     {
         if ($sender instanceof Address) {
             $this->sender = [$sender];
@@ -333,96 +353,153 @@ class EmailManager
         return $this;
     }
 
+    /**
+     * @return string
+     */
     public function getSuccessMessage(): string
     {
         return $this->successMessage;
     }
 
     /**
+     * @param string $successMessage
      * @return $this
      */
     public function setSuccessMessage(string $successMessage): static
     {
         $this->successMessage = $successMessage;
-
         return $this;
     }
 
+    /**
+     * @return string
+     */
     public function getFailMessage(): string
     {
         return $this->failMessage;
     }
 
     /**
+     * @param string $failMessage
      * @return $this
      */
     public function setFailMessage(string $failMessage): static
     {
         $this->failMessage = $failMessage;
-
         return $this;
     }
 
+    /**
+     * @return TranslatorInterface
+     */
     public function getTranslator(): TranslatorInterface
     {
         return $this->translator;
     }
 
+    /**
+     * @param TranslatorInterface $translator
+     * @return $this
+     */
+    public function setTranslator(TranslatorInterface $translator): static
+    {
+        $this->translator = $translator;
+        return $this;
+    }
+
+    /**
+     * @return Environment
+     */
     public function getTemplating(): Environment
     {
         return $this->templating;
     }
 
+    /**
+     * @param Environment $templating
+     * @return $this
+     */
+    public function setTemplating(Environment $templating): static
+    {
+        $this->templating = $templating;
+        return $this;
+    }
+
+    /**
+     * @return MailerInterface
+     */
     public function getMailer(): MailerInterface
     {
         return $this->mailer;
     }
 
+    /**
+     * @param MailerInterface $mailer
+     * @return $this
+     */
+    public function setMailer(MailerInterface $mailer): static
+    {
+        $this->mailer = $mailer;
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
     public function getEmailTemplate(): ?string
     {
         return $this->emailTemplate;
     }
 
     /**
+     * @param string|null $emailTemplate
      * @return $this
      */
     public function setEmailTemplate(?string $emailTemplate = null): static
     {
         $this->emailTemplate = $emailTemplate;
-
         return $this;
     }
 
+    /**
+     * @return string|null
+     */
     public function getEmailPlainTextTemplate(): ?string
     {
         return $this->emailPlainTextTemplate;
     }
 
     /**
+     * @param string|null $emailPlainTextTemplate
      * @return $this
      */
     public function setEmailPlainTextTemplate(?string $emailPlainTextTemplate = null): static
     {
         $this->emailPlainTextTemplate = $emailPlainTextTemplate;
-
         return $this;
     }
 
+    /**
+     * @return string|null
+     */
     public function getEmailStylesheet(): ?string
     {
         return $this->emailStylesheet;
     }
 
     /**
+     * @param string|null $emailStylesheet
      * @return $this
      */
     public function setEmailStylesheet(?string $emailStylesheet = null): static
     {
         $this->emailStylesheet = $emailStylesheet;
-
         return $this;
     }
 
+    /**
+     * @return Request
+     */
     public function getRequest(): Request
     {
         return $this->requestStack->getMainRequest();
@@ -433,6 +510,8 @@ class EmailManager
      *
      * This must be an email address with a know
      * domain name to be validated on your SMTP server.
+     *
+     * @return null|Address
      */
     public function getOrigin(): ?Address
     {
@@ -442,47 +521,52 @@ class EmailManager
             $defaultSender = $this->settingsBag->get('email_sender');
             $defaultSenderName = $this->settingsBag->get('site_name', '') ?? '';
         }
-
         return $this->origin ?? new Address($defaultSender, $defaultSenderName);
     }
 
     /**
+     * @param string $origin
      * @return $this
      */
     public function setOrigin(string $origin): static
     {
         $this->origin = new Address($origin);
-
         return $this;
     }
 
+    /**
+     * @return array
+     */
     public function getAssignation(): array
     {
         return $this->assignation;
     }
 
     /**
+     * @param array $assignation
      * @return $this
      */
     public function setAssignation(array $assignation): static
     {
         $this->assignation = $assignation;
-
         return $this;
     }
 
+    /**
+     * @return null|string
+     */
     public function getEmailType(): ?string
     {
         return $this->emailType;
     }
 
     /**
+     * @param null|string $emailType
      * @return $this
      */
     public function setEmailType(?string $emailType): static
     {
         $this->emailType = $emailType;
-
         return $this;
     }
 
@@ -496,13 +580,11 @@ class EmailManager
 
     /**
      * @param File[] $files
-     *
      * @return $this
      */
     public function setFiles(array $files): static
     {
         $this->files = $files;
-
         return $this;
     }
 
@@ -516,13 +598,13 @@ class EmailManager
 
     /**
      * @param resource $resource
-     *
+     * @param string $filename
+     * @param string $mimeType
      * @return $this
      */
     public function addResource($resource, string $filename, string $mimeType): static
     {
         $this->resources[] = [$resource, $filename, $mimeType];
-
         return $this;
     }
 }

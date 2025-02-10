@@ -4,23 +4,27 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Extension;
 
-use ApiPlatform\Doctrine\Orm\Extension\QueryCollectionExtensionInterface;
-use ApiPlatform\Doctrine\Orm\Extension\QueryItemExtensionInterface;
-use ApiPlatform\Doctrine\Orm\Util\QueryBuilderHelper;
-use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
-use ApiPlatform\Metadata\Operation;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Extension\QueryCollectionExtensionInterface;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Extension\QueryItemExtensionInterface;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryBuilderHelper;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
+use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\Enum\NodeStatus;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 
-final readonly class NodesSourcesQueryExtension implements QueryItemExtensionInterface, QueryCollectionExtensionInterface
+final class NodesSourcesQueryExtension implements QueryItemExtensionInterface, QueryCollectionExtensionInterface
 {
+    private PreviewResolverInterface $previewResolver;
+    private string $generatedEntityNamespacePattern;
+
     public function __construct(
-        private PreviewResolverInterface $previewResolver,
-        private string $generatedEntityNamespacePattern = '#^App\\\GeneratedEntity\\\NS(?:[a-zA-Z]+)$#',
+        PreviewResolverInterface $previewResolver,
+        string $generatedEntityNamespacePattern = '#^App\\\GeneratedEntity\\\NS(?:[a-zA-Z]+)$#'
     ) {
+        $this->previewResolver = $previewResolver;
+        $this->generatedEntityNamespacePattern = $generatedEntityNamespacePattern;
     }
 
     public function applyToItem(
@@ -28,30 +32,30 @@ final readonly class NodesSourcesQueryExtension implements QueryItemExtensionInt
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
         array $identifiers,
-        ?Operation $operation = null,
-        array $context = [],
+        string $operationName = null,
+        array $context = []
     ): void {
-        $this->apply($queryBuilder, $queryNameGenerator, $resourceClass);
+        $this->apply($queryBuilder, $queryNameGenerator, $resourceClass, $operationName);
     }
 
     public function applyToCollection(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
-        ?Operation $operation = null,
-        array $context = [],
+        string $operationName = null
     ): void {
-        $this->apply($queryBuilder, $queryNameGenerator, $resourceClass);
+        $this->apply($queryBuilder, $queryNameGenerator, $resourceClass, $operationName);
     }
 
     private function apply(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
+        string $operationName = null
     ): void {
         if (
-            NodesSources::class !== $resourceClass
-            && 0 === preg_match($this->generatedEntityNamespacePattern, $resourceClass)
+            $resourceClass !== NodesSources::class &&
+            preg_match($this->generatedEntityNamespacePattern, $resourceClass) === 0
         ) {
             return;
         }
@@ -70,9 +74,8 @@ final readonly class NodesSourcesQueryExtension implements QueryItemExtensionInt
                 Join::INNER_JOIN
             );
             $queryBuilder
-                ->andWhere($queryBuilder->expr()->lte($alias.'.status', ':status'))
-                ->setParameter(':status', NodeStatus::PUBLISHED);
-
+                ->andWhere($queryBuilder->expr()->lte($alias . '.status', ':status'))
+                ->setParameter(':status', Node::PUBLISHED);
             return;
         }
 
@@ -85,10 +88,9 @@ final readonly class NodesSourcesQueryExtension implements QueryItemExtensionInt
         );
         $queryBuilder
             ->andWhere($queryBuilder->expr()->lte('o.publishedAt', ':lte_published_at'))
-            ->andWhere($queryBuilder->expr()->eq($alias.'.status', ':status'))
+            ->andWhere($queryBuilder->expr()->eq($alias . '.status', ':status'))
             ->setParameter(':lte_published_at', new \DateTime())
-            ->setParameter(':status', NodeStatus::PUBLISHED);
-
+            ->setParameter(':status', Node::PUBLISHED);
         return;
     }
 }

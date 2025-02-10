@@ -14,18 +14,35 @@ use RZ\TreeWalker\WalkerContextInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-final readonly class NodeSourceWalkerContextFactory implements WalkerContextFactoryInterface
+final class NodeSourceWalkerContextFactory implements WalkerContextFactoryInterface
 {
+    private Stopwatch $stopwatch;
+    private NodeTypes $nodeTypesBag;
+    private NodeSourceApi $nodeSourceApi;
+    private RequestStack $requestStack;
+    private ManagerRegistry $managerRegistry;
+    private CacheItemPoolInterface $cacheAdapter;
+    private NodeTypeResolver $nodeTypeResolver;
+    private PreviewResolverInterface $previewResolver;
+
     public function __construct(
-        private Stopwatch $stopwatch,
-        private NodeTypes $nodeTypesBag,
-        private NodeSourceApi $nodeSourceApi,
-        private RequestStack $requestStack,
-        private ManagerRegistry $managerRegistry,
-        private CacheItemPoolInterface $cacheAdapter,
-        private NodeTypeResolver $nodeTypeResolver,
-        private PreviewResolverInterface $previewResolver,
+        Stopwatch $stopwatch,
+        NodeTypes $nodeTypesBag,
+        NodeSourceApi $nodeSourceApi,
+        RequestStack $requestStack,
+        ManagerRegistry $managerRegistry,
+        CacheItemPoolInterface $cacheAdapter,
+        NodeTypeResolver $nodeTypeResolver,
+        PreviewResolverInterface $previewResolver
     ) {
+        $this->stopwatch = $stopwatch;
+        $this->nodeTypesBag = $nodeTypesBag;
+        $this->nodeSourceApi = $nodeSourceApi;
+        $this->requestStack = $requestStack;
+        $this->managerRegistry = $managerRegistry;
+        $this->cacheAdapter = $cacheAdapter;
+        $this->nodeTypeResolver = $nodeTypeResolver;
+        $this->previewResolver = $previewResolver;
     }
 
     public function createWalkerContext(): WalkerContextInterface

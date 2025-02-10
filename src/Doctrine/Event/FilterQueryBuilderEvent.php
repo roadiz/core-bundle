@@ -7,34 +7,54 @@ namespace RZ\Roadiz\CoreBundle\Doctrine\Event;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Contracts\EventDispatcher\Event;
 
+/**
+ * @package RZ\Roadiz\CoreBundle\Doctrine\Event
+ */
 abstract class FilterQueryBuilderEvent extends Event
 {
     /**
-     * @param class-string $entityClass
+     * @var QueryBuilder
      */
-    public function __construct(private QueryBuilder $queryBuilder, private readonly string $entityClass)
+    private QueryBuilder $queryBuilder;
+    /**
+     * @var class-string
+     */
+    private string $entityClass;
+
+    /**
+     * @param QueryBuilder $queryBuilder
+     * @param string $entityClass
+     */
+    public function __construct(QueryBuilder $queryBuilder, string $entityClass)
     {
+        $this->queryBuilder = $queryBuilder;
+        $this->entityClass = $entityClass;
     }
 
+    /**
+     * @return QueryBuilder
+     */
     public function getQueryBuilder(): QueryBuilder
     {
         return $this->queryBuilder;
     }
 
     /**
+     * @param QueryBuilder $queryBuilder
      * @return FilterQueryBuilderEvent
      */
     public function setQueryBuilder(QueryBuilder $queryBuilder)
     {
         $this->queryBuilder = $queryBuilder;
-
         return $this;
     }
 
+
     /**
-     * @param class-string $entityClass
+     * @param string $entityClass
+     * @return bool
      */
-    public function supports(string $entityClass): bool
+    public function supports($entityClass): bool
     {
         return $this->entityClass === $entityClass;
     }

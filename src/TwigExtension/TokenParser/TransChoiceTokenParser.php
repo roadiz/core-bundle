@@ -24,6 +24,11 @@ use Twig\TokenParser\AbstractTokenParser;
  */
 class TransChoiceTokenParser extends AbstractTokenParser
 {
+    /**
+     * {@inheritdoc}
+     *
+     * @return Node
+     */
     public function parse(Token $token): Node
     {
         $lineno = $token->getLine();
@@ -72,6 +77,11 @@ class TransChoiceTokenParser extends AbstractTokenParser
         return $token->test(['endtranschoice']);
     }
 
+    /**
+     * {@inheritdoc}
+     *
+     * @return string
+     */
     public function getTag(): string
     {
         return 'transchoice';

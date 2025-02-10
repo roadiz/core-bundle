@@ -8,15 +8,12 @@ use Psr\Cache\CacheItemPoolInterface;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Api\Breadcrumbs\BreadcrumbsFactoryInterface;
-use RZ\Roadiz\CoreBundle\Api\Model\BlocksAwareWebResponseInterface;
 use RZ\Roadiz\CoreBundle\Api\Model\NodesSourcesHeadFactoryInterface;
-use RZ\Roadiz\CoreBundle\Api\Model\RealmsAwareWebResponseInterface;
+use RZ\Roadiz\CoreBundle\Api\Model\WebResponse;
 use RZ\Roadiz\CoreBundle\Api\Model\WebResponseInterface;
 use RZ\Roadiz\CoreBundle\Api\TreeWalker\AutoChildrenNodeSourceWalker;
-use RZ\Roadiz\CoreBundle\Api\TreeWalker\TreeWalkerGenerator;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Realm\RealmResolverInterface;
-use RZ\TreeWalker\AbstractWalker;
 use RZ\TreeWalker\WalkerContextInterface;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -26,19 +23,27 @@ class WebResponseOutputDataTransformer implements WebResponseDataTransformerInte
     use BlocksAwareWebResponseOutputDataTransformerTrait;
     use RealmsAwareWebResponseOutputDataTransformerTrait;
 
-    /**
-     * @param class-string<WebResponseInterface> $webResponseClass
-     */
+    private NodesSourcesHeadFactoryInterface $nodesSourcesHeadFactory;
+    private BreadcrumbsFactoryInterface $breadcrumbsFactory;
+    private WalkerContextInterface $walkerContext;
+    private CacheItemPoolInterface $cacheItemPool;
+    private UrlGeneratorInterface $urlGenerator;
+    private RealmResolverInterface $realmResolver;
+
     public function __construct(
-        protected readonly NodesSourcesHeadFactoryInterface $nodesSourcesHeadFactory,
-        protected readonly BreadcrumbsFactoryInterface $breadcrumbsFactory,
-        protected readonly WalkerContextInterface $walkerContext,
-        protected readonly CacheItemPoolInterface $cacheItemPool,
-        protected readonly UrlGeneratorInterface $urlGenerator,
-        protected readonly RealmResolverInterface $realmResolver,
-        protected readonly TreeWalkerGenerator $treeWalkerGenerator,
-        private readonly string $webResponseClass,
+        NodesSourcesHeadFactoryInterface $nodesSourcesHeadFactory,
+        BreadcrumbsFactoryInterface $breadcrumbsFactory,
+        WalkerContextInterface $walkerContext,
+        CacheItemPoolInterface $cacheItemPool,
+        UrlGeneratorInterface $urlGenerator,
+        RealmResolverInterface $realmResolver
     ) {
+        $this->nodesSourcesHeadFactory = $nodesSourcesHeadFactory;
+        $this->breadcrumbsFactory = $breadcrumbsFactory;
+        $this->walkerContext = $walkerContext;
+        $this->cacheItemPool = $cacheItemPool;
+        $this->urlGenerator = $urlGenerator;
+        $this->realmResolver = $realmResolver;
     }
 
     protected function getWalkerContext(): WalkerContextInterface
@@ -56,14 +61,6 @@ class WebResponseOutputDataTransformer implements WebResponseDataTransformerInte
         return 5;
     }
 
-    public function getTreeWalkerGenerator(): TreeWalkerGenerator
-    {
-        return $this->treeWalkerGenerator;
-    }
-
-    /**
-     * @return class-string<AbstractWalker>
-     */
     protected function getChildrenNodeSourceWalkerClassname(): string
     {
         return AutoChildrenNodeSourceWalker::class;
@@ -74,34 +71,40 @@ class WebResponseOutputDataTransformer implements WebResponseDataTransformerInte
         return $this->realmResolver;
     }
 
-    public function createWebResponse(): WebResponseInterface
+    /**
+     * @inheritDoc
+     */
+    public function transform($object, string $to, array $context = []): ?WebResponseInterface
     {
-        return new ($this->webResponseClass)();
-    }
-
-    public function transform(PersistableInterface $object, string $to, array $context = [], ?WebResponseInterface $output = null): ?WebResponseInterface
-    {
-        $output = $output ?? $this->createWebResponse();
-        $output->setItem($object);
+        if (!$object instanceof PersistableInterface) {
+            throw new \InvalidArgumentException(
+                'Data to transform must be instance of ' .
+                PersistableInterface::class
+            );
+        }
+        $output = new WebResponse();
+        $output->item = $object;
         if ($object instanceof NodesSources) {
-            if ($output instanceof RealmsAwareWebResponseInterface) {
-                $this->injectRealms($output, $object);
-            }
-            if ($output instanceof BlocksAwareWebResponseInterface) {
-                $this->injectBlocks($output, $object);
-            }
+            $this->injectRealms($output, $object);
+            $this->injectBlocks($output, $object);
 
-            $output->setPath($this->urlGenerator->generate(RouteObjectInterface::OBJECT_BASED_ROUTE_NAME, [
-                RouteObjectInterface::ROUTE_OBJECT => $object,
-            ], UrlGeneratorInterface::ABSOLUTE_PATH));
-            $output->setHead($this->nodesSourcesHeadFactory->createForNodeSource($object));
-            $output->setBreadcrumbs($this->breadcrumbsFactory->create($object));
-            $output->setMaxAge($object->getNode()->getTtl() * 60);
+            $output->path = $this->urlGenerator->generate(RouteObjectInterface::OBJECT_BASED_ROUTE_NAME, [
+                RouteObjectInterface::ROUTE_OBJECT => $object
+            ], UrlGeneratorInterface::ABSOLUTE_PATH);
+            $output->head = $this->nodesSourcesHeadFactory->createForNodeSource($object);
+            $output->breadcrumbs = $this->breadcrumbsFactory->create($object);
         }
         if ($object instanceof TranslationInterface) {
-            $output->setHead($this->nodesSourcesHeadFactory->createForTranslation($object));
+            $output->head = $this->nodesSourcesHeadFactory->createForTranslation($object);
         }
-
         return $output;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function supportsTransformation($data, string $to, array $context = []): bool
+    {
+        return WebResponseInterface::class === $to && $data instanceof PersistableInterface;
     }
 }

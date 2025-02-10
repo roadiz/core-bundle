@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Routing;
 
 use League\Flysystem\FilesystemOperator;
 use Psr\Cache\CacheItemPoolInterface;
+use Psr\Cache\InvalidArgumentException;
 use RZ\Roadiz\Documents\UrlGenerators\AbstractDocumentUrlGenerator;
 use Symfony\Component\HttpFoundation\UrlHelper;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -15,12 +16,15 @@ final class DocumentUrlGenerator extends AbstractDocumentUrlGenerator
     public function __construct(
         FilesystemOperator $documentsStorage,
         UrlHelper $urlHelper,
-        private readonly UrlGeneratorInterface $urlGenerator,
-        CacheItemPoolInterface $optionsCacheAdapter,
+        private UrlGeneratorInterface $urlGenerator,
+        CacheItemPoolInterface $optionsCacheAdapter
     ) {
         parent::__construct($documentsStorage, $urlHelper, $optionsCacheAdapter);
     }
 
+    /**
+     * @return string
+     */
     protected function getRouteName(): string
     {
         return 'interventionRequestProcess';

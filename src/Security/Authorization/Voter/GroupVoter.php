@@ -13,8 +13,11 @@ use Symfony\Component\Security\Core\Role\RoleHierarchyInterface;
 
 class GroupVoter extends RoleVoter
 {
-    public function __construct(private readonly RoleHierarchyInterface $roleHierarchy, string $prefix = 'ROLE_')
+    private RoleHierarchyInterface $roleHierarchy;
+
+    public function __construct(RoleHierarchyInterface $roleHierarchy, string $prefix = 'ROLE_')
     {
+        $this->roleHierarchy = $roleHierarchy;
         parent::__construct($prefix);
     }
 
@@ -28,6 +31,9 @@ class GroupVoter extends RoleVoter
         return $this->roleHierarchy->getReachableRoleNames($token->getRoleNames());
     }
 
+    /**
+     * @inheritDoc
+     */
     public function vote(TokenInterface $token, $subject, array $attributes): int
     {
         $result = VoterInterface::ACCESS_ABSTAIN;
@@ -51,8 +57,8 @@ class GroupVoter extends RoleVoter
              * If user is part of current tested group, grant it.
              */
             if (
-                $user instanceof User
-                && $user->getGroups()->exists(function ($key, Group $group) use ($attribute) {
+                $user instanceof User &&
+                $user->getGroups()->exists(function ($key, Group $group) use ($attribute) {
                     return $attribute->getId() === $group->getId();
                 })
             ) {
@@ -73,6 +79,8 @@ class GroupVoter extends RoleVoter
     }
 
     /**
+     * @param Group $group
+     *
      * @return string[]
      */
     protected function extractGroupRoles(Group $group): array
@@ -81,10 +89,18 @@ class GroupVoter extends RoleVoter
     }
 
     /**
+     * @param string $role
      * @param string[] $roles
+     *
+     * @return bool
      */
     protected function isRoleContained(string $role, array $roles): bool
     {
-        return \in_array($role, $roles, true);
+        foreach ($roles as $singleRole) {
+            if ($role === $singleRole) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -5,47 +5,51 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Serializer\Normalizer;
 
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Serializer\Normalizer\ContextAwareNormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerAwareInterface;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Stopwatch\Stopwatch;
 
-abstract class AbstractPathNormalizer implements NormalizerInterface, DenormalizerInterface, SerializerAwareInterface
+abstract class AbstractPathNormalizer implements ContextAwareNormalizerInterface, DenormalizerInterface, SerializerAwareInterface
 {
+    protected UrlGeneratorInterface $urlGenerator;
     /**
      * @var DenormalizerInterface&NormalizerInterface
      */
     protected $decorated;
 
-    public function __construct(
-        NormalizerInterface $decorated,
-        protected readonly UrlGeneratorInterface $urlGenerator,
-        protected readonly Stopwatch $stopwatch,
-    ) {
+    public function __construct(NormalizerInterface $decorated, UrlGeneratorInterface $urlGenerator)
+    {
         if (!$decorated instanceof DenormalizerInterface) {
             throw new \InvalidArgumentException(sprintf('The decorated normalizer must implement the %s.', DenormalizerInterface::class));
         }
 
         $this->decorated = $decorated;
+        $this->urlGenerator = $urlGenerator;
     }
 
-    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
+    public function supportsNormalization($data, $format = null, array $context = []): bool
     {
-        return $this->decorated->supportsNormalization($data, $format/* , $context */);
+        return $this->decorated->supportsNormalization($data, $format);
     }
 
-    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
+    public function supportsDenormalization($data, $type, $format = null): bool
     {
-        return $this->decorated->supportsDenormalization($data, $type, $format/* , $context */);
+        return $this->decorated->supportsDenormalization($data, $type, $format);
     }
 
     /**
+     * @param mixed $data
+     * @param string $class
+     * @param string|null $format
+     * @param array $context
+     * @return mixed
      * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
      */
-    public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): mixed
+    public function denormalize($data, $class, $format = null, array $context = [])
     {
-        return $this->decorated->denormalize($data, $type, $format, $context);
+        return $this->decorated->denormalize($data, $class, $format, $context);
     }
 
     public function setSerializer(SerializerInterface $serializer): void
@@ -53,12 +57,5 @@ abstract class AbstractPathNormalizer implements NormalizerInterface, Denormaliz
         if ($this->decorated instanceof SerializerAwareInterface) {
             $this->decorated->setSerializer($serializer);
         }
-    }
-
-    public function getSupportedTypes(?string $format): array
-    {
-        return [
-            '*' => false,
-        ];
     }
 }

@@ -11,8 +11,14 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class FormErrorSerializer implements FormErrorSerializerInterface
 {
-    public function __construct(private readonly TranslatorInterface $translator)
+    private TranslatorInterface $translator;
+
+    /**
+     * @param TranslatorInterface $translator
+     */
+    public function __construct(TranslatorInterface $translator)
     {
+        $this->translator = $translator;
     }
 
     public function getErrorsAsArray(FormInterface $form): array
@@ -34,9 +40,9 @@ final class FormErrorSerializer implements FormErrorSerializerInterface
                     }
                     if (is_object($cause)) {
                         if ($cause instanceof \Exception) {
-                            $errors[$errorFieldName.'_cause_message'] = $cause->getMessage();
+                            $errors[$errorFieldName . '_cause_message'] = $cause->getMessage();
                         }
-                        $errors[$errorFieldName.'_cause'] = get_class($cause);
+                        $errors[$errorFieldName . '_cause'] = get_class($cause);
                     }
                 }
             }
@@ -48,7 +54,6 @@ final class FormErrorSerializer implements FormErrorSerializerInterface
                 $errors[$key] = $err;
             }
         }
-
         return $errors;
     }
 }

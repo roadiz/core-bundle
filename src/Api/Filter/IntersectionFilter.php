@@ -4,30 +4,31 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Filter;
 
-use ApiPlatform\Doctrine\Orm\Filter\AbstractFilter;
-use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\AbstractContextAwareFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use ApiPlatform\Exception\FilterValidationException;
-use ApiPlatform\Metadata\Operation;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 
 /**
  * Intersection filter must be used AFTER SearchFilter if you want to combine both.
  */
-final class IntersectionFilter extends AbstractFilter
+final class IntersectionFilter extends AbstractContextAwareFilter
 {
     public const PARAMETER = 'intersect';
 
+    /**
+     * @inheritDoc
+     */
     protected function filterProperty(
         string $property,
-        mixed $value,
+        $value,
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
-        ?Operation $operation = null,
-        array $context = [],
+        string $operationName = null
     ): void {
-        if (IntersectionFilter::PARAMETER !== $property || !is_array($value)) {
+        if ($property !== IntersectionFilter::PARAMETER || !is_array($value)) {
             return;
         }
 
@@ -49,7 +50,7 @@ final class IntersectionFilter extends AbstractFilter
                         $resourceClass,
                         Join::INNER_JOIN // Join type must be inner to filter out empty result sets
                     );
-                    $placeholder = ':'.$alias.$splitFieldName;
+                    $placeholder = ':' . $alias . $splitFieldName;
                     $queryBuilder->andWhere($queryBuilder->expr()->eq(sprintf('%s.%s', $alias, $splitFieldName), $placeholder));
                     $queryBuilder->setParameter($placeholder, $singleValue);
                 }
@@ -57,6 +58,9 @@ final class IntersectionFilter extends AbstractFilter
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getDescription(string $resourceClass): array
     {
         $properties = $this->properties;
@@ -74,8 +78,8 @@ final class IntersectionFilter extends AbstractFilter
                     'required' => false,
                     'description' => 'Discriminate an existing filter with additional filtering value using a new inner join.',
                     'openapi' => [
-                        'description' => 'Discriminate an existing filter with additional filtering value using a new inner join.',
-                    ],
+                        'description' => 'Discriminate an existing filter with additional filtering value using a new inner join.'
+                    ]
                 ];
                 $carry[sprintf('%s[%s][]', IntersectionFilter::PARAMETER, $property)] = [
                     'property' => $property,
@@ -83,10 +87,9 @@ final class IntersectionFilter extends AbstractFilter
                     'required' => false,
                     'description' => 'Discriminate an existing filter with additional filtering value using a new inner join.',
                     'openapi' => [
-                        'description' => 'Discriminate an existing filter with additional filtering value using a new inner join.',
-                    ],
+                        'description' => 'Discriminate an existing filter with additional filtering value using a new inner join.'
+                    ]
                 ];
-
                 return $carry;
             },
             []
@@ -99,7 +102,7 @@ final class IntersectionFilter extends AbstractFilter
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
-        string $joinType,
+        string $joinType
     ): array {
         $propertyParts = $this->splitPropertyParts($property, $resourceClass);
         $parentAlias = $rootAlias;
@@ -125,9 +128,9 @@ final class IntersectionFilter extends AbstractFilter
         QueryNameGeneratorInterface $queryNameGenerator,
         string $alias,
         string $association,
-        ?string $joinType = null,
+        string $joinType = null
     ): string {
-        $associationAlias = $queryNameGenerator->generateJoinAlias($association).uniqid();
+        $associationAlias = $queryNameGenerator->generateJoinAlias($association) . uniqid();
         $query = "$alias.$association";
 
         if (Join::LEFT_JOIN === $joinType) {
