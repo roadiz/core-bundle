@@ -16,11 +16,8 @@ use RZ\TreeWalker\WalkerContextInterface;
 trait BlocksAwareWebResponseOutputDataTransformerTrait
 {
     abstract protected function getWalkerContext(): WalkerContextInterface;
-
     abstract protected function getCacheItemPool(): CacheItemPoolInterface;
-
     abstract protected function getTreeWalkerGenerator(): TreeWalkerGenerator;
-
     abstract protected function getChildrenNodeSourceWalkerMaxLevel(): int;
 
     /**

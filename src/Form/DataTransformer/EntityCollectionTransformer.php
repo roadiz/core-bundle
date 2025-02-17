@@ -10,6 +10,9 @@ use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
 
+/**
+ * @package RZ\Roadiz\CoreBundle\Form\DataTransformer
+ */
 class EntityCollectionTransformer implements DataTransformerInterface
 {
     protected bool $asCollection;
@@ -20,7 +23,9 @@ class EntityCollectionTransformer implements DataTransformerInterface
     private string $classname;
 
     /**
+     * @param ObjectManager $manager
      * @param class-string<PersistableInterface> $classname
+     * @param bool $asCollection
      */
     public function __construct(ObjectManager $manager, string $classname, bool $asCollection = false)
     {
@@ -31,6 +36,7 @@ class EntityCollectionTransformer implements DataTransformerInterface
 
     /**
      * @param iterable<PersistableInterface>|mixed|null $value
+     * @return string|array
      */
     public function transform(mixed $value): string|array
     {
@@ -45,13 +51,11 @@ class EntityCollectionTransformer implements DataTransformerInterface
         if ($this->asCollection) {
             return $ids;
         }
-
         return implode(',', $ids);
     }
 
     /**
      * @param string|array|null $value
-     *
      * @return array<PersistableInterface>|ArrayCollection<int, PersistableInterface>
      */
     public function reverseTransform(mixed $value): array|ArrayCollection
@@ -60,7 +64,6 @@ class EntityCollectionTransformer implements DataTransformerInterface
             if ($this->asCollection) {
                 return new ArrayCollection();
             }
-
             return [];
         }
 
@@ -79,7 +82,11 @@ class EntityCollectionTransformer implements DataTransformerInterface
                 ->find($entityId)
             ;
             if (null === $entity) {
-                throw new TransformationFailedException(sprintf('A %s with id "%s" does not exist!', $this->classname, $entityId));
+                throw new TransformationFailedException(sprintf(
+                    'A %s with id "%s" does not exist!',
+                    $this->classname,
+                    $entityId
+                ));
             }
 
             $entities[] = $entity;
@@ -87,7 +94,6 @@ class EntityCollectionTransformer implements DataTransformerInterface
         if ($this->asCollection) {
             return new ArrayCollection($entities);
         }
-
         return $entities;
     }
 }

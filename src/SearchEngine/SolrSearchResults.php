@@ -32,13 +32,16 @@ class SolrSearchResults implements SearchResultsInterface
         protected readonly array $response,
         #[JMS\Exclude]
         #[Ignore]
-        protected readonly ObjectManager $entityManager,
+        protected readonly ObjectManager $entityManager
     ) {
         $this->position = 0;
         $this->resultItems = null;
     }
 
-    #[JMS\Groups(['search_results'])]
+    /**
+     * @return int
+     */
+    #[JMS\Groups(["search_results"])]
     #[JMS\VirtualProperty()]
     public function getResultCount(): int
     {
@@ -47,14 +50,13 @@ class SolrSearchResults implements SearchResultsInterface
         ) {
             return (int) $this->response['response']['numFound'];
         }
-
         return 0;
     }
 
     /**
      * @return array<SolrSearchResultItem>
      */
-    #[JMS\Groups(['search_results'])]
+    #[JMS\Groups(["search_results"])]
     #[JMS\VirtualProperty()]
     public function getResultItems(): array
     {
@@ -70,7 +72,6 @@ class SolrSearchResults implements SearchResultsInterface
                             return null;
                         }
                         $highlighting = $this->getHighlighting($item['id']);
-
                         return new SolrSearchResultItem(
                             $object,
                             $highlighting
@@ -88,6 +89,7 @@ class SolrSearchResults implements SearchResultsInterface
      * Get highlighting for one field.
      * This does not merge highlighting for all fields anymore.
      *
+     * @param string $id
      * @return array<string, array>
      */
     protected function getHighlighting(string $id): array
@@ -95,16 +97,22 @@ class SolrSearchResults implements SearchResultsInterface
         if (isset($this->response['highlighting'][$id]) && \is_array($this->response['highlighting'][$id])) {
             return $this->response['highlighting'][$id];
         }
-
         return [];
     }
 
+    /**
+     * @param callable $callable
+     *
+     * @return array
+     */
     public function map(callable $callable): array
     {
         return array_map($callable, $this->getResultItems());
     }
 
     /**
+     * @param array $item
+     *
      * @return array|object|null
      */
     protected function getHydratedItem(array $item): mixed
@@ -121,7 +129,6 @@ class SolrSearchResults implements SearchResultsInterface
                         DocumentTranslation::class,
                         $item[SolariumDocumentTranslation::IDENTIFIER_KEY]
                     );
-
                     return $documentTranslation?->getDocument();
             }
         }
@@ -130,9 +137,10 @@ class SolrSearchResults implements SearchResultsInterface
     }
 
     /**
-     * Return the current element.
+     * Return the current element
      *
-     * @see https://php.net/manual/en/iterator.current.php
+     * @link https://php.net/manual/en/iterator.current.php
+     * @return SolrSearchResultItem
      * @since 5.0
      */
     #[\ReturnTypeWillChange]
@@ -142,12 +150,10 @@ class SolrSearchResults implements SearchResultsInterface
     }
 
     /**
-     * Move forward to next element.
+     * Move forward to next element
      *
-     * @see https://php.net/manual/en/iterator.next.php
-     *
-     * @return void any returned value is ignored
-     *
+     * @link https://php.net/manual/en/iterator.next.php
+     * @return void Any returned value is ignored.
      * @since 5.0
      */
     public function next(): void
@@ -156,9 +162,10 @@ class SolrSearchResults implements SearchResultsInterface
     }
 
     /**
-     * Return the key of the current element.
+     * Return the key of the current element
      *
-     * @see https://php.net/manual/en/iterator.key.php
+     * @link https://php.net/manual/en/iterator.key.php
+     * @return int
      * @since 5.0
      */
     #[\ReturnTypeWillChange]
@@ -168,13 +175,11 @@ class SolrSearchResults implements SearchResultsInterface
     }
 
     /**
-     * Checks if current position is valid.
+     * Checks if current position is valid
      *
-     * @see https://php.net/manual/en/iterator.valid.php
-     *
+     * @link https://php.net/manual/en/iterator.valid.php
      * @return bool The return value will be casted to boolean and then evaluated.
-     *              Returns true on success or false on failure.
-     *
+     * Returns true on success or false on failure.
      * @since 5.0
      */
     public function valid(): bool
@@ -183,12 +188,10 @@ class SolrSearchResults implements SearchResultsInterface
     }
 
     /**
-     * Rewind the Iterator to the first element.
+     * Rewind the Iterator to the first element
      *
-     * @see https://php.net/manual/en/iterator.rewind.php
-     *
-     * @return void any returned value is ignored
-     *
+     * @link https://php.net/manual/en/iterator.rewind.php
+     * @return void Any returned value is ignored.
      * @since 5.0
      */
     public function rewind(): void

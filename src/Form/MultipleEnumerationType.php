@@ -15,6 +15,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class MultipleEnumerationType extends AbstractType
 {
+    /**
+     * {@inheritdoc}
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -29,7 +32,6 @@ class MultipleEnumerationType extends AbstractType
             if ('' !== $options['nodeTypeField']->getPlaceholder()) {
                 $placeholder = $options['nodeTypeField']->getPlaceholder();
             }
-
             return $placeholder;
         });
 
@@ -40,7 +42,6 @@ class MultipleEnumerationType extends AbstractType
                 $value = trim($value);
                 $choices[$value] = $value;
             }
-
             return $choices;
         });
 
@@ -48,12 +49,16 @@ class MultipleEnumerationType extends AbstractType
             return $options['nodeTypeField']->isExpanded();
         });
     }
-
+    /**
+     * {@inheritdoc}
+     */
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
-
+    /**
+     * {@inheritdoc}
+     */
     public function getBlockPrefix(): string
     {
         return 'enumeration';

@@ -15,18 +15,21 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\WebLink\GenericLinkProvider;
 use Symfony\Component\WebLink\Link;
 
-final readonly class NodesSourcesLinkHeaderEventSubscriber implements EventSubscriberInterface
+final class NodesSourcesLinkHeaderEventSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private UrlGeneratorInterface $urlGenerator,
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly UrlGeneratorInterface $urlGenerator
     ) {
     }
 
+    /**
+     * @inheritDoc
+     */
     public static function getSubscribedEvents(): array
     {
         return [
-            ViewEvent::class => ['onKernelView', 15],
+            ViewEvent::class => ['onKernelView', 15]
         ];
     }
 
@@ -58,7 +61,7 @@ final readonly class NodesSourcesLinkHeaderEventSubscriber implements EventSubsc
                 (new Link(
                     'alternate',
                     $this->urlGenerator->generate(RouteObjectInterface::OBJECT_BASED_ROUTE_NAME, [
-                        RouteObjectInterface::ROUTE_OBJECT => $singleSource,
+                        RouteObjectInterface::ROUTE_OBJECT => $singleSource
                     ])
                 ))
                     ->withAttribute('hreflang', $singleSource->getTranslation()->getLocale())

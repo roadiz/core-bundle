@@ -19,7 +19,7 @@ final class NodeClearTagCommand extends Command
 {
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
-        ?string $name = null,
+        ?string $name = null
     ) {
         parent::__construct($name);
     }
@@ -35,7 +35,6 @@ final class NodeClearTagCommand extends Command
     protected function getNodeQueryBuilder(Tag $tag): QueryBuilder
     {
         $qb = $this->managerRegistry->getRepository(Node::class)->createQueryBuilder('n');
-
         return $qb->innerJoin('n.nodesTags', 'ntg')
             ->andWhere($qb->expr()->eq('ntg.tag', ':tagId'))
             ->setParameter(':tagId', $tag);
@@ -52,7 +51,7 @@ final class NodeClearTagCommand extends Command
         }
         /** @var Tag|null $tag */
         $tag = $em->find(Tag::class, $tagId);
-        if (null === $tag) {
+        if ($tag === null) {
             throw new \InvalidArgumentException(sprintf('Tag #%d does not exist.', $tagId));
         }
 
@@ -66,7 +65,6 @@ final class NodeClearTagCommand extends Command
 
         if ($count <= 0) {
             $io->warning('No nodes were found linked with this tag.');
-
             return 0;
         }
 

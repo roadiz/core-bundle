@@ -21,16 +21,20 @@ class TranslationTransformer implements DataTransformerInterface
 
     /**
      * @param Translation|null $value
+     * @return int|string
      */
     public function transform(mixed $value): int|string
     {
         if (!($value instanceof PersistableInterface)) {
             return '';
         }
-
         return $value->getId();
     }
 
+    /**
+     * @param mixed $value
+     * @return null|Translation
+     */
     public function reverseTransform(mixed $value): ?Translation
     {
         if (!$value) {
@@ -47,7 +51,10 @@ class TranslationTransformer implements DataTransformerInterface
             // causes a validation error
             // this message is not shown to the user
             // see the invalid_message option
-            throw new TransformationFailedException(sprintf('A translation with id "%s" does not exist!', $value));
+            throw new TransformationFailedException(sprintf(
+                'A translation with id "%s" does not exist!',
+                $value
+            ));
         }
 
         return $translation;

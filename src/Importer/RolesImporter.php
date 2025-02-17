@@ -9,22 +9,34 @@ use JMS\Serializer\SerializerInterface;
 use RZ\Roadiz\CoreBundle\Entity\Role;
 use RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TypedObjectConstructorInterface;
 
-final readonly class RolesImporter implements EntityImporterInterface
+class RolesImporter implements EntityImporterInterface
 {
-    public function __construct(private SerializerInterface $serializer)
+    protected SerializerInterface $serializer;
+
+    /**
+     * @param SerializerInterface $serializer
+     */
+    public function __construct(SerializerInterface $serializer)
     {
+        $this->serializer = $serializer;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function supports(string $entityClass): bool
     {
-        return Role::class === $entityClass;
+        return $entityClass === Role::class;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function import(string $serializedData): bool
     {
         $this->serializer->deserialize(
             $serializedData,
-            'array<'.Role::class.'>',
+            'array<' . Role::class . '>',
             'json',
             DeserializationContext::create()
                 ->setAttribute(TypedObjectConstructorInterface::PERSIST_NEW_OBJECTS, true)

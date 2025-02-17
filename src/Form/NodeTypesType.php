@@ -18,11 +18,17 @@ class NodeTypesType extends AbstractType
 {
     protected ManagerRegistry $managerRegistry;
 
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
     public function __construct(ManagerRegistry $managerRegistry)
     {
         $this->managerRegistry = $managerRegistry;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -31,7 +37,7 @@ class NodeTypesType extends AbstractType
         $resolver->setAllowedTypes('showInvisible', ['boolean']);
         $resolver->setNormalizer('choices', function (Options $options, $choices) {
             $criteria = [];
-            if (false === $options['showInvisible']) {
+            if ($options['showInvisible'] === false) {
                 $criteria['visible'] = true;
             }
             $nodeTypes = $this->managerRegistry->getRepository(NodeType::class)->findBy($criteria);
@@ -45,12 +51,16 @@ class NodeTypesType extends AbstractType
             return $choices;
         });
     }
-
+    /**
+     * {@inheritdoc}
+     */
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
-
+    /**
+     * {@inheritdoc}
+     */
     public function getBlockPrefix(): string
     {
         return 'node_types';

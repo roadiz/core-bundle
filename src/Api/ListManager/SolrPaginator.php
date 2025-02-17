@@ -27,7 +27,6 @@ final class SolrPaginator implements PaginatorInterface, \IteratorAggregate
     public function count(): int
     {
         $this->handleOnce();
-
         return $this->listManager->getItemCount();
     }
 
@@ -35,28 +34,24 @@ final class SolrPaginator implements PaginatorInterface, \IteratorAggregate
     {
         $this->handleOnce();
         $lastPage = $this->listManager->getPageCount();
-
         return max($lastPage, 1);
     }
 
     public function getTotalItems(): float
     {
         $this->handleOnce();
-
         return $this->listManager->getItemCount();
     }
 
     public function getCurrentPage(): float
     {
         $this->handleOnce();
-
         return $this->listManager->getAssignation()['currentPage'];
     }
 
     public function getItemsPerPage(): float
     {
         $this->handleOnce();
-
         return $this->listManager->getAssignation()['itemPerPage'];
     }
 
@@ -64,7 +59,9 @@ final class SolrPaginator implements PaginatorInterface, \IteratorAggregate
     {
         $this->handleOnce();
         $entities = $this->listManager->getEntities();
-
-        return new \ArrayIterator($entities);
+        if (\is_array($entities)) {
+            return new \ArrayIterator($entities);
+        }
+        return $entities->getIterator();
     }
 }

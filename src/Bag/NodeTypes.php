@@ -24,7 +24,6 @@ final class NodeTypes extends LazyParameterBag implements NodeTypeResolverInterf
         if (null === $this->repository) {
             $this->repository = $this->managerRegistry->getRepository(NodeType::class);
         }
-
         return $this->repository;
     }
 

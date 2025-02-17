@@ -15,16 +15,22 @@ final class AttributeImporter implements EntityImporterInterface
     {
     }
 
+    /**
+     * @inheritDoc
+     */
     public function supports(string $entityClass): bool
     {
-        return Attribute::class === $entityClass || $entityClass === 'array<'.Attribute::class.'>';
+        return $entityClass === Attribute::class || $entityClass === 'array<' . Attribute::class . '>';
     }
 
+    /**
+     * @inheritDoc
+     */
     public function import(string $serializedData): bool
     {
         $this->serializer->deserialize(
             $serializedData,
-            'array<'.Attribute::class.'>',
+            'array<' . Attribute::class . '>',
             'json',
             DeserializationContext::create()
                 ->setAttribute(TypedObjectConstructorInterface::PERSIST_NEW_OBJECTS, true)

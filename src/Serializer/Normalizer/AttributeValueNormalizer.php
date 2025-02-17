@@ -15,15 +15,16 @@ use RZ\Roadiz\Documents\Models\DocumentInterface;
 final class AttributeValueNormalizer extends AbstractPathNormalizer
 {
     /**
+     * @param mixed $object
+     * @param string|null $format
+     * @param array $context
      * @return array|\ArrayObject|bool|float|int|mixed|string|null
-     *
      * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
      */
     public function normalize(mixed $object, ?string $format = null, array $context = []): mixed
     {
         $data = $this->decorated->normalize($object, $format, $context);
         if ($object instanceof AttributeValue && is_array($data)) {
-            $this->stopwatch->start('normalizeAttributeValue', 'serializer');
             /** @var array<string> $serializationGroups */
             $serializationGroups = isset($context['groups']) && is_array($context['groups']) ? $context['groups'] : [];
 
@@ -36,8 +37,8 @@ final class AttributeValueNormalizer extends AbstractPathNormalizer
                 $translatedData = $object->getAttributeValueTranslation($context['translation']);
                 $data['label'] = $object->getAttribute()->getLabelOrCode($context['translation']);
                 if (
-                    $translatedData instanceof AttributeValueTranslationInterface
-                    && null !== $translatedData->getValue()
+                    $translatedData instanceof AttributeValueTranslationInterface &&
+                    $translatedData->getValue() !== null
                 ) {
                     $data['value'] = $translatedData->getValue();
                 } else {
@@ -56,9 +57,7 @@ final class AttributeValueNormalizer extends AbstractPathNormalizer
                     return $this->decorated->normalize($document, $format, $documentsContext);
                 }, $object->getAttribute()->getDocuments()->toArray());
             }
-            $this->stopwatch->stop('normalizeAttributeValue');
         }
-
         return $data;
     }
 }

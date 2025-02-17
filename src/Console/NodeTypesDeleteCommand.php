@@ -17,9 +17,7 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * @deprecated nodeTypes will be static in future Roadiz versions
- *
- * Command line utils for managing node-types from terminal
+ * Command line utils for managing node-types from terminal.
  */
 final class NodeTypesDeleteCommand extends Command
 {
@@ -27,7 +25,7 @@ final class NodeTypesDeleteCommand extends Command
         private readonly ManagerRegistry $managerRegistry,
         private readonly HandlerFactory $handlerFactory,
         private readonly SchemaUpdater $schemaUpdater,
-        ?string $name = null,
+        ?string $name = null
     ) {
         parent::__construct($name);
     }
@@ -57,35 +55,33 @@ final class NodeTypesDeleteCommand extends Command
             ->getRepository(NodeType::class)
             ->findOneByName($name);
 
-        if (null === $nodeType) {
-            $io->error('"'.$name.'" node type does not exist');
-
+        if ($nodeType !== null) {
+            $io->note('///////////////////////////////' . PHP_EOL .
+                '/////////// WARNING ///////////' . PHP_EOL .
+                '///////////////////////////////' . PHP_EOL .
+                'This operation cannot be undone.' . PHP_EOL .
+                'Deleting a node-type, you will automatically delete every nodes of this type.');
+            $question = new ConfirmationQuestion(
+                '<question>Are you sure to delete ' . $nodeType->getName() . ' node-type?</question>',
+                false
+            );
+            if (
+                $io->askQuestion(
+                    $question
+                )
+            ) {
+                /** @var NodeTypeHandler $handler */
+                $handler = $this->handlerFactory->getHandler($nodeType);
+                $handler->removeSourceEntityClass();
+                $this->managerRegistry->getManagerForClass(NodeType::class)->remove($nodeType);
+                $this->managerRegistry->getManagerForClass(NodeType::class)->flush();
+                $this->schemaUpdater->updateNodeTypesSchema();
+                $io->success('Node-type deleted.');
+            }
+        } else {
+            $io->error('"' . $name . '" node type does not exist');
             return 1;
         }
-
-        $io->note('///////////////////////////////'.PHP_EOL.
-            '/////////// WARNING ///////////'.PHP_EOL.
-            '///////////////////////////////'.PHP_EOL.
-            'This operation cannot be undone.'.PHP_EOL.
-            'Deleting a node-type, you will automatically delete every nodes of this type.');
-        $question = new ConfirmationQuestion(
-            '<question>Are you sure to delete '.$nodeType->getName().' node-type?</question>',
-            false
-        );
-        if (
-            $io->askQuestion(
-                $question
-            )
-        ) {
-            /** @var NodeTypeHandler $handler */
-            $handler = $this->handlerFactory->getHandler($nodeType);
-            $handler->removeSourceEntityClass();
-            $this->managerRegistry->getManagerForClass(NodeType::class)->remove($nodeType);
-            $this->managerRegistry->getManagerForClass(NodeType::class)->flush();
-            $this->schemaUpdater->updateNodeTypesSchema();
-            $io->success('Node-type deleted.');
-        }
-
         return 0;
     }
 }

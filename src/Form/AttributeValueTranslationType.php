@@ -13,6 +13,7 @@ use Symfony\Component\Form\Extension\Core\Type\CountryType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
+use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -23,6 +24,9 @@ use Symfony\Component\Validator\Constraints\Length;
 
 class AttributeValueTranslationType extends AbstractType
 {
+    /**
+     * @inheritDoc
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $attributeValueTranslation = $builder->getData();
@@ -34,9 +38,9 @@ class AttributeValueTranslationType extends AbstractType
                 'label' => false,
                 'constraints' => [
                     new Length([
-                        'max' => 254,
-                    ]),
-                ],
+                        'max' => 254
+                    ])
+                ]
             ];
             switch ($attributeValueTranslation->getAttributeValue()->getType()) {
                 case AttributeInterface::INTEGER_T:
@@ -50,14 +54,14 @@ class AttributeValueTranslationType extends AbstractType
                         'placeholder' => [
                             'year' => 'year',
                             'month' => 'month',
-                            'day' => 'day',
+                            'day' => 'day'
                         ],
                         'widget' => 'single_text',
                         'format' => 'yyyy-MM-dd',
                         'attr' => [
                             'class' => 'rz-datetime-field',
                         ],
-                        'constraints' => [],
+                        'constraints' => []
                     ]));
                     break;
                 case AttributeInterface::COLOUR_T:
@@ -77,7 +81,7 @@ class AttributeValueTranslationType extends AbstractType
                         'attr' => [
                             'class' => 'rz-datetime-field',
                         ],
-                        'constraints' => [],
+                        'constraints' => []
                     ]));
                     break;
                 case AttributeInterface::BOOLEAN_T:
@@ -86,14 +90,14 @@ class AttributeValueTranslationType extends AbstractType
                 case AttributeInterface::ENUM_T:
                     $builder->add('value', ChoiceType::class, array_merge($defaultOptions, [
                         'required' => true,
-                        'choices' => $this->getOptions($attributeValueTranslation),
+                        'choices' => $this->getOptions($attributeValueTranslation)
                     ]));
                     break;
                 case AttributeInterface::EMAIL_T:
                     $builder->add('value', EmailType::class, array_merge($defaultOptions, [
                         'constraints' => [
-                            new Email(),
-                        ],
+                            new Email()
+                        ]
                     ]));
                     break;
                 default:
@@ -106,11 +110,21 @@ class AttributeValueTranslationType extends AbstractType
         ]);
     }
 
+    /**
+     * @param AttributeValueTranslationInterface $attributeValueTranslation
+     *
+     * @return AttributeInterface|null
+     */
     protected function getAttribute(AttributeValueTranslationInterface $attributeValueTranslation): ?AttributeInterface
     {
         return $attributeValueTranslation->getAttributeValue()->getAttribute();
     }
 
+    /**
+     * @param AttributeValueTranslationInterface $attributeValueTranslation
+     *
+     * @return array
+     */
     protected function getOptions(AttributeValueTranslationInterface $attributeValueTranslation): array
     {
         $options = $this->getAttribute($attributeValueTranslation)->getOptions(
@@ -133,6 +147,10 @@ class AttributeValueTranslationType extends AbstractType
         ]);
     }
 
+
+    /**
+     * @inheritDoc
+     */
     public function getBlockPrefix(): string
     {
         return 'attribute_value_translation';

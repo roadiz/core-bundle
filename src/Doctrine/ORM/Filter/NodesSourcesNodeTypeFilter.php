@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Doctrine\ORM\Filter;
 
+use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\FilterNodesSourcesQueryBuilderCriteriaEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderNodesSourcesApplyEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderNodesSourcesBuildEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
-use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
+/**
+ * @package RZ\Roadiz\CoreBundle\Doctrine\ORM\Filter
+ */
 final class NodesSourcesNodeTypeFilter implements EventSubscriberInterface
 {
     public static function getSubscribedEvents(): array
@@ -21,18 +24,26 @@ final class NodesSourcesNodeTypeFilter implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * @param FilterNodesSourcesQueryBuilderCriteriaEvent $event
+     *
+     * @return bool
+     */
     protected function supports(FilterNodesSourcesQueryBuilderCriteriaEvent $event): bool
     {
-        return $event->supports()
-            && 'node.nodeType' === $event->getProperty()
-            && (
-                $event->getValue() instanceof NodeType
-                || (is_array($event->getValue())
-                    && count($event->getValue()) > 0
-                    && $event->getValue()[0] instanceof NodeType)
+        return $event->supports() &&
+            $event->getProperty() === 'node.nodeType' &&
+            (
+                $event->getValue() instanceof NodeType ||
+                (is_array($event->getValue()) &&
+                    count($event->getValue()) > 0 &&
+                    $event->getValue()[0] instanceof NodeType)
             );
     }
 
+    /**
+     * @param QueryBuilderNodesSourcesBuildEvent $event
+     */
     public function onNodesSourcesQueryBuilderBuild(QueryBuilderNodesSourcesBuildEvent $event): void
     {
         if ($this->supports($event)) {
