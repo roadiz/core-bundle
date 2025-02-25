@@ -20,6 +20,9 @@ class WebhookType extends AbstractType
 {
     private array $webhookMessageTypes;
 
+    /**
+     * @param array $webhookMessageTypes
+     */
     public function __construct(array $webhookMessageTypes)
     {
         $this->webhookMessageTypes = $webhookMessageTypes;
@@ -30,7 +33,7 @@ class WebhookType extends AbstractType
         $builder->add('messageType', ChoiceType::class, [
             'required' => true,
             'label' => 'webhooks.messageType',
-            'choices' => $this->webhookMessageTypes,
+            'choices' => $this->webhookMessageTypes
         ])->add('description', TextType::class, [
             'required' => true,
             'label' => 'webhooks.description',
@@ -51,7 +54,7 @@ class WebhookType extends AbstractType
             'required' => false,
             'label' => 'webhooks.rootNode',
             'help' => 'webhooks.rootNode.help',
-            'multiple' => false,
+            'multiple' => false
         ]);
 
         $builder->get('payload')->addModelTransformer(new CallbackTransformer(function (?array $model) {

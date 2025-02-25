@@ -48,8 +48,7 @@ final class UsersCreationCommand extends UsersCommand
             ->findOneBy(['username' => $name]);
 
         if ($user instanceof User) {
-            $io->warning('User “'.$name.'” already exists.');
-
+            $io->warning('User “' . $name . '” already exists.');
             return 1;
         }
 
@@ -61,14 +60,20 @@ final class UsersCreationCommand extends UsersCommand
             'username' => $user->getUsername(),
         ];
         $passwordInput = new ArrayInput($arguments);
-
         return $command->run($passwordInput, $output);
     }
 
+    /**
+     * @param string          $username
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     *
+     * @return User
+     */
     private function executeUserCreation(
         string $username,
         InputInterface $input,
-        OutputInterface $output,
+        OutputInterface $output
     ): User {
         $user = new User();
         $io = new SymfonyStyle($input, $output);
@@ -89,8 +94,8 @@ final class UsersCreationCommand extends UsersCommand
                     $questionEmail
                 );
             } while (
-                !filter_var($email, FILTER_VALIDATE_EMAIL)
-                || $this->managerRegistry->getRepository(User::class)->emailExists($email)
+                !filter_var($email, FILTER_VALIDATE_EMAIL) ||
+                $this->managerRegistry->getRepository(User::class)->emailExists($email)
             );
         } else {
             /*
@@ -119,7 +124,7 @@ final class UsersCreationCommand extends UsersCommand
             ) {
                 $user->addRoleEntity($this->getRole(Role::ROLE_BACKEND_USER));
             }
-        } elseif (true === $input->getOption('back-end')) {
+        } elseif ($input->getOption('back-end') === true) {
             $user->addRoleEntity($this->getRole(Role::ROLE_BACKEND_USER));
         }
 
@@ -135,7 +140,7 @@ final class UsersCreationCommand extends UsersCommand
             ) {
                 $user->addRoleEntity($this->getRole(Role::ROLE_SUPERADMIN));
             }
-        } elseif (true === $input->getOption('super-admin')) {
+        } elseif ($input->getOption('super-admin') === true) {
             $user->addRoleEntity($this->getRole(Role::ROLE_SUPERADMIN));
         }
 
@@ -150,8 +155,7 @@ final class UsersCreationCommand extends UsersCommand
         $this->managerRegistry->getManagerForClass(User::class)->persist($user);
         $this->managerRegistry->getManagerForClass(User::class)->flush();
 
-        $io->success('User “'.$username.'”<'.$email.'> created no password.');
-
+        $io->success('User “' . $username . '”<' . $email . '> created no password.');
         return $user;
     }
 }

@@ -9,18 +9,21 @@ use JMS\Serializer\SerializerInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TypedObjectConstructorInterface;
 
-final readonly class NodeTypesImporter implements EntityImporterInterface
+class NodeTypesImporter implements EntityImporterInterface
 {
     public function __construct(
-        private SerializerInterface $serializer,
+        protected SerializerInterface $serializer
     ) {
     }
 
     public function supports(string $entityClass): bool
     {
-        return NodeType::class === $entityClass;
+        return $entityClass === NodeType::class;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function import(string $serializedData): bool
     {
         $this->serializer->deserialize(

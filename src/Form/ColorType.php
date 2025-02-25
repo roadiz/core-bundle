@@ -13,6 +13,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ColorType extends AbstractType
 {
+    /**
+     * @inheritDoc
+     */
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);

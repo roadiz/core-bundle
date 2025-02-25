@@ -30,6 +30,7 @@ class DataListTextType extends AbstractType
         $view->vars['list'] = $options['list'];
     }
 
+
     public function getBlockPrefix(): string
     {
         return 'data_list_text';

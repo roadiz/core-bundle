@@ -57,9 +57,6 @@ class Configuration implements ConfigurationInterface
             ->booleanNode('useGravatar')
                 ->defaultTrue()
             ->end()
-            ->booleanNode('useEmailReplyTo')
-                ->defaultTrue()
-            ->end()
             ->scalarNode('documentsLibDir')->defaultValue(
                 'vendor/roadiz/documents/src'
             )->info('Relative path to Roadiz Documents lib sources from project directory.')->end()
@@ -84,7 +81,6 @@ EOT)
             ->append($this->addReverseProxyCacheNode())
             ->append($this->addMediasNode())
         ;
-
         return $builder;
     }
 
@@ -109,13 +105,12 @@ EOD
                     ->validate()
                     ->ifNotInArray([
                         static::INHERITANCE_TYPE_JOINED,
-                        static::INHERITANCE_TYPE_SINGLE_TABLE,
+                        static::INHERITANCE_TYPE_SINGLE_TABLE
                     ])
                     ->thenInvalid('The %s inheritance type is not supported ("joined", "single_table" are accepted).')
                 ->end()
             ->end()
         ;
-
         return $node;
     }
 
@@ -147,14 +142,14 @@ EOD
         $builder = new TreeBuilder('solr');
         $node = $builder->getRootNode();
 
-        $node->children()
+        $node->addDefaultsIfNotSet()
+            ->children()
                 ->scalarNode('timeout')->defaultValue(3)->end()
                 ->arrayNode('endpoints')
-                    ->defaultValue([])
                     ->useAttributeAsKey('name')
                     ->prototype('array')
                         ->children()
-                            ->scalarNode('host')->isRequired()->end()
+                            ->scalarNode('host')->defaultValue('127.0.0.1')->end()
                             ->scalarNode('username')->end()
                             ->scalarNode('password')->end()
                             ->scalarNode('core')->isRequired()->end()
@@ -181,6 +176,7 @@ EOD
         $node = $builder->getRootNode();
         $node->children()
                 ->arrayNode('frontend')
+                    ->isRequired()
                     ->useAttributeAsKey('name')
                     ->prototype('array')
                     ->children()
@@ -197,6 +193,7 @@ EOD
                     ->end()
                 ->end()
                 ->arrayNode('cloudflare')
+                    ->addDefaultsIfNotSet()
                     ->children()
                         ->scalarNode('version')
                             ->defaultValue('v4')

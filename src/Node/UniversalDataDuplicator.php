@@ -14,9 +14,9 @@ use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
 use RZ\Roadiz\CoreBundle\Repository\TranslationRepository;
 
-final readonly class UniversalDataDuplicator
+final class UniversalDataDuplicator
 {
-    public function __construct(private ManagerRegistry $managerRegistry)
+    public function __construct(private readonly ManagerRegistry $managerRegistry)
     {
     }
 
@@ -25,6 +25,8 @@ final readonly class UniversalDataDuplicator
      *
      * **Be careful, this method does not flush.**
      *
+     * @param NodesSources $source
+     * @return bool
      * @throws \Doctrine\ORM\NoResultException
      * @throws \Doctrine\ORM\NonUniqueResultException
      * @throws \Doctrine\ORM\ORMException
@@ -70,7 +72,6 @@ final readonly class UniversalDataDuplicator
                         }
                     }
                 }
-
                 return true;
             }
         }
@@ -79,6 +80,9 @@ final readonly class UniversalDataDuplicator
     }
 
     /**
+     * @param NodesSources $source
+     *
+     * @return bool
      * @throws \Doctrine\ORM\NoResultException
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
@@ -98,13 +102,13 @@ final readonly class UniversalDataDuplicator
                 'translation' => $defaultTranslation,
             ]);
 
-        return 1 === $sourceCount;
+        return $sourceCount === 1;
     }
 
     protected function duplicateNonVirtualField(
         NodesSources $universalSource,
         NodesSources $destSource,
-        NodeTypeFieldInterface $field,
+        NodeTypeFieldInterface $field
     ): void {
         $getter = $field->getGetterName();
         $setter = $field->getSetterName();
@@ -115,7 +119,7 @@ final readonly class UniversalDataDuplicator
     protected function duplicateDocumentsField(
         NodesSources $universalSource,
         NodesSources $destSource,
-        NodeTypeFieldInterface $field,
+        NodeTypeFieldInterface $field
     ): void {
         $newDocuments = $this->managerRegistry
             ->getRepository(NodesSourcesDocuments::class)
@@ -143,7 +147,7 @@ final readonly class UniversalDataDuplicator
             foreach ($newDocuments as $newDocument) {
                 $nsDoc = new NodesSourcesDocuments($destSource, $newDocument->getDocument(), $field);
                 $nsDoc->setPosition($position);
-                ++$position;
+                $position++;
 
                 $manager->persist($nsDoc);
             }

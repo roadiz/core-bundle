@@ -4,21 +4,23 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Webhook\Message;
 
+use GuzzleHttp\Psr7\Request;
+use Psr\Http\Message\RequestInterface;
 use RZ\Roadiz\CoreBundle\Message\AsyncMessage;
-use RZ\Roadiz\CoreBundle\Message\HttpRequestMessageInterface;
+use RZ\Roadiz\CoreBundle\Message\HttpRequestMessage;
 use RZ\Roadiz\CoreBundle\Webhook\WebhookInterface;
 
-final readonly class GitlabPipelineTriggerMessageInterface implements AsyncMessage, HttpRequestMessageInterface, WebhookMessage
+final class GitlabPipelineTriggerMessage implements AsyncMessage, HttpRequestMessage, WebhookMessage
 {
     public function __construct(
-        private string $uri,
-        private string $token,
-        private string $ref = 'main',
-        private ?array $variables = null,
+        private readonly string $uri,
+        private readonly string $token,
+        private readonly string $ref = 'main',
+        private readonly ?array $variables = null
     ) {
     }
 
-    public function getOptions(): array
+    public function getRequest(): RequestInterface
     {
         $postBody = [
             'token' => $this->token,
@@ -28,38 +30,40 @@ final readonly class GitlabPipelineTriggerMessageInterface implements AsyncMessa
             $postBody['variables'] = $this->variables;
         }
 
-        return [
-            'timeout' => 3,
-            'headers' => [
+        return new Request(
+            'POST',
+            $this->uri,
+            [
                 'Content-Type' => 'application/x-www-form-urlencoded',
-                'Accept' => 'application/json',
+                'Accept'     => 'application/json'
             ],
-            'body' => http_build_query($postBody),
+            http_build_query($postBody)
+        );
+    }
+
+    /**
+     * @return array
+     */
+    public function getOptions(): array
+    {
+        return [
+            'debug' => false,
+            'timeout' => 3
         ];
     }
 
     /**
+     * @param WebhookInterface $webhook
      * @return static
      */
     public static function fromWebhook(WebhookInterface $webhook): self
     {
         $payload = $webhook->getPayload();
-
         return new self(
             $webhook->getUri(),
             $payload['token'] ?? '',
             $payload['ref'] ?? 'main',
             $payload['variables'] ?? []
         );
-    }
-
-    public function getMethod(): string
-    {
-        return 'POST';
-    }
-
-    public function getUri(): string
-    {
-        return $this->uri;
     }
 }
