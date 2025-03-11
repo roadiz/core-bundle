@@ -8,7 +8,7 @@ use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
-class NonSqlReservedWordValidator extends ConstraintValidator
+final class NonSqlReservedWordValidator extends ConstraintValidator
 {
     public function validate(mixed $value, Constraint $constraint): void
     {
@@ -16,9 +16,9 @@ class NonSqlReservedWordValidator extends ConstraintValidator
             $fieldName = StringHandler::variablize($value);
             $lowerName = \mb_strtolower($value);
             if (
-                in_array($value, NonSqlReservedWord::$forbiddenNames) ||
-                in_array($lowerName, NonSqlReservedWord::$forbiddenNames) ||
-                in_array($fieldName, NonSqlReservedWord::$forbiddenNames)
+                in_array($value, NonSqlReservedWord::$forbiddenNames)
+                || in_array($lowerName, NonSqlReservedWord::$forbiddenNames)
+                || in_array($fieldName, NonSqlReservedWord::$forbiddenNames)
             ) {
                 if ($constraint instanceof NonSqlReservedWord) {
                     $this->context->addViolation($constraint->message);

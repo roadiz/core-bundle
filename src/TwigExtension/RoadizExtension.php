@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\TwigExtension;
 
-use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
+use RZ\Roadiz\CoreBundle\Bag\DecoratedNodeTypes;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\NodeChrootResolver;
@@ -15,19 +15,16 @@ final class RoadizExtension extends AbstractExtension implements GlobalsInterfac
 {
     public function __construct(
         private readonly Settings $settingsBag,
-        private readonly NodeTypes $nodeTypesBag,
+        private readonly DecoratedNodeTypes $nodeTypesBag,
         private readonly PreviewResolverInterface $previewResolver,
         private readonly NodeChrootResolver $chrootResolver,
         private readonly string $cmsVersion,
         private readonly string $cmsVersionPrefix,
         private readonly bool $hideRoadizVersion,
-        private readonly int $maxVersionsShowed
+        private readonly int $maxVersionsShowed,
     ) {
     }
 
-    /**
-     * @return array
-     */
     public function getGlobals(): array
     {
         return [
@@ -41,11 +38,13 @@ final class RoadizExtension extends AbstractExtension implements GlobalsInterfac
                 'nodeTypes' => $this->nodeTypesBag,
             ],
             'chroot_resolver' => $this->chrootResolver,
+            'main_color' => $this->settingsBag->get('main_color'),
             'meta' => [
                 'siteName' => $this->settingsBag->get('site_name'),
+                'backofficeName' => $this->settingsBag->get('site_name').' backstage',
                 'siteCopyright' => $this->settingsBag->get('site_copyright'),
                 'siteDescription' => $this->settingsBag->get('seo_description'),
-            ]
+            ],
         ];
     }
 }

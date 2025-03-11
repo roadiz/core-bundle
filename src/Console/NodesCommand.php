@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Entity\Node;
-use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -16,8 +16,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class NodesCommand extends Command
 {
     public function __construct(
+        private readonly NodeTypes $nodeTypesBag,
         private readonly ManagerRegistry $managerRegistry,
-        ?string $name = null
+        ?string $name = null,
     ) {
         parent::__construct($name);
     }
@@ -41,14 +42,12 @@ final class NodesCommand extends Command
         $tableContent = [];
 
         if ($input->getOption('type')) {
-            $nodeType = $this->managerRegistry
-                ->getRepository(NodeType::class)
-                ->findByName($input->getOption('type'));
+            $nodeType = $this->nodeTypesBag->get($input->getOption('type'));
             if (null !== $nodeType) {
                 $nodes = $this->managerRegistry
                     ->getRepository(Node::class)
                     ->setDisplayingNotPublishedNodes(true)
-                    ->findBy(['nodeType' => $nodeType], ['nodeName' => 'ASC']);
+                    ->findBy(['nodeTypeName' => $nodeType->getName()], ['nodeName' => 'ASC']);
             }
         } else {
             $nodes = $this->managerRegistry
@@ -62,13 +61,14 @@ final class NodesCommand extends Command
             $tableContent[] = [
                 $node->getId(),
                 $node->getNodeName(),
-                $node->getNodeType()->getName(),
-                (!$node->isVisible() ? 'X' : ''),
-                ($node->isPublished() ? 'X' : ''),
+                $node->getNodeTypeName(),
+                !$node->isVisible() ? 'X' : '',
+                $node->isPublished() ? 'X' : '',
             ];
         }
 
         $io->table(['Id', 'Name', 'Type', 'Hidden', 'Published'], $tableContent);
+
         return 0;
     }
 }
