@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
-use RZ\Roadiz\Core\Handlers\AbstractHandler;
 use RZ\Roadiz\CoreBundle\Entity\Group;
 use RZ\Roadiz\CoreBundle\Entity\Role;
+use RZ\Roadiz\Core\Handlers\AbstractHandler;
 
 /**
  * Handle operations with Group entities.
  */
-final class GroupHandler extends AbstractHandler
+class GroupHandler extends AbstractHandler
 {
     private ?Group $group = null;
 
@@ -20,26 +20,27 @@ final class GroupHandler extends AbstractHandler
         if (null === $this->group) {
             throw new \BadMethodCallException('Group is null');
         }
-
         return $this->group;
     }
 
     /**
+     * @param Group $group
      * @return $this
      */
     public function setGroup(Group $group): self
     {
         $this->group = $group;
-
         return $this;
     }
 
     /**
      * This method does not flush ORM. You'll need to manually call it.
+     *
+     * @param Group $newGroup
      */
     public function diff(Group $newGroup): void
     {
-        if ('' != $newGroup->getName()) {
+        if ("" != $newGroup->getName()) {
             $this->getGroup()->setName($newGroup->getName());
         }
 

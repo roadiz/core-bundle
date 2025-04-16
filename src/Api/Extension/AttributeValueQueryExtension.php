@@ -12,14 +12,16 @@ use ApiPlatform\Metadata\Operation;
 use Doctrine\ORM\QueryBuilder;
 use RZ\Roadiz\CoreBundle\Entity\AttributeValue;
 use RZ\Roadiz\CoreBundle\Entity\Node;
-use RZ\Roadiz\CoreBundle\Enum\NodeStatus;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 
-final readonly class AttributeValueQueryExtension implements QueryItemExtensionInterface, QueryCollectionExtensionInterface
+final class AttributeValueQueryExtension implements QueryItemExtensionInterface, QueryCollectionExtensionInterface
 {
+    private PreviewResolverInterface $previewResolver;
+
     public function __construct(
-        private PreviewResolverInterface $previewResolver,
+        PreviewResolverInterface $previewResolver
     ) {
+        $this->previewResolver = $previewResolver;
     }
 
     public function applyToItem(
@@ -28,7 +30,7 @@ final readonly class AttributeValueQueryExtension implements QueryItemExtensionI
         string $resourceClass,
         array $identifiers,
         ?Operation $operation = null,
-        array $context = [],
+        array $context = []
     ): void {
         $this->apply($queryBuilder, $resourceClass);
     }
@@ -38,17 +40,17 @@ final readonly class AttributeValueQueryExtension implements QueryItemExtensionI
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
         ?Operation $operation = null,
-        array $context = [],
+        array $context = []
     ): void {
         $this->apply($queryBuilder, $resourceClass);
     }
 
     private function apply(
         QueryBuilder $queryBuilder,
-        string $resourceClass,
+        string $resourceClass
     ): void {
         if (
-            AttributeValue::class !== $resourceClass
+            $resourceClass !== AttributeValue::class
         ) {
             return;
         }
@@ -61,7 +63,7 @@ final readonly class AttributeValueQueryExtension implements QueryItemExtensionI
          */
         $existingNodeJoin = QueryBuilderHelper::getExistingJoin($queryBuilder, 'o', 'node');
         if (null === $existingNodeJoin || !$existingNodeJoin->getAlias()) {
-            $queryBuilder->leftJoin($rootAlias.'.node', 'node');
+            $queryBuilder->leftJoin($rootAlias . '.node', 'node');
             $joinAlias = 'node';
         } else {
             $joinAlias = $existingNodeJoin->getAlias();
@@ -69,16 +71,14 @@ final readonly class AttributeValueQueryExtension implements QueryItemExtensionI
 
         if ($this->previewResolver->isPreview()) {
             $queryBuilder
-                ->andWhere($queryBuilder->expr()->lte($joinAlias.'.status', ':status'))
-                ->setParameter(':status', NodeStatus::PUBLISHED);
-
+                ->andWhere($queryBuilder->expr()->lte($joinAlias . '.status', ':status'))
+                ->setParameter(':status', Node::PUBLISHED);
             return;
         }
 
         $queryBuilder
-            ->andWhere($queryBuilder->expr()->eq($joinAlias.'.status', ':status'))
-            ->setParameter(':status', NodeStatus::PUBLISHED);
-
+            ->andWhere($queryBuilder->expr()->eq($joinAlias . '.status', ':status'))
+            ->setParameter(':status', Node::PUBLISHED);
         return;
     }
 }

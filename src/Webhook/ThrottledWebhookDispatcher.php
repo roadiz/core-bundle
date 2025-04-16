@@ -10,24 +10,32 @@ use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\RateLimiter\RateLimiterFactory;
 
-final readonly class ThrottledWebhookDispatcher implements WebhookDispatcher
+final class ThrottledWebhookDispatcher implements WebhookDispatcher
 {
+    private WebhookMessageFactoryInterface $messageFactory;
+    private MessageBusInterface $messageBus;
+    private RateLimiterFactory $throttledWebhooksLimiter;
+
     public function __construct(
-        private WebhookMessageFactoryInterface $messageFactory,
-        private MessageBusInterface $messageBus,
-        private RateLimiterFactory $throttledWebhooksLimiter,
+        WebhookMessageFactoryInterface $messageFactory,
+        MessageBusInterface $messageBus,
+        RateLimiterFactory $throttledWebhooksLimiter
     ) {
+        $this->messageFactory = $messageFactory;
+        $this->messageBus = $messageBus;
+        $this->throttledWebhooksLimiter = $throttledWebhooksLimiter;
     }
 
     /**
+     * @param WebhookInterface $webhook
      * @throws \Exception
      */
     public function dispatch(WebhookInterface $webhook): void
     {
         $doNotTriggerBefore = $webhook->doNotTriggerBefore();
         if (
-            null !== $doNotTriggerBefore
-            && $doNotTriggerBefore > new \DateTime()
+            null !== $doNotTriggerBefore &&
+            $doNotTriggerBefore > new \DateTime()
         ) {
             throw new TooManyWebhookTriggeredException(\DateTimeImmutable::createFromMutable($doNotTriggerBefore));
         }

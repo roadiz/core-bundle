@@ -11,6 +11,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * Command line utils for managing users from terminal.
+ */
 final class UsersEnableCommand extends UsersCommand
 {
     protected function configure(): void
@@ -31,7 +34,7 @@ final class UsersEnableCommand extends UsersCommand
         $user = $this->getUserForInput($input);
 
         $confirmation = new ConfirmationQuestion(
-            '<question>Do you really want to enable user “'.$user->getUsername().'”?</question>',
+            '<question>Do you really want to enable user “' . $user->getUsername() . '”?</question>',
             false
         );
         if (
@@ -41,12 +44,10 @@ final class UsersEnableCommand extends UsersCommand
         ) {
             $user->setEnabled(true);
             $this->managerRegistry->getManagerForClass(User::class)->flush();
-            $io->success('User “'.$name.'” was enabled.');
-
+            $io->success('User “' . $name . '” was enabled.');
             return 0;
         } else {
-            $io->warning('User “'.$name.'” was not enabled');
-
+            $io->warning('User “' . $name . '” was not enabled');
             return 1;
         }
     }

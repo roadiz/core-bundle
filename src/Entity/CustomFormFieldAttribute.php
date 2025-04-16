@@ -16,36 +16,36 @@ use RZ\Roadiz\CoreBundle\Repository\CustomFormFieldAttributeRepository;
  */
 #[
     ORM\Entity(repositoryClass: CustomFormFieldAttributeRepository::class),
-    ORM\Table(name: 'custom_form_field_attributes'),
-    ORM\Index(columns: ['custom_form_answer_id', 'custom_form_field_id'], name: 'cffattribute_answer_field'),
+    ORM\Table(name: "custom_form_field_attributes"),
+    ORM\Index(columns: ["custom_form_answer_id", "custom_form_field_id"], name: "cffattribute_answer_field"),
     ORM\HasLifecycleCallbacks
 ]
 class CustomFormFieldAttribute extends AbstractEntity
 {
     #[
-        ORM\ManyToOne(targetEntity: CustomFormAnswer::class, inversedBy: 'answerFields'),
-        ORM\JoinColumn(name: 'custom_form_answer_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')
+        ORM\ManyToOne(targetEntity: CustomFormAnswer::class, inversedBy: "answerFields"),
+        ORM\JoinColumn(name: "custom_form_answer_id", referencedColumnName: "id", onDelete: "CASCADE")
     ]
-    protected CustomFormAnswer $customFormAnswer;
+    protected ?CustomFormAnswer $customFormAnswer = null;
 
     #[
-        ORM\ManyToOne(targetEntity: CustomFormField::class, inversedBy: 'customFormFieldAttributes'),
-        ORM\JoinColumn(name: 'custom_form_field_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')
+        ORM\ManyToOne(targetEntity: CustomFormField::class, inversedBy: "customFormFieldAttributes"),
+        ORM\JoinColumn(name: "custom_form_field_id", referencedColumnName: "id", onDelete: "CASCADE")
     ]
-    protected CustomFormField $customFormField;
+    protected ?CustomFormField $customFormField = null;
 
     /**
      * @var Collection<int, Document>
      */
     #[
-        ORM\ManyToMany(targetEntity: Document::class, inversedBy: 'customFormFieldAttributes'),
-        ORM\JoinTable(name: 'custom_form_answers_documents'),
-        ORM\JoinColumn(name: 'customformfieldattribute_id', onDelete: 'CASCADE'),
-        ORM\InverseJoinColumn(name: 'document_id', onDelete: 'CASCADE')
+        ORM\ManyToMany(targetEntity: "RZ\Roadiz\CoreBundle\Entity\Document", inversedBy: "customFormFieldAttributes"),
+        ORM\JoinTable(name: "custom_form_answers_documents"),
+        ORM\JoinColumn(name: "customformfieldattribute_id", onDelete: "CASCADE"),
+        ORM\InverseJoinColumn(name: "document_id", onDelete: "CASCADE")
     ]
     protected Collection $documents;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[ORM\Column(type: "text", nullable: true)]
     protected ?string $value = null;
 
     public function __construct()
@@ -55,7 +55,6 @@ class CustomFormFieldAttribute extends AbstractEntity
 
     /**
      * @return string|null $value
-     *
      * @throws \Exception
      */
     public function getValue(): ?string
@@ -71,25 +70,36 @@ class CustomFormFieldAttribute extends AbstractEntity
         if ($this->getCustomFormField()->isDateTime()) {
             return (new \DateTime($this->value))->format('Y-m-d H:i:s');
         }
-
         return $this->value;
     }
 
     /**
+     * @param string|null $value
      * @return $this
      */
     public function setValue(?string $value): CustomFormFieldAttribute
     {
         $this->value = $value;
-
         return $this;
     }
 
-    public function getCustomFormAnswer(): CustomFormAnswer
+    /**
+     * Gets the value of customFormAnswer.
+     *
+     * @return CustomFormAnswer|null
+     */
+    public function getCustomFormAnswer(): ?CustomFormAnswer
     {
         return $this->customFormAnswer;
     }
 
+    /**
+     * Sets the value of customFormAnswer.
+     *
+     * @param CustomFormAnswer $customFormAnswer the custom form answer
+     *
+     * @return self
+     */
     public function setCustomFormAnswer(CustomFormAnswer $customFormAnswer): CustomFormFieldAttribute
     {
         $this->customFormAnswer = $customFormAnswer;
@@ -98,6 +108,7 @@ class CustomFormFieldAttribute extends AbstractEntity
     }
 
     /**
+     * @return string
      * @throws \Exception
      */
     public function __toString(): string
@@ -105,11 +116,20 @@ class CustomFormFieldAttribute extends AbstractEntity
         return $this->getValue() ?? '';
     }
 
-    public function getCustomFormField(): CustomFormField
+    /**
+     * @return CustomFormField|null
+     */
+    public function getCustomFormField(): ?CustomFormField
     {
         return $this->customFormField;
     }
 
+    /**
+     * Sets the value of customFormField.
+     *
+     * @param CustomFormField $customFormField the custom form field
+     * @return self
+     */
     public function setCustomFormField(CustomFormField $customFormField): CustomFormFieldAttribute
     {
         $this->customFormField = $customFormField;
@@ -117,11 +137,19 @@ class CustomFormFieldAttribute extends AbstractEntity
         return $this;
     }
 
+    /**
+     * @return Collection
+     */
     public function getDocuments(): Collection
     {
         return $this->documents;
     }
 
+    /**
+     * @param Collection $documents
+     *
+     * @return CustomFormFieldAttribute
+     */
     public function setDocuments(Collection $documents): CustomFormFieldAttribute
     {
         $this->documents = $documents;

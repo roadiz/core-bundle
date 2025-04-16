@@ -15,13 +15,17 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-final class LogsCleanupCommand extends Command
+class LogsCleanupCommand extends Command
 {
-    public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        ?string $name = null,
-    ) {
-        parent::__construct($name);
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
     }
 
     protected function configure(): void
@@ -34,12 +38,15 @@ final class LogsCleanupCommand extends Command
         ;
     }
 
+    /**
+     * @inheritDoc
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $now = new \DateTime('now');
         $since = '-3 months';
         if (\is_string($input->getOption('since'))) {
-            $since = '-'.$input->getOption('since');
+            $since = '-' . $input->getOption('since');
         }
         $interval = \DateInterval::createFromDateString($since);
         if (false === $interval) {
@@ -62,7 +69,7 @@ final class LogsCleanupCommand extends Command
             $logs = 0;
         }
 
-        $io->note($logs.' log entries found before '.$now->format('Y-m-d H:i:s').'.');
+        $io->note($logs . ' log entries found before ' . $now->format('Y-m-d H:i:s') . '.');
 
         if ($input->getOption('erase') && $logs > 0) {
             $qb2 = $logRepository->createQueryBuilder('l');
@@ -72,12 +79,11 @@ final class LogsCleanupCommand extends Command
             ;
             try {
                 $numDeleted = $qb2->getQuery()->execute();
-                $io->success($numDeleted.' log entries were deleted.');
+                $io->success($numDeleted . ' log entries were deleted.');
             } catch (NoResultException $e) {
                 $io->writeln('No log entries were deleted.');
             }
         }
-
         return 0;
     }
 }

@@ -9,24 +9,39 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 
 interface AttributeGroupTranslationInterface extends PersistableInterface
 {
+    /**
+     * @return string
+     */
     public function getName(): string;
 
     /**
-     * @return $this
+     * @param string $value
+     *
+     * @return mixed
      */
-    public function setName(string $value): self;
+    public function setName(string $value);
 
     /**
-     * @return $this
+     * @param TranslationInterface $translation
+     *
+     * @return mixed
      */
-    public function setTranslation(TranslationInterface $translation): self;
+    public function setTranslation(TranslationInterface $translation);
 
+    /**
+     * @return TranslationInterface|null
+     */
     public function getTranslation(): ?TranslationInterface;
 
+    /**
+     * @return AttributeGroupInterface
+     */
     public function getAttributeGroup(): AttributeGroupInterface;
 
     /**
-     * @return $this
+     * @param AttributeGroupInterface $attributeGroup
+     *
+     * @return mixed
      */
-    public function setAttributeGroup(AttributeGroupInterface $attributeGroup): self;
+    public function setAttributeGroup(AttributeGroupInterface $attributeGroup);
 }

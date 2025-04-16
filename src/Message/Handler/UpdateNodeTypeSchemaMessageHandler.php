@@ -10,20 +10,22 @@ use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\EntityHandler\NodeTypeHandler;
 use RZ\Roadiz\CoreBundle\Message\UpdateDoctrineSchemaMessage;
 use RZ\Roadiz\CoreBundle\Message\UpdateNodeTypeSchemaMessage;
-use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
+use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-/** @deprecated nodeTypes will be static in future Roadiz versions */
-#[AsMessageHandler]
-final readonly class UpdateNodeTypeSchemaMessageHandler
+final class UpdateNodeTypeSchemaMessageHandler implements MessageHandlerInterface
 {
-    public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private HandlerFactoryInterface $handlerFactory,
-        private MessageBusInterface $messageBus,
-    ) {
+    private ManagerRegistry $managerRegistry;
+    private HandlerFactoryInterface $handlerFactory;
+    private MessageBusInterface $messageBus;
+
+    public function __construct(ManagerRegistry $managerRegistry, HandlerFactoryInterface $handlerFactory, MessageBusInterface $messageBus)
+    {
+        $this->managerRegistry = $managerRegistry;
+        $this->handlerFactory = $handlerFactory;
+        $this->messageBus = $messageBus;
     }
 
     public function __invoke(UpdateNodeTypeSchemaMessage $message): void
@@ -40,7 +42,7 @@ final readonly class UpdateNodeTypeSchemaMessageHandler
 
         $this->managerRegistry->getManager()->clear();
         $this->messageBus->dispatch(
-            new Envelope(new UpdateDoctrineSchemaMessage())
+            (new Envelope(new UpdateDoctrineSchemaMessage()))
         );
     }
 }

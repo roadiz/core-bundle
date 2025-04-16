@@ -4,30 +4,42 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Node;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\CoreBundle\Entity\AttributeValue;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments;
 use RZ\Roadiz\CoreBundle\Entity\NodesToNodes;
-use RZ\Roadiz\CoreBundle\Enum\NodeStatus;
-use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
 /**
  * Handles node duplication.
  */
-#[Exclude]
-final readonly class NodeDuplicator
+final class NodeDuplicator
 {
+    private Node $originalNode;
+    private ObjectManager $objectManager;
+    private NodeNamePolicyInterface $nodeNamePolicy;
+
+    /**
+     * @param Node $originalNode
+     * @param ObjectManager $objectManager
+     * @param NodeNamePolicyInterface $nodeNamePolicy
+     */
     public function __construct(
-        private Node $originalNode,
-        private ObjectManager $objectManager,
-        private NodeNamePolicyInterface $nodeNamePolicy,
+        Node $originalNode,
+        ObjectManager $objectManager,
+        NodeNamePolicyInterface $nodeNamePolicy
     ) {
+        $this->objectManager = $objectManager;
+        $this->originalNode = $originalNode;
+        $this->nodeNamePolicy = $nodeNamePolicy;
     }
 
     /**
      * Warning this method flush entityManager at its end.
+     *
+     * @return Node
      */
     public function duplicate(): Node
     {
@@ -44,13 +56,13 @@ final readonly class NodeDuplicator
             $this->objectManager->clear();
         }
 
-        if (null !== $parent) {
+        if ($parent !== null) {
             /** @var Node $parent */
             $parent = $this->objectManager->find(Node::class, $parent->getId());
             $node->setParent($parent);
         }
         // Demote cloned node to draft
-        $node->setStatus(NodeStatus::DRAFT);
+        $node->setStatus(Node::DRAFT);
 
         $node = $this->doDuplicate($node);
         $this->objectManager->flush();
@@ -61,6 +73,9 @@ final readonly class NodeDuplicator
 
     /**
      * Warning, do not do any FLUSH here to preserve transactional integrity.
+     *
+     * @param  Node $node
+     * @return Node
      */
     private function doDuplicate(Node &$node): Node
     {
@@ -87,7 +102,8 @@ final readonly class NodeDuplicator
                 $nsDoc->setNodeSource($nodeSource);
                 $doc = $nsDoc->getDocument();
                 $nsDoc->setDocument($doc);
-                $nsDoc->setFieldName($nsDoc->getFieldName());
+                $f = $nsDoc->getField();
+                $nsDoc->setField($f);
                 $this->objectManager->persist($nsDoc);
             }
         }
@@ -119,16 +135,19 @@ final readonly class NodeDuplicator
      * Duplicate Node to Node relationship.
      *
      * Warning, do not do any FLUSH here to preserve transactional integrity.
+     *
+     * @param Node $node
+     * @return Node
      */
-    private function doDuplicateNodeRelations(Node $node): void
+    private function doDuplicateNodeRelations(Node $node): Node
     {
-        /** @var NodesToNodes[] $nodeRelations */
-        $nodeRelations = $node->getBNodes()->toArray();
+        $nodeRelations = new ArrayCollection($node->getBNodes()->toArray());
         foreach ($nodeRelations as $position => $nodeRelation) {
-            $ntn = new NodesToNodes($node, $nodeRelation->getNodeB());
-            $ntn->setFieldName($nodeRelation->getFieldName());
+            $ntn = new NodesToNodes($node, $nodeRelation->getNodeB(), $nodeRelation->getField());
             $ntn->setPosition($position);
             $this->objectManager->persist($ntn);
         }
+
+        return $node;
     }
 }

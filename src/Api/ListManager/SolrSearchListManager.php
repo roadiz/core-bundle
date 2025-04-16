@@ -7,35 +7,38 @@ namespace RZ\Roadiz\CoreBundle\Api\ListManager;
 use RZ\Roadiz\CoreBundle\ListManager\AbstractEntityListManager;
 use RZ\Roadiz\CoreBundle\SearchEngine\SearchHandlerInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\SearchResultsInterface;
-use Symfony\Component\DependencyInjection\Attribute\Exclude;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
-#[Exclude]
 final class SolrSearchListManager extends AbstractEntityListManager
 {
-    private ?SearchResultsInterface $searchResults = null;
+    protected SearchHandlerInterface $searchHandler;
+    protected ?SearchResultsInterface $searchResults;
+    private array $criteria;
+    private bool $searchInTags;
     private ?string $query = null;
 
     public function __construct(
         ?Request $request,
-        private readonly SearchHandlerInterface $searchHandler,
-        private readonly array $criteria = [],
-        private readonly bool $searchInTags = true,
+        SearchHandlerInterface $searchHandler,
+        array $criteria = [],
+        bool $searchInTags = true
     ) {
         parent::__construct($request);
+        $this->searchHandler = $searchHandler;
+        $this->criteria = $criteria;
+        $this->searchInTags = $searchInTags;
     }
 
-    public function handle(bool $disabled = false): void
+    public function handle(bool $disabled = false)
     {
-        if (null === $this->request) {
+        if ($this->request === null) {
             throw new \InvalidArgumentException('Cannot handle a NULL request.');
         }
 
         $this->handleRequestQuery($disabled);
 
         if (null === $this->query) {
-            throw new BadRequestHttpException('Search param is required.');
+            throw new \InvalidArgumentException('Cannot handle a NULL query.');
         }
         /*
          * Query must be longer than 3 chars or Solr might crash
@@ -43,18 +46,20 @@ final class SolrSearchListManager extends AbstractEntityListManager
          */
         if (\mb_strlen($this->query) > 3) {
             $this->searchResults = $this->searchHandler->searchWithHighlight(
-                $this->query, // Use ?q query parameter to search with
-                $this->criteria, // a simple criteria array to filter search results
-                $this->getItemPerPage(), // result count
-                $this->searchInTags, // Search in tags too,
+                $this->query, # Use ?q query parameter to search with
+                $this->criteria, # a simple criteria array to filter search results
+                $this->getItemPerPage(), # result count
+                $this->searchInTags, # Search in tags too,
+                1,
                 $this->getPage()
             );
         } else {
             $this->searchResults = $this->searchHandler->search(
-                $this->query, // Use ?q query parameter to search with
-                $this->criteria, // a simple criteria array to filter search results
-                $this->getItemPerPage(), // result count
-                $this->searchInTags, // Search in tags too,
+                $this->query, # Use ?q query parameter to search with
+                $this->criteria, # a simple criteria array to filter search results
+                $this->getItemPerPage(), # result count
+                $this->searchInTags, # Search in tags too,
+                2,
                 $this->getPage()
             );
         }
@@ -66,6 +71,9 @@ final class SolrSearchListManager extends AbstractEntityListManager
         $this->query = trim($search);
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getItemCount(): int
     {
         if (null !== $this->searchResults) {
@@ -74,7 +82,10 @@ final class SolrSearchListManager extends AbstractEntityListManager
         throw new \InvalidArgumentException('Call EntityListManagerInterface::handle before counting entities.');
     }
 
-    public function getEntities(): array
+    /**
+     * @inheritDoc
+     */
+    public function getEntities()
     {
         if (null !== $this->searchResults) {
             return $this->searchResults->getResultItems();

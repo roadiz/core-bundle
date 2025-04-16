@@ -9,7 +9,9 @@ use Symfony\Component\Validator\Constraint;
 class ValidAccountConfirmationToken extends Constraint
 {
     /**
-     * Confirmation token time to live, in seconds.
+     * Confirmation token time to live, in seconds
+     *
+     * @var integer
      */
     public int $ttl = 60;
 

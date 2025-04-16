@@ -11,13 +11,20 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * Command line utils for managing translations from terminal.
+ */
 class TranslationsCommand extends Command
 {
-    public function __construct(
-        protected readonly ManagerRegistry $managerRegistry,
-        ?string $name = null,
-    ) {
-        parent::__construct($name);
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        parent::__construct();
+        $this->managerRegistry = $managerRegistry;
     }
 
     protected function configure(): void
@@ -33,25 +40,22 @@ class TranslationsCommand extends Command
             ->getRepository(Translation::class)
             ->findAll();
 
-        if (0 === count($translations)) {
+        if (count($translations) > 0) {
+            $tableContent = [];
+            /** @var Translation $trans */
+            foreach ($translations as $trans) {
+                $tableContent[] = [
+                    $trans->getId(),
+                    $trans->getName(),
+                    $trans->getLocale(),
+                    (!$trans->isAvailable() ? 'X' : ''),
+                    ($trans->isDefaultTranslation() ? 'X' : ''),
+                ];
+            }
+            $io->table(['Id', 'Name', 'Locale', 'Disabled', 'Default'], $tableContent);
+        } else {
             $io->error('No available translations.');
-
-            return 1;
         }
-
-        $tableContent = [];
-        /** @var Translation $trans */
-        foreach ($translations as $trans) {
-            $tableContent[] = [
-                $trans->getId(),
-                $trans->getName(),
-                $trans->getLocale(),
-                !$trans->isAvailable() ? 'X' : '',
-                $trans->isDefaultTranslation() ? 'X' : '',
-            ];
-        }
-        $io->table(['Id', 'Name', 'Locale', 'Disabled', 'Default'], $tableContent);
-
         return 0;
     }
 }

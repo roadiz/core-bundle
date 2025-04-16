@@ -8,38 +8,49 @@ use Doctrine\Persistence\ObjectManager;
 use JMS\Serializer\Annotation as JMS;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use Symfony\Component\Serializer\Attribute\Ignore;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 /**
  * Wrapper over Solr search results and metas.
+ *
+ * @package RZ\Roadiz\CoreBundle\SearchEngine
  */
 class SolrSearchResults implements SearchResultsInterface
 {
-    #[JMS\Exclude]
-    #[Ignore]
-    protected int $position;
-
     /**
-     * @var array<SolrSearchResultItem>|null
+     * @JMS\Exclude()
      */
-    #[JMS\Exclude]
-    #[Ignore]
+    protected array $response;
+    /**
+     * @JMS\Exclude()
+     */
+    protected ObjectManager $entityManager;
+    /**
+     * @JMS\Exclude()
+     */
+    protected int $position;
+    /**
+     * @JMS\Exclude()
+     */
     protected ?array $resultItems;
 
-    public function __construct(
-        #[JMS\Exclude]
-        #[Ignore]
-        protected readonly array $response,
-        #[JMS\Exclude]
-        #[Ignore]
-        protected readonly ObjectManager $entityManager,
-    ) {
+    /**
+     * @param array $response
+     * @param ObjectManager $entityManager
+     */
+    public function __construct(array $response, ObjectManager $entityManager)
+    {
+        $this->response = $response;
+        $this->entityManager = $entityManager;
         $this->position = 0;
         $this->resultItems = null;
     }
 
-    #[JMS\Groups(['search_results'])]
-    #[JMS\VirtualProperty()]
+    /**
+     * @return int
+     * @JMS\Groups({"search_results"})
+     * @JMS\VirtualProperty()
+     */
     public function getResultCount(): int
     {
         if (
@@ -47,15 +58,14 @@ class SolrSearchResults implements SearchResultsInterface
         ) {
             return (int) $this->response['response']['numFound'];
         }
-
         return 0;
     }
 
     /**
-     * @return array<SolrSearchResultItem>
+     * @return array
+     * @JMS\Groups({"search_results"})
+     * @JMS\VirtualProperty()
      */
-    #[JMS\Groups(['search_results'])]
-    #[JMS\VirtualProperty()]
     public function getResultItems(): array
     {
         if (null === $this->resultItems) {
@@ -64,17 +74,26 @@ class SolrSearchResults implements SearchResultsInterface
                 isset($this->response['response']['docs'])
             ) {
                 $this->resultItems = array_filter(array_map(
-                    function (array $item) {
+                    function ($item) {
                         $object = $this->getHydratedItem($item);
-                        if (!\is_object($object)) {
-                            return null;
+                        if (isset($this->response["highlighting"])) {
+                            $key = 'object';
+                            if ($object instanceof NodesSources) {
+                                $key = 'nodeSource';
+                            }
+                            if ($object instanceof DocumentInterface) {
+                                $key = 'document';
+                            }
+                            if ($object instanceof DocumentTranslation) {
+                                $key = 'document';
+                                $object = $object->getDocument();
+                            }
+                            return [
+                                $key => $object,
+                                'highlighting' => $this->getHighlighting($item['id']),
+                            ];
                         }
-                        $highlighting = $this->getHighlighting($item['id']);
-
-                        return new SolrSearchResultItem(
-                            $object,
-                            $highlighting
-                        );
+                        return $object;
                     },
                     $this->response['response']['docs']
                 ));
@@ -86,8 +105,9 @@ class SolrSearchResults implements SearchResultsInterface
 
     /**
      * Get highlighting for one field.
-     * This does not merge highlighting for all fields anymore.
+     * This do not merge highlighting for all fields anymore.
      *
+     * @param string $id
      * @return array<string, array>
      */
     protected function getHighlighting(string $id): array
@@ -95,16 +115,22 @@ class SolrSearchResults implements SearchResultsInterface
         if (isset($this->response['highlighting'][$id]) && \is_array($this->response['highlighting'][$id])) {
             return $this->response['highlighting'][$id];
         }
-
         return [];
     }
 
+    /**
+     * @param callable $callable
+     *
+     * @return array
+     */
     public function map(callable $callable): array
     {
         return array_map($callable, $this->getResultItems());
     }
 
     /**
+     * @param array $item
+     *
      * @return array|object|null
      */
     protected function getHydratedItem(array $item): mixed
@@ -117,12 +143,10 @@ class SolrSearchResults implements SearchResultsInterface
                         $item[SolariumNodeSource::IDENTIFIER_KEY]
                     );
                 case SolariumDocumentTranslation::DOCUMENT_TYPE:
-                    $documentTranslation = $this->entityManager->find(
+                    return $this->entityManager->find(
                         DocumentTranslation::class,
                         $item[SolariumDocumentTranslation::IDENTIFIER_KEY]
                     );
-
-                    return $documentTranslation?->getDocument();
             }
         }
 
@@ -130,24 +154,23 @@ class SolrSearchResults implements SearchResultsInterface
     }
 
     /**
-     * Return the current element.
+     * Return the current element
      *
-     * @see https://php.net/manual/en/iterator.current.php
+     * @link https://php.net/manual/en/iterator.current.php
+     * @return mixed Can return any type.
      * @since 5.0
      */
     #[\ReturnTypeWillChange]
-    public function current(): SolrSearchResultItem
+    public function current(): mixed
     {
         return $this->getResultItems()[$this->position];
     }
 
     /**
-     * Move forward to next element.
+     * Move forward to next element
      *
-     * @see https://php.net/manual/en/iterator.next.php
-     *
-     * @return void any returned value is ignored
-     *
+     * @link https://php.net/manual/en/iterator.next.php
+     * @return void Any returned value is ignored.
      * @since 5.0
      */
     public function next(): void
@@ -156,9 +179,10 @@ class SolrSearchResults implements SearchResultsInterface
     }
 
     /**
-     * Return the key of the current element.
+     * Return the key of the current element
      *
-     * @see https://php.net/manual/en/iterator.key.php
+     * @link https://php.net/manual/en/iterator.key.php
+     * @return int
      * @since 5.0
      */
     #[\ReturnTypeWillChange]
@@ -168,13 +192,11 @@ class SolrSearchResults implements SearchResultsInterface
     }
 
     /**
-     * Checks if current position is valid.
+     * Checks if current position is valid
      *
-     * @see https://php.net/manual/en/iterator.valid.php
-     *
+     * @link https://php.net/manual/en/iterator.valid.php
      * @return bool The return value will be casted to boolean and then evaluated.
-     *              Returns true on success or false on failure.
-     *
+     * Returns true on success or false on failure.
      * @since 5.0
      */
     public function valid(): bool
@@ -183,12 +205,10 @@ class SolrSearchResults implements SearchResultsInterface
     }
 
     /**
-     * Rewind the Iterator to the first element.
+     * Rewind the Iterator to the first element
      *
-     * @see https://php.net/manual/en/iterator.rewind.php
-     *
-     * @return void any returned value is ignored
-     *
+     * @link https://php.net/manual/en/iterator.rewind.php
+     * @return void Any returned value is ignored.
      * @since 5.0
      */
     public function rewind(): void

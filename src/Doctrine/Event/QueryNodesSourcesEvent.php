@@ -10,11 +10,18 @@ use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 final class QueryNodesSourcesEvent extends QueryEvent
 {
     /**
+     * @var class-string
+     */
+    protected string $actualEntityName;
+
+    /**
+     * @param Query  $query
      * @param class-string $actualEntityName
      */
-    public function __construct(Query $query, private readonly string $actualEntityName)
+    public function __construct(Query $query, string $actualEntityName)
     {
         parent::__construct($query, NodesSources::class);
+        $this->actualEntityName = $actualEntityName;
     }
 
     /**
@@ -26,11 +33,12 @@ final class QueryNodesSourcesEvent extends QueryEvent
     }
 
     /**
+     * @return bool
      * @throws \ReflectionException
      */
     public function supports(): bool
     {
-        if (NodesSources::class === $this->actualEntityName) {
+        if ($this->actualEntityName === NodesSources::class) {
             return true;
         }
 

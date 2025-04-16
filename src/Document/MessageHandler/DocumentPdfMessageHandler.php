@@ -18,22 +18,31 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class DocumentPdfMessageHandler extends AbstractLockingDocumentMessageHandler
 {
+    private DocumentFactory $documentFactory;
+    private EventDispatcherInterface $eventDispatcher;
+
     public function __construct(
-        private readonly DocumentFactory $documentFactory,
-        private readonly EventDispatcherInterface $eventDispatcher,
+        DocumentFactory $documentFactory,
+        EventDispatcherInterface $eventDispatcher,
         ManagerRegistry $managerRegistry,
         LoggerInterface $messengerLogger,
-        FilesystemOperator $documentsStorage,
+        FilesystemOperator $documentsStorage
     ) {
         parent::__construct($managerRegistry, $messengerLogger, $documentsStorage);
+        $this->documentFactory = $documentFactory;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
+    /**
+     * @param  DocumentInterface $document
+     * @return bool
+     */
     protected function supports(DocumentInterface $document): bool
     {
-        return $document->isLocal()
-            && $document->isPdf()
-            && \class_exists('\Imagick')
-            && \class_exists('\ImagickException');
+        return $document->isLocal() &&
+            $document->isPdf() &&
+            \class_exists('\Imagick') &&
+            \class_exists('\ImagickException');
     }
 
     protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
@@ -75,13 +84,13 @@ final class DocumentPdfMessageHandler extends AbstractLockingDocumentMessageHand
         if (false === $thumbnailPath) {
             throw new UnrecoverableMessageHandlingException('Cannot create temporary file for PDF thumbnail.');
         }
-        \rename($thumbnailPath, $thumbnailPath .= $document->getFilename().'.jpg');
+        \rename($thumbnailPath, $thumbnailPath .= $document->getFilename() . '.jpg');
 
         try {
             $im = new \Imagick();
             $im->setResolution(144, 144);
             // Use [0] to get first page of PDF.
-            if ($im->readImage($localPdfPath.'[0]')) {
+            if ($im->readImage($localPdfPath . '[0]')) {
                 $im->writeImages($thumbnailPath, false);
 
                 $thumbnailDocument = $this->documentFactory
@@ -96,13 +105,12 @@ final class DocumentPdfMessageHandler extends AbstractLockingDocumentMessageHand
                 }
             }
         } catch (\ImagickException $exception) {
-            // Silent fail to avoid issue with message handling
-            $this->messengerLogger->warning(
+            throw new UnrecoverableMessageHandlingException(
                 sprintf(
                     'Cannot extract thumbnail from %s PDF file : %s',
                     $localPdfPath,
                     $exception->getMessage()
-                )
+                ),
             );
         }
     }

@@ -11,12 +11,21 @@ use Symfony\Component\Process\Process;
 
 final class SchemaUpdater
 {
+    private LoggerInterface $logger;
+    private OPCacheClearer $opCacheClearer;
+    private string $projectDir;
+    private CacheClearerInterface $cacheClearer;
+
     public function __construct(
-        private readonly CacheClearerInterface $cacheClearer,
-        private readonly OPCacheClearer $opCacheClearer,
-        private readonly LoggerInterface $logger,
-        private readonly string $projectDir,
+        CacheClearerInterface $cacheClearer,
+        OPCacheClearer $opCacheClearer,
+        LoggerInterface $logger,
+        string $projectDir
     ) {
+        $this->logger = $logger;
+        $this->opCacheClearer = $opCacheClearer;
+        $this->projectDir = $projectDir;
+        $this->cacheClearer = $cacheClearer;
     }
 
     public function clearMetadata(): void
@@ -29,10 +38,10 @@ final class SchemaUpdater
         );
         $process->run();
 
-        if (0 === $process->wait()) {
+        if ($process->wait() === 0) {
             $this->logger->info('Cleared Doctrine metadata cache.');
         } else {
-            throw new \RuntimeException('Cannot clear Doctrine metadata cache. '.$process->getErrorOutput());
+            throw new \RuntimeException('Cannot clear Doctrine metadata cache. ' . $process->getErrorOutput());
         }
 
         $process = $this->runCommand(
@@ -40,10 +49,10 @@ final class SchemaUpdater
         );
         $process->run();
 
-        if (0 === $process->wait()) {
+        if ($process->wait() === 0) {
             $this->logger->info('Stop any running messenger worker to force them to restart');
         } else {
-            throw new \RuntimeException('Cannot stop messenger workers. '.$process->getErrorOutput());
+            throw new \RuntimeException('Cannot stop messenger workers. ' . $process->getErrorOutput());
         }
     }
 
@@ -56,10 +65,10 @@ final class SchemaUpdater
         );
         $process->run();
 
-        if (0 === $process->wait()) {
+        if ($process->wait() === 0) {
             $this->logger->info('Cleared all caches.');
         } else {
-            throw new \RuntimeException('Cannot clear cache. '.$process->getErrorOutput());
+            throw new \RuntimeException('Cannot clear cache. ' . $process->getErrorOutput());
         }
     }
 
@@ -77,10 +86,10 @@ final class SchemaUpdater
         );
         $process->run();
 
-        if (0 === $process->wait()) {
+        if ($process->wait() === 0) {
             $this->logger->info('Executed pending migrations.');
         } else {
-            throw new \RuntimeException('Migrations failed. '.$process->getErrorOutput());
+            throw new \RuntimeException('Migrations failed. ' . $process->getErrorOutput());
         }
     }
 
@@ -95,27 +104,26 @@ final class SchemaUpdater
             '--namespace=DoctrineMigrations --quiet --allow-empty-diff',
         );
         $process->run();
-        if (0 === $process->wait()) {
+        if ($process->wait() === 0) {
             $this->logger->info('New migration has been generated.');
             $this->updateSchema();
         } else {
-            throw new \RuntimeException('DB schema update failed. '.$process->getErrorOutput());
+            throw new \RuntimeException('DB schema update failed. ' . $process->getErrorOutput());
         }
     }
 
     private function runCommand(
         string $command,
-        string $args = '',
+        string $args = ''
     ): Process {
         $args .= ' --no-interaction';
         $args .= ' --quiet';
 
         $process = Process::fromShellCommandline(
-            'php bin/console '.$command.' '.$args
+            'php bin/console ' . $command  . ' ' . $args
         );
         $process->setWorkingDirectory($this->projectDir);
         $process->setTty(false);
-
         return $process;
     }
 }

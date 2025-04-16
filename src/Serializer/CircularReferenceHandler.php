@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Serializer;
 
-use ApiPlatform\Metadata\IriConverterInterface;
-use ApiPlatform\Metadata\UrlGeneratorInterface;
+use ApiPlatform\Api\IriConverterInterface;
+use ApiPlatform\Api\UrlGeneratorInterface;
+use ApiPlatform\Metadata\Operation;
 
-final readonly class CircularReferenceHandler
+final class CircularReferenceHandler
 {
-    public function __construct(private IriConverterInterface $iriConverter)
+    private IriConverterInterface $iriConverter;
+
+    /**
+     * @param IriConverterInterface $iriConverter
+     */
+    public function __construct(IriConverterInterface $iriConverter)
     {
+        $this->iriConverter = $iriConverter;
     }
 
     public function __invoke(mixed $object, string $format, array $context): ?string
@@ -26,7 +33,6 @@ final readonly class CircularReferenceHandler
             if (is_object($object) && method_exists($object, 'getId')) {
                 return (string) $object->getId();
             }
-
             return '';
         }
     }

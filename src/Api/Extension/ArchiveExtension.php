@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * pagination_client_enabled: false
  * archive_enabled: true
  * archive_publication_field_name: publishedAt
- * ```.
+ * ```
  *
  * ```
  * "hydra:member": [
@@ -41,12 +41,17 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *  ],
  * ```
  */
-final readonly class ArchiveExtension implements QueryResultCollectionExtensionInterface
+final class ArchiveExtension implements QueryResultCollectionExtensionInterface
 {
+    private RequestStack $requestStack;
+    private string $defaultPublicationFieldName;
+
     public function __construct(
-        private RequestStack $requestStack,
-        private string $defaultPublicationFieldName = 'publishedAt',
+        RequestStack $requestStack,
+        string $defaultPublicationFieldName = 'publishedAt'
     ) {
+        $this->requestStack = $requestStack;
+        $this->defaultPublicationFieldName = $defaultPublicationFieldName;
     }
 
     public function applyToCollection(
@@ -54,7 +59,7 @@ final readonly class ArchiveExtension implements QueryResultCollectionExtensionI
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
         ?Operation $operation = null,
-        array $context = [],
+        array $context = []
     ): void {
         if (!$this->supportsResult($resourceClass, $operation)) {
             return;
@@ -65,7 +70,7 @@ final readonly class ArchiveExtension implements QueryResultCollectionExtensionI
         $aliases = $queryBuilder->getRootAliases();
         $alias = reset($aliases);
         $publicationFieldName = $this->getPublicationFieldName($operation);
-        $publicationField = $alias.'.'.$publicationFieldName;
+        $publicationField = $alias . '.' . $publicationFieldName;
 
         $queryBuilder->select($publicationField)
             ->addGroupBy($publicationField)
@@ -85,7 +90,7 @@ final readonly class ArchiveExtension implements QueryResultCollectionExtensionI
         QueryBuilder $queryBuilder,
         ?string $resourceClass = null,
         ?Operation $operation = null,
-        array $context = [],
+        array $context = []
     ): iterable {
         $entities = [];
         $dates = [];
@@ -123,13 +128,13 @@ final readonly class ArchiveExtension implements QueryResultCollectionExtensionI
     }
 
     private function isArchiveEnabled(
-        ?Operation $operation = null,
+        ?Operation $operation = null
     ): bool {
         return $operation->getExtraProperties()['archive_enabled'] ?? false;
     }
 
     private function getPublicationFieldName(
-        ?Operation $operation = null,
+        ?Operation $operation = null
     ): string {
         return $operation->getExtraProperties()['archive_publication_field_name'] ?? $this->defaultPublicationFieldName;
     }

@@ -12,12 +12,20 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-final readonly class RedirectionController
+final class RedirectionController
 {
-    public function __construct(private UrlGeneratorInterface $urlGenerator)
+    private UrlGeneratorInterface $urlGenerator;
+
+    public function __construct(UrlGeneratorInterface $urlGenerator)
     {
+        $this->urlGenerator = $urlGenerator;
     }
 
+    /**
+     * @param Request $request
+     * @param Redirection $redirection
+     * @return RedirectResponse
+     */
     public function redirectAction(Request $request, Redirection $redirection): RedirectResponse
     {
         if (null !== $redirection->getRedirectNodeSource()) {
@@ -31,8 +39,8 @@ final readonly class RedirectionController
         }
 
         if (
-            null !== $redirection->getRedirectUri()
-            && \mb_strlen($redirection->getRedirectUri()) > 0
+            null !== $redirection->getRedirectUri() &&
+            \mb_strlen($redirection->getRedirectUri()) > 0
         ) {
             return new RedirectResponse($redirection->getRedirectUri(), $redirection->getType());
         }
@@ -62,7 +70,7 @@ final readonly class RedirectionController
         Request $request,
         string $route,
         bool $permanent = false,
-        bool|array $ignoreAttributes = false,
+        $ignoreAttributes = false
     ): RedirectResponse {
         if ('' == $route) {
             throw new HttpException($permanent ? 410 : 404);
@@ -75,7 +83,6 @@ final readonly class RedirectionController
                 $attributes = array_diff_key($attributes, array_flip($ignoreAttributes));
             }
         }
-
         return new RedirectResponse(
             $this->urlGenerator->generate(
                 $route,

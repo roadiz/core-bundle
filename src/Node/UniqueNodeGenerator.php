@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Node;
 
+use DateTime;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
@@ -14,36 +15,41 @@ use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Security\Authorization\Voter\NodeVoter;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Security\Core\Security;
 
-final readonly class UniqueNodeGenerator
+class UniqueNodeGenerator
 {
     public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private NodeNamePolicyInterface $nodeNamePolicy,
-        private Security $security,
+        protected ManagerRegistry $managerRegistry,
+        protected NodeNamePolicyInterface $nodeNamePolicy,
+        protected Security $security,
     ) {
     }
 
     /**
      * Generate a node with a unique name.
      *
-     * This method flush entity-manager by default.
+     * This method flush entity-manager.
+     *
+     * @param NodeType $nodeType
+     * @param TranslationInterface $translation
+     * @param Node|null $parent
+     * @param Tag|null $tag
+     * @param bool $pushToTop
+     * @return NodesSources
      */
     public function generate(
         NodeType $nodeType,
         TranslationInterface $translation,
-        ?Node $parent = null,
-        ?Tag $tag = null,
-        bool $pushToTop = false,
-        bool $flush = true,
+        Node $parent = null,
+        Tag $tag = null,
+        bool $pushToTop = false
     ): NodesSources {
-        $name = $nodeType->getDisplayName().' '.uniqid();
-        $node = new Node();
-        $node->setNodeType($nodeType);
+        $name = $nodeType->getDisplayName() . " " . uniqid();
+        $node = new Node($nodeType);
         $node->setTtl($nodeType->getDefaultTtl());
 
         if (null !== $tag) {
@@ -58,21 +64,19 @@ final readonly class UniqueNodeGenerator
             $node->setPosition(0.5);
         }
 
-        /** @var class-string<NodesSources> $sourceClass */ // phpstan hint
-        $sourceClass = NodeType::getGeneratedEntitiesNamespace().'\\'.$nodeType->getSourceEntityClassName();
+        /** @var class-string<NodesSources> $sourceClass */ # phpstan hint
+        $sourceClass = NodeType::getGeneratedEntitiesNamespace() . "\\" . $nodeType->getSourceEntityClassName();
 
         $source = new $sourceClass($node, $translation);
         $source->setTitle($name);
-        $source->setPublishedAt(new \DateTime());
+        $source->setPublishedAt(new DateTime());
         $node->setNodeName($this->nodeNamePolicy->getCanonicalNodeName($source));
 
         $manager = $this->managerRegistry->getManagerForClass(Node::class);
         if (null !== $manager) {
             $manager->persist($node);
             $manager->persist($source);
-            if ($flush) {
-                $manager->flush();
-            }
+            $manager->flush();
         }
 
         return $source;
@@ -81,6 +85,9 @@ final readonly class UniqueNodeGenerator
     /**
      * Try to generate a unique node from request variables.
      *
+     * @param Request $request
+     *
+     * @return NodesSources
      * @throws ORMException
      * @throws OptimisticLockException
      */
@@ -88,7 +95,7 @@ final readonly class UniqueNodeGenerator
     {
         $pushToTop = false;
 
-        if (1 == $request->get('pushTop')) {
+        if ($request->get('pushTop') == 1) {
             $pushToTop = true;
         }
 
@@ -105,7 +112,7 @@ final readonly class UniqueNodeGenerator
                 ->getRepository(Node::class)
                 ->find((int) $request->get('parentNodeId'));
             if (null === $parent || !$this->security->isGranted(NodeVoter::CREATE, $parent)) {
-                throw new BadRequestHttpException('Parent node does not exist.');
+                throw new BadRequestHttpException("Parent node does not exist.");
             }
         } else {
             if (!$this->security->isGranted(NodeVoter::CREATE_AT_ROOT)) {
@@ -116,7 +123,7 @@ final readonly class UniqueNodeGenerator
 
         $nodeTypeId = $request->get('nodeTypeId');
         if (!is_numeric($nodeTypeId) || $nodeTypeId < 1) {
-            throw new BadRequestHttpException('No node-type ID has been given.');
+            throw new BadRequestHttpException("No node-type ID has been given.");
         }
 
         /** @var NodeType|null $nodeType */
@@ -125,7 +132,7 @@ final readonly class UniqueNodeGenerator
             ->find((int) $nodeTypeId);
 
         if (null === $nodeType) {
-            throw new BadRequestHttpException('Node-type does not exist.');
+            throw new BadRequestHttpException("Node-type does not exist.");
         }
 
         if ($request->get('translationId') > 0) {

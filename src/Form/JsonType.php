@@ -16,16 +16,24 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class JsonType extends AbstractType
 {
+    /**
+     * {@inheritdoc}
+     */
     public function getParent(): ?string
     {
         return TextareaType::class;
     }
-
+    /**
+     * {@inheritdoc}
+     */
     public function getBlockPrefix(): string
     {
         return 'json';
     }
 
+    /**
+     * @inheritDoc
+     */
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
@@ -38,8 +46,8 @@ class JsonType extends AbstractType
         $resolver->setDefaults([
             'required' => false,
             'constraints' => [
-                new ValidJson(),
-            ],
+                new ValidJson()
+            ]
         ]);
     }
 }

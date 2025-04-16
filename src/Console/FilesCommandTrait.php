@@ -6,17 +6,26 @@ namespace RZ\Roadiz\CoreBundle\Console;
 
 trait FilesCommandTrait
 {
-    protected function getPublicFolderName(): string
+    /**
+     * @return string
+     */
+    protected function getPublicFolderName()
     {
         return '/exported_public';
     }
 
-    protected function getPrivateFolderName(): string
+    /**
+     * @return string
+     */
+    protected function getPrivateFolderName()
     {
         return '/exported_private';
     }
 
-    protected function getFontsFolderName(): string
+    /**
+     * @return string
+     */
+    protected function getFontsFolderName()
     {
         return '/exported_fonts';
     }

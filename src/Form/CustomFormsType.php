@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
 
+use RZ\Roadiz\CoreBundle\Form\Constraint\Recaptcha;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Entity\CustomFormField;
-use RZ\Roadiz\CoreBundle\Form\Constraint\Recaptcha;
 use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -29,6 +29,9 @@ use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\File;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
+/**
+ * @package RZ\Roadiz\CoreBundle\Form
+ */
 class CustomFormsType extends AbstractType
 {
     protected ?string $recaptchaPrivateKey;
@@ -40,6 +43,10 @@ class CustomFormsType extends AbstractType
         $this->recaptchaPublicKey = $recaptchaPublicKey;
     }
 
+    /**
+     * @param  FormBuilderInterface $builder
+     * @param  array $options
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $fieldsArray = $this->getFieldsByGroups($options);
@@ -55,7 +62,7 @@ class CustomFormsType extends AbstractType
                     'inherit_data' => true,
                     'attr' => [
                         'data-group-wrapper' => $groupCanonical,
-                    ],
+                    ]
                 ]);
                 /** @var CustomFormField $subfield */
                 foreach ($field as $subfield) {
@@ -69,8 +76,8 @@ class CustomFormsType extends AbstractType
          * Add Google Recaptcha if setting optional options.
          */
         if (
-            !empty($this->recaptchaPublicKey)
-            && !empty($this->recaptchaPrivateKey)
+            !empty($this->recaptchaPublicKey) &&
+            !empty($this->recaptchaPrivateKey)
         ) {
             $builder->add($options['recaptcha_name'], RecaptchaType::class, [
                 'label' => false,
@@ -80,13 +87,17 @@ class CustomFormsType extends AbstractType
                 'constraints' => [
                     new Recaptcha([
                         'privateKey' => $this->recaptchaPrivateKey,
-                        'fieldName' => $options['recaptcha_name'],
+                        'fieldName' => $options['recaptcha_name']
                     ]),
                 ],
             ]);
         }
     }
 
+    /**
+     * @param array $options
+     * @return array
+     */
     protected function getFieldsByGroups(array $options): array
     {
         $fieldsArray = [];
@@ -95,7 +106,7 @@ class CustomFormsType extends AbstractType
         /** @var CustomFormField $field */
         foreach ($fields as $field) {
             $groupName = $field->getGroupName();
-            if (\is_string($groupName) && '' !== $groupName) {
+            if (\is_string($groupName) && $groupName !== '') {
                 if (!isset($fieldsArray[$groupName]) || !\is_array($fieldsArray[$groupName])) {
                     $fieldsArray[$groupName] = [];
                 }
@@ -109,6 +120,9 @@ class CustomFormsType extends AbstractType
     }
 
     /**
+     * @param FormBuilderInterface $builder
+     * @param CustomFormField $field
+     * @param array $formOptions
      * @return $this
      */
     protected function addSingleField(FormBuilderInterface $builder, CustomFormField $field, array $formOptions): self
@@ -118,11 +132,11 @@ class CustomFormsType extends AbstractType
             $this->getTypeForField($field),
             $this->getOptionsForField($field, $formOptions)
         );
-
         return $this;
     }
 
     /**
+     * @param CustomFormField $field
      * @return class-string<AbstractType>
      */
     protected function getTypeForField(CustomFormField $field): string
@@ -145,32 +159,30 @@ class CustomFormsType extends AbstractType
     }
 
     /**
+     * @param CustomFormField $field
+     * @param array $formOptions
      * @return array<string, mixed>
      */
     protected function getOptionsForField(CustomFormField $field, array $formOptions): array
     {
         $option = [
-            'label' => $field->getLabel(),
+            "label" => $field->getLabel(),
             'help' => $field->getDescription(),
             'attr' => [
                 'data-group' => $field->getGroupName(),
             ],
         ];
 
-        if (!empty($field->getPlaceholder())) {
+        if ($field->getPlaceholder() !== '') {
             $option['attr']['placeholder'] = $field->getPlaceholder();
-        }
-
-        if (null !== $field->getAutocomplete()) {
-            $option['attr']['autocomplete'] = $field->getAutocomplete();
         }
 
         if ($field->isRequired()) {
             $option['required'] = true;
             $option['constraints'] = [
                 new NotBlank([
-                    'message' => 'you.need.to.fill.this.required.field',
-                ]),
+                    'message' => 'you.need.to.fill.this.required.field'
+                ])
             ];
         } else {
             $option['required'] = false;
@@ -178,39 +190,39 @@ class CustomFormsType extends AbstractType
 
         switch ($field->getType()) {
             case AbstractField::DATETIME_T:
-                $option['widget'] = 'single_text';
-                $option['format'] = DateTimeType::HTML5_FORMAT;
+                $option["widget"] = 'single_text';
+                $option["format"] = DateTimeType::HTML5_FORMAT;
                 break;
             case AbstractField::DATE_T:
-                $option['widget'] = 'single_text';
-                $option['format'] = DateType::HTML5_FORMAT;
+                $option["widget"] = 'single_text';
+                $option["format"] = DateType::HTML5_FORMAT;
                 break;
             case AbstractField::ENUM_T:
-                if (!empty($field->getPlaceholder())) {
+                if ($field->getPlaceholder() !== '') {
                     $option['placeholder'] = $field->getPlaceholder();
                 }
-                $option['choices'] = $this->getChoices($field);
-                $option['expanded'] = $field->isExpanded();
+                $option["choices"] = $this->getChoices($field);
+                $option["expanded"] = $field->isExpanded();
 
                 if ($formOptions['forceExpanded']) {
-                    $option['expanded'] = true;
+                    $option["expanded"] = true;
                 }
-                if (false === $field->isRequired()) {
+                if ($field->isRequired() === false) {
                     $option['placeholder'] = 'none';
                 }
                 break;
             case AbstractField::MULTIPLE_T:
-                if (!empty($field->getPlaceholder())) {
+                if ($field->getPlaceholder() !== '') {
                     $option['placeholder'] = $field->getPlaceholder();
                 }
-                $option['choices'] = $this->getChoices($field);
-                $option['multiple'] = true;
-                $option['expanded'] = $field->isExpanded();
+                $option["choices"] = $this->getChoices($field);
+                $option["multiple"] = true;
+                $option["expanded"] = $field->isExpanded();
 
                 if ($formOptions['forceExpanded']) {
-                    $option['expanded'] = true;
+                    $option["expanded"] = true;
                 }
-                if (false === $field->isRequired()) {
+                if ($field->isRequired() === false) {
                     $option['placeholder'] = 'none';
                 }
                 break;
@@ -236,14 +248,14 @@ class CustomFormsType extends AbstractType
                     'constraints' => [
                         new File([
                             'maxSize' => $formOptions['fileUploadMaxSize'],
-                            'mimeTypes' => $mimeTypes,
-                        ]),
-                    ],
+                            'mimeTypes' => $mimeTypes
+                        ])
+                    ]
                 ]);
                 break;
             case AbstractField::COUNTRY_T:
-                $option['expanded'] = $field->isExpanded();
-                if (!empty($field->getPlaceholder())) {
+                $option["expanded"] = $field->isExpanded();
+                if ($field->getPlaceholder() !== '') {
                     $option['placeholder'] = $field->getPlaceholder();
                 }
                 if (!empty($field->getDefaultValues())) {
@@ -261,18 +273,23 @@ class CustomFormsType extends AbstractType
             default:
                 break;
         }
-
         return $option;
     }
 
+    /**
+     * @param CustomFormField $field
+     * @return array
+     */
     protected function getChoices(CustomFormField $field): array
     {
         $choices = explode(',', $field->getDefaultValues() ?? '');
         $choices = array_map('trim', $choices);
-
         return array_combine(array_values($choices), array_values($choices));
     }
 
+    /**
+     * @param OptionsResolver $resolver
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -291,6 +308,9 @@ class CustomFormsType extends AbstractType
         $resolver->setAllowedTypes('recaptcha_name', ['string']);
     }
 
+    /**
+     * @return string
+     */
     public function getBlockPrefix(): string
     {
         return 'custom_form_public';

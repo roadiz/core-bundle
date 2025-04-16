@@ -15,7 +15,6 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 trait TranslationAwareControllerTrait
 {
     abstract protected function getManagerRegistry(): ManagerRegistry;
-
     abstract protected function getPreviewResolver(): PreviewResolverInterface;
 
     /**
@@ -24,14 +23,9 @@ trait TranslationAwareControllerTrait
     protected function getTranslation(Request $request): TranslationInterface
     {
         $locale = $request->query->get('_locale');
-        $requestTranslation = $request->attributes->get('_translation');
-        if ($requestTranslation instanceof TranslationInterface) {
-            return $requestTranslation;
-        }
-
         /** @var TranslationRepository $repository */
         $repository = $this->getManagerRegistry()->getRepository(TranslationInterface::class);
-        if (!\is_string($locale) || '' === $locale) {
+        if (!\is_string($locale) || $locale === '') {
             return $repository->findDefault();
         }
 

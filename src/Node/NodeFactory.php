@@ -15,12 +15,21 @@ use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
 use RZ\Roadiz\CoreBundle\Repository\NodeRepository;
 use RZ\Roadiz\CoreBundle\Repository\UrlAliasRepository;
 
-final readonly class NodeFactory
+final class NodeFactory
 {
+    private ManagerRegistry $managerRegistry;
+    private NodeNamePolicyInterface $nodeNamePolicy;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param NodeNamePolicyInterface $nodeNamePolicy
+     */
     public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private NodeNamePolicyInterface $nodeNamePolicy,
+        ManagerRegistry $managerRegistry,
+        NodeNamePolicyInterface $nodeNamePolicy
     ) {
+        $this->nodeNamePolicy = $nodeNamePolicy;
+        $this->managerRegistry = $managerRegistry;
     }
 
     public function create(
@@ -28,29 +37,27 @@ final readonly class NodeFactory
         ?NodeTypeInterface $type = null,
         ?TranslationInterface $translation = null,
         ?Node $node = null,
-        ?Node $parent = null,
+        ?Node $parent = null
     ): Node {
         /** @var NodeRepository $repository */
         $repository = $this->managerRegistry->getRepository(Node::class)
             ->setDisplayingAllNodesStatuses(true);
 
-        if (null === $node && null === $type) {
+        if ($node === null && $type === null) {
             throw new \RuntimeException('Cannot create node from null NodeType and null Node.');
         }
 
-        if (null === $translation) {
+        if ($translation === null) {
             $translation = $this->managerRegistry->getRepository(Translation::class)->findDefault();
         }
 
-        if (null === $node) {
-            $node = new Node();
-            $node->setNodeType($type);
+        if ($node === null) {
+            $node = new Node($type);
         }
 
-        if ($node->getNodeType() instanceof NodeType) {
-            $node->setTtl($node->getNodeType()->getDefaultTtl());
+        if ($type instanceof NodeType) {
+            $node->setTtl($type->getDefaultTtl());
         }
-
         if (null !== $parent) {
             $node->setParent($parent);
         }
@@ -90,15 +97,13 @@ final readonly class NodeFactory
         ?NodeTypeInterface $type = null,
         ?TranslationInterface $translation = null,
         ?Node $node = null,
-        ?Node $parent = null,
+        ?Node $parent = null
     ): Node {
         $node = $this->create($title, $type, $translation, $node, $parent);
-        $nodeSource = $node->getNodeSources()->first();
         /** @var UrlAliasRepository $repository */
         $repository = $this->managerRegistry->getRepository(UrlAlias::class);
-        if (false !== $nodeSource && false === $repository->exists($urlAlias)) {
-            $alias = new UrlAlias();
-            $alias->setNodeSource($nodeSource);
+        if (false === $repository->exists($urlAlias)) {
+            $alias = new UrlAlias($node->getNodeSources()->first() ?: null);
             $alias->setAlias($urlAlias);
             $this->managerRegistry->getManagerForClass(UrlAlias::class)->persist($alias);
         }

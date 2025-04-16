@@ -7,34 +7,41 @@ namespace RZ\Roadiz\CoreBundle\Routing;
 use Doctrine\ORM\Query;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Cache\CacheItemPoolInterface;
-use Psr\Cache\InvalidArgumentException;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 
-final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSourcesPathAggregator
+final class OptimizedNodesSourcesGraphPathAggregator implements NodesSourcesPathAggregator
 {
-    public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private CacheItemPoolInterface $cacheAdapter,
-    ) {
+    private ManagerRegistry $managerRegistry;
+    private CacheItemPoolInterface $cacheAdapter;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param CacheItemPoolInterface $cacheAdapter
+     */
+    public function __construct(ManagerRegistry $managerRegistry, CacheItemPoolInterface $cacheAdapter)
+    {
+        $this->managerRegistry = $managerRegistry;
+        $this->cacheAdapter = $cacheAdapter;
     }
 
     private function getCacheKey(NodesSources $nodesSources): string
     {
-        return 'ns_url_'.$nodesSources->getId();
+        return 'ns_url_' . $nodesSources->getId();
     }
 
     /**
-     * @throws InvalidArgumentException
+     * @param NodesSources $nodesSources
+     * @param array $parameters
+     * @return string
      */
     public function aggregatePath(NodesSources $nodesSources, array $parameters = []): string
     {
         if (
-            isset($parameters[NodeRouter::NO_CACHE_PARAMETER])
-            && true === $parameters[NodeRouter::NO_CACHE_PARAMETER]
+            isset($parameters[NodeRouter::NO_CACHE_PARAMETER]) &&
+            $parameters[NodeRouter::NO_CACHE_PARAMETER] === true
         ) {
             $urlTokens = array_reverse($this->getIdentifiers($nodesSources));
-
             return implode('/', $urlTokens);
         }
 
@@ -44,17 +51,18 @@ final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSo
             $cacheItem->set(implode('/', $urlTokens));
             $this->cacheAdapter->save($cacheItem);
         }
-
         return $cacheItem->get();
     }
 
     /**
+     * @param Node $parent
+     *
      * @return array<int, int|string>
      */
-    private function getParentsIds(Node $parent): array
+    protected function getParentsIds(Node $parent): array
     {
         $parentIds = [];
-        while (null !== $parent && !$parent->isHome()) {
+        while ($parent !== null && !$parent->isHome()) {
             $parentIds[] = $parent->getId();
             $parent = $parent->getParent();
         }
@@ -64,9 +72,13 @@ final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSo
 
     /**
      * Get every nodeSource parents identifier from current to
-     * farthest ancestor.
+     * farest ancestor.
+     *
+     * @param NodesSources $source
+     *
+     * @return array
      */
-    private function getIdentifiers(NodesSources $source): array
+    protected function getIdentifiers(NodesSources $source): array
     {
         $urlTokens = [];
         $parents = [];
@@ -77,7 +89,8 @@ final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSo
             $parentIds = $this->getParentsIds($parentNode);
             if (count($parentIds) > 0) {
                 /**
-                 * Do a partial query to optimize SQL time.
+                 *
+                 * Do a partial query to optimize SQL time
                  */
                 $qb = $this->managerRegistry
                     ->getRepository(NodesSources::class)
@@ -91,7 +104,7 @@ final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSo
                     ->setParameters([
                         'parentIds' => $parentIds,
                         'visible' => true,
-                        'translation' => $source->getTranslation(),
+                        'translation' => $source->getTranslation()
                     ])
                     ->getQuery()
                     ->setHint(Query::HINT_FORCE_PARTIAL_LOAD, true)

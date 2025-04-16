@@ -14,23 +14,21 @@ use RZ\Roadiz\CoreBundle\Entity\CustomFormAnswer;
 use RZ\Roadiz\CoreBundle\Mailer\EmailManagerFactory;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
-use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
+use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 use Symfony\Component\Mime\Address;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
-#[AsMessageHandler]
-final readonly class CustomFormAnswerNotifyMessageHandler
+final class CustomFormAnswerNotifyMessageHandler implements MessageHandlerInterface
 {
     public function __construct(
         private ManagerRegistry $managerRegistry,
         private EmailManagerFactory $emailManagerFactory,
         private Settings $settingsBag,
         private FilesystemOperator $documentsStorage,
-        private LoggerInterface $messengerLogger,
-        private bool $useReplyTo = true,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -45,42 +43,39 @@ final readonly class CustomFormAnswerNotifyMessageHandler
         }
 
         $emailFields = [
-            ['name' => 'ip.address', 'value' => $answer->getIp()],
-            ['name' => 'submittedAt', 'value' => $answer->getSubmittedAt()->format('Y-m-d H:i:s')],
+            ["name" => "ip.address", "value" => $answer->getIp()],
+            ["name" => "submittedAt", "value" => $answer->getSubmittedAt()->format('Y-m-d H:i:s')],
         ];
         $emailFields = array_merge(
             $emailFields,
             $answer->toArray(false)
         );
 
+        $receiver = array_filter(
+            array_map('trim', explode(',', $answer->getCustomForm()->getEmail() ?? ''))
+        );
+        $receiver = array_map(function (string $email) {
+            return new Address($email);
+        }, $receiver);
         $this->sendAnswer(
             $answer,
             [
+                'mailContact' => $message->getSenderAddress(),
                 'fields' => $emailFields,
                 'customForm' => $answer->getCustomForm(),
                 'title' => $message->getTitle(),
                 'requestLocale' => $message->getLocale(),
-            ]
+            ],
+            $receiver
         );
-    }
-
-    /**
-     * @return Address[]
-     */
-    private function getCustomFormReceivers(CustomFormAnswer $answer): array
-    {
-        $receiver = array_filter(
-            array_map('trim', explode(',', $answer->getCustomForm()->getEmail() ?? ''))
-        );
-
-        return array_map(function (string $email) {
-            return new Address($email);
-        }, $receiver);
     }
 
     /**
      * Send an answer form by Email.
      *
+     * @param CustomFormAnswer $answer
+     * @param array $assignation
+     * @param string|array|null $receiver
      * @throws TransportExceptionInterface
      * @throws LoaderError
      * @throws RuntimeError
@@ -89,30 +84,17 @@ final readonly class CustomFormAnswerNotifyMessageHandler
     private function sendAnswer(
         CustomFormAnswer $answer,
         array $assignation,
+        $receiver
     ): void {
-        $defaultSender = $this->settingsBag->get('email_sender');
-        $defaultSender = filter_var($defaultSender, FILTER_VALIDATE_EMAIL) ? $defaultSender : 'sender@roadiz.io';
-        $receivers = $this->getCustomFormReceivers($answer);
-
         $emailManager = $this->emailManagerFactory->create();
-        $emailManager->setAssignation([
-            ...$assignation,
-            // Mail contact is support or sender
-            'mailContact' => $emailManager->getSupportEmailAddress(),
-        ]);
+        $defaultSender = $this->settingsBag->get('email_sender');
+        $defaultSender = !empty($defaultSender) ? $defaultSender : 'sender@roadiz.io';
+        $emailManager->setAssignation($assignation);
         $emailManager->setEmailTemplate('@RoadizCore/email/forms/answerForm.html.twig');
         $emailManager->setEmailPlainTextTemplate('@RoadizCore/email/forms/answerForm.txt.twig');
         $emailManager->setSubject($assignation['title']);
         $emailManager->setEmailTitle($assignation['title']);
-        $emailManager->appendWebsiteIcon();
-
-        /*
-         * Set real sender if email is valid to enable Reply-To
-         */
-        $realSender = filter_var($answer->getEmail(), FILTER_VALIDATE_EMAIL) ? $answer->getEmail() : $defaultSender;
-        if ($this->useReplyTo) {
-            $emailManager->setSender($realSender);
-        }
+        $emailManager->setSender($defaultSender);
 
         try {
             foreach ($answer->getAnswerFields() as $customFormAnswerAttr) {
@@ -123,30 +105,21 @@ final readonly class CustomFormAnswerNotifyMessageHandler
                         $document->getFilename(),
                         $this->documentsStorage->mimeType($document->getMountPath())
                     );
-                    $this->messengerLogger->debug(sprintf(
-                        'Joining document %s to email.',
-                        $document->getFilename()
-                    ));
                 }
             }
         } catch (FilesystemException $exception) {
-            $this->messengerLogger->error($exception->getMessage(), [
-                'entity' => $answer,
+            $this->logger->error($exception->getMessage(), [
+                'entity' => $answer
             ]);
         }
 
-        if (empty($receivers)) {
+        if (empty($receiver)) {
             $emailManager->setReceiver($defaultSender);
         } else {
-            $emailManager->setReceiver($receivers);
+            $emailManager->setReceiver($receiver);
         }
 
         // Send the message
         $emailManager->send();
-        $this->messengerLogger->debug(sprintf(
-            'CustomForm (%s) answer sent to %s',
-            $answer->getCustomForm()->getName(),
-            $realSender
-        ));
     }
 }

@@ -11,6 +11,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * Command line utils for managing users from terminal.
+ */
 final class UsersDeleteCommand extends UsersCommand
 {
     protected function configure(): void
@@ -31,7 +34,7 @@ final class UsersDeleteCommand extends UsersCommand
         $user = $this->getUserForInput($input);
 
         $confirmation = new ConfirmationQuestion(
-            '<question>Do you really want to delete user “'.$user->getUsername().'”?</question>',
+            '<question>Do you really want to delete user “' . $user->getUsername() . '”?</question>',
             false
         );
         if (
@@ -41,12 +44,10 @@ final class UsersDeleteCommand extends UsersCommand
         ) {
             $this->managerRegistry->getManagerForClass(User::class)->remove($user);
             $this->managerRegistry->getManagerForClass(User::class)->flush();
-            $io->success('User “'.$name.'” deleted.');
-
+            $io->success('User “' . $name . '” deleted.');
             return 0;
         } else {
-            $io->warning('User “'.$name.'” was not deleted.');
-
+            $io->warning('User “' . $name . '” was not deleted.');
             return 1;
         }
     }

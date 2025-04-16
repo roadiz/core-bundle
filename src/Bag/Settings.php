@@ -13,21 +13,25 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
 class Settings extends LazyParameterBag
 {
+    private ManagerRegistry $managerRegistry;
     private ?SettingRepository $repository = null;
+    private Stopwatch $stopwatch;
 
-    public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly Stopwatch $stopwatch,
-    ) {
+    public function __construct(ManagerRegistry $managerRegistry, Stopwatch $stopwatch)
+    {
         parent::__construct();
+        $this->managerRegistry = $managerRegistry;
+        $this->stopwatch = $stopwatch;
     }
 
+    /**
+     * @return SettingRepository
+     */
     public function getRepository(): SettingRepository
     {
         if (null === $this->repository) {
             $this->repository = $this->managerRegistry->getRepository(Setting::class);
         }
-
         return $this->repository;
     }
 
@@ -48,19 +52,26 @@ class Settings extends LazyParameterBag
         $this->stopwatch->stop('settings');
     }
 
-    public function get(string $key, $default = false): mixed
+    /**
+     * @param string $key
+     * @param mixed $default
+     * @return bool|mixed
+     */
+    public function get($key, $default = false)
     {
         return parent::get($key, $default);
     }
 
     /**
      * Get a document from its setting name.
+     *
+     * @param string $key
+     * @return Document|null
      */
-    public function getDocument(string $key): ?Document
+    public function getDocument($key): ?Document
     {
         try {
             $id = $this->getInt($key);
-
             return $this->managerRegistry
                         ->getRepository(Document::class)
                         ->findOneById($id);

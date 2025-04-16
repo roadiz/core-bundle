@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\TwigExtension;
 
-use Symfony\Bridge\Twig\Extension\RoutingExtension as BaseRoutingExtension;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Twig\Error\RuntimeError;
@@ -15,14 +14,26 @@ use Twig\TwigFunction;
 /**
  * Override Symfony RoutingExtension to support object url generation.
  */
-final class RoutingExtension extends AbstractExtension
+class RoutingExtension extends AbstractExtension
 {
+    private UrlGeneratorInterface $generator;
+    private \Symfony\Bridge\Twig\Extension\RoutingExtension $decorated;
+
+    /**
+     * @param UrlGeneratorInterface $generator
+     * @param \Symfony\Bridge\Twig\Extension\RoutingExtension $decorated
+     */
     public function __construct(
-        private readonly BaseRoutingExtension $decorated,
-        private readonly UrlGeneratorInterface $generator,
+        \Symfony\Bridge\Twig\Extension\RoutingExtension $decorated,
+        UrlGeneratorInterface $generator
     ) {
+        $this->generator = $generator;
+        $this->decorated = $decorated;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getFunctions(): array
     {
         return [
@@ -32,9 +43,13 @@ final class RoutingExtension extends AbstractExtension
     }
 
     /**
+     * @param string|object|null $name
+     * @param array $parameters
+     * @param bool $relative
+     * @return string
      * @throws RuntimeError
      */
-    public function getPath(string|object|null $name, array $parameters = [], bool $relative = false): string
+    public function getPath($name, array $parameters = [], bool $relative = false): string
     {
         if (is_string($name)) {
             return $this->decorated->getPath(
@@ -54,9 +69,13 @@ final class RoutingExtension extends AbstractExtension
     }
 
     /**
+     * @param string|object|null $name
+     * @param array $parameters
+     * @param bool $schemeRelative
+     * @return string
      * @throws RuntimeError
      */
-    public function getUrl(string|object|null $name, array $parameters = [], bool $schemeRelative = false): string
+    public function getUrl($name, array $parameters = [], bool $schemeRelative = false): string
     {
         if (is_string($name)) {
             return $this->decorated->getUrl(

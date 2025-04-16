@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CompatBundle\Theme\ThemeGenerator;
 use RZ\Roadiz\CoreBundle\Exception\EntityAlreadyExistsException;
 use RZ\Roadiz\CoreBundle\Importer\AttributeImporter;
 use RZ\Roadiz\CoreBundle\Importer\EntityImporterInterface;
@@ -18,28 +19,48 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Yaml\Yaml;
 
+/**
+ * Command line utils for managing themes from terminal.
+ */
 final class AppInstallCommand extends Command
 {
-    private SymfonyStyle $io;
+    protected SymfonyStyle $io;
     private bool $dryRun = false;
+    protected string $projectDir;
+    protected ThemeGenerator $themeGenerator;
+    protected NodeTypesImporter $nodeTypesImporter;
+    protected TagsImporter $tagsImporter;
+    protected SettingsImporter $settingsImporter;
+    protected RolesImporter $rolesImporter;
+    protected GroupsImporter $groupsImporter;
+    protected AttributeImporter $attributeImporter;
+    protected ManagerRegistry $managerRegistry;
 
     public function __construct(
-        #[Autowire('%kernel.project_dir%')]
-        private readonly string $projectDir,
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly NodeTypesImporter $nodeTypesImporter,
-        private readonly TagsImporter $tagsImporter,
-        private readonly SettingsImporter $settingsImporter,
-        private readonly RolesImporter $rolesImporter,
-        private readonly GroupsImporter $groupsImporter,
-        private readonly AttributeImporter $attributeImporter,
-        ?string $name = null,
+        string $projectDir,
+        ManagerRegistry $managerRegistry,
+        ThemeGenerator $themeGenerator,
+        NodeTypesImporter $nodeTypesImporter,
+        TagsImporter $tagsImporter,
+        SettingsImporter $settingsImporter,
+        RolesImporter $rolesImporter,
+        GroupsImporter $groupsImporter,
+        AttributeImporter $attributeImporter,
+        string $name = null
     ) {
         parent::__construct($name);
+        $this->projectDir = $projectDir;
+        $this->themeGenerator = $themeGenerator;
+        $this->nodeTypesImporter = $nodeTypesImporter;
+        $this->tagsImporter = $tagsImporter;
+        $this->settingsImporter = $settingsImporter;
+        $this->rolesImporter = $rolesImporter;
+        $this->groupsImporter = $groupsImporter;
+        $this->attributeImporter = $attributeImporter;
+        $this->managerRegistry = $managerRegistry;
     }
 
     protected function configure(): void
@@ -64,19 +85,17 @@ final class AppInstallCommand extends Command
         /*
          * Test if Classname is not a valid yaml file before using Theme
          */
-        $configPath = $this->projectDir.'/src/Resources/config.yml';
+        $configPath = $this->projectDir . '/src/Resources/config.yml';
         $realConfigPath = realpath($configPath);
         if (false !== $realConfigPath && file_exists($realConfigPath)) {
-            $this->io->note('Install assets directly from file: '.$realConfigPath);
+            $this->io->note('Install assets directly from file: ' . $realConfigPath);
             $themeConfigPath = $realConfigPath;
         } else {
-            $this->io->error($configPath.' configuration file is not readable.');
-
+            $this->io->error($configPath . ' configuration file is not readable.');
             return 1;
         }
 
         $this->importAppData($themeConfigPath);
-
         return 0;
     }
 
@@ -84,92 +103,89 @@ final class AppInstallCommand extends Command
     {
         $data = $this->getAppConfig($themeConfigPath);
 
-        if (!isset($data['importFiles']) || !is_array($data['importFiles'])) {
-            $this->io->warning('Config file "'.$themeConfigPath.'" has no data to import.');
-
-            return;
-        }
-
-        if (isset($data['importFiles']['groups'])) {
-            foreach ($data['importFiles']['groups'] as $filename) {
-                $this->importFile($filename, $this->groupsImporter);
+        if (isset($data["importFiles"])) {
+            if (isset($data["importFiles"]['groups'])) {
+                foreach ($data["importFiles"]['groups'] as $filename) {
+                    $this->importFile($filename, $this->groupsImporter);
+                }
             }
-        }
-        if (isset($data['importFiles']['roles'])) {
-            foreach ($data['importFiles']['roles'] as $filename) {
-                $this->importFile($filename, $this->rolesImporter);
+            if (isset($data["importFiles"]['roles'])) {
+                foreach ($data["importFiles"]['roles'] as $filename) {
+                    $this->importFile($filename, $this->rolesImporter);
+                }
             }
-        }
-        if (isset($data['importFiles']['settings'])) {
-            foreach ($data['importFiles']['settings'] as $filename) {
-                $this->importFile($filename, $this->settingsImporter);
+            if (isset($data["importFiles"]['settings'])) {
+                foreach ($data["importFiles"]['settings'] as $filename) {
+                    $this->importFile($filename, $this->settingsImporter);
+                }
             }
-        }
-        if (isset($data['importFiles']['nodetypes'])) {
-            foreach ($data['importFiles']['nodetypes'] as $filename) {
-                $this->importFile($filename, $this->nodeTypesImporter);
+            if (isset($data["importFiles"]['nodetypes'])) {
+                foreach ($data["importFiles"]['nodetypes'] as $filename) {
+                    $this->importFile($filename, $this->nodeTypesImporter);
+                }
             }
-        }
-        if (isset($data['importFiles']['tags'])) {
-            foreach ($data['importFiles']['tags'] as $filename) {
-                $this->importFile($filename, $this->tagsImporter);
+            if (isset($data["importFiles"]['tags'])) {
+                foreach ($data["importFiles"]['tags'] as $filename) {
+                    $this->importFile($filename, $this->tagsImporter);
+                }
             }
-        }
-        if (isset($data['importFiles']['attributes'])) {
-            foreach ($data['importFiles']['attributes'] as $filename) {
-                $this->importFile($filename, $this->attributeImporter);
+            if (isset($data["importFiles"]['attributes'])) {
+                foreach ($data["importFiles"]['attributes'] as $filename) {
+                    $this->importFile($filename, $this->attributeImporter);
+                }
             }
+        } else {
+            $this->io->warning('Config file "' . $themeConfigPath . '" has no data to import.');
         }
     }
 
+    /**
+     * @param string $filename
+     * @param EntityImporterInterface $importer
+     */
     protected function importFile(string $filename, EntityImporterInterface $importer): void
     {
         if (false !== $realFilename = realpath($filename)) {
             $file = new File($realFilename);
         } else {
-            throw new \RuntimeException($filename.' is not a valid file');
+            throw new \RuntimeException($filename . ' is not a valid file');
         }
-        if ($this->dryRun) {
-            $this->io->writeln(
-                '* <info>'.$file->getPathname().'</info> file would be imported.'
-            );
-
-            return;
-        }
-
-        try {
-            if (false === $fileContent = file_get_contents($file->getPathname())) {
-                throw new \RuntimeException($file->getPathname().' file is not readable');
+        if (!$this->dryRun) {
+            try {
+                if (false === $fileContent = file_get_contents($file->getPathname())) {
+                    throw new \RuntimeException($file->getPathname() . ' file is not readable');
+                }
+                $importer->import($fileContent);
+                $this->managerRegistry->getManager()->flush();
+                $this->io->writeln(
+                    '* <info>' . $file->getPathname() . '</info> file has been imported.'
+                );
+                return;
+            } catch (EntityAlreadyExistsException $e) {
+                $this->io->writeln(
+                    '* <info>' . $file->getPathname() . '</info>' .
+                    ' <error>has NOT been imported (' . $e->getMessage() . ')</error>.'
+                );
             }
-            $importer->import($fileContent);
-            $this->managerRegistry->getManager()->flush();
-            $this->io->writeln(
-                '* <info>'.$file->getPathname().'</info> file has been imported.'
-            );
-
-            return;
-        } catch (EntityAlreadyExistsException $e) {
-            $this->io->writeln(
-                '* <info>'.$file->getPathname().'</info>'.
-                ' <error>has NOT been imported ('.$e->getMessage().')</error>.'
-            );
         }
-
         $this->io->writeln(
-            '* <info>'.$file->getPathname().'</info> file has been imported.'
+            '* <info>' . $file->getPathname() . '</info> file has been imported.'
         );
     }
 
+    /**
+     * @param string $appConfigPath
+     * @return array
+     */
     protected function getAppConfig(string $appConfigPath): array
     {
         if (false === $fileContent = file_get_contents($appConfigPath)) {
-            throw new \RuntimeException($appConfigPath.' file is not readable');
+            throw new \RuntimeException($appConfigPath . ' file is not readable');
         }
         $data = Yaml::parse($fileContent);
         if (!\is_array($data)) {
-            throw new \RuntimeException($appConfigPath.' file is not a valid YAML file');
+            throw new \RuntimeException($appConfigPath . ' file is not a valid YAML file');
         }
-
         return $data;
     }
 }

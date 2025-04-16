@@ -13,14 +13,19 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Mime\Address;
 
-final class MailerTestCommand extends Command
+class MailerTestCommand extends Command
 {
-    public function __construct(
-        private readonly EmailManagerFactory $emailManagerFactory,
-        ?string $name = null,
-    ) {
-        parent::__construct($name);
+    protected EmailManagerFactory $emailManagerFactory;
+
+    /**
+     * @param EmailManagerFactory $emailManagerFactory
+     */
+    public function __construct(EmailManagerFactory $emailManagerFactory)
+    {
+        parent::__construct();
+        $this->emailManagerFactory = $emailManagerFactory;
     }
+
 
     protected function configure(): void
     {
@@ -46,12 +51,11 @@ final class MailerTestCommand extends Command
             ->setEmailTemplate('@RoadizCore/email/base_email.html.twig')
             ->setAssignation([
                 'title' => $title,
-                'content' => 'This is a test email send to *'.$to->getAddress().'* from `mailer:send:test` CLI command.',
-                'mailContact' => $from->getAddress(),
+                'content' => 'This is a test email send to *' . $to->getAddress() . '* from `mailer:send:test` CLI command.',
+                'mailContact' => $from->getAddress()
             ])
             ->send();
         (new SymfonyStyle($input, $output))->success('Email sent.');
-
         return 0;
     }
 }

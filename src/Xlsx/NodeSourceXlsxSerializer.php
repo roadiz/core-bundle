@@ -4,47 +4,61 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Xlsx;
 
+use Doctrine\Common\Collections\Collection;
 use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
- * @deprecated XLSX serialization is deprecated and will be removed in next major version.
  * XLSX Serialization handler for NodeSource.
  */
-final class NodeSourceXlsxSerializer extends AbstractXlsxSerializer
+class NodeSourceXlsxSerializer extends AbstractXlsxSerializer
 {
+    protected ObjectManager $objectManager;
+    protected Request $request;
+    protected UrlGeneratorInterface $urlGenerator;
+    protected bool $forceLocale = false;
     protected bool $addUrls = false;
     protected bool $onlyTexts = false;
 
+    /**
+     *
+     * @param ObjectManager $objectManager
+     * @param TranslatorInterface $translator
+     * @param UrlGeneratorInterface $urlGenerator
+     */
     public function __construct(
+        ObjectManager $objectManager,
         TranslatorInterface $translator,
-        private readonly ObjectManager $objectManager,
-        private readonly UrlGeneratorInterface $urlGenerator,
+        UrlGeneratorInterface $urlGenerator
     ) {
         parent::__construct($translator);
+        $this->objectManager = $objectManager;
+        $this->urlGenerator = $urlGenerator;
     }
 
     /**
      * Create a simple associative array with a NodeSource.
      *
-     * @param NodesSources|iterable<NodesSources>|null $nodeSource
+     * @param NodesSources|Collection|array|null $nodeSource
+     * @return array
      */
-    public function toArray(mixed $nodeSource): array
+    public function toArray($nodeSource): array
     {
         $data = [];
 
         if ($nodeSource instanceof NodesSources) {
-            if (true === $this->addUrls) {
+            if ($this->addUrls === true) {
                 $data['_url'] = $this->urlGenerator->generate(
                     RouteObjectInterface::OBJECT_BASED_ROUTE_NAME,
                     [
-                        RouteObjectInterface::ROUTE_OBJECT => $nodeSource,
+                        RouteObjectInterface::ROUTE_OBJECT => $nodeSource
                     ],
                     UrlGeneratorInterface::ABSOLUTE_URL
                 );
@@ -54,10 +68,11 @@ final class NodeSourceXlsxSerializer extends AbstractXlsxSerializer
             $data['title'] = $nodeSource->getTitle();
             $data['published_at'] = $nodeSource->getPublishedAt();
             $data['meta_title'] = $nodeSource->getMetaTitle();
+            $data['meta_keywords'] = $nodeSource->getMetaKeywords();
             $data['meta_description'] = $nodeSource->getMetaDescription();
 
             $data = array_merge($data, $this->getSourceFields($nodeSource));
-        } elseif (is_iterable($nodeSource)) {
+        } elseif ($nodeSource instanceof Collection || is_array($nodeSource)) {
             /*
              * If asked to serialize a nodeSource collection
              */
@@ -70,6 +85,7 @@ final class NodeSourceXlsxSerializer extends AbstractXlsxSerializer
     }
 
     /**
+     * @param NodesSources $nodeSource
      * @return array<string, mixed>
      */
     protected function getSourceFields(NodesSources $nodeSource): array
@@ -89,6 +105,7 @@ final class NodeSourceXlsxSerializer extends AbstractXlsxSerializer
     }
 
     /**
+     * @param NodeTypeInterface $nodeType
      * @return NodeTypeField[]
      */
     protected function getFields(NodeTypeInterface $nodeType): array
@@ -128,25 +145,36 @@ final class NodeSourceXlsxSerializer extends AbstractXlsxSerializer
             ->findBy($criteria, ['position' => 'ASC']);
     }
 
-    public function deserialize(string $string): null
+    /**
+     * {@inheritDoc}
+     */
+    public function deserialize($string)
     {
         return null;
     }
 
     /**
      * Serialize only texts.
+     *
+     * @param bool $onlyTexts
+     * @return NodeSourceXlsxSerializer
      */
     public function setOnlyTexts(bool $onlyTexts = true): self
     {
         $this->onlyTexts = $onlyTexts;
-
         return $this;
     }
 
-    public function addUrls(): self
+    /**
+     * @param Request $request
+     * @param bool $forceLocale
+     * @return NodeSourceXlsxSerializer
+     */
+    public function addUrls(Request $request, bool $forceLocale = false): self
     {
         $this->addUrls = true;
-
+        $this->request = $request;
+        $this->forceLocale = $forceLocale;
         return $this;
     }
 }

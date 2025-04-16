@@ -21,38 +21,41 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 #[
     ORM\Entity(repositoryClass: AttributeValueRepository::class),
-    ORM\Table(name: 'attribute_values'),
-    ORM\Index(columns: ['attribute_id', 'node_id']),
-    ORM\Index(columns: ['node_id', 'position'], name: 'idx_attribute_value_node_position'),
-    ORM\Index(columns: ['position'], name: 'idx_attribute_value_position'),
+    ORM\Table(name: "attribute_values"),
+    ORM\Index(columns: ["attribute_id", "node_id"]),
+    ORM\Index(columns: ["node_id", "position"], name: "idx_attribute_value_node_position"),
+    ORM\Index(columns: ["position"], name: "idx_attribute_value_position"),
     ORM\HasLifecycleCallbacks,
     ApiFilter(PropertyFilter::class),
     ApiFilter(BaseFilter\OrderFilter::class, properties: [
-        'position',
+        "position",
     ]),
 ]
 class AttributeValue extends AbstractPositioned implements AttributeValueInterface
 {
     use AttributeValueTrait;
 
+    /**
+     * @var Node|null
+     */
     #[
-        ORM\ManyToOne(targetEntity: Node::class, inversedBy: 'attributeValues'),
-        ORM\JoinColumn(name: 'node_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),
-        Serializer\Groups(['attribute_node']),
-        SymfonySerializer\Groups(['attribute_node']),
+        ORM\ManyToOne(targetEntity: Node::class, inversedBy: "attributeValues"),
+        ORM\JoinColumn(name: "node_id", onDelete: "CASCADE"),
+        Serializer\Groups(["attribute_node"]),
+        SymfonySerializer\Groups(["attribute_node"]),
         SymfonySerializer\MaxDepth(1),
         ApiFilter(BaseFilter\SearchFilter::class, properties: [
-            'node' => 'exact',
-            'node.id' => 'exact',
-            'node.nodeName' => 'exact',
-            'node.nodeType' => 'exact',
-            'node.nodeType.name' => 'exact',
+            "node" => "exact",
+            "node.id" => "exact",
+            "node.nodeName" => "exact",
+            "node.nodeType" => "exact",
+            "node.nodeType.name" => "exact"
         ]),
         ApiFilter(BaseFilter\BooleanFilter::class, properties: [
-            'node.visible',
+            "node.visible"
         ])
     ]
-    protected Node $node;
+    protected ?Node $node = null;
 
     #[ORM\ManyToOne(targetEntity: Realm::class)]
     #[ORM\JoinColumn(
@@ -82,30 +85,40 @@ class AttributeValue extends AbstractPositioned implements AttributeValueInterfa
         return $this->position;
     }
 
-    public function getAttributable(): Node
+    /**
+     * @inheritDoc
+     */
+    public function getAttributable(): ?AttributableInterface
     {
         return $this->node;
     }
 
     /**
-     * @return $this
+     * @inheritDoc
      */
-    public function setAttributable(?AttributableInterface $attributable): self
+    public function setAttributable(?AttributableInterface $attributable)
     {
         if ($attributable instanceof Node) {
             $this->node = $attributable;
-
             return $this;
         }
         throw new \InvalidArgumentException('Attributable have to be an instance of Node.');
     }
 
-    public function getNode(): Node
+    /**
+     * @return Node|null
+     */
+    public function getNode(): ?Node
     {
         return $this->node;
     }
 
-    public function setNode(Node $node): AttributeValue
+    /**
+     * @param Node|null $node
+     *
+     * @return AttributeValue
+     */
+    public function setNode(?Node $node): AttributeValue
     {
         $this->node = $node;
 
@@ -120,7 +133,6 @@ class AttributeValue extends AbstractPositioned implements AttributeValueInterfa
     public function setRealm(?RealmInterface $realm): AttributeValue
     {
         $this->realm = $realm;
-
         return $this;
     }
 

@@ -14,6 +14,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class ThemesType extends AbstractType
 {
+    /**
+     * {@inheritdoc}
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -29,16 +32,21 @@ class ThemesType extends AbstractType
                 $callable = [$class, 'getThemeName'];
                 $value[call_user_func($callable)] = $class;
             }
-
             return $value;
         });
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getBlockPrefix(): string
     {
         return 'classname';

@@ -5,18 +5,21 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Model;
 
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
-use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\Utils\StringHandler;
+use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
+/**
+ * @package RZ\Roadiz\CoreBundle\Model
+ */
 trait AttributeGroupTrait
 {
     #[
-        ORM\Column(name: 'canonical_name', type: 'string', length: 255, unique: true, nullable: false),
-        Serializer\Groups(['attribute_group', 'attribute', 'node', 'nodes_sources']),
-        Serializer\Type('string'),
+        ORM\Column(name: "canonical_name", type: "string", length: 255, unique: true, nullable: false),
+        Serializer\Groups(["attribute_group", "attribute", "node", "nodes_sources"]),
+        Serializer\Type("string"),
         Assert\NotNull(),
         Assert\Length(max: 255),
         Assert\NotBlank()
@@ -27,9 +30,9 @@ trait AttributeGroupTrait
      * @var Collection<int, AttributeInterface>
      */
     #[
-        ORM\OneToMany(mappedBy: 'group', targetEntity: AttributeInterface::class),
-        Serializer\Groups(['attribute_group']),
-        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Attribute>")
+        ORM\OneToMany(mappedBy: "group", targetEntity: AttributeInterface::class),
+        Serializer\Groups(["attribute_group"]),
+        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Model\AttributeInterface>")
     ]
     protected Collection $attributes;
 
@@ -37,15 +40,10 @@ trait AttributeGroupTrait
      * @var Collection<int, AttributeGroupTranslationInterface>
      */
     #[
-        ORM\OneToMany(
-            mappedBy: 'attributeGroup',
-            targetEntity: AttributeGroupTranslationInterface::class,
-            cascade: ['all'],
-            orphanRemoval: true
-        ),
-        Serializer\Groups(['attribute_group', 'attribute', 'node', 'nodes_sources']),
-        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\AttributeGroupTranslation>"),
-        Serializer\Accessor(getter: 'getAttributeGroupTranslations', setter: 'setAttributeGroupTranslations')
+        ORM\OneToMany(mappedBy: "attributeGroup", targetEntity: AttributeGroupTranslationInterface::class, cascade: ["all"]),
+        Serializer\Groups(["attribute_group", "attribute", "node", "nodes_sources"]),
+        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Model\AttributeGroupTranslationInterface>"),
+        Serializer\Accessor(getter: "getAttributeGroupTranslations", setter: "setAttributeGroupTranslations")
     ]
     protected Collection $attributeGroupTranslations;
 
@@ -54,7 +52,6 @@ trait AttributeGroupTrait
         if ($this->getAttributeGroupTranslations()->first()) {
             return $this->getAttributeGroupTranslations()->first()->getName();
         }
-
         return $this->getCanonicalName();
     }
 
@@ -69,27 +66,24 @@ trait AttributeGroupTrait
                 if ($attributeGroupTranslation->getTranslation() === $translation) {
                     return true;
                 }
-
                 return false;
             }
         );
-        if ($attributeGroupTranslation->count() > 0 && '' !== $attributeGroupTranslation->first()->getName()) {
+        if ($attributeGroupTranslation->count() > 0 && $attributeGroupTranslation->first()->getName() !== '') {
             return $attributeGroupTranslation->first()->getName();
         }
-
         return $this->getCanonicalName();
     }
 
     public function setName(?string $name): self
     {
-        if (0 === $this->getAttributeGroupTranslations()->count()) {
+        if ($this->getAttributeGroupTranslations()->count() === 0) {
             $this->getAttributeGroupTranslations()->add(
                 $this->createAttributeGroupTranslation()->setName($name)
             );
         }
 
         $this->canonicalName = StringHandler::slugify($name ?? '');
-
         return $this;
     }
 
@@ -99,12 +93,12 @@ trait AttributeGroupTrait
     }
 
     /**
+     * @param string|null $canonicalName
      * @return $this
      */
     public function setCanonicalName(?string $canonicalName): self
     {
         $this->canonicalName = StringHandler::slugify($canonicalName ?? '');
-
         return $this;
     }
 
@@ -114,12 +108,12 @@ trait AttributeGroupTrait
     }
 
     /**
+     * @param Collection $attributes
      * @return $this
      */
     public function setAttributes(Collection $attributes): self
     {
         $this->attributes = $attributes;
-
         return $this;
     }
 
@@ -129,6 +123,7 @@ trait AttributeGroupTrait
     }
 
     /**
+     * @param Collection $attributeGroupTranslations
      * @return $this
      */
     public function setAttributeGroupTranslations(Collection $attributeGroupTranslations): self
@@ -138,11 +133,11 @@ trait AttributeGroupTrait
         foreach ($this->attributeGroupTranslations as $attributeGroupTranslation) {
             $attributeGroupTranslation->setAttributeGroup($this);
         }
-
         return $this;
     }
 
     /**
+     * @param AttributeGroupTranslationInterface $attributeGroupTranslation
      * @return $this
      */
     public function addAttributeGroupTranslation(AttributeGroupTranslationInterface $attributeGroupTranslation): self
@@ -151,11 +146,11 @@ trait AttributeGroupTrait
             $this->getAttributeGroupTranslations()->add($attributeGroupTranslation);
             $attributeGroupTranslation->setAttributeGroup($this);
         }
-
         return $this;
     }
 
     /**
+     * @param AttributeGroupTranslationInterface $attributeGroupTranslation
      * @return $this
      */
     public function removeAttributeGroupTranslation(AttributeGroupTranslationInterface $attributeGroupTranslation): self
@@ -163,7 +158,6 @@ trait AttributeGroupTrait
         if ($this->getAttributeGroupTranslations()->contains($attributeGroupTranslation)) {
             $this->getAttributeGroupTranslations()->removeElement($attributeGroupTranslation);
         }
-
         return $this;
     }
 
