@@ -15,13 +15,20 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
-final class SettingDocumentType extends AbstractType
+class SettingDocumentType extends AbstractType
 {
+    protected ManagerRegistry $managerRegistry;
+    protected AbstractDocumentFactory $documentFactory;
+    protected FilesystemOperator $documentsStorage;
+
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly AbstractDocumentFactory $documentFactory,
-        private readonly FilesystemOperator $documentsStorage,
+        ManagerRegistry $managerRegistry,
+        AbstractDocumentFactory $documentFactory,
+        FilesystemOperator $documentsStorage,
     ) {
+        $this->documentFactory = $documentFactory;
+        $this->managerRegistry = $managerRegistry;
+        $this->documentsStorage = $documentsStorage;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options): void

@@ -20,7 +20,9 @@ final readonly class NodeTypeResolver
      */
     protected function getNodeTypeList(NodeTypeFieldInterface $field): array
     {
-        return array_filter($field->getDefaultValuesAsArray());
+        $nodeTypesNames = array_map('trim', explode(',', $field->getDefaultValues() ?? ''));
+
+        return array_filter($nodeTypesNames);
     }
 
     /**

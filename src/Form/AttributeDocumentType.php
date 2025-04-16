@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
 
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
 use RZ\Roadiz\CoreBundle\Entity\Attribute;
 use RZ\Roadiz\CoreBundle\Entity\AttributeDocuments;
 use RZ\Roadiz\CoreBundle\Form\DataTransformer\AttributeDocumentsTransformer;
@@ -16,11 +16,13 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class AttributeDocumentType extends AbstractType
+class AttributeDocumentType extends AbstractType
 {
-    public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-    ) {
+    protected EntityManagerInterface $entityManager;
+
+    public function __construct(EntityManagerInterface $entityManager)
+    {
+        $this->entityManager = $entityManager;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -30,7 +32,7 @@ final class AttributeDocumentType extends AbstractType
             [$this, 'onPostSubmit']
         );
         $builder->addModelTransformer(new AttributeDocumentsTransformer(
-            $this->managerRegistry,
+            $this->entityManager,
             $options['attribute']
         ));
     }
@@ -68,7 +70,7 @@ final class AttributeDocumentType extends AbstractType
             $attribute = $event->getForm()->getConfig()->getOption('attribute');
 
             if ($attribute instanceof Attribute && $attribute->getId()) {
-                $qb = $this->managerRegistry->getRepository(AttributeDocuments::class)
+                $qb = $this->entityManager->getRepository(AttributeDocuments::class)
                     ->createQueryBuilder('ad');
                 $qb->delete()
                     ->andWhere($qb->expr()->eq('ad.attribute', ':attribute'))

@@ -11,7 +11,10 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class TagsType extends AbstractType
+/**
+ * Tag form field type.
+ */
+class TagsType extends AbstractType
 {
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {

@@ -14,7 +14,7 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class HoneypotType extends AbstractType
+class HoneypotType extends AbstractType
 {
     public function getParent(): ?string
     {

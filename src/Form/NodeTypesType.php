@@ -4,16 +4,23 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
 
-use RZ\Roadiz\CoreBundle\Bag\DecoratedNodeTypes;
+use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class NodeTypesType extends AbstractType
+/**
+ * Node types selector form field type.
+ */
+class NodeTypesType extends AbstractType
 {
-    public function __construct(private readonly DecoratedNodeTypes $nodeTypesBag)
+    protected ManagerRegistry $managerRegistry;
+
+    public function __construct(ManagerRegistry $managerRegistry)
     {
+        $this->managerRegistry = $managerRegistry;
     }
 
     public function configureOptions(OptionsResolver $resolver): void
@@ -23,14 +30,15 @@ final class NodeTypesType extends AbstractType
         ]);
         $resolver->setAllowedTypes('showInvisible', ['boolean']);
         $resolver->setNormalizer('choices', function (Options $options, $choices) {
-            if (true === $options['showInvisible']) {
-                $nodeTypes = $this->nodeTypesBag->all();
-            } else {
-                $nodeTypes = $this->nodeTypesBag->allVisible();
+            $criteria = [];
+            if (false === $options['showInvisible']) {
+                $criteria['visible'] = true;
             }
+            $nodeTypes = $this->managerRegistry->getRepository(NodeType::class)->findBy($criteria);
 
+            /** @var NodeType $nodeType */
             foreach ($nodeTypes as $nodeType) {
-                $choices[$nodeType->getDisplayName()] = $nodeType->getName();
+                $choices[$nodeType->getDisplayName()] = $nodeType->getId();
             }
             ksort($choices);
 

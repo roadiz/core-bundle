@@ -10,16 +10,23 @@ use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
 
-readonly class EntityCollectionTransformer implements DataTransformerInterface
+class EntityCollectionTransformer implements DataTransformerInterface
 {
+    protected bool $asCollection;
+    private ObjectManager $manager;
+    /**
+     * @var class-string<PersistableInterface>
+     */
+    private string $classname;
+
     /**
      * @param class-string<PersistableInterface> $classname
      */
-    public function __construct(
-        protected ObjectManager $manager,
-        protected string $classname,
-        protected bool $asCollection = false,
-    ) {
+    public function __construct(ObjectManager $manager, string $classname, bool $asCollection = false)
+    {
+        $this->manager = $manager;
+        $this->asCollection = $asCollection;
+        $this->classname = $classname;
     }
 
     /**

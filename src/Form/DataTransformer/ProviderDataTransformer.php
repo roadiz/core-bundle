@@ -8,10 +8,15 @@ use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Explorer\ExplorerProviderInterface;
 use Symfony\Component\Form\DataTransformerInterface;
 
-final readonly class ProviderDataTransformer implements DataTransformerInterface
+class ProviderDataTransformer implements DataTransformerInterface
 {
-    public function __construct(private NodeTypeField $nodeTypeField, private ExplorerProviderInterface $provider)
+    protected NodeTypeField $nodeTypeField;
+    protected ExplorerProviderInterface $provider;
+
+    public function __construct(NodeTypeField $nodeTypeField, ExplorerProviderInterface $provider)
     {
+        $this->nodeTypeField = $nodeTypeField;
+        $this->provider = $provider;
     }
 
     public function transform(mixed $value): ?array

@@ -17,14 +17,12 @@ use Gedmo\Loggable\Loggable;
 use Gedmo\Mapping\Annotation as Gedmo;
 use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
 use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
 use RZ\Roadiz\Core\AbstractEntities\NodeInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
-use RZ\Roadiz\CoreBundle\Api\Filter\NodeTypePublishableFilter;
-use RZ\Roadiz\CoreBundle\Api\Filter\NodeTypeReachableFilter;
-use RZ\Roadiz\CoreBundle\Api\Filter\TagGroupFilter;
 use RZ\Roadiz\CoreBundle\Enum\NodeStatus;
 use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributableTrait;
@@ -55,10 +53,8 @@ use Symfony\Component\Validator\Constraints as Assert;
     ORM\Index(columns: ['visible', 'status']),
     ORM\Index(columns: ['visible', 'status', 'parent_node_id'], name: 'node_visible_status_parent'),
     ORM\Index(columns: ['status', 'parent_node_id'], name: 'node_status_parent'),
-    ORM\Index(columns: ['nodetype_name'], name: 'node_ntname'),
-    ORM\Index(columns: ['nodetype_name', 'status'], name: 'node_ntname_status'),
-    ORM\Index(columns: ['nodetype_name', 'status', 'parent_node_id'], name: 'node_ntname_status_parent'),
-    ORM\Index(columns: ['nodetype_name', 'status', 'parent_node_id', 'position'], name: 'node_ntname_status_parent_position'),
+    ORM\Index(columns: ['nodeType_id', 'status', 'parent_node_id'], name: 'node_nodetype_status_parent'),
+    ORM\Index(columns: ['nodeType_id', 'status', 'parent_node_id', 'position'], name: 'node_nodetype_status_parent_position'),
     ORM\Index(columns: ['visible', 'parent_node_id'], name: 'node_visible_parent'),
     ORM\Index(columns: ['parent_node_id', 'position'], name: 'node_parent_position'),
     ORM\Index(columns: ['visible', 'parent_node_id', 'position'], name: 'node_visible_parent_position'),
@@ -71,10 +67,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         message: 'nodeName.alreadyExists',
         repositoryMethod: 'findOneWithoutSecurity'
     ),
-    ApiFilter(NodeTypeReachableFilter::class),
-    ApiFilter(NodeTypePublishableFilter::class),
-    ApiFilter(PropertyFilter::class),
-    ApiFilter(TagGroupFilter::class)
+    ApiFilter(PropertyFilter::class)
 ]
 class Node extends AbstractDateTimedPositioned implements LeafInterface, AttributableInterface, Loggable, NodeInterface
 {
@@ -223,10 +216,12 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     )]
     private string $childrenOrderDirection = 'ASC';
 
-    #[ORM\Column(name: 'nodetype_name', type: 'string', length: 30)]
+    #[ORM\ManyToOne(targetEntity: NodeTypeInterface::class)]
+    #[ORM\JoinColumn(name: 'nodeType_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    #[SymfonySerializer\Groups(['node'])]
     #[Serializer\Groups(['node'])]
     #[SymfonySerializer\Ignore]
-    private string $nodeTypeName;
+    private NodeTypeInterface $nodeType;
 
     /**
      * @var Node|null
@@ -281,9 +276,11 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     private Collection $customForms;
 
     /**
-     * @var Collection<int, StackType>
+     * @var Collection<int, NodeType>
      */
-    #[ORM\OneToMany(mappedBy: 'node', targetEntity: StackType::class, cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\JoinTable(name: 'stack_types')]
+    #[ORM\InverseJoinColumn(name: 'nodetype_id', onDelete: 'CASCADE')]
+    #[ORM\ManyToMany(targetEntity: NodeType::class)]
     #[Serializer\Groups(['node'])]
     #[SymfonySerializer\Groups(['node'])]
     #[SymfonySerializer\Ignore]
@@ -688,21 +685,17 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @return $this
      */
-    public function removeStackType(NodeType $nodeType): static
+    public function removeStackType(NodeType $stackType): static
     {
-        $stackType = $this->stackTypes->findFirst(
-            function (int $key, StackType $stackType) use ($nodeType) {
-                return $stackType->getNodeTypeName() === $nodeType->getName();
-            }
-        );
-
-        $this->stackTypes->removeElement($stackType);
+        if ($this->getStackTypes()->contains($stackType)) {
+            $this->getStackTypes()->removeElement($stackType);
+        }
 
         return $this;
     }
 
     /**
-     * @return Collection<int, StackType>
+     * @return Collection<int, NodeType>
      */
     public function getStackTypes(): Collection
     {
@@ -712,17 +705,10 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
     /**
      * @return $this
      */
-    public function addStackType(NodeType $nodeType): static
+    public function addStackType(NodeType $stackType): static
     {
-        if (!$this->getStackTypes()->exists(function (int $key, StackType $stackType) use ($nodeType) {
-            return $stackType->getNodeTypeName() === $nodeType->getName();
-        })) {
-            $this->getStackTypes()->add(
-                new StackType(
-                    $this,
-                    $nodeType->getName()
-                )
-            );
+        if (!$this->getStackTypes()->contains($stackType)) {
+            $this->getStackTypes()->add($stackType);
         }
 
         return $this;
@@ -875,14 +861,14 @@ class Node extends AbstractDateTimedPositioned implements LeafInterface, Attribu
         return $this;
     }
 
-    public function getNodeTypeName(): string
+    public function getNodeType(): NodeTypeInterface
     {
-        return $this->nodeTypeName;
+        return $this->nodeType;
     }
 
-    public function setNodeTypeName(string $nodeType): Node
+    public function setNodeType(NodeTypeInterface $nodeType): Node
     {
-        $this->nodeTypeName = $nodeType;
+        $this->nodeType = $nodeType;
 
         return $this;
     }
