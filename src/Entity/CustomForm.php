@@ -108,7 +108,12 @@ class CustomForm extends AbstractDateTimed
      * @var Collection<int, CustomFormField>
      */
     #[
-        ORM\OneToMany(mappedBy: "customForm", targetEntity: CustomFormField::class, cascade: ["ALL"]),
+        ORM\OneToMany(
+            mappedBy: "customForm",
+            targetEntity: CustomFormField::class,
+            cascade: ["ALL"],
+            orphanRemoval: true
+        ),
         ORM\OrderBy(["position" => "ASC"]),
         Serializer\Groups(["custom_form"]),
         SymfonySerializer\Groups(["custom_form"]),
@@ -123,7 +128,8 @@ class CustomForm extends AbstractDateTimed
         ORM\OneToMany(
             mappedBy: "customForm",
             targetEntity: CustomFormAnswer::class,
-            cascade: ["ALL"]
+            cascade: ["ALL"],
+            orphanRemoval: true
         ),
         Serializer\Exclude,
         SymfonySerializer\Ignore
@@ -177,10 +183,9 @@ class CustomForm extends AbstractDateTimed
     }
 
     /**
-     * @param string $description
      * @return $this
      */
-    public function setDescription(string $description): CustomForm
+    public function setDescription(?string $description): CustomForm
     {
         $this->description = $description;
         return $this;
@@ -263,13 +268,9 @@ class CustomForm extends AbstractDateTimed
     }
 
     /**
-     * Sets the value of color.
-     *
-     * @param string $color
-     *
      * @return $this
      */
-    public function setColor(string $color): CustomForm
+    public function setColor(?string $color): CustomForm
     {
         $this->color = $color;
         return $this;
@@ -339,14 +340,13 @@ class CustomForm extends AbstractDateTimed
     {
         if ($this->getFields()->contains($field)) {
             $this->getFields()->removeElement($field);
-            $field->setCustomForm(null);
         }
 
         return $this;
     }
 
     /**
-     * @return Collection
+     * @return Collection<int, CustomFormAnswer>
      */
     public function getCustomFormAnswers(): Collection
     {

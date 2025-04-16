@@ -7,26 +7,22 @@ namespace RZ\Roadiz\CoreBundle\Api\ListManager;
 use RZ\Roadiz\CoreBundle\ListManager\AbstractEntityListManager;
 use RZ\Roadiz\CoreBundle\SearchEngine\SearchHandlerInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\SearchResultsInterface;
+use Symfony\Component\DependencyInjection\Attribute\Exclude;
 use Symfony\Component\HttpFoundation\Request;
 
+#[Exclude]
 final class SolrSearchListManager extends AbstractEntityListManager
 {
-    protected SearchHandlerInterface $searchHandler;
-    protected ?SearchResultsInterface $searchResults;
-    private array $criteria;
-    private bool $searchInTags;
+    private ?SearchResultsInterface $searchResults;
     private ?string $query = null;
 
     public function __construct(
         ?Request $request,
-        SearchHandlerInterface $searchHandler,
-        array $criteria = [],
-        bool $searchInTags = true
+        private readonly SearchHandlerInterface $searchHandler,
+        private readonly array $criteria = [],
+        private readonly bool $searchInTags = true
     ) {
         parent::__construct($request);
-        $this->searchHandler = $searchHandler;
-        $this->criteria = $criteria;
-        $this->searchInTags = $searchInTags;
     }
 
     public function handle(bool $disabled = false)
@@ -50,7 +46,6 @@ final class SolrSearchListManager extends AbstractEntityListManager
                 $this->criteria, # a simple criteria array to filter search results
                 $this->getItemPerPage(), # result count
                 $this->searchInTags, # Search in tags too,
-                1,
                 $this->getPage()
             );
         } else {
@@ -59,7 +54,6 @@ final class SolrSearchListManager extends AbstractEntityListManager
                 $this->criteria, # a simple criteria array to filter search results
                 $this->getItemPerPage(), # result count
                 $this->searchInTags, # Search in tags too,
-                2,
                 $this->getPage()
             );
         }
@@ -85,7 +79,7 @@ final class SolrSearchListManager extends AbstractEntityListManager
     /**
      * @inheritDoc
      */
-    public function getEntities()
+    public function getEntities(): array
     {
         if (null !== $this->searchResults) {
             return $this->searchResults->getResultItems();
