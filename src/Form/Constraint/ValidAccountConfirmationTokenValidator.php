@@ -9,22 +9,14 @@ use RZ\Roadiz\CoreBundle\Entity\User;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
-class ValidAccountConfirmationTokenValidator extends ConstraintValidator
+final class ValidAccountConfirmationTokenValidator extends ConstraintValidator
 {
-    protected ManagerRegistry $managerRegistry;
-
-    /**
-     * @param ManagerRegistry $managerRegistry
-     */
-    public function __construct(ManagerRegistry $managerRegistry)
+    public function __construct(private readonly ManagerRegistry $managerRegistry)
     {
-        $this->managerRegistry = $managerRegistry;
     }
 
     /**
-     * @param mixed $value
      * @param ValidAccountConfirmationToken $constraint
-     * @return void
      */
     public function validate(mixed $value, Constraint $constraint): void
     {

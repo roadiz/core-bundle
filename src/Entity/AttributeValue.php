@@ -9,7 +9,6 @@ use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Serializer\Filter\PropertyFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
-use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
 use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueInterface;
@@ -21,14 +20,14 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 #[
     ORM\Entity(repositoryClass: AttributeValueRepository::class),
-    ORM\Table(name: "attribute_values"),
-    ORM\Index(columns: ["attribute_id", "node_id"]),
-    ORM\Index(columns: ["node_id", "position"], name: "idx_attribute_value_node_position"),
-    ORM\Index(columns: ["position"], name: "idx_attribute_value_position"),
+    ORM\Table(name: 'attribute_values'),
+    ORM\Index(columns: ['attribute_id', 'node_id']),
+    ORM\Index(columns: ['node_id', 'position'], name: 'idx_attribute_value_node_position'),
+    ORM\Index(columns: ['position'], name: 'idx_attribute_value_position'),
     ORM\HasLifecycleCallbacks,
     ApiFilter(PropertyFilter::class),
     ApiFilter(BaseFilter\OrderFilter::class, properties: [
-        "position",
+        'position',
     ]),
 ]
 class AttributeValue extends AbstractPositioned implements AttributeValueInterface
@@ -36,20 +35,18 @@ class AttributeValue extends AbstractPositioned implements AttributeValueInterfa
     use AttributeValueTrait;
 
     #[
-        ORM\ManyToOne(targetEntity: Node::class, inversedBy: "attributeValues"),
-        ORM\JoinColumn(name: "node_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE"),
-        Serializer\Groups(["attribute_node"]),
-        SymfonySerializer\Groups(["attribute_node"]),
+        ORM\ManyToOne(targetEntity: Node::class, inversedBy: 'attributeValues'),
+        ORM\JoinColumn(name: 'node_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),
+        SymfonySerializer\Groups(['attribute_node']),
         SymfonySerializer\MaxDepth(1),
         ApiFilter(BaseFilter\SearchFilter::class, properties: [
-            "node" => "exact",
-            "node.id" => "exact",
-            "node.nodeName" => "exact",
-            "node.nodeType" => "exact",
-            "node.nodeType.name" => "exact"
+            'node' => 'exact',
+            'node.id' => 'exact',
+            'node.nodeName' => 'exact',
+            'node.nodeTypeName' => 'exact',
         ]),
         ApiFilter(BaseFilter\BooleanFilter::class, properties: [
-            "node.visible"
+            'node.visible',
         ])
     ]
     protected Node $node;
@@ -63,7 +60,6 @@ class AttributeValue extends AbstractPositioned implements AttributeValueInterfa
         onDelete: 'SET NULL'
     )]
     #[SymfonySerializer\Ignore]
-    #[Serializer\Exclude]
     private ?RealmInterface $realm = null;
 
     public function __construct()
@@ -88,12 +84,13 @@ class AttributeValue extends AbstractPositioned implements AttributeValueInterfa
     }
 
     /**
-     * @inheritDoc
+     * @return $this
      */
-    public function setAttributable(?AttributableInterface $attributable)
+    public function setAttributable(?AttributableInterface $attributable): self
     {
         if ($attributable instanceof Node) {
             $this->node = $attributable;
+
             return $this;
         }
         throw new \InvalidArgumentException('Attributable have to be an instance of Node.');
@@ -119,6 +116,7 @@ class AttributeValue extends AbstractPositioned implements AttributeValueInterfa
     public function setRealm(?RealmInterface $realm): AttributeValue
     {
         $this->realm = $realm;
+
         return $this;
     }
 
