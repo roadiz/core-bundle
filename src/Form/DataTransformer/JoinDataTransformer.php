@@ -9,16 +9,26 @@ use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use Symfony\Component\Form\DataTransformerInterface;
 
-final readonly class JoinDataTransformer implements DataTransformerInterface
+class JoinDataTransformer implements DataTransformerInterface
 {
+    private NodeTypeField $nodeTypeField;
+    private ManagerRegistry $managerRegistry;
+    /**
+     * @var class-string
+     */
+    private string $entityClassname;
+
     /**
      * @param class-string $entityClassname
      */
     public function __construct(
-        private NodeTypeField $nodeTypeField,
-        private ManagerRegistry $managerRegistry,
-        private string $entityClassname,
+        NodeTypeField $nodeTypeField,
+        ManagerRegistry $managerRegistry,
+        string $entityClassname,
     ) {
+        $this->nodeTypeField = $nodeTypeField;
+        $this->entityClassname = $entityClassname;
+        $this->managerRegistry = $managerRegistry;
     }
 
     /**

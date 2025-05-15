@@ -24,6 +24,6 @@ final readonly class Breadcrumbs implements BreadcrumbsInterface
      */
     public function getItems(): array
     {
-        return array_values($this->items);
+        return $this->items;
     }
 }

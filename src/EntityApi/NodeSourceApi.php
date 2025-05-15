@@ -96,4 +96,25 @@ class NodeSourceApi extends AbstractApi
                         $order
                     );
     }
+
+    /**
+     * Search Nodes-Sources using LIKE condition on title,
+     * meta-title, meta-keywords and meta-description.
+     */
+    public function searchBy(
+        string $textQuery,
+        int $limit = 0,
+        array $nodeTypes = [],
+        bool $onlyVisible = false,
+        array $additionalCriteria = [],
+    ): array {
+        return $this->getRepository()
+            ->findByTextQuery(
+                $textQuery,
+                $limit,
+                $nodeTypes,
+                $onlyVisible,
+                $additionalCriteria
+            );
+    }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
 
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
 use RZ\Roadiz\CoreBundle\Entity\AttributeGroup;
 use RZ\Roadiz\CoreBundle\Form\DataTransformer\AttributeGroupTransformer;
 use Symfony\Component\Form\AbstractType;
@@ -13,19 +13,20 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class AttributeGroupsType extends AbstractType
+class AttributeGroupsType extends AbstractType
 {
-    public function __construct(
-        private readonly AttributeGroupTransformer $attributeGroupTransformer,
-        private readonly ManagerRegistry $managerRegistry,
-    ) {
+    protected EntityManagerInterface $entityManager;
+
+    public function __construct(EntityManagerInterface $entityManager)
+    {
+        $this->entityManager = $entityManager;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildForm($builder, $options);
 
-        $builder->addModelTransformer($this->attributeGroupTransformer);
+        $builder->addModelTransformer(new AttributeGroupTransformer($this->entityManager));
     }
 
     public function configureOptions(OptionsResolver $resolver): void
@@ -35,7 +36,7 @@ final class AttributeGroupsType extends AbstractType
             $ordering = [
                 'canonicalName' => 'ASC',
             ];
-            $attributeGroups = $this->managerRegistry
+            $attributeGroups = $this->entityManager
                 ->getRepository(AttributeGroup::class)
                 ->findBy($criteria, $ordering);
 

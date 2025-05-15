@@ -14,7 +14,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 /**
  * Yaml editor form field type.
  */
-final class YamlType extends AbstractType
+class YamlType extends AbstractType
 {
     public function getParent(): ?string
     {

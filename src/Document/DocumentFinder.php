@@ -34,7 +34,10 @@ final class DocumentFinder extends AbstractDocumentFinder
 
     public function findOneByHashAndAlgorithm(string $hash, string $algorithm): ?DocumentInterface
     {
-        return $this->getRepository()->findOneByHashAndAlgorithm($hash, $algorithm);
+        return $this->getRepository()->findOneBy([
+            'fileHash' => $hash,
+            'fileHashAlgorithm' => $algorithm,
+        ]);
     }
 
     protected function getRepository(): DocumentRepository

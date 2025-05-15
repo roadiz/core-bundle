@@ -6,7 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 
 use Symfony\Component\Validator\Constraint;
 
-final class ValidAccountConfirmationToken extends Constraint
+class ValidAccountConfirmationToken extends Constraint
 {
     /**
      * Confirmation token time to live, in seconds.
