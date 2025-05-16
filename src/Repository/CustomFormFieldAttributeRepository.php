@@ -13,10 +13,8 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  */
 final class CustomFormFieldAttributeRepository extends EntityRepository
 {
-    public function __construct(
-        ManagerRegistry $registry,
-        EventDispatcherInterface $dispatcher,
-    ) {
+    public function __construct(ManagerRegistry $registry, EventDispatcherInterface $dispatcher)
+    {
         parent::__construct($registry, CustomFormFieldAttribute::class, $dispatcher);
     }
 }

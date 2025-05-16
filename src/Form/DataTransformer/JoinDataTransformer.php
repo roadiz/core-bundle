@@ -11,6 +11,9 @@ use Symfony\Component\Form\DataTransformerInterface;
 
 class JoinDataTransformer implements DataTransformerInterface
 {
+    /**
+     * @var NodeTypeField
+     */
     private NodeTypeField $nodeTypeField;
     private ManagerRegistry $managerRegistry;
     /**
@@ -19,12 +22,14 @@ class JoinDataTransformer implements DataTransformerInterface
     private string $entityClassname;
 
     /**
-     * @param class-string $entityClassname
+     * @param NodeTypeField $nodeTypeField
+     * @param ManagerRegistry $managerRegistry
+     * @param string $entityClassname
      */
     public function __construct(
         NodeTypeField $nodeTypeField,
         ManagerRegistry $managerRegistry,
-        string $entityClassname,
+        string $entityClassname
     ) {
         $this->nodeTypeField = $nodeTypeField;
         $this->entityClassname = $entityClassname;
@@ -32,7 +37,8 @@ class JoinDataTransformer implements DataTransformerInterface
     }
 
     /**
-     * @return array joinDataTransformer must always return an array for view data
+     * @param mixed $value
+     * @return array JoinDataTransformer must always return an array for view data.
      */
     public function transform(mixed $value): array
     {
@@ -40,8 +46,8 @@ class JoinDataTransformer implements DataTransformerInterface
          * If model is already an PersistableInterface
          */
         if (
-            !empty($value)
-            && $value instanceof PersistableInterface
+            !empty($value) &&
+            $value instanceof PersistableInterface
         ) {
             return [$value->getId()];
         } elseif (!empty($value) && is_iterable($value)) {
@@ -54,22 +60,20 @@ class JoinDataTransformer implements DataTransformerInterface
                     $idArray[] = $entity->getId();
                 }
             }
-
             return $idArray;
         } elseif (!empty($value)) {
             return [$value];
         }
-
         return [];
     }
 
     /**
+     * @param mixed $value
      * @return array|object|null
      */
     public function reverseTransform(mixed $value): mixed
     {
         if ($this->nodeTypeField->isManyToMany()) {
-            /** @var PersistableInterface[] $unorderedEntities */
             $unorderedEntities = $this->managerRegistry->getRepository($this->entityClassname)->findBy([
                 'id' => $value,
             ]);
@@ -80,7 +84,6 @@ class JoinDataTransformer implements DataTransformerInterface
                 return array_search($a->getId(), $value) -
                     array_search($b->getId(), $value);
             });
-
             return $unorderedEntities;
         }
         if ($this->nodeTypeField->isManyToOne()) {
@@ -88,7 +91,6 @@ class JoinDataTransformer implements DataTransformerInterface
                 'id' => $value,
             ]);
         }
-
         return null;
     }
 }

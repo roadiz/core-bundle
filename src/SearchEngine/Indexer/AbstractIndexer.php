@@ -14,37 +14,50 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 abstract class AbstractIndexer implements CliAwareIndexer
 {
+    private ClientRegistry $clientRegistry;
+    protected SolariumFactoryInterface $solariumFactory;
     protected LoggerInterface $logger;
     protected ?SymfonyStyle $io = null;
+    protected ManagerRegistry $managerRegistry;
 
     public function __construct(
-        protected readonly ClientRegistry $clientRegistry,
-        protected readonly ManagerRegistry $managerRegistry,
-        protected readonly SolariumFactoryInterface $solariumFactory,
-        readonly LoggerInterface $searchEngineLogger,
+        ClientRegistry $clientRegistry,
+        ManagerRegistry $managerRegistry,
+        SolariumFactoryInterface $solariumFactory,
+        LoggerInterface $searchEngineLogger
     ) {
+        $this->solariumFactory = $solariumFactory;
+        $this->clientRegistry = $clientRegistry;
         $this->logger = $searchEngineLogger;
+        $this->managerRegistry = $managerRegistry;
     }
 
+    /**
+     * @return Client
+     */
     public function getSolr(): Client
     {
         $solr = $this->clientRegistry->getClient();
         if (null === $solr) {
             throw new SolrServerNotAvailableException();
         }
-
         return $solr;
     }
 
+    /**
+     * @param SymfonyStyle|null $io
+     * @return AbstractIndexer
+     */
     public function setIo(?SymfonyStyle $io): self
     {
         $this->io = $io;
-
         return $this;
     }
 
     /**
      * Empty Solr index.
+     *
+     * @param string|null $documentType
      */
     public function emptySolr(?string $documentType = null): void
     {

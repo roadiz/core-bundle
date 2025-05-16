@@ -20,18 +20,27 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-final readonly class DocumentMessageDispatchSubscriber implements EventSubscriberInterface
+final class DocumentMessageDispatchSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private MessageBusInterface $bus)
+    private MessageBusInterface $bus;
+
+    /**
+     * @param MessageBusInterface $bus
+     */
+    public function __construct(MessageBusInterface $bus)
     {
+        $this->bus = $bus;
     }
 
+    /**
+     * @inheritDoc
+     */
     public static function getSubscribedEvents(): array
     {
         return [
             // Only dispatch async message when document files are updated or created
-            DocumentCreatedEvent::class => ['onFilterDocumentEvent', 0],
-            DocumentFileUpdatedEvent::class => ['onFilterDocumentEvent', 0],
+             DocumentCreatedEvent::class => ['onFilterDocumentEvent', 0],
+             DocumentFileUpdatedEvent::class => ['onFilterDocumentEvent', 0],
         ];
     }
 
@@ -39,20 +48,19 @@ final readonly class DocumentMessageDispatchSubscriber implements EventSubscribe
     {
         $document = $event->getDocument();
         if (
-            $document instanceof Document
-            && \is_numeric($document->getId())
-            && $document->isLocal()
-            && null !== $document->getRelativePath()
+            $document instanceof Document &&
+            null !== $document->getId() &&
+            $document->isLocal() &&
+            null !== $document->getRelativePath()
         ) {
-            $id = (int) $document->getId();
-            $this->bus->dispatch(new Envelope(new DocumentRawMessage($id)));
-            $this->bus->dispatch(new Envelope(new DocumentFilesizeMessage($id)));
-            $this->bus->dispatch(new Envelope(new DocumentSizeMessage($id)));
-            $this->bus->dispatch(new Envelope(new DocumentAverageColorMessage($id)));
-            $this->bus->dispatch(new Envelope(new DocumentExifMessage($id)));
-            $this->bus->dispatch(new Envelope(new DocumentSvgMessage($id)));
-            $this->bus->dispatch(new Envelope(new DocumentAudioVideoMessage($id)));
-            $this->bus->dispatch(new Envelope(new DocumentPdfMessage($id)));
+            $this->bus->dispatch(new Envelope(new DocumentRawMessage($document->getId())));
+            $this->bus->dispatch(new Envelope(new DocumentFilesizeMessage($document->getId())));
+            $this->bus->dispatch(new Envelope(new DocumentSizeMessage($document->getId())));
+            $this->bus->dispatch(new Envelope(new DocumentAverageColorMessage($document->getId())));
+            $this->bus->dispatch(new Envelope(new DocumentExifMessage($document->getId())));
+            $this->bus->dispatch(new Envelope(new DocumentSvgMessage($document->getId())));
+            $this->bus->dispatch(new Envelope(new DocumentAudioVideoMessage($document->getId())));
+            $this->bus->dispatch(new Envelope(new DocumentPdfMessage($document->getId())));
         }
     }
 }

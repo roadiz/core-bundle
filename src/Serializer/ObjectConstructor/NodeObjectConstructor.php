@@ -9,14 +9,20 @@ use JMS\Serializer\Exception\ObjectConstructionException;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Repository\NodeRepository;
 
-final class NodeObjectConstructor extends AbstractTypedObjectConstructor
+class NodeObjectConstructor extends AbstractTypedObjectConstructor
 {
+    /**
+     * @inheritDoc
+     */
     public function supports(string $className, array $data): bool
     {
-        return Node::class === $className && array_key_exists('nodeName', $data);
+        return $className === Node::class && array_key_exists('nodeName', $data);
     }
 
-    protected function findObject(mixed $data, DeserializationContext $context): ?object
+    /**
+     * @inheritDoc
+     */
+    protected function findObject($data, DeserializationContext $context): ?object
     {
         if (empty($data['nodeName']) && empty($data['node_name'])) {
             throw new ObjectConstructionException('Node name can not be empty');
@@ -25,7 +31,6 @@ final class NodeObjectConstructor extends AbstractTypedObjectConstructor
         $nodeRepository = $this->entityManager
             ->getRepository(Node::class)
             ->setDisplayingAllNodesStatuses(true);
-
         return $nodeRepository->findOneByNodeName($data['nodeName'] ?? $data['node_name']);
     }
 

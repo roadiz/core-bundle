@@ -6,20 +6,44 @@ namespace RZ\Roadiz\CoreBundle\Routing;
 
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Theme;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Do not extend this class, use NodesSourcesPathGeneratingEvent::class event.
  */
-final readonly class NodesSourcesUrlGenerator
+final class NodesSourcesUrlGenerator
 {
+    protected ?Request $request;
+    protected ?NodesSources $nodeSource;
+    protected bool $forceLocale;
+    protected bool $forceLocaleWithUrlAlias;
+    protected NodesSourcesPathAggregator $pathAggregator;
+
+    /**
+     * @param NodesSourcesPathAggregator $pathAggregator
+     * @param Request|null               $request
+     * @param NodesSources|null          $nodeSource
+     * @param bool                       $forceLocale
+     * @param bool                       $forceLocaleWithUrlAlias
+     */
     public function __construct(
-        private NodesSourcesPathAggregator $pathAggregator,
-        private ?NodesSources $nodeSource = null,
-        private bool $forceLocale = false,
-        private bool $forceLocaleWithUrlAlias = false,
+        NodesSourcesPathAggregator $pathAggregator,
+        Request $request = null,
+        NodesSources $nodeSource = null,
+        bool $forceLocale = false,
+        bool $forceLocaleWithUrlAlias = false
     ) {
+        $this->pathAggregator = $pathAggregator;
+        $this->request = $request;
+        $this->nodeSource = $nodeSource;
+        $this->forceLocale = $forceLocale;
+        $this->forceLocaleWithUrlAlias = $forceLocaleWithUrlAlias;
     }
 
+    /**
+     * @param NodesSources $nodeSource
+     * @return bool
+     */
     protected function isNodeSourceHome(NodesSources $nodeSource): bool
     {
         if ($nodeSource->getNode()->isHome()) {
@@ -34,14 +58,19 @@ final readonly class NodesSourcesUrlGenerator
      * root folder.
      *
      * It returns a relative url to Roadiz, not relative to your server root.
+     *
+     * @param Theme|null $theme
+     * @param array $parameters
+     *
+     * @return string
      */
     public function getNonContextualUrl(?Theme $theme = null, array $parameters = []): string
     {
         if (null !== $this->nodeSource) {
             if ($this->isNodeSourceHome($this->nodeSource)) {
                 if (
-                    $this->nodeSource->getTranslation()->isDefaultTranslation()
-                    && false === $this->forceLocale
+                    $this->nodeSource->getTranslation()->isDefaultTranslation() &&
+                    false === $this->forceLocale
                 ) {
                     return '';
                 } else {
@@ -56,25 +85,30 @@ final readonly class NodesSourcesUrlGenerator
              * translation is not the default one.
              */
             if ($this->urlNeedsLocalePrefix($this->nodeSource)) {
-                $path = $this->nodeSource->getTranslation()->getPreferredLocale().'/'.$path;
+                $path = $this->nodeSource->getTranslation()->getPreferredLocale() . '/' . $path;
             }
 
-            if (null !== $theme && '' != $theme->getRoutePrefix()) {
-                $path = $theme->getRoutePrefix().'/'.$path;
+            if (null !== $theme && $theme->getRoutePrefix() != '') {
+                $path = $theme->getRoutePrefix() . '/' . $path;
             }
             /*
              * Add non default format at the path end.
              */
             if (isset($parameters['_format']) && in_array($parameters['_format'], ['xml', 'json', 'pdf'])) {
-                $path .= '.'.$parameters['_format'];
+                $path .= '.' . $parameters['_format'];
             }
 
             return $path;
         } else {
-            throw new \RuntimeException('Cannot generate Url for a NULL NodesSources', 1);
+            throw new \RuntimeException("Cannot generate Url for a NULL NodesSources", 1);
         }
     }
 
+    /**
+     * @param NodesSources $nodesSources
+     *
+     * @return bool
+     */
     protected function useUrlAlias(NodesSources $nodesSources): bool
     {
         if ($nodesSources->getIdentifier() !== $nodesSources->getNode()->getNodeName()) {
@@ -84,6 +118,11 @@ final readonly class NodesSourcesUrlGenerator
         return false;
     }
 
+    /**
+     * @param NodesSources $nodesSources
+     *
+     * @return bool
+     */
     protected function urlNeedsLocalePrefix(NodesSources $nodesSources): bool
     {
         /*
@@ -94,15 +133,15 @@ final readonly class NodesSourcesUrlGenerator
          */
         if (
             (
-                !$this->useUrlAlias($nodesSources)
-                && !$nodesSources->getTranslation()->isDefaultTranslation()
-            )
-            || (
-                $this->useUrlAlias($nodesSources)
-                && !$nodesSources->getTranslation()->isDefaultTranslation()
-                && true === $this->forceLocaleWithUrlAlias
-            )
-            || true === $this->forceLocale
+                !$this->useUrlAlias($nodesSources) &&
+                !$nodesSources->getTranslation()->isDefaultTranslation()
+            ) ||
+            (
+                $this->useUrlAlias($nodesSources) &&
+                !$nodesSources->getTranslation()->isDefaultTranslation() &&
+                true === $this->forceLocaleWithUrlAlias
+            ) ||
+            true === $this->forceLocale
         ) {
             return true;
         }

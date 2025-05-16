@@ -11,20 +11,21 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 
 interface AttributeValueInterface extends PositionedInterface, PersistableInterface
 {
-    public function getRealm(): ?RealmInterface;
-
     /**
-     * @return $this
+     * @return AttributeInterface
      */
-    public function setRealm(?RealmInterface $realm): self;
-
     public function getAttribute(): ?AttributeInterface;
 
     /**
-     * @return $this
+     * @param AttributeInterface $attribute
+     *
+     * @return mixed
      */
-    public function setAttribute(AttributeInterface $attribute): self;
+    public function setAttribute(AttributeInterface $attribute);
 
+    /**
+     * @return int
+     */
     public function getType(): int;
 
     /**
@@ -32,19 +33,29 @@ interface AttributeValueInterface extends PositionedInterface, PersistableInterf
      */
     public function getAttributeValueTranslations(): Collection;
 
+    /**
+     * @param TranslationInterface $translation
+     *
+     * @return AttributeValueTranslationInterface|null
+     */
     public function getAttributeValueTranslation(TranslationInterface $translation): ?AttributeValueTranslationInterface;
 
     /**
      * @param Collection<int, AttributeValueTranslationInterface> $attributeValueTranslations
      *
-     * @return $this
+     * @return mixed
      */
-    public function setAttributeValueTranslations(Collection $attributeValueTranslations): self;
+    public function setAttributeValueTranslations(Collection $attributeValueTranslations);
 
+    /**
+     * @return AttributableInterface|null
+     */
     public function getAttributable(): ?AttributableInterface;
 
     /**
-     * @return $this
+     * @param AttributableInterface|null $attributable
+     *
+     * @return mixed
      */
-    public function setAttributable(?AttributableInterface $attributable): self;
+    public function setAttributable(?AttributableInterface $attributable);
 }

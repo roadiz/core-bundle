@@ -13,16 +13,28 @@ use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 
 /**
- * Extension that allow render documents Url.
+ * Extension that allow render documents Url
  */
-final class DocumentUrlExtension extends AbstractExtension
+class DocumentUrlExtension extends AbstractExtension
 {
+    protected DocumentUrlGeneratorInterface $documentUrlGenerator;
+    protected bool $throwExceptions;
+
+    /**
+     * @param DocumentUrlGeneratorInterface $documentUrlGenerator
+     * @param bool $throwExceptions Trigger exception if using filter on NULL values (default: false)
+     */
     public function __construct(
-        private readonly DocumentUrlGeneratorInterface $documentUrlGenerator,
-        private readonly bool $throwExceptions = false,
+        DocumentUrlGeneratorInterface $documentUrlGenerator,
+        bool $throwExceptions = false
     ) {
+        $this->throwExceptions = $throwExceptions;
+        $this->documentUrlGenerator = $documentUrlGenerator;
     }
 
+    /**
+     * @return array
+     */
     public function getFilters(): array
     {
         return [
@@ -37,15 +49,18 @@ final class DocumentUrlExtension extends AbstractExtension
      *
      * - Document
      *
+     * @param PersistableInterface|null $mixed
+     * @param array $criteria
+     * @return string
      * @throws RuntimeError
      */
-    public function getUrl(?PersistableInterface $mixed = null, array $criteria = []): string
+    public function getUrl(PersistableInterface $mixed = null, array $criteria = [])
     {
         if (null === $mixed) {
             if ($this->throwExceptions) {
-                throw new RuntimeError('Twig “url” filter must be used with a not null object');
+                throw new RuntimeError("Twig “url” filter must be used with a not null object");
             } else {
-                return '';
+                return "";
             }
         }
 
@@ -58,13 +73,12 @@ final class DocumentUrlExtension extends AbstractExtension
 
                 $this->documentUrlGenerator->setOptions($criteria);
                 $this->documentUrlGenerator->setDocument($mixed);
-
                 return $this->documentUrlGenerator->getUrl($absolute);
             } catch (InvalidArgumentException $e) {
                 throw new RuntimeError($e->getMessage(), -1, null, $e);
             }
         }
 
-        throw new RuntimeError('Twig “url” filter can be only used with a Document');
+        throw new RuntimeError("Twig “url” filter can be only used with a Document");
     }
 }

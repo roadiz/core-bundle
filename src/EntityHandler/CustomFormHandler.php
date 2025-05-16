@@ -11,20 +11,29 @@ use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 /**
  * Handle operations with node-type entities.
  */
-final class CustomFormHandler extends AbstractHandler
+class CustomFormHandler extends AbstractHandler
 {
     protected ?CustomForm $customForm = null;
 
-    public function setCustomForm(CustomForm $customForm): self
+    public function getCustomForm(): ?CustomForm
+    {
+        return $this->customForm;
+    }
+
+    /**
+     * @param CustomForm $customForm
+     * @return $this
+     */
+    public function setCustomForm(CustomForm $customForm)
     {
         $this->customForm = $customForm;
-
         return $this;
     }
 
     /**
      * Reset current node-type fields positions.
      *
+     * @param bool $setPositions
      * @return float Return the next position after the **last** field
      */
     public function cleanFieldsPositions(bool $setPositions = true): float
@@ -41,7 +50,7 @@ final class CustomFormHandler extends AbstractHandler
             if ($setPositions) {
                 $field->setPosition($i);
             }
-            ++$i;
+            $i++;
         }
 
         if ($setPositions) {

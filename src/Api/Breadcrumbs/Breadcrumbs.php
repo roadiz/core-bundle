@@ -7,16 +7,21 @@ namespace RZ\Roadiz\CoreBundle\Api\Breadcrumbs;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use Symfony\Component\Serializer\Annotation as Serializer;
 
-final readonly class Breadcrumbs implements BreadcrumbsInterface
+final class Breadcrumbs implements BreadcrumbsInterface
 {
     /**
-     * @param PersistableInterface[] $items
+     * @var array<PersistableInterface>
      */
-    public function __construct(
-        #[Serializer\Groups(['breadcrumbs', 'web_response'])]
-        #[Serializer\MaxDepth(1)]
-        private array $items,
-    ) {
+    #[Serializer\Groups(["breadcrumbs", "web_response"])]
+    #[Serializer\MaxDepth(1)]
+    private array $items;
+
+    /**
+     * @param array<PersistableInterface> $items
+     */
+    public function __construct(array $items)
+    {
+        $this->items = $items;
     }
 
     /**

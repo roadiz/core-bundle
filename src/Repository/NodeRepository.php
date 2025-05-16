@@ -13,7 +13,6 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
-use RZ\Roadiz\Core\AbstractEntities\NodeInterface;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderApplyEvent;
@@ -21,11 +20,10 @@ use RZ\Roadiz\CoreBundle\Doctrine\Event\QueryBuilder\QueryBuilderBuildEvent;
 use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\Model\NodeTreeDto;
+use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
+use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
-use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\String\Slugger\AsciiSlugger;
-use Symfony\Contracts\EventDispatcher\Event;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -37,28 +35,34 @@ final class NodeRepository extends StatusAwareRepository
         ManagerRegistry $registry,
         PreviewResolverInterface $previewResolver,
         EventDispatcherInterface $dispatcher,
-        Security $security,
+        Security $security
     ) {
         parent::__construct($registry, Node::class, $previewResolver, $dispatcher, $security);
     }
 
     /**
-     * @return Event
+     * @param QueryBuilder $qb
+     * @param string $property
+     * @param mixed $value
+     *
+     * @return object|QueryBuilderBuildEvent
      */
     protected function dispatchQueryBuilderBuildEvent(QueryBuilder $qb, string $property, mixed $value): object
     {
-        // @phpstan-ignore-next-line
         return $this->dispatcher->dispatch(
             new QueryBuilderBuildEvent($qb, Node::class, $property, $value, $this->getEntityName())
         );
     }
 
     /**
-     * @return Event
+     * @param QueryBuilder $qb
+     * @param string $property
+     * @param mixed $value
+     *
+     * @return object|QueryBuilderApplyEvent
      */
     protected function dispatchQueryBuilderApplyEvent(QueryBuilder $qb, string $property, mixed $value): object
     {
-        // @phpstan-ignore-next-line
         return $this->dispatcher->dispatch(
             new QueryBuilderApplyEvent($qb, Node::class, $property, $value, $this->getEntityName())
         );
@@ -68,13 +72,15 @@ final class NodeRepository extends StatusAwareRepository
      * Just like the countBy method but with relational criteria.
      *
      * @param Criteria|mixed|array $criteria
+     * @param TranslationInterface|null $translation
      *
+     * @return int
      * @throws NonUniqueResultException
-     * @throws NoResultException
+     * @throws \Doctrine\ORM\NoResultException
      */
     public function countBy(
         mixed $criteria,
-        ?TranslationInterface $translation = null,
+        TranslationInterface $translation = null
     ): int {
         $qb = $this->createQueryBuilder(self::NODE_ALIAS);
         $qb->select($qb->expr()->countDistinct(self::NODE_ALIAS));
@@ -101,22 +107,24 @@ final class NodeRepository extends StatusAwareRepository
 
     /**
      * Create filters according to any translation criteria OR argument.
+     *
+     * @param array            $criteria
+     * @param QueryBuilder     $qb
+     * @param TranslationInterface|null $translation
      */
     protected function filterByTranslation(
         array $criteria,
         QueryBuilder $qb,
-        ?TranslationInterface $translation = null,
+        TranslationInterface $translation = null
     ): void {
         if (
-            isset($criteria['translation'])
-            || isset($criteria['translation.locale'])
-            || isset($criteria['translation.id'])
-            || isset($criteria['translation.available'])
+            isset($criteria['translation']) ||
+            isset($criteria['translation.locale']) ||
+            isset($criteria['translation.id']) ||
+            isset($criteria['translation.available'])
         ) {
-            if (!$this->hasJoinedNodesSources($qb, self::NODE_ALIAS)) {
-                $qb->innerJoin(self::NODE_ALIAS.'.nodeSources', self::NODESSOURCES_ALIAS);
-            }
-            $qb->innerJoin(self::NODESSOURCES_ALIAS.'.translation', self::TRANSLATION_ALIAS);
+            $qb->innerJoin(self::NODE_ALIAS . '.nodeSources', self::NODESSOURCES_ALIAS);
+            $qb->innerJoin(self::NODESSOURCES_ALIAS . '.translation', self::TRANSLATION_ALIAS);
         } else {
             if (null !== $translation) {
                 /*
@@ -126,22 +134,23 @@ final class NodeRepository extends StatusAwareRepository
                     'n.nodeSources',
                     self::NODESSOURCES_ALIAS,
                     'WITH',
-                    self::NODESSOURCES_ALIAS.'.translation = :translation'
+                    self::NODESSOURCES_ALIAS . '.translation = :translation'
                 );
             } else {
                 /*
                  * With a null translation, not filter by translation to enable
                  * nodes with only one translation which is not the default one.
                  */
-                if (!$this->hasJoinedNodesSources($qb, self::NODE_ALIAS)) {
-                    $qb->innerJoin(self::NODE_ALIAS.'.nodeSources', self::NODESSOURCES_ALIAS);
-                }
+                $qb->innerJoin(self::NODE_ALIAS . '.nodeSources', self::NODESSOURCES_ALIAS);
             }
         }
     }
 
     /**
      * Add a tag filtering to queryBuilder.
+     *
+     * @param array        $criteria
+     * @param QueryBuilder $qb
      */
     protected function filterByTag(array &$criteria, QueryBuilder $qb): void
     {
@@ -166,6 +175,9 @@ final class NodeRepository extends StatusAwareRepository
      *
      * * `translation => $object`
      * * `translation.locale => 'fr_FR'`
+     *
+     * @param array        $criteria
+     * @param QueryBuilder $qb
      */
     protected function filterByCriteria(array &$criteria, QueryBuilder $qb): void
     {
@@ -174,7 +186,7 @@ final class NodeRepository extends StatusAwareRepository
          * Reimplementing findBy features…
          */
         foreach ($criteria as $key => $value) {
-            if ('tags' == $key || 'tagExclusive' == $key) {
+            if ($key == "tags" || $key == "tagExclusive") {
                 continue;
             }
             /*
@@ -188,7 +200,7 @@ final class NodeRepository extends StatusAwareRepository
                  * compute prefix for
                  * filtering node, and sources relation fields
                  */
-                $prefix = self::NODE_ALIAS.'.';
+                $prefix = self::NODE_ALIAS . '.';
                 // Dots are forbidden in field definitions
                 $baseKey = $simpleQB->getParameterKey($key);
                 $qb->andWhere($simpleQB->buildExpressionWithoutBinding($value, $prefix, $key, $baseKey));
@@ -198,6 +210,9 @@ final class NodeRepository extends StatusAwareRepository
 
     /**
      * Bind parameters to generated query.
+     *
+     * @param array $criteria
+     * @param QueryBuilder $qb
      */
     protected function applyFilterByCriteria(array &$criteria, QueryBuilder $qb): void
     {
@@ -206,7 +221,7 @@ final class NodeRepository extends StatusAwareRepository
          */
         $simpleQB = new SimpleQueryBuilder($qb);
         foreach ($criteria as $key => $value) {
-            if ('tags' == $key || 'tagExclusive' == $key) {
+            if ($key == "tags" || $key == "tagExclusive") {
                 continue;
             }
 
@@ -219,14 +234,46 @@ final class NodeRepository extends StatusAwareRepository
 
     /**
      * Bind translation parameter to final query.
+     *
+     * @param QueryBuilder $qb
+     * @param TranslationInterface|null $translation
      */
     protected function applyTranslationByTag(
         QueryBuilder $qb,
-        ?TranslationInterface $translation = null,
+        TranslationInterface $translation = null
     ): void {
         if (null !== $translation) {
             $qb->setParameter('translation', $translation);
         }
+    }
+
+    /**
+     * Just like the findBy method but with a given Translation
+     *
+     * If no translation nor authorizationChecker is given, the vanilla `findBy`
+     * method will be called instead.
+     *
+     * @param array $criteria
+     * @param array|null $orderBy
+     * @param int|null $limit
+     * @param int|null $offset
+     * @param TranslationInterface|null $translation
+     * @return array|Paginator
+     */
+    public function findByWithTranslation(
+        array $criteria,
+        array $orderBy = null,
+        ?int $limit = null,
+        ?int $offset = null,
+        TranslationInterface $translation = null
+    ): array|Paginator {
+        return $this->findBy(
+            $criteria,
+            $orderBy,
+            $limit,
+            $offset,
+            $translation
+        );
     }
 
     /**
@@ -254,18 +301,20 @@ final class NodeRepository extends StatusAwareRepository
      * * `tags => [$tag1, $tag2]`
      * * `tags => [$tag1, $tag2], tagExclusive => true`
      *
+     * @param array $criteria
+     * @param array|null $orderBy
      * @param int|null $limit
      * @param int|null $offset
-     *
-     * @return array<Node>
+     * @param TranslationInterface|null $translation
+     * @return array|Paginator
      */
     public function findBy(
         array $criteria,
-        ?array $orderBy = null,
+        array $orderBy = null,
         $limit = null,
         $offset = null,
-        ?TranslationInterface $translation = null,
-    ): array {
+        TranslationInterface $translation = null
+    ): array|Paginator {
         $qb = $this->getContextualQueryWithTranslation(
             $criteria,
             $orderBy,
@@ -279,169 +328,21 @@ final class NodeRepository extends StatusAwareRepository
         $this->applyFilterByTag($criteria, $qb);
         $this->applyFilterByCriteria($criteria, $qb);
         $this->applyTranslationByTag($qb, $translation);
-        // @phpstan-ignore-next-line
         $query = $qb->getQuery();
         $this->dispatchQueryEvent($query);
 
         if (
-            null !== $limit
-            && null !== $offset
+            null !== $limit &&
+            null !== $offset
         ) {
             /*
              * We need to use Doctrine paginator
              * if a limit is set because of the default inner join
              */
-            return (new Paginator($query))->getIterator()->getArrayCopy();
+            return new Paginator($query);
         } else {
             return $query->getResult();
         }
-    }
-
-    /**
-     * @return array<NodeTreeDto>
-     */
-    public function findByAsNodeTreeDto(
-        array $criteria,
-        ?array $orderBy = null,
-        ?int $limit = null,
-        ?int $offset = null,
-        ?TranslationInterface $translation = null,
-    ): array {
-        $qb = $this->getContextualQueryWithTranslation(
-            $criteria,
-            $orderBy,
-            $limit,
-            $offset,
-            $translation
-        );
-
-        $qb->setCacheable(true);
-        $this->dispatchQueryBuilderEvent($qb, $this->getEntityName());
-        $this->applyFilterByTag($criteria, $qb);
-        $this->applyFilterByCriteria($criteria, $qb);
-        $this->applyTranslationByTag($qb, $translation);
-
-        $this->alterQueryBuilderAsNodeTreeDto($qb);
-
-        // @phpstan-ignore-next-line
-        $query = $qb->getQuery();
-        $this->dispatchQueryEvent($query);
-
-        return $query->getResult();
-    }
-
-    /**
-     * @param string $pattern  Search pattern
-     * @param array  $criteria Additional criteria
-     *
-     * @return array<NodeTreeDto>
-     *
-     * @psalm-return array<NodeTreeDto>
-     */
-    public function searchByAsNodeTreeDto(
-        string $pattern,
-        array $criteria = [],
-        array $orders = [],
-        ?int $limit = null,
-        ?int $offset = null,
-        string $alias = EntityRepository::DEFAULT_ALIAS,
-    ): array {
-        $qb = $this->createQueryBuilder($alias);
-        $qb = $this->createSearchBy($pattern, $qb, $criteria, $alias);
-
-        // Add ordering
-        foreach ($orders as $key => $value) {
-            if (
-                (\str_starts_with($key, 'node.') || \str_starts_with($key, static::NODE_ALIAS.'.'))
-                && $this->hasJoinedNode($qb, $alias)
-            ) {
-                $key = preg_replace('#^node\.#', static::NODE_ALIAS.'.', $key);
-                $qb->addOrderBy($key, $value);
-            } elseif (
-                \str_starts_with($key, static::NODESSOURCES_ALIAS.'.')
-                && $this->hasJoinedNodesSources($qb, $alias)
-            ) {
-                $qb->addOrderBy($key, $value);
-            } else {
-                $qb->addOrderBy($alias.'.'.$key, $value);
-            }
-        }
-        if (null !== $offset) {
-            $qb->setFirstResult($offset);
-        }
-        if (null !== $limit) {
-            $qb->setMaxResults($limit);
-        }
-
-        $this->dispatchQueryBuilderEvent($qb, $this->getEntityName());
-        $this->applyFilterByCriteria($criteria, $qb);
-
-        $this->alterQueryBuilderAsNodeTreeDto($qb, $alias);
-
-        $query = $qb->getQuery();
-        $this->dispatchQueryEvent($query);
-
-        return $query->getResult();
-    }
-
-    protected function alterQueryBuilderAsNodeTreeDto(QueryBuilder $qb, string $alias = self::NODE_ALIAS): QueryBuilder
-    {
-        if (!$this->hasJoinedNodeType($qb, $alias)) {
-            $qb->innerJoin($alias.'.nodeType', self::NODETYPE_ALIAS);
-        }
-        if (!$this->hasJoinedNodesSources($qb, $alias)) {
-            $qb->innerJoin($alias.'.nodeSources', self::NODESSOURCES_ALIAS);
-        }
-
-        $qb->select(sprintf(
-            <<<EOT
-NEW %s(
-    %s.id,
-    %s.nodeName,
-    %s.hideChildren,
-    %s.home,
-    %s.visible,
-    %s.status,
-    IDENTITY(%s.parent),
-    %s.childrenOrder,
-    %s.childrenOrderDirection,
-    %s.locked,
-    %s.name,
-    %s.publishable,
-    %s.reachable,
-    %s.displayName,
-    %s.color,
-    %s.hidingNodes,
-    %s.hidingNonReachableNodes,
-    %s.id,
-    %s.title,
-    %s.publishedAt
-)
-EOT,
-            NodeTreeDto::class,
-            $alias,
-            $alias,
-            $alias,
-            $alias,
-            $alias,
-            $alias,
-            $alias,
-            $alias,
-            $alias,
-            $alias,
-            self::NODETYPE_ALIAS,
-            self::NODETYPE_ALIAS,
-            self::NODETYPE_ALIAS,
-            self::NODETYPE_ALIAS,
-            self::NODETYPE_ALIAS,
-            self::NODETYPE_ALIAS,
-            self::NODETYPE_ALIAS,
-            self::NODESSOURCES_ALIAS,
-            self::NODESSOURCES_ALIAS,
-            self::NODESSOURCES_ALIAS,
-        ));
-
-        return $qb;
     }
 
     /**
@@ -449,13 +350,20 @@ EOT,
      * not a Backend user and if authorizationChecker is defined.
      *
      * This method allows to pre-filter Nodes with a given translation.
+     *
+     * @param array $criteria
+     * @param array|null $orderBy
+     * @param int|null $limit
+     * @param int|null $offset
+     * @param TranslationInterface|null $translation
+     * @return QueryBuilder
      */
     protected function getContextualQueryWithTranslation(
         array &$criteria,
-        ?array $orderBy = null,
+        array $orderBy = null,
         ?int $limit = null,
         ?int $offset = null,
-        ?TranslationInterface $translation = null,
+        TranslationInterface $translation = null
     ): QueryBuilder {
         $qb = $this->createQueryBuilder(self::NODE_ALIAS);
         $qb->addSelect(self::NODESSOURCES_ALIAS);
@@ -471,15 +379,15 @@ EOT,
         // Add ordering
         if (null !== $orderBy) {
             foreach ($orderBy as $key => $value) {
-                if (str_starts_with($key, self::NODESSOURCES_ALIAS.'.')) {
+                if (str_starts_with($key, self::NODESSOURCES_ALIAS . '.')) {
                     $qb->addOrderBy($key, $value);
-                } elseif (str_starts_with($key, self::NODETYPE_ALIAS.'.')) {
+                } elseif (str_starts_with($key, self::NODETYPE_ALIAS . '.')) {
                     if (!$this->hasJoinedNodeType($qb, self::NODE_ALIAS)) {
-                        $qb->innerJoin(self::NODE_ALIAS.'.nodeType', self::NODETYPE_ALIAS);
+                        $qb->innerJoin(self::NODE_ALIAS . '.nodeType', self::NODETYPE_ALIAS);
                     }
                     $qb->addOrderBy($key, $value);
                 } else {
-                    $qb->addOrderBy(self::NODE_ALIAS.'.'.$key, $value);
+                    $qb->addOrderBy(self::NODE_ALIAS . '.' . $key, $value);
                 }
             }
         }
@@ -500,11 +408,14 @@ EOT,
      * If no translation nor authorizationChecker is given, the vanilla `findOneBy`
      * method will be called instead.
      *
+     * @param array $criteria
+     * @param TranslationInterface|null $translation
+     * @return null|Node
      * @throws NonUniqueResultException
      */
     public function findOneByWithTranslation(
         array $criteria,
-        ?TranslationInterface $translation = null,
+        TranslationInterface $translation = null
     ): ?Node {
         return $this->findOneBy(
             $criteria,
@@ -516,12 +427,16 @@ EOT,
     /**
      * Just like the findOneBy method but with relational criteria.
      *
+     * @param array $criteria
+     * @param array|null $orderBy
+     * @param TranslationInterface|null $translation
+     * @return null|Node
      * @throws NonUniqueResultException
      */
     public function findOneBy(
         array $criteria,
-        ?array $orderBy = null,
-        ?TranslationInterface $translation = null,
+        array $orderBy = null,
+        TranslationInterface $translation = null
     ): ?Node {
         $qb = $this->getContextualQueryWithTranslation(
             $criteria,
@@ -536,7 +451,6 @@ EOT,
         $this->applyFilterByTag($criteria, $qb);
         $this->applyFilterByCriteria($criteria, $qb);
         $this->applyTranslationByTag($qb, $translation);
-        // @phpstan-ignore-next-line
         $query = $qb->getQuery();
         $this->dispatchQueryEvent($query);
 
@@ -546,11 +460,14 @@ EOT,
     /**
      * Find one Node with its Id and a given translation.
      *
+     * @param int $nodeId
+     * @param TranslationInterface $translation
+     * @return null|Node
      * @throws NonUniqueResultException
      */
     public function findWithTranslation(
         int $nodeId,
-        TranslationInterface $translation,
+        TranslationInterface $translation
     ): ?Node {
         $qb = $this->createQueryBuilder(self::NODE_ALIAS);
         $qb->select('n, ns')
@@ -570,10 +487,12 @@ EOT,
     /**
      * Find one Node with its Id and the default translation.
      *
+     * @param int $nodeId
+     * @return null|Node
      * @throws NonUniqueResultException
      */
     public function findWithDefaultTranslation(
-        int $nodeId,
+        int $nodeId
     ): ?Node {
         $qb = $this->createQueryBuilder(self::NODE_ALIAS);
         $qb->select('n, ns')
@@ -594,13 +513,16 @@ EOT,
     /**
      * Find one Node with its nodeName and a given translation.
      *
-     * @throws NonUniqueResultException
+     * @param string $nodeName
+     * @param TranslationInterface $translation
      *
+     * @return null|Node
+     * @throws NonUniqueResultException
      * @deprecated Use findNodeTypeNameAndSourceIdByIdentifier
      */
     public function findByNodeNameWithTranslation(
         string $nodeName,
-        TranslationInterface $translation,
+        TranslationInterface $translation
     ): ?Node {
         $qb = $this->createQueryBuilder(self::NODE_ALIAS);
         $qb->select('n, ns')
@@ -620,15 +542,18 @@ EOT,
     /**
      * Find one node using its nodeName and a translation, or a unique URL alias.
      *
+     * @param string $identifier
+     * @param TranslationInterface|null $translation
+     * @param bool $availableTranslation
+     * @param bool $allowNonReachableNodes
      * @return array|null Array with node-type "name" and node-source "id"
-     *
      * @throws NonUniqueResultException
      */
     public function findNodeTypeNameAndSourceIdByIdentifier(
         string $identifier,
         ?TranslationInterface $translation,
         bool $availableTranslation = false,
-        bool $allowNonReachableNodes = true,
+        bool $allowNonReachableNodes = true
     ): ?array {
         $qb = $this->createQueryBuilder(self::NODE_ALIAS);
         $qb->select('nt.name, ns.id')
@@ -662,19 +587,20 @@ EOT,
         $query = $qb->getQuery();
         $query->setHint(Query::HINT_FORCE_PARTIAL_LOAD, true);
         $query->setHydrationMode(Query::HYDRATE_ARRAY);
-
         return $query->getOneOrNullResult();
     }
 
     /**
      * Find one Node with its nodeName and the default translation.
      *
-     * @throws NonUniqueResultException
+     * @param string $nodeName
      *
+     * @return null|Node
+     * @throws NonUniqueResultException
      * @deprecated Use findNodeTypeNameAndSourceIdByIdentifier
      */
     public function findByNodeNameWithDefaultTranslation(
-        string $nodeName,
+        string $nodeName
     ): ?Node {
         $qb = $this->createQueryBuilder(self::NODE_ALIAS);
         $qb->select('n, ns')
@@ -695,10 +621,12 @@ EOT,
     /**
      * Find the Home node with a given translation.
      *
+     * @param TranslationInterface|null $translation
+     * @return null|Node
      * @throws NonUniqueResultException
      */
     public function findHomeWithTranslation(
-        ?TranslationInterface $translation = null,
+        TranslationInterface $translation = null
     ): ?Node {
         if (null === $translation) {
             return $this->findHomeWithDefaultTranslation();
@@ -722,6 +650,7 @@ EOT,
     /**
      * Find the Home node with the default translation.
      *
+     * @return null|Node
      * @throws NonUniqueResultException
      */
     public function findHomeWithDefaultTranslation(): ?Node
@@ -742,20 +671,25 @@ EOT,
         return $qb->getQuery()->getOneOrNullResult();
     }
 
+    /**
+     * @param TranslationInterface $translation
+     * @param Node|null $parent
+     * @return array
+     */
     public function findByParentWithTranslation(
         TranslationInterface $translation,
-        ?Node $parent = null,
+        Node $parent = null
     ): array {
         $qb = $this->createQueryBuilder(self::NODE_ALIAS);
         $qb->select('n, ns, ua')
             ->innerJoin('n.nodeSources', self::NODESSOURCES_ALIAS)
-            ->leftJoin(self::NODESSOURCES_ALIAS.'.urlAliases', 'ua')
+            ->leftJoin(self::NODESSOURCES_ALIAS . '.urlAliases', 'ua')
             ->andWhere($qb->expr()->eq('ns.translation', ':translation'))
             ->setParameter('translation', $translation)
             ->addOrderBy('n.position', 'ASC')
             ->setCacheable(true);
 
-        if (null === $parent) {
+        if ($parent === null) {
             $qb->andWhere($qb->expr()->isNull('n.parent'));
         } else {
             $qb->andWhere($qb->expr()->eq('n.parent', ':parent'))
@@ -768,9 +702,10 @@ EOT,
     }
 
     /**
+     * @param Node|null $parent
      * @return Node[]
      */
-    public function findByParentWithDefaultTranslation(?Node $parent = null): array
+    public function findByParentWithDefaultTranslation(Node $parent = null): array
     {
         $qb = $this->createQueryBuilder(self::NODE_ALIAS);
         $qb->select('n, ns')
@@ -780,7 +715,7 @@ EOT,
             ->addOrderBy('n.position', 'ASC')
             ->setCacheable(true);
 
-        if (null === $parent) {
+        if ($parent === null) {
             $qb->andWhere($qb->expr()->isNull('n.parent'));
         } else {
             $qb->andWhere($qb->expr()->eq('n.parent', ':parent'))
@@ -793,6 +728,9 @@ EOT,
     }
 
     /**
+     * @param string $urlAliasAlias
+     *
+     * @return null|Node
      * @throws NonUniqueResultException
      */
     public function findOneWithAliasAndAvailableTranslation(string $urlAliasAlias): ?Node
@@ -817,6 +755,7 @@ EOT,
     /**
      * @param string $urlAliasAlias
      *
+     * @return null|Node
      * @throws NonUniqueResultException
      */
     public function findOneWithAlias($urlAliasAlias): ?Node
@@ -839,7 +778,8 @@ EOT,
     /**
      * @param string $nodeName
      *
-     * @throws NonUniqueResultException|NoResultException
+     * @return bool
+     * @throws NonUniqueResultException|\Doctrine\ORM\NoResultException
      */
     public function exists($nodeName): bool
     {
@@ -854,38 +794,46 @@ EOT,
     }
 
     /**
+     * @param Node $node
+     * @param NodeTypeFieldInterface $field
      * @return Node[]
      */
     public function findByNodeAndField(
         Node $node,
-        NodeTypeFieldInterface $field,
+        NodeTypeFieldInterface $field
     ): array {
         $qb = $this->createQueryBuilder(self::NODE_ALIAS);
         $qb->select(self::NODE_ALIAS)
             ->innerJoin('n.aNodes', 'ntn')
-            ->andWhere($qb->expr()->eq('ntn.fieldName', ':fieldName'))
+            ->andWhere($qb->expr()->eq('ntn.field', ':field'))
             ->andWhere($qb->expr()->eq('ntn.nodeA', ':nodeA'))
             ->addOrderBy('ntn.position', 'ASC')
             ->setCacheable(true);
 
         $this->alterQueryBuilderWithAuthorizationChecker($qb);
 
-        $qb->setParameter('fieldName', $field->getName())
+        $qb->setParameter('field', $field)
             ->setParameter('nodeA', $node);
 
         return $qb->getQuery()->getResult();
     }
 
+    /**
+     * @param Node $node
+     * @param NodeTypeFieldInterface $field
+     * @param TranslationInterface $translation
+     * @return array
+     */
     public function findByNodeAndFieldAndTranslation(
         Node $node,
         NodeTypeFieldInterface $field,
-        TranslationInterface $translation,
+        TranslationInterface $translation
     ): array {
         $qb = $this->createQueryBuilder(self::NODE_ALIAS);
         $qb->select('n, ns')
             ->innerJoin('n.aNodes', 'ntn')
             ->innerJoin('n.nodeSources', self::NODESSOURCES_ALIAS)
-            ->andWhere($qb->expr()->eq('ntn.fieldName', ':fieldName'))
+            ->andWhere($qb->expr()->eq('ntn.field', ':field'))
             ->andWhere($qb->expr()->eq('ntn.nodeA', ':nodeA'))
             ->andWhere($qb->expr()->eq('ns.translation', ':translation'))
             ->addOrderBy('ntn.position', 'ASC')
@@ -893,43 +841,54 @@ EOT,
 
         $this->alterQueryBuilderWithAuthorizationChecker($qb);
 
-        $qb->setParameter('fieldName', $field->getName())
+        $qb->setParameter('field', $field)
             ->setParameter('nodeA', $node)
             ->setParameter('translation', $translation);
 
         return $qb->getQuery()->getResult();
     }
 
+    /**
+     * @param Node $node
+     * @param NodeTypeFieldInterface $field
+     * @return array
+     */
     public function findByReverseNodeAndField(
         Node $node,
-        NodeTypeFieldInterface $field,
+        NodeTypeFieldInterface $field
     ): array {
         $qb = $this->createQueryBuilder(self::NODE_ALIAS);
         $qb->select(self::NODE_ALIAS)
             ->innerJoin('n.bNodes', 'ntn')
-            ->andWhere($qb->expr()->eq('ntn.fieldName', ':fieldName'))
+            ->andWhere($qb->expr()->eq('ntn.field', ':field'))
             ->andWhere($qb->expr()->eq('ntn.nodeB', ':nodeB'))
             ->addOrderBy('ntn.position', 'ASC')
             ->setCacheable(true);
 
         $this->alterQueryBuilderWithAuthorizationChecker($qb);
 
-        $qb->setParameter('fieldName', $field->getName())
+        $qb->setParameter('field', $field)
             ->setParameter('nodeB', $node);
 
         return $qb->getQuery()->getResult();
     }
 
+    /**
+     * @param Node $node
+     * @param NodeTypeFieldInterface $field
+     * @param TranslationInterface $translation
+     * @return array
+     */
     public function findByReverseNodeAndFieldAndTranslation(
         Node $node,
         NodeTypeFieldInterface $field,
-        TranslationInterface $translation,
+        TranslationInterface $translation
     ): array {
         $qb = $this->createQueryBuilder(self::NODE_ALIAS);
         $qb->select('n, ns')
             ->innerJoin('n.bNodes', 'ntn')
             ->innerJoin('n.nodeSources', self::NODESSOURCES_ALIAS)
-            ->andWhere($qb->expr()->eq('ntn.fieldName', ':fieldName'))
+            ->andWhere($qb->expr()->eq('ntn.field', ':field'))
             ->andWhere($qb->expr()->eq('ns.translation', ':translation'))
             ->andWhere($qb->expr()->eq('ntn.nodeB', ':nodeB'))
             ->addOrderBy('ntn.position', 'ASC')
@@ -937,7 +896,7 @@ EOT,
 
         $this->alterQueryBuilderWithAuthorizationChecker($qb);
 
-        $qb->setParameter('fieldName', $field->getName())
+        $qb->setParameter('field', $field)
             ->setParameter('translation', $translation)
             ->setParameter('nodeB', $node);
 
@@ -945,17 +904,16 @@ EOT,
     }
 
     /**
-     * @return array<int>
-     *
-     * @internal Use NodeOffspringResolverInterface service instead
+     * @param Node $node
+     * @return array
      */
-    public function findAllOffspringIdByNode(NodeInterface $node): array
+    public function findAllOffspringIdByNode(Node $node)
     {
-        $theOffsprings = [];
-        $in = \array_filter([(int) $node->getId()]);
+        $theOffprings = [];
+        $in = [$node->getId()];
 
         do {
-            $theOffsprings = array_merge($theOffsprings, $in);
+            $theOffprings = array_merge($theOffprings, $in);
             $subQb = $this->createQueryBuilder('n');
             $subQb->select('n.id')
                 ->andWhere($subQb->expr()->in('n.parent', ':tab'))
@@ -964,25 +922,32 @@ EOT,
             $result = $subQb->getQuery()->getScalarResult();
             $in = [];
 
-            // For memory optimizations
+            //For memory optimizations
             foreach ($result as $item) {
                 $in[] = (int) $item['id'];
             }
         } while (!empty($in));
-
-        return $theOffsprings;
+        return $theOffprings;
     }
 
     /**
      * Find all node’ parents with criteria and ordering.
+     *
+     * @param Node $node
+     * @param array $criteria
+     * @param array|null $orderBy
+     * @param int|null $limit
+     * @param int|null $offset
+     * @param TranslationInterface|null $translation
+     * @return array|Paginator|null
      */
     public function findAllNodeParentsBy(
         Node $node,
         array $criteria,
-        ?array $orderBy = null,
+        array $orderBy = null,
         ?int $limit = null,
         ?int $offset = null,
-        ?TranslationInterface $translation = null,
+        TranslationInterface $translation = null
     ): array|Paginator|null {
         $parentsId = $this->findAllParentsIdByNode($node);
         if (count($parentsId) > 0) {
@@ -1000,9 +965,6 @@ EOT,
         );
     }
 
-    /**
-     * @return array<int|string>
-     */
     public function findAllParentsIdByNode(Node $node): array
     {
         $theParents = [];
@@ -1013,7 +975,7 @@ EOT,
             $parent = $parent->getParent();
         }
 
-        return array_filter($theParents);
+        return $theParents;
     }
 
     /**
@@ -1023,25 +985,27 @@ EOT,
      * @param QueryBuilder $qb       QueryBuilder to pass
      * @param array        $criteria Additional criteria
      * @param string       $alias    SQL query table alias
+     *
+     * @return QueryBuilder
      */
     protected function createSearchBy(
         string $pattern,
         QueryBuilder $qb,
         array &$criteria = [],
-        string $alias = 'obj',
+        string $alias = "obj"
     ): QueryBuilder {
         $this->classicLikeComparison($pattern, $qb, $alias);
 
         /*
          * Search in translations
          */
-        $qb->innerJoin($alias.'.nodeSources', self::NODESSOURCES_ALIAS);
+        $qb->innerJoin($alias . '.nodeSources', self::NODESSOURCES_ALIAS);
         $criteriaFields = [];
         foreach (self::getSearchableColumnsNames($this->_em->getClassMetadata(NodesSources::class)) as $field) {
-            $criteriaFields[$field] = '%'.strip_tags(\mb_strtolower($pattern)).'%';
+            $criteriaFields[$field] = '%' . strip_tags(\mb_strtolower($pattern)) . '%';
         }
         foreach ($criteriaFields as $key => $value) {
-            $fullKey = sprintf('LOWER(%s)', self::NODESSOURCES_ALIAS.'.'.$key);
+            $fullKey = sprintf('LOWER(%s)', self::NODESSOURCES_ALIAS . '.' . $key);
             $qb->orWhere($qb->expr()->like($fullKey, $qb->expr()->literal($value)));
         }
 
@@ -1051,21 +1015,21 @@ EOT,
         if (isset($criteria['tags'])) {
             if ($criteria['tags'] instanceof PersistableInterface) {
                 $qb->innerJoin(
-                    $alias.'.nodesTags',
+                    $alias . '.nodesTags',
                     'ntg',
                     Expr\Join::WITH,
                     $qb->expr()->eq('ntg.tag', (int) $criteria['tags']->getId())
                 );
             } elseif (is_array($criteria['tags'])) {
                 $qb->innerJoin(
-                    $alias.'.nodesTags',
+                    $alias . '.nodesTags',
                     'ntg',
                     Expr\Join::WITH,
                     $qb->expr()->in('ntg.tag', $criteria['tags'])
                 );
             } elseif (is_integer($criteria['tags'])) {
                 $qb->innerJoin(
-                    $alias.'.nodesTags',
+                    $alias . '.nodesTags',
                     'ntg',
                     Expr\Join::WITH,
                     $qb->expr()->eq('ntg.tag', (int) $criteria['tags'])
@@ -1095,20 +1059,20 @@ EOT,
 
             if (!$event->isPropagationStopped()) {
                 $baseKey = $simpleQB->getParameterKey($key);
-                if ('translation' == $key) {
+                if ($key == 'translation') {
                     if (!$this->hasJoinedNodesSources($qb, $alias)) {
-                        $qb->innerJoin($alias.'.nodeSources', self::NODESSOURCES_ALIAS);
+                        $qb->innerJoin($alias . '.nodeSources', self::NODESSOURCES_ALIAS);
                     }
                     $qb->andWhere($simpleQB->buildExpressionWithoutBinding(
                         $value,
-                        self::NODESSOURCES_ALIAS.'.',
+                        self::NODESSOURCES_ALIAS . '.',
                         $key,
                         $baseKey
                     ));
                 } else {
                     $qb->andWhere($simpleQB->buildExpressionWithoutBinding(
                         $value,
-                        $alias.'.',
+                        $alias . '.',
                         $key,
                         $baseKey
                     ));
@@ -1124,10 +1088,12 @@ EOT,
      *
      * Parent can be null for node root
      *
+     * @param Node|null $parent
+     * @return int
      * @throws NonUniqueResultException
      * @throws NoResultException
      */
-    public function findLatestPositionInParent(?Node $parent = null): int
+    public function findLatestPositionInParent(Node $parent = null): int
     {
         $qb = $this->createQueryBuilder('n');
         $qb->select($qb->expr()->max('n.position'));
@@ -1140,123 +1106,5 @@ EOT,
         }
 
         return (int) $qb->getQuery()->getSingleScalarResult();
-    }
-
-    /**
-     * Use by UniqueEntity Validator to bypass node status query filtering.
-     *
-     * @throws NonUniqueResultException
-     */
-    public function findOneWithoutSecurity(array $criteria): ?Node
-    {
-        $this->setDisplayingAllNodesStatuses(true);
-        if (1 === count($criteria) && !empty($criteria['nodeName'])) {
-            /*
-             * Test if nodeName is used as an url-alias too
-             */
-            $nodeName = (new AsciiSlugger())->slug($criteria['nodeName'])->lower()->trim()->toString();
-
-            $qb = $this->createQueryBuilder('o');
-            $qb->leftJoin('o.nodeSources', 'ns')
-                ->leftJoin('ns.urlAliases', 'ua')
-                ->andWhere($qb->expr()->orX(
-                    $qb->expr()->eq('ua.alias', ':nodeName'),
-                    $qb->expr()->eq('o.nodeName', ':nodeName')
-                ))
-                ->setParameter('nodeName', $nodeName)
-                ->setMaxResults(1)
-                ->setCacheable(true);
-
-            return $qb->getQuery()->getOneOrNullResult();
-        }
-
-        return $this->findOneBy($criteria);
-    }
-
-    protected function classicLikeComparison(
-        string $pattern,
-        QueryBuilder $qb,
-        string $alias = EntityRepository::DEFAULT_ALIAS,
-    ): QueryBuilder {
-        $qb = parent::classicLikeComparison($pattern, $qb, $alias);
-        $qb
-            ->leftJoin($alias.'.attributeValues', 'av')
-            ->leftJoin('av.attributeValueTranslations', 'avt')
-        ;
-        $value = '%'.strip_tags(\mb_strtolower($pattern)).'%';
-        $qb->orWhere($qb->expr()->like('LOWER(avt.value)', $qb->expr()->literal($value)));
-        $qb->orWhere($qb->expr()->like('LOWER('.$alias.'.nodeName)', $qb->expr()->literal($value)));
-
-        return $qb;
-    }
-
-    /**
-     * Get previous node from hierarchy.
-     */
-    public function findPreviousNode(
-        Node $node,
-        ?array $criteria = null,
-        ?array $order = null,
-    ): ?Node {
-        if ($node->getPosition() <= 1) {
-            return null;
-        }
-        if (null === $order) {
-            $order = [];
-        }
-
-        if (null === $criteria) {
-            $criteria = [];
-        }
-
-        $criteria['parent'] = $node->getParent();
-        /*
-         * Use < operator to get first previous nodeSource
-         * even if it’s not the previous position index
-         */
-        $criteria['position'] = [
-            '<',
-            $node->getPosition(),
-        ];
-
-        $order['position'] = 'DESC';
-
-        return $this->findOneBy(
-            $criteria,
-            $order
-        );
-    }
-
-    /**
-     * Get next node from hierarchy.
-     */
-    public function findNextNode(
-        Node $node,
-        ?array $criteria = null,
-        ?array $order = null,
-    ): ?Node {
-        if (null === $criteria) {
-            $criteria = [];
-        }
-        if (null === $order) {
-            $order = [];
-        }
-
-        $criteria['parent'] = $node->getParent();
-
-        /*
-         * Use > operator to get first next nodeSource
-         * even if it’s not the next position index
-         */
-        $criteria['position'] = [
-            '>',
-            $node->getPosition(),
-        ];
-        $order['position'] = 'ASC';
-
-        return $this->findOneBy(
-            $criteria,
-            $order
-        );
     }
 }

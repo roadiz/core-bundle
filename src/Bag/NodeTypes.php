@@ -10,21 +10,28 @@ use RZ\Roadiz\Contracts\NodeType\NodeTypeResolverInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Repository\NodeTypeRepository;
 
-final class NodeTypes extends LazyParameterBag implements NodeTypeResolverInterface
+class NodeTypes extends LazyParameterBag implements NodeTypeResolverInterface
 {
     private ?NodeTypeRepository $repository = null;
+    private ManagerRegistry $managerRegistry;
 
-    public function __construct(private readonly ManagerRegistry $managerRegistry)
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
     {
         parent::__construct();
+        $this->managerRegistry = $managerRegistry;
     }
 
+    /**
+     * @return NodeTypeRepository
+     */
     public function getRepository(): NodeTypeRepository
     {
         if (null === $this->repository) {
             $this->repository = $this->managerRegistry->getRepository(NodeType::class);
         }
-
         return $this->repository;
     }
 

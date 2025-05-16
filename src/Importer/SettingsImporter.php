@@ -12,22 +12,37 @@ use JMS\Serializer\SerializerInterface;
 use RZ\Roadiz\CoreBundle\Entity\Setting;
 use RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TypedObjectConstructorInterface;
 
-final readonly class SettingsImporter implements EntityImporterInterface
+class SettingsImporter implements EntityImporterInterface
 {
-    public function __construct(private ManagerRegistry $managerRegistry, private SerializerInterface $serializer)
+    private ManagerRegistry $managerRegistry;
+    private SerializerInterface $serializer;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param SerializerInterface $serializer
+     */
+    public function __construct(ManagerRegistry $managerRegistry, SerializerInterface $serializer)
     {
+        $this->managerRegistry = $managerRegistry;
+        $this->serializer = $serializer;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function supports(string $entityClass): bool
     {
-        return Setting::class === $entityClass;
+        return $entityClass === Setting::class;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function import(string $serializedData): bool
     {
         $settings = $this->serializer->deserialize(
             $serializedData,
-            'array<'.Setting::class.'>',
+            'array<' . Setting::class . '>',
             'json',
             DeserializationContext::create()
                 ->setAttribute(TypedObjectConstructorInterface::PERSIST_NEW_OBJECTS, true)

@@ -13,12 +13,20 @@ class ProviderDataTransformer implements DataTransformerInterface
     protected NodeTypeField $nodeTypeField;
     protected ExplorerProviderInterface $provider;
 
+    /**
+     * @param NodeTypeField             $nodeTypeField
+     * @param ExplorerProviderInterface $provider
+     */
     public function __construct(NodeTypeField $nodeTypeField, ExplorerProviderInterface $provider)
     {
         $this->nodeTypeField = $nodeTypeField;
         $this->provider = $provider;
     }
 
+    /**
+     * @param mixed $value
+     * @return array|null
+     */
     public function transform(mixed $value): ?array
     {
         if (null === $value) {
@@ -31,19 +39,23 @@ class ProviderDataTransformer implements DataTransformerInterface
 
         $value = array_filter($value);
 
-        if (0 === count($value)) {
+        if (count($value) === 0) {
             return null;
         }
 
         return $this->provider->getItemsById($value);
     }
 
+    /**
+     * @param mixed $value
+     * @return mixed
+     */
     public function reverseTransform(mixed $value): mixed
     {
         if (
-            is_array($value)
-            && $this->nodeTypeField->isSingleProvider()
-            && isset($value[0])
+            is_array($value) &&
+            $this->nodeTypeField->isSingleProvider() &&
+            isset($value[0])
         ) {
             return $value[0];
         }

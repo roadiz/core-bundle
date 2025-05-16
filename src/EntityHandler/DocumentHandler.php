@@ -21,38 +21,37 @@ use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 /**
  * Handle operations with documents entities.
  */
-final class DocumentHandler extends AbstractHandler
+class DocumentHandler extends AbstractHandler
 {
-    private ?DocumentInterface $document = null;
+    protected ?DocumentInterface $document = null;
+    private FilesystemOperator $documentStorage;
 
-    public function __construct(ObjectManager $objectManager, private readonly FilesystemOperator $documentStorage)
+    public function __construct(ObjectManager $objectManager, FilesystemOperator $documentStorage)
     {
         parent::__construct($objectManager);
+        $this->documentStorage = $documentStorage;
     }
 
     /**
      * Get a Response object to force download document.
      * This method works for both private and public documents.
      *
+     * @return StreamedResponse
      * @throws FilesystemException
      */
-    public function getDownloadResponse(bool $asAttachment = true): StreamedResponse
+    public function getDownloadResponse(): StreamedResponse
     {
         if ($this->document->isLocal()) {
             $documentPath = $this->document->getMountPath();
 
             if ($this->documentStorage->fileExists($documentPath)) {
-                $headers = [
-                    'Content-Type' => $this->documentStorage->mimeType($documentPath),
-                    'Content-Length' => $this->documentStorage->fileSize($documentPath),
-                ];
-                if ($asAttachment) {
-                    $headers['Content-disposition'] = 'attachment; filename="'.basename($this->document->getFilename()).'"';
-                }
-
                 return new StreamedResponse(function () use ($documentPath) {
                     \fpassthru($this->documentStorage->readStream($documentPath));
-                }, Response::HTTP_OK, $headers);
+                }, Response::HTTP_OK, [
+                    "Content-Type" => $this->documentStorage->mimeType($documentPath),
+                    "Content-Length" => $this->documentStorage->fileSize($documentPath),
+                    "Content-disposition" => "attachment; filename=\"" . basename($this->document->getFilename()) . "\"",
+                ]);
             }
         }
 
@@ -62,8 +61,11 @@ final class DocumentHandler extends AbstractHandler
     /**
      * Return documents folders with the same translation as
      * current document.
+     *
+     * @param Translation|null $translation
+     * @return array
      */
-    public function getFolders(?Translation $translation = null): array
+    public function getFolders(Translation $translation = null): array
     {
         if (!$this->document instanceof Document) {
             return [];
@@ -88,12 +90,12 @@ final class DocumentHandler extends AbstractHandler
     }
 
     /**
-     * @return $this
+     * @param DocumentInterface $document
+     * @return DocumentHandler
      */
-    public function setDocument(DocumentInterface $document): self
+    public function setDocument(DocumentInterface $document): DocumentHandler
     {
         $this->document = $document;
-
         return $this;
     }
 }

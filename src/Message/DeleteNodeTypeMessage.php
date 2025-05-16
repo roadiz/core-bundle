@@ -4,14 +4,22 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Message;
 
-/** @deprecated nodeTypes will be static in future Roadiz versions */
-final readonly class DeleteNodeTypeMessage implements AsyncMessage
+final class DeleteNodeTypeMessage implements AsyncMessage
 {
-    public function __construct(private int|string|null $nodeTypeId)
+    private int $nodeTypeId;
+
+    /**
+     * @param int $nodeTypeId
+     */
+    public function __construct(int $nodeTypeId)
     {
+        $this->nodeTypeId = $nodeTypeId;
     }
 
-    public function getNodeTypeId(): int|string|null
+    /**
+     * @return int
+     */
+    public function getNodeTypeId(): int
     {
         return $this->nodeTypeId;
     }

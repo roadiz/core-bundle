@@ -4,16 +4,14 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Filter;
 
-use ApiPlatform\Doctrine\Common\PropertyHelperTrait;
-use ApiPlatform\Doctrine\Orm\Filter\AbstractFilter;
-use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use ApiPlatform\Core\Bridge\Doctrine\Common\PropertyHelperTrait;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\AbstractContextAwareFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use ApiPlatform\Exception\FilterValidationException;
-use ApiPlatform\Metadata\Operation;
-use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 
-final class ArchiveFilter extends AbstractFilter
+final class ArchiveFilter extends AbstractContextAwareFilter
 {
     use PropertyHelperTrait;
 
@@ -31,25 +29,26 @@ final class ArchiveFilter extends AbstractFilter
         if (\is_string($type)) {
             return \in_array($type, \array_keys(DateFilter::DOCTRINE_DATE_TYPES), true);
         }
-
-        return 'datetime' === $type->getName() || 'date' === $type->getName();
+        return $type->getName() === 'datetime' || $type->getName() === 'date';
     }
 
+    /**
+     * {@inheritdoc}
+     */
     protected function filterProperty(
         string $property,
-        mixed $value,
+        $values,
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
-        ?Operation $operation = null,
-        array $context = [],
+        string $operationName = null
     ): void {
         // Expect $values to be an array having the period as keys and the date value as values
         if (
-            !$this->isPropertyEnabled($property, $resourceClass)
-            || !$this->isPropertyMapped($property, $resourceClass)
-            || !$this->isDateField($property, $resourceClass)
-            || !isset($value[self::PARAMETER_ARCHIVE])
+            !$this->isPropertyEnabled($property, $resourceClass) ||
+            !$this->isPropertyMapped($property, $resourceClass) ||
+            !$this->isDateField($property, $resourceClass) ||
+            !isset($values[self::PARAMETER_ARCHIVE])
         ) {
             return;
         }
@@ -58,23 +57,19 @@ final class ArchiveFilter extends AbstractFilter
         $field = $property;
 
         if ($this->isPropertyNested($property, $resourceClass)) {
-            [$alias, $field] = $this->addJoinsForNestedProperty(
-                $property,
-                $alias,
-                $queryBuilder,
-                $queryNameGenerator,
-                $resourceClass,
-                Join::INNER_JOIN
-            );
+            [$alias, $field] = $this->addJoinsForNestedProperty($property, $alias, $queryBuilder, $queryNameGenerator, $resourceClass);
         }
 
-        if (!is_string($value[self::PARAMETER_ARCHIVE])) {
-            throw new FilterValidationException([sprintf('“%s” filter must be only used with a string value.', self::PARAMETER_ARCHIVE)]);
+        if (!is_string($values[self::PARAMETER_ARCHIVE])) {
+            throw new FilterValidationException([sprintf(
+                '“%s” filter must be only used with a string value.',
+                self::PARAMETER_ARCHIVE
+            )]);
         }
 
-        $range = $this->normalizeFilteringDates($value[self::PARAMETER_ARCHIVE]);
+        $range = $this->normalizeFilteringDates($values[self::PARAMETER_ARCHIVE]);
 
-        if (null === $range || 2 !== count($range)) {
+        if (null === $range || count($range) !== 2) {
             return;
         }
 
@@ -82,18 +77,18 @@ final class ArchiveFilter extends AbstractFilter
         $queryBuilder->andWhere($queryBuilder->expr()->isNotNull(sprintf('%s.%s', $alias, $field)))
             ->andWhere($queryBuilder->expr()->between(
                 sprintf('%s.%s', $alias, $field),
-                ':'.$valueParameter.'Start',
-                ':'.$valueParameter.'End'
+                ':' . $valueParameter . 'Start',
+                ':' . $valueParameter . 'End'
             ))
-            ->setParameter($valueParameter.'Start', $range[0])
-            ->setParameter($valueParameter.'End', $range[1]);
+            ->setParameter($valueParameter . 'Start', $range[0])
+            ->setParameter($valueParameter . 'End', $range[1]);
     }
 
     /**
      * Support archive parameter with year or year-month.
      *
+     * @param string $value
      * @return \DateTime[]|null
-     *
      * @throws \Exception
      */
     protected function normalizeFilteringDates(string $value): ?array
@@ -102,25 +97,24 @@ final class ArchiveFilter extends AbstractFilter
          * Support archive parameter with year or year-month
          */
         if (preg_match('#[0-9]{4}\-[0-9]{2}\-[0-9]{2}#', $value) > 0) {
-            $startDate = new \DateTime($value.' 00:00:00');
+            $startDate = new \DateTime($value . ' 00:00:00');
             $endDate = clone $startDate;
             $endDate->add(new \DateInterval('P1D'));
 
             return [$startDate, $this->limitEndDate($endDate)];
         } elseif (preg_match('#[0-9]{4}\-[0-9]{2}#', $value) > 0) {
-            $startDate = new \DateTime($value.'-01 00:00:00');
+            $startDate = new \DateTime($value . '-01 00:00:00');
             $endDate = clone $startDate;
             $endDate->add(new \DateInterval('P1M'));
 
             return [$startDate, $this->limitEndDate($endDate)];
         } elseif (preg_match('#[0-9]{4}#', $value) > 0) {
-            $startDate = new \DateTime($value.'-01-01 00:00:00');
+            $startDate = new \DateTime($value . '-01-01 00:00:00');
             $endDate = clone $startDate;
             $endDate->add(new \DateInterval('P1Y'));
 
             return [$startDate, $this->limitEndDate($endDate)];
         }
-
         return null;
     }
 
@@ -130,7 +124,6 @@ final class ArchiveFilter extends AbstractFilter
         if ($endDate > $now) {
             return $now;
         }
-
         return $endDate->sub(new \DateInterval('PT1S'));
     }
 

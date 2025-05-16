@@ -6,46 +6,64 @@ namespace RZ\Roadiz\CoreBundle\Preview\EventSubscriber;
 
 use RZ\Roadiz\CoreBundle\Preview\Exception\PreviewNotAllowedException;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Security;
 
-final class PreviewModeSubscriber implements EventSubscriberInterface
+class PreviewModeSubscriber implements EventSubscriberInterface
 {
     public const QUERY_PARAM_NAME = '_preview';
 
+    protected PreviewResolverInterface $previewResolver;
+    protected TokenStorageInterface $tokenStorage;
+    protected Security $security;
+
     public function __construct(
-        private readonly PreviewResolverInterface $previewResolver,
-        private readonly Security $security,
+        PreviewResolverInterface $previewResolver,
+        TokenStorageInterface $tokenStorage,
+        Security $security
     ) {
+        $this->previewResolver = $previewResolver;
+        $this->tokenStorage = $tokenStorage;
+        $this->security = $security;
     }
 
+    /**
+     * @return array
+     */
     public static function getSubscribedEvents(): array
     {
         return [
-            KernelEvents::REQUEST => ['onKernelRequest', 2047],
+            KernelEvents::REQUEST => ['onKernelRequest', 9999],
             KernelEvents::CONTROLLER => ['onControllerMatched', 10],
-            // Must Triggered after API platform AddHeadersListener
-            KernelEvents::RESPONSE => ['onResponse', -255],
+            KernelEvents::RESPONSE => 'onResponse',
         ];
     }
 
+    /**
+     * @return bool
+     */
     protected function supports(): bool
     {
         return $this->previewResolver->isPreview();
     }
 
+    /**
+     * @param RequestEvent $event
+     */
     public function onKernelRequest(RequestEvent $event): void
     {
         $request = $event->getRequest();
         if (
-            $event->isMainRequest()
-            && $request->query->has(self::QUERY_PARAM_NAME)
-            && \in_array(
-                $request->query->get(self::QUERY_PARAM_NAME, 0),
+            $event->isMainRequest() &&
+            $request->query->has(static::QUERY_PARAM_NAME) &&
+            \in_array(
+                $request->query->get(static::QUERY_PARAM_NAME, 0),
                 ['true', true, '1', 1, 'on', 'yes', 'y'],
                 true
             )
@@ -59,11 +77,17 @@ final class PreviewModeSubscriber implements EventSubscriberInterface
      * You MUST check here is user can use preview mode BEFORE going
      * any further into your app logic.
      *
+     * @param ControllerEvent $event
      * @throws PreviewNotAllowedException
      */
     public function onControllerMatched(ControllerEvent $event): void
     {
         if ($this->supports() && $event->isMainRequest()) {
+            /** @var TokenInterface|null $token */
+            $token = $this->tokenStorage->getToken();
+            if (null === $token || !$token->isAuthenticated()) {
+                throw new PreviewNotAllowedException('You are not authenticated to use preview mode.');
+            }
             if (!$this->security->isGranted($this->previewResolver->getRequiredRole())) {
                 throw new PreviewNotAllowedException('You are not granted to use preview mode.');
             }
@@ -72,16 +96,17 @@ final class PreviewModeSubscriber implements EventSubscriberInterface
 
     /**
      * Enforce cache disabling.
+     *
+     * @param ResponseEvent $event
      */
     public function onResponse(ResponseEvent $event): void
     {
         if ($this->supports()) {
             $response = $event->getResponse();
-            $response->setMaxAge(0);
-            $response->setSharedMaxAge(0);
+            $response->expire();
             $response->headers->addCacheControlDirective('no-store');
             $response->headers->add(['X-Roadiz-Preview' => true]);
-            $response->setPrivate();
+            $event->setResponse($response);
         }
     }
 }

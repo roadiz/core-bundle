@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Model;
 
 use Doctrine\Common\Collections\Collection;
-use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 
-interface RealmInterface extends PersistableInterface
+interface RealmInterface
 {
     public const TYPE_PLAIN_PASSWORD = 'plain_password';
     public const TYPE_ROLE = 'bearer_role';
@@ -33,24 +32,20 @@ interface RealmInterface extends PersistableInterface
     public function getType(): string;
 
     /**
+     * @return string
      * @see https://www.iana.org/assignments/http-authschemes/http-authschemes.xhtml
      */
     public function getAuthenticationScheme(): string;
 
     /**
+     * @return string
      * @see https://developer.mozilla.org/fr/docs/Web/HTTP/Headers/WWW-Authenticate
      */
     public function getChallenge(): string;
-
     public function getBehaviour(): string;
-
     public function getName(): string;
-
     public function getPlainPassword(): ?string;
-
     public function getRole(): ?string;
-
     public function getUsers(): Collection;
-
     public function getSerializationGroup(): ?string;
 }

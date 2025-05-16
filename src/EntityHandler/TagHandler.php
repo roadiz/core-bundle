@@ -5,23 +5,36 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
 use Doctrine\Common\Collections\Criteria;
-use RZ\Roadiz\Core\Handlers\AbstractHandler;
+use Doctrine\ORM\NoResultException;
+use Doctrine\ORM\Query;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
+use RZ\Roadiz\Core\Handlers\AbstractHandler;
 
 /**
  * Handle operations with tags entities.
  */
-final class TagHandler extends AbstractHandler
+class TagHandler extends AbstractHandler
 {
     private ?Tag $tag = null;
 
     /**
+     * @return Tag
+     */
+    public function getTag(): Tag
+    {
+        if (null === $this->tag) {
+            throw new \BadMethodCallException('Tag is null');
+        }
+        return $this->tag;
+    }
+
+    /**
+     * @param Tag $tag
      * @return $this
      */
-    public function setTag(Tag $tag): self
+    public function setTag(Tag $tag)
     {
         $this->tag = $tag;
-
         return $this;
     }
 
@@ -30,7 +43,7 @@ final class TagHandler extends AbstractHandler
      *
      * @return $this
      */
-    private function removeChildren(): self
+    private function removeChildren()
     {
         /** @var Tag $tag */
         foreach ($this->tag->getChildren() as $tag) {
@@ -41,13 +54,12 @@ final class TagHandler extends AbstractHandler
 
         return $this;
     }
-
     /**
      * Remove only current tag associations.
      *
      * @return $this
      */
-    public function removeAssociations(): self
+    public function removeAssociations()
     {
         foreach ($this->tag->getTranslatedTags() as $tt) {
             $this->objectManager->remove($tt);
@@ -55,14 +67,13 @@ final class TagHandler extends AbstractHandler
 
         return $this;
     }
-
     /**
      * Remove current tag with its children recursively and
      * its associations.
      *
      * @return $this
      */
-    public function removeWithChildrenAndAssociations(): self
+    public function removeWithChildrenAndAssociations()
     {
         $this->removeChildren();
         $this->removeAssociations();
@@ -78,18 +89,132 @@ final class TagHandler extends AbstractHandler
     }
 
     /**
+     * @return array Array of Translation
+     * @deprecated Do not query DB here
+     */
+    public function getAvailableTranslations()
+    {
+        $query = $this->objectManager
+                        ->createQuery('
+            SELECT tr
+            FROM RZ\Roadiz\CoreBundle\Entity\Translation tr
+            INNER JOIN tr.tagTranslations tt
+            INNER JOIN tt.tag t
+            WHERE t.id = :tag_id')
+                        ->setParameter('tag_id', $this->tag->getId());
+
+        try {
+            return $query->getResult();
+        } catch (NoResultException $e) {
+            return [];
+        }
+    }
+    /**
+     * @return array Array of Translation id
+     * @deprecated Do not query DB here
+     */
+    public function getAvailableTranslationsId()
+    {
+        $query = $this->objectManager
+                        ->createQuery('
+            SELECT tr.id FROM RZ\Roadiz\CoreBundle\Entity\Tag t
+            INNER JOIN t.translatedTags tt
+            INNER JOIN tt.translation tr
+            WHERE t.id = :tag_id')
+                        ->setParameter('tag_id', $this->tag->getId());
+
+        try {
+            $simpleArray = [];
+            $complexArray = $query->getScalarResult();
+            foreach ($complexArray as $subArray) {
+                $simpleArray[] = $subArray['id'];
+            }
+
+            return $simpleArray;
+        } catch (NoResultException $e) {
+            return [];
+        }
+    }
+
+    /**
+     * @return array Array of Translation
+     * @deprecated Do not query DB here
+     */
+    public function getUnavailableTranslations()
+    {
+        $query = $this->objectManager
+                        ->createQuery('
+            SELECT tr FROM RZ\Roadiz\CoreBundle\Entity\Translation tr
+            WHERE tr.id NOT IN (:translations_id)')
+                        ->setParameter('translations_id', $this->getAvailableTranslationsId());
+
+        try {
+            return $query->getResult();
+        } catch (NoResultException $e) {
+            return [];
+        }
+    }
+
+    /**
+     * @return array Array of Translation id
+     * @deprecated Do not query DB here
+     */
+    public function getUnavailableTranslationsId()
+    {
+        /** @var Query $query */
+        $query = $this->objectManager
+                        ->createQuery('
+            SELECT t.id FROM RZ\Roadiz\CoreBundle\Entity\Translation t
+            WHERE t.id NOT IN (:translations_id)')
+                        ->setParameter('translations_id', $this->getAvailableTranslationsId());
+
+        try {
+            $simpleArray = [];
+            $complexArray = $query->getScalarResult();
+            foreach ($complexArray as $subArray) {
+                $simpleArray[] = $subArray['id'];
+            }
+
+            return $simpleArray;
+        } catch (NoResultException $e) {
+            return [];
+        }
+    }
+
+    /**
+     * Return every tag’s parents.
+     * @deprecated Use directly Tag::getParents
+     * @return array
+     */
+    public function getParents()
+    {
+        return $this->tag->getParents();
+    }
+
+    /**
+     * Get tag full path using tag names.
+     *
+     * @deprecated Use directly Tag::getFullPath
+     * @return string
+     */
+    public function getFullPath(): string
+    {
+        return $this->tag->getFullPath();
+    }
+
+    /**
      * Clean position for current tag siblings.
      *
+     * @param bool $setPositions
      * @return float Return the next position after the **last** tag
      */
     public function cleanPositions(bool $setPositions = true): float
     {
-        if (null !== $this->tag->getParent()) {
+        if ($this->tag->getParent() !== null) {
             $tagHandler = new TagHandler($this->objectManager);
             /** @var Tag|null $parent */
             $parent = $this->tag->getParent();
             $tagHandler->setTag($parent);
-
             return $tagHandler->cleanChildrenPositions($setPositions);
         } else {
             return $this->cleanRootTagsPositions($setPositions);
@@ -101,6 +226,7 @@ final class TagHandler extends AbstractHandler
      *
      * Warning, this method does not flush.
      *
+     * @param bool $setPositions
      * @return float Return the next position after the **last** tag
      */
     public function cleanChildrenPositions(bool $setPositions = true): float
@@ -110,7 +236,7 @@ final class TagHandler extends AbstractHandler
          */
         $sort = Criteria::create();
         $sort->orderBy([
-            'position' => Criteria::ASC,
+            'position' => Criteria::ASC
         ]);
 
         $children = $this->tag->getChildren()->matching($sort);
@@ -120,7 +246,7 @@ final class TagHandler extends AbstractHandler
             if ($setPositions) {
                 $child->setPosition($i);
             }
-            ++$i;
+            $i++;
         }
 
         return $i;
@@ -131,6 +257,7 @@ final class TagHandler extends AbstractHandler
      *
      * Warning, this method does not flush.
      *
+     * @param bool $setPositions
      * @return float Return the next position after the **last** tag
      */
     public function cleanRootTagsPositions(bool $setPositions = true): float
@@ -145,7 +272,7 @@ final class TagHandler extends AbstractHandler
             if ($setPositions) {
                 $child->setPosition($i);
             }
-            ++$i;
+            $i++;
         }
 
         return $i;

@@ -15,6 +15,9 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+/**
+ * Command line utils for managing users from terminal.
+ */
 final class UsersCreationCommand extends UsersCommand
 {
     protected function configure(): void
@@ -35,40 +38,42 @@ final class UsersCreationCommand extends UsersCommand
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $io = new SymfonyStyle($input, $output);
         $name = $input->getArgument('username');
 
-        if (!\is_string($name) || empty($name)) {
-            throw new \InvalidArgumentException('Username argument is required.');
+        if ($name) {
+            /** @var User|null $user */
+            $user = $this->managerRegistry
+                ->getRepository(User::class)
+                ->findOneBy(['username' => $name]);
+
+            if (null === $user) {
+                $user = $this->executeUserCreation($name, $input, $output);
+
+                // Change password right away
+                $command = $this->getApplication()->find('users:password');
+                $arguments = [
+                    'username' => $user->getUsername(),
+                ];
+                $passwordInput = new ArrayInput($arguments);
+                return $command->run($passwordInput, $output);
+            } else {
+                throw new \InvalidArgumentException('User “' . $name . '” already exists.');
+            }
         }
-
-        /** @var User|null $user */
-        $user = $this->managerRegistry
-            ->getRepository(User::class)
-            ->findOneBy(['username' => $name]);
-
-        if ($user instanceof User) {
-            $io->warning('User “'.$name.'” already exists.');
-
-            return 1;
-        }
-
-        $user = $this->executeUserCreation($name, $input, $output);
-
-        // Change password right away
-        $command = $this->getApplication()->find('users:password');
-        $arguments = [
-            'username' => $user->getUsername(),
-        ];
-        $passwordInput = new ArrayInput($arguments);
-
-        return $command->run($passwordInput, $output);
+        return 0;
     }
 
+    /**
+     * @param string          $username
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     *
+     * @return User
+     */
     private function executeUserCreation(
         string $username,
         InputInterface $input,
-        OutputInterface $output,
+        OutputInterface $output
     ): User {
         $user = new User();
         $io = new SymfonyStyle($input, $output);
@@ -89,8 +94,8 @@ final class UsersCreationCommand extends UsersCommand
                     $questionEmail
                 );
             } while (
-                !filter_var($email, FILTER_VALIDATE_EMAIL)
-                || $this->managerRegistry->getRepository(User::class)->emailExists($email)
+                !filter_var($email, FILTER_VALIDATE_EMAIL) ||
+                $this->managerRegistry->getRepository(User::class)->emailExists($email)
             );
         } else {
             /*
@@ -119,7 +124,7 @@ final class UsersCreationCommand extends UsersCommand
             ) {
                 $user->addRoleEntity($this->getRole(Role::ROLE_BACKEND_USER));
             }
-        } elseif (true === $input->getOption('back-end')) {
+        } elseif ($input->getOption('back-end') === true) {
             $user->addRoleEntity($this->getRole(Role::ROLE_BACKEND_USER));
         }
 
@@ -135,7 +140,7 @@ final class UsersCreationCommand extends UsersCommand
             ) {
                 $user->addRoleEntity($this->getRole(Role::ROLE_SUPERADMIN));
             }
-        } elseif (true === $input->getOption('super-admin')) {
+        } elseif ($input->getOption('super-admin') === true) {
             $user->addRoleEntity($this->getRole(Role::ROLE_SUPERADMIN));
         }
 
@@ -150,8 +155,7 @@ final class UsersCreationCommand extends UsersCommand
         $this->managerRegistry->getManagerForClass(User::class)->persist($user);
         $this->managerRegistry->getManagerForClass(User::class)->flush();
 
-        $io->success('User “'.$username.'”<'.$email.'> created no password.');
-
+        $io->success('User “' . $username . '”<' . $email . '> created no password.');
         return $user;
     }
 }

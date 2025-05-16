@@ -9,6 +9,9 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class ProviderFieldConfiguration implements ConfigurationInterface
 {
+    /**
+     * @return TreeBuilder
+     */
     public function getConfigTreeBuilder(): TreeBuilder
     {
         $builder = new TreeBuilder('provider');
