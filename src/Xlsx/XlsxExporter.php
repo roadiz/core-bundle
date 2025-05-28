@@ -11,16 +11,13 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-class XlsxExporter
+/**
+ * @deprecated XLSX serialization is deprecated and will be removed in next major version
+ */
+readonly class XlsxExporter
 {
-    protected TranslatorInterface $translator;
-
-    /**
-     * @param TranslatorInterface $translator
-     */
-    public function __construct(TranslatorInterface $translator)
+    public function __construct(protected TranslatorInterface $translator)
     {
-        $this->translator = $translator;
     }
 
     /**
@@ -30,6 +27,7 @@ class XlsxExporter
      * @param array                    $keys
      *
      * @return string
+     *
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
@@ -38,9 +36,9 @@ class XlsxExporter
         $spreadsheet = new Spreadsheet();
 
         // Set document properties
-        $spreadsheet->getProperties()->setCreator("Roadiz CMS")
-            ->setLastModifiedBy("Roadiz CMS")
-            ->setCategory("");
+        $spreadsheet->getProperties()->setCreator('Roadiz CMS')
+            ->setLastModifiedBy('Roadiz CMS')
+            ->setCategory('');
 
         $spreadsheet->setActiveSheetIndex(0);
         $activeSheet = $spreadsheet->getActiveSheet();
@@ -63,10 +61,10 @@ class XlsxExporter
         if (count($keys) > 0) {
             foreach ($keys as $key => $value) {
                 $columnAlpha = Coordinate::stringFromColumnIndex($key + 1);
-                $activeSheet->getStyle($columnAlpha . ($activeRow))->applyFromArray($headerStyles);
+                $activeSheet->getStyle($columnAlpha.$activeRow)->applyFromArray($headerStyles);
                 $activeSheet->setCellValueByColumnAndRow($key + 1, $activeRow, $this->translator->trans($value));
             }
-            $activeRow++;
+            ++$activeRow;
             $hasGlobalHeader = true;
         }
 
@@ -78,16 +76,19 @@ class XlsxExporter
              * we print them
              */
             if (
-                false === $hasGlobalHeader &&
-                $headerkeys != array_keys($answer)
+                false === $hasGlobalHeader
+                && $headerkeys != array_keys($answer)
             ) {
                 $headerkeys = array_keys($answer);
                 foreach ($headerkeys as $key => $value) {
                     $columnAlpha = Coordinate::stringFromColumnIndex($key + 1);
-                    $activeSheet->getStyle($columnAlpha . $activeRow)->applyFromArray($headerStyles);
-                    $activeSheet->setCellValueByColumnAndRow($key + 1, $activeRow, $this->translator->trans($value));
+                    $activeSheet->getStyle($columnAlpha.$activeRow)->applyFromArray($headerStyles);
+                    if (\is_string($value)) {
+                        $value = $this->translator->trans($value);
+                    }
+                    $activeSheet->setCellValueByColumnAndRow($key + 1, $activeRow, $value);
                 }
-                $activeRow++;
+                ++$activeRow;
             }
 
             /*
@@ -98,26 +99,26 @@ class XlsxExporter
                 $columnAlpha = Coordinate::stringFromColumnIndex($k + 1);
 
                 if (
-                    $value instanceof Collection ||
-                    is_array($value)
+                    $value instanceof Collection
+                    || is_array($value)
                 ) {
                     continue;
                 }
 
-                if ($value instanceof \DateTime) {
+                if ($value instanceof \DateTimeInterface) {
                     $value = Date::PHPToExcel($value);
-                    $activeSheet->getStyle($columnAlpha . ($activeRow))
+                    $activeSheet->getStyle($columnAlpha.$activeRow)
                         ->getNumberFormat()
                         ->setFormatCode('dd.mm.yyyy hh:MM:ss');
                 }
                 /*
                  * Set value into cell
                  */
-                $activeSheet->getStyle($columnAlpha . $activeRow)->getAlignment()->setWrapText(true);
+                $activeSheet->getStyle($columnAlpha.$activeRow)->getAlignment()->setWrapText(true);
                 $activeSheet->setCellValueByColumnAndRow($k + 1, $activeRow, $this->translator->trans((string) $value));
             }
 
-            $activeRow++;
+            ++$activeRow;
         }
 
         /*
@@ -129,11 +130,16 @@ class XlsxExporter
                     ->setWidth(50);
         }
 
-
         // Set active sheet index to the first sheet, so Excel opens this as the first sheet
         $writer = new Xlsx($spreadsheet);
         ob_start();
         $writer->save('php://output');
-        return ob_get_clean();
+        $output = ob_get_clean();
+
+        if (!\is_string($output)) {
+            throw new \RuntimeException('Output is not a string.');
+        }
+
+        return $output;
     }
 }

@@ -15,20 +15,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class NodeApplyUniversalFieldsCommand extends Command
+final class NodeApplyUniversalFieldsCommand extends Command
 {
-    protected ManagerRegistry $managerRegistry;
-    protected UniversalDataDuplicator $universalDataDuplicator;
-
-    /**
-     * @param ManagerRegistry $managerRegistry
-     * @param UniversalDataDuplicator $universalDataDuplicator
-     */
-    public function __construct(ManagerRegistry $managerRegistry, UniversalDataDuplicator $universalDataDuplicator)
-    {
-        parent::__construct();
-        $this->managerRegistry = $managerRegistry;
-        $this->universalDataDuplicator = $universalDataDuplicator;
+    public function __construct(
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly UniversalDataDuplicator $universalDataDuplicator,
+        ?string $name = null,
+    ) {
+        parent::__construct($name);
     }
 
     protected function configure(): void
@@ -45,7 +39,7 @@ class NodeApplyUniversalFieldsCommand extends Command
 
         $manager = $this->managerRegistry->getManagerForClass(NodesSources::class);
         if (null === $manager) {
-            throw new \RuntimeException('No manager found for ' . NodesSources::class);
+            throw new \RuntimeException('No manager found for '.NodesSources::class);
         }
 
         $qb = $manager->createQueryBuilder();
@@ -60,7 +54,7 @@ class NodeApplyUniversalFieldsCommand extends Command
             ->setParameter(':translation', $translation);
         try {
             $sources = $qb->getQuery()->getResult();
-            $io->note(count($sources) . ' node(s) with universal fields were found.');
+            $io->note(count($sources).' node(s) with universal fields were found.');
 
             $question = new ConfirmationQuestion(
                 '<question>Are you sure to force every universal fields?</question>',
@@ -84,6 +78,7 @@ class NodeApplyUniversalFieldsCommand extends Command
         } catch (NoResultException $e) {
             $io->warning('No node with universal fields were found.');
         }
+
         return 0;
     }
 }

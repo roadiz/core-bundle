@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\Configuration\CollectionFieldConfiguration;
 use RZ\Roadiz\CoreBundle\Configuration\JoinNodeTypeFieldConfiguration;
@@ -17,32 +18,55 @@ use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
+/**
+ * @deprecated nodeTypes will be static in future Roadiz versions
+ */
 class NodeTypeFieldValidator extends ConstraintValidator
 {
+    public function __construct(
+        private readonly ManagerRegistry $registry,
+    ) {
+    }
+
     public function validate(mixed $value, Constraint $constraint): void
     {
-        if ($value instanceof NodeTypeFieldEntity) {
-            if ($value->isMarkdown()) {
-                $this->validateMarkdownOptions($value);
-            }
-            if ($value->isManyToMany() || $value->isManyToOne()) {
-                $this->validateJoinTypes($value, $constraint);
-            }
-            if ($value->isMultiProvider() || $value->isSingleProvider()) {
-                $this->validateProviderTypes($value, $constraint);
-            }
-            if ($value->isCollection()) {
-                $this->validateCollectionTypes($value, $constraint);
-            }
-        } else {
+        if (!$value instanceof NodeTypeFieldEntity) {
             $this->context->buildViolation('Value is not a valid NodeTypeField.')->addViolation();
+
+            return;
+        }
+
+        $existingNodeTypeFieldsByName = $this->registry->getRepository(NodeTypeFieldEntity::class)->findBy([
+            'name' => $value->getName(),
+        ]);
+        foreach ($existingNodeTypeFieldsByName as $item) {
+            if ($item->getId() === $value->getId()) {
+                continue;
+            }
+            if ($item->getDoctrineType() !== $value->getDoctrineType()) {
+                $this->context->buildViolation('field_with_same_name_already_exists_but_with_different_doctrine_type')
+                    ->setParameter('%name%', $item->getName())
+                    ->setParameter('%nodeTypeName%', $item->getNodeTypeName())
+                    ->setParameter('%type%', $item->getDoctrineType())
+                    ->atPath('name')
+                    ->addViolation();
+            }
+        }
+
+        if ($value->isMarkdown()) {
+            $this->validateMarkdownOptions($value);
+        }
+        if ($value->isManyToMany() || $value->isManyToOne()) {
+            $this->validateJoinTypes($value, $constraint);
+        }
+        if ($value->isMultiProvider() || $value->isSingleProvider()) {
+            $this->validateProviderTypes($value, $constraint);
+        }
+        if ($value->isCollection()) {
+            $this->validateCollectionTypes($value, $constraint);
         }
     }
 
-    /**
-     * @param NodeTypeFieldEntity $value
-     * @param Constraint $constraint
-     */
     protected function validateJoinTypes(NodeTypeFieldEntity $value, Constraint $constraint): void
     {
         try {
@@ -64,6 +88,7 @@ class NodeTypeFieldValidator extends ConstraintValidator
                         ->setParameter('%classname%', $configuration['classname'])
                         ->atPath('classname')
                         ->addViolation();
+
                     return;
                 }
 
@@ -111,9 +136,6 @@ class NodeTypeFieldValidator extends ConstraintValidator
     }
 
     /**
-     * @param NodeTypeFieldEntity $value
-     * @param Constraint $constraint
-     *
      * @throws \ReflectionException
      */
     protected function validateProviderTypes(NodeTypeFieldEntity $value, Constraint $constraint): void
@@ -140,6 +162,7 @@ class NodeTypeFieldValidator extends ConstraintValidator
                             ->setParameter('%classname%', $configuration['classname'])
                             ->atPath('defaultValues')
                             ->addViolation();
+
                         return;
                     }
 
@@ -159,10 +182,6 @@ class NodeTypeFieldValidator extends ConstraintValidator
         }
     }
 
-    /**
-     * @param NodeTypeFieldEntity $value
-     * @param Constraint $constraint
-     */
     protected function validateCollectionTypes(NodeTypeFieldEntity $value, Constraint $constraint): void
     {
         try {
@@ -184,6 +203,7 @@ class NodeTypeFieldValidator extends ConstraintValidator
                         ->setParameter('%classname%', $configuration['entry_type'])
                         ->atPath('defaultValues')
                         ->addViolation();
+
                     return;
                 }
 
@@ -202,9 +222,6 @@ class NodeTypeFieldValidator extends ConstraintValidator
         }
     }
 
-    /**
-     * @param NodeTypeFieldEntity $value
-     */
     protected function validateMarkdownOptions(NodeTypeFieldEntity $value): void
     {
         try {

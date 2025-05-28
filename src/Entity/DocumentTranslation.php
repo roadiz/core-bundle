@@ -13,18 +13,20 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Repository\DocumentTranslationRepository;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[
     ORM\Entity(repositoryClass: DocumentTranslationRepository::class),
-    ORM\Table(name: "documents_translations"),
-    ORM\UniqueConstraint(columns: ["document_id", "translation_id"]),
+    ORM\Table(name: 'documents_translations'),
+    ORM\UniqueConstraint(columns: ['document_id', 'translation_id']),
     Gedmo\Loggable(logEntryClass: UserLogEntry::class)
 ]
 class DocumentTranslation extends AbstractEntity implements Loggable
 {
-    #[ORM\Column(type: 'string', nullable: true)]
+    #[ORM\Column(type: 'string', length: 250, nullable: true)]
     #[SymfonySerializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
+    #[Assert\Length(max: 250)]
     #[Gedmo\Versioned]
     protected ?string $name = null;
 
@@ -41,16 +43,16 @@ class DocumentTranslation extends AbstractEntity implements Loggable
     protected ?string $externalUrl = null;
 
     #[ORM\ManyToOne(targetEntity: Translation::class, fetch: 'EXTRA_LAZY', inversedBy: 'documentTranslations')]
-    #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     #[SymfonySerializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
-    protected ?TranslationInterface $translation = null;
+    protected TranslationInterface $translation;
 
     #[ORM\ManyToOne(targetEntity: Document::class, fetch: 'EXTRA_LAZY', inversedBy: 'documentTranslations')]
-    #[ORM\JoinColumn(name: 'document_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'document_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]
-    protected ?DocumentInterface $document;
+    protected DocumentInterface $document;
 
     #[ORM\Column(type: 'text', nullable: true)]
     #[SymfonySerializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
@@ -58,55 +60,39 @@ class DocumentTranslation extends AbstractEntity implements Loggable
     #[Gedmo\Versioned]
     private ?string $copyright = null;
 
-    /**
-     * @return string|null
-     */
     public function getName(): ?string
     {
         return $this->name;
     }
 
     /**
-     * @param string|null $name
-     *
      * @return $this
      */
     public function setName(?string $name): DocumentTranslation
     {
         $this->name = $name;
+
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    /**
-     * @param string|null $description
-     *
-     * @return $this
-     */
     public function setDescription(?string $description): DocumentTranslation
     {
         $this->description = $description;
+
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
     public function getCopyright(): ?string
     {
         return $this->copyright;
     }
 
     /**
-     * @param string|null $copyright
-     *
      * @return $this
      */
     public function setCopyright(?string $copyright): DocumentTranslation
@@ -116,34 +102,24 @@ class DocumentTranslation extends AbstractEntity implements Loggable
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
     public function getExternalUrl(): ?string
     {
         return $this->externalUrl;
     }
 
-    /**
-     * @param string|null $externalUrl
-     * @return DocumentTranslation
-     */
     public function setExternalUrl(?string $externalUrl): DocumentTranslation
     {
         $this->externalUrl = $externalUrl;
+
         return $this;
     }
 
-    /**
-     * @return TranslationInterface
-     */
     public function getTranslation(): TranslationInterface
     {
         return $this->translation;
     }
 
     /**
-     * @param TranslationInterface $translation
      * @return $this
      */
     public function setTranslation(TranslationInterface $translation): DocumentTranslation
@@ -153,21 +129,18 @@ class DocumentTranslation extends AbstractEntity implements Loggable
         return $this;
     }
 
-    /**
-     * @return DocumentInterface
-     */
     public function getDocument(): DocumentInterface
     {
         return $this->document;
     }
 
     /**
-     * @param DocumentInterface $document
      * @return $this
      */
-    public function setDocument(DocumentInterface $document)
+    public function setDocument(DocumentInterface $document): DocumentTranslation
     {
         $this->document = $document;
+
         return $this;
     }
 }

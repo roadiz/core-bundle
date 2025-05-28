@@ -20,82 +20,66 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 #[
     ORM\Entity(repositoryClass: FolderTranslationRepository::class),
-    ORM\Table(name: "folders_translations"),
-    ORM\UniqueConstraint(columns: ["folder_id", "translation_id"]),
-    UniqueEntity(fields: ["folder", "translation"])
+    ORM\Table(name: 'folders_translations'),
+    ORM\UniqueConstraint(columns: ['folder_id', 'translation_id']),
+    UniqueEntity(fields: ['folder', 'translation'])
 ]
 class FolderTranslation extends AbstractEntity
 {
-    #[ORM\Column(type: 'string')]
+    #[ORM\Column(type: 'string', length: 250)]
     #[SymfonySerializer\Groups(['folder', 'document'])]
     #[Serializer\Groups(['folder', 'document'])]
     #[Assert\Length(max: 250)]
     protected string $name = '';
 
     #[ORM\ManyToOne(targetEntity: Folder::class, inversedBy: 'translatedFolders')]
-    #[ORM\JoinColumn(name: 'folder_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'folder_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]
-    protected ?Folder $folder = null;
+    protected Folder $folder;
 
     #[ORM\ManyToOne(targetEntity: Translation::class, fetch: 'EXTRA_LAZY', inversedBy: 'folderTranslations')]
-    #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     #[SymfonySerializer\Groups(['folder', 'document'])]
     #[Serializer\Groups(['folder', 'document'])]
-    protected ?TranslationInterface $translation = null;
+    protected TranslationInterface $translation;
 
-    /**
-     * @param Folder $original
-     * @param TranslationInterface $translation
-     */
     public function __construct(Folder $original, TranslationInterface $translation)
     {
         $this->setFolder($original);
         $this->setTranslation($translation);
-        $this->name = $original->getDirtyFolderName() != '' ? $original->getDirtyFolderName() : $original->getFolderName();
+        $this->name = '' != $original->getDirtyFolderName() ? $original->getDirtyFolderName() : $original->getFolderName();
     }
 
-    /**
-     * @return string
-     */
     public function getName(): string
     {
         return $this->name ?? '';
     }
 
     /**
-     * @param string $name
      * @return $this
      */
-    public function setName(string $name)
+    public function setName(string $name): FolderTranslation
     {
         $this->name = $name;
+
         return $this;
     }
 
-    /**
-     * @return Folder
-     */
     public function getFolder(): Folder
     {
         return $this->folder;
     }
 
-    /**
-     * @param Folder $folder
-     * @return FolderTranslation
-     */
     public function setFolder(Folder $folder): FolderTranslation
     {
         $this->folder = $folder;
+
         return $this;
     }
 
-
     /**
      * Gets the value of translation.
-     *
-     * @return TranslationInterface
      */
     public function getTranslation(): TranslationInterface
     {
@@ -106,11 +90,11 @@ class FolderTranslation extends AbstractEntity
      * Sets the value of translation.
      *
      * @param TranslationInterface $translation the translation
-     * @return self
      */
     public function setTranslation(TranslationInterface $translation): FolderTranslation
     {
         $this->translation = $translation;
+
         return $this;
     }
 }

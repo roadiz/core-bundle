@@ -12,31 +12,20 @@ use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\CliAwareIndexer;
 use RZ\Roadiz\CoreBundle\SearchEngine\Indexer\IndexerFactoryInterface;
 use RZ\Roadiz\CoreBundle\SearchEngine\SolariumDocumentTranslation;
 use RZ\Roadiz\CoreBundle\SearchEngine\SolariumNodeSource;
-use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-/**
- * Command line utils for managing nodes from terminal.
- */
 class SolrReindexCommand extends SolrCommand implements ThemeAwareCommandInterface
 {
-    protected ?QuestionHelper $questionHelper = null;
-    protected IndexerFactoryInterface $indexerFactory;
-
-    /**
-     * @param ClientRegistry $clientRegistry
-     * @param IndexerFactoryInterface $indexerFactory
-     */
     public function __construct(
+        protected readonly IndexerFactoryInterface $indexerFactory,
         ClientRegistry $clientRegistry,
-        IndexerFactoryInterface $indexerFactory
+        ?string $name = null,
     ) {
-        parent::__construct($clientRegistry);
-        $this->indexerFactory = $indexerFactory;
+        parent::__construct($clientRegistry, $name);
     }
 
     protected function configure(): void
@@ -51,38 +40,32 @@ class SolrReindexCommand extends SolrCommand implements ThemeAwareCommandInterfa
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $solr = $this->clientRegistry->getClient();
         $this->io = new SymfonyStyle($input, $output);
 
-        if (null !== $solr) {
-            if (true === $this->clientRegistry->isClientReady($solr)) {
-                if (
-                    $this->io->confirm(
-                        'Are you sure to reindex your Node and Document database?',
-                        !$input->isInteractive()
-                    )
-                ) {
-                    $stopwatch = new Stopwatch();
-                    $stopwatch->start('global');
-
-                    if ($input->getOption('documents')) {
-                        $this->executeForDocuments($stopwatch);
-                    } elseif ($input->getOption('nodes')) {
-                        $batchCount = (int) ($input->getOption('batch-count') ?? 1);
-                        $batchNumber = (int) ($input->getOption('batch-number') ?? 0);
-                        $this->executeForNodes($stopwatch, $batchCount, $batchNumber);
-                    } else {
-                        $this->executeForAll($stopwatch);
-                    }
-                }
-            } else {
-                $this->io->error('Solr search engine server does not respond…');
-                $this->io->note('See your config.yml file to correct your Solr connexion settings.');
-                return 1;
-            }
-        } else {
-            $this->displayBasicConfig();
+        if (null === $this->validateSolrState($this->io)) {
+            return 1;
         }
+
+        if (
+            $this->io->confirm(
+                'Are you sure to reindex your Node and Document database?',
+                !$input->isInteractive()
+            )
+        ) {
+            $stopwatch = new Stopwatch();
+            $stopwatch->start('global');
+
+            if ($input->getOption('documents')) {
+                $this->executeForDocuments($stopwatch);
+            } elseif ($input->getOption('nodes')) {
+                $batchCount = (int) ($input->getOption('batch-count') ?? 1);
+                $batchNumber = (int) ($input->getOption('batch-number') ?? 0);
+                $this->executeForNodes($stopwatch, $batchCount, $batchNumber);
+            } else {
+                $this->executeForAll($stopwatch);
+            }
+        }
+
         return 0;
     }
 
@@ -127,7 +110,7 @@ class SolrReindexCommand extends SolrCommand implements ThemeAwareCommandInterfa
             $nodesSourcesIndexer->setIo($this->io);
         }
         // Empty first ONLY if one batch or first batch.
-        if ($batchNumber === 0) {
+        if (0 === $batchNumber) {
             $nodesSourcesIndexer->emptySolr(SolariumNodeSource::DOCUMENT_TYPE);
         }
 

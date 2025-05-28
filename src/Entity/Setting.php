@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\CoreBundle\Repository\SettingRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
-use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
-use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use Symfony\Component\String\UnicodeString;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -19,11 +20,11 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 #[
     ORM\Entity(repositoryClass: SettingRepository::class),
-    ORM\Table(name: "settings"),
-    ORM\Index(columns: ["type"]),
-    ORM\Index(columns: ["name"]),
-    ORM\Index(columns: ["visible"]),
-    UniqueEntity(fields: ["name"])
+    ORM\Table(name: 'settings'),
+    ORM\Index(columns: ['type']),
+    ORM\Index(columns: ['name']),
+    ORM\Index(columns: ['visible']),
+    UniqueEntity(fields: ['name'])
 ]
 class Setting extends AbstractEntity
 {
@@ -54,7 +55,7 @@ class Setting extends AbstractEntity
         AbstractField::MULTIPLE_T => 'multiple-choice.type',
     ];
 
-    #[ORM\Column(type: 'string', unique: true)]
+    #[ORM\Column(type: 'string', length: 250, unique: true)]
     #[SymfonySerializer\Groups(['setting', 'nodes_sources'])]
     #[Serializer\Groups(['setting', 'nodes_sources'])]
     #[Assert\NotBlank]
@@ -71,43 +72,28 @@ class Setting extends AbstractEntity
     #[Serializer\Groups(['setting', 'nodes_sources'])]
     private ?string $value = null;
 
-    /**
-     * Holds clear setting value after value is decoded by postLoad Doctrine event.
-     *
-     * READ ONLY: Not persisted value to hold clear value if setting is encrypted.
-     */
-    #[SymfonySerializer\Ignore]
-    #[Serializer\Exclude]
-    private ?string $clearValue = null;
-
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => true])]
     #[SymfonySerializer\Groups(['setting'])]
     #[Serializer\Groups(['setting'])]
     private bool $visible = true;
 
-    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
-    #[SymfonySerializer\Groups(['setting'])]
-    #[Serializer\Groups(['setting'])]
-    private bool $encrypted = false;
-
     #[ORM\ManyToOne(
         targetEntity: SettingGroup::class,
         cascade: ['persist', 'merge'],
-        fetch: 'EAGER',
         inversedBy: 'settings'
     )]
     #[ORM\JoinColumn(name: 'setting_group_id', referencedColumnName: 'id', onDelete: 'SET NULL')]
     #[SymfonySerializer\Groups(['setting'])]
     #[Serializer\Groups(['setting'])]
     #[Serializer\AccessType(type: 'public_method')]
-    #[Serializer\Accessor(getter: "getSettingGroup", setter: "setSettingGroup")]
+    #[Serializer\Accessor(getter: 'getSettingGroup', setter: 'setSettingGroup')]
     private ?SettingGroup $settingGroup;
 
     /**
      * Value types.
      * Use NodeTypeField types constants.
      */
-    #[ORM\Column(type: 'integer')]
+    #[ORM\Column(type: Types::SMALLINT)]
     #[SymfonySerializer\Groups(['setting'])]
     #[Serializer\Groups(['setting'])]
     private int $type = AbstractField::STRING_T;
@@ -120,20 +106,15 @@ class Setting extends AbstractEntity
     #[Serializer\Groups(['setting'])]
     private ?string $defaultValues;
 
-    /**
-     * @return string
-     */
     public function getName(): string
     {
         return $this->name;
     }
 
     /**
-     * @param string|null $name
-     *
      * @return $this
      */
-    public function setName(?string $name)
+    public function setName(?string $name): self
     {
         $this->name = trim(\mb_strtolower($name ?? ''));
         $this->name = (new UnicodeString($this->name))
@@ -144,19 +125,11 @@ class Setting extends AbstractEntity
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
     public function getDescription(): ?string
     {
         return $this->description;
     }
 
-    /**
-     * @param string|null $description
-     *
-     * @return Setting
-     */
     public function setDescription(?string $description): Setting
     {
         $this->description = $description;
@@ -164,59 +137,42 @@ class Setting extends AbstractEntity
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
     public function getRawValue(): ?string
     {
         return $this->value;
     }
 
     /**
-     * Getter for setting value OR clear value, if encrypted.
-     *
-     * @return string|bool|\DateTime|int|null
      * @throws \Exception
      */
     #[SymfonySerializer\Ignore]
-    public function getValue()
+    public function getValue(): string|bool|\DateTime|int|null
     {
-        if ($this->isEncrypted()) {
-            $value = $this->clearValue;
-        } else {
-            $value = $this->value;
+        if (AbstractField::BOOLEAN_T == $this->getType()) {
+            return (bool) $this->value;
         }
 
-        if ($this->getType() == AbstractField::BOOLEAN_T) {
-            return (bool) $value;
-        }
-
-        if (null !== $value) {
-            if ($this->getType() == AbstractField::DATETIME_T) {
-                return new \DateTime($value);
+        if (null !== $this->value) {
+            if (AbstractField::DATETIME_T == $this->getType()) {
+                return new \DateTime($this->value);
             }
-            if ($this->getType() == AbstractField::DOCUMENTS_T) {
-                return (int) $value;
+            if (AbstractField::DOCUMENTS_T == $this->getType()) {
+                return (int) $this->value;
             }
         }
 
-        return $value;
+        return $this->value;
     }
 
     /**
-     * @param null|mixed $value
-     *
      * @return $this
      */
-    public function setValue($value)
+    public function setValue(mixed $value): self
     {
         if (null === $value) {
             $this->value = null;
-        } elseif (
-            ($this->getType() === AbstractField::DATETIME_T || $this->getType() === AbstractField::DATE_T) &&
-            $value instanceof \DateTimeInterface
-        ) {
-            $this->value = $value->format('c');
+        } elseif ($value instanceof \DateTimeInterface) {
+            $this->value = $value->format('c'); // $value is instance of \DateTime
         } else {
             $this->value = (string) $value;
         }
@@ -224,114 +180,57 @@ class Setting extends AbstractEntity
         return $this;
     }
 
-    /**
-     * @return bool
-     */
-    public function isEncrypted(): bool
-    {
-        return $this->encrypted;
-    }
-
-    /**
-     * @param bool $encrypted
-     *
-     * @return Setting
-     */
-    public function setEncrypted(bool $encrypted): Setting
-    {
-        $this->encrypted = $encrypted;
-
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
     public function getType(): int
     {
         return $this->type;
     }
 
     /**
-     * @param int $type
-     *
      * @return $this
      */
-    public function setType(int $type)
+    public function setType(int $type): self
     {
         $this->type = $type;
 
         return $this;
     }
 
-    /**
-     * Holds clear setting value after value is decoded by postLoad Doctrine event.
-     *
-     * @param string|null $clearValue
-     *
-     * @return Setting
-     */
-    public function setClearValue(?string $clearValue): Setting
-    {
-        $this->clearValue = $clearValue;
-
-        return $this;
-    }
-
-    /**
-     * @return boolean
-     */
     public function isVisible(): bool
     {
         return $this->visible;
     }
 
     /**
-     * @param bool $visible
-     *
      * @return $this
      */
-    public function setVisible(bool $visible)
+    public function setVisible(bool $visible): self
     {
         $this->visible = $visible;
 
         return $this;
     }
 
-    /**
-     * @return SettingGroup|null
-     */
     public function getSettingGroup(): ?SettingGroup
     {
         return $this->settingGroup;
     }
 
     /**
-     * @param SettingGroup|null $settingGroup
-     *
      * @return $this
      */
-    public function setSettingGroup(?SettingGroup $settingGroup)
+    public function setSettingGroup(?SettingGroup $settingGroup): self
     {
         $this->settingGroup = $settingGroup;
 
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
     public function getDefaultValues(): ?string
     {
         return $this->defaultValues;
     }
 
-    /**
-     * @param string|null $defaultValues
-     *
-     * @return Setting
-     */
-    public function setDefaultValues(?string $defaultValues)
+    public function setDefaultValues(?string $defaultValues): self
     {
         $this->defaultValues = $defaultValues;
 

@@ -9,12 +9,9 @@ use RZ\Roadiz\CoreBundle\Message\AsyncMessage;
 abstract class AbstractSolrMessage implements AsyncMessage
 {
     /**
-     * @var class-string
+     * Cannot typehint with class-string: breaks Symfony Serializer 5.4.
      */
     protected string $classname;
-    /**
-     * @var mixed
-     */
     protected mixed $identifier;
 
     public function __construct(string $classname, mixed $identifier)
@@ -23,17 +20,11 @@ abstract class AbstractSolrMessage implements AsyncMessage
         $this->identifier = $identifier;
     }
 
-    /**
-     * @return string
-     */
     public function getClassname(): string
     {
         return $this->classname;
     }
 
-    /**
-     * @return mixed
-     */
     public function getIdentifier(): mixed
     {
         return $this->identifier;

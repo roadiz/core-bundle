@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber;
 
-use Doctrine\Common\EventSubscriber;
-use Doctrine\Persistence\Event\LifecycleEventArgs;
+use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Events;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Entity\User;
 use RZ\Roadiz\CoreBundle\Event\User\UserCreatedEvent;
@@ -22,65 +22,38 @@ use RZ\Roadiz\Random\TokenGenerator;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-final class UserLifeCycleSubscriber implements EventSubscriber
+#[AsDoctrineListener(event: Events::preUpdate)]
+#[AsDoctrineListener(event: Events::prePersist)]
+#[AsDoctrineListener(event: Events::postPersist)]
+#[AsDoctrineListener(event: Events::postUpdate)]
+#[AsDoctrineListener(event: Events::postRemove)]
+final readonly class UserLifeCycleSubscriber
 {
-    private UserViewer $userViewer;
-    private EventDispatcherInterface $dispatcher;
-    private PasswordHasherFactoryInterface $passwordHasherFactory;
-    private LoggerInterface $logger;
-
-    /**
-     * @param UserViewer $userViewer
-     * @param EventDispatcherInterface $dispatcher
-     * @param PasswordHasherFactoryInterface $passwordHasherFactory
-     * @param LoggerInterface $logger
-     */
     public function __construct(
-        UserViewer $userViewer,
-        EventDispatcherInterface $dispatcher,
-        PasswordHasherFactoryInterface $passwordHasherFactory,
-        LoggerInterface $logger
+        private UserViewer $userViewer,
+        private EventDispatcherInterface $dispatcher,
+        private PasswordHasherFactoryInterface $passwordHasherFactory,
+        private FacebookPictureFinder $facebookPictureFinder,
+        private LoggerInterface $logger,
+        private bool $useGravatar,
     ) {
-        $this->userViewer = $userViewer;
-        $this->dispatcher = $dispatcher;
-        $this->logger = $logger;
-        $this->passwordHasherFactory = $passwordHasherFactory;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getSubscribedEvents(): array
-    {
-        return [
-            Events::preUpdate,
-            Events::prePersist,
-            Events::postPersist,
-            Events::postUpdate,
-            Events::postRemove,
-        ];
-    }
-
-    /**
-     * @param PreUpdateEventArgs $event
-     * @return void
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
     public function preUpdate(PreUpdateEventArgs $event): void
     {
-        $user = $event->getEntity();
+        $user = $event->getObject();
         if ($user instanceof User) {
             if (
-                $event->hasChangedField('enabled') &&
-                true === $event->getNewValue('enabled')
+                $event->hasChangedField('enabled')
+                && true === $event->getNewValue('enabled')
             ) {
                 $userEvent = new UserEnabledEvent($user);
                 $this->dispatcher->dispatch($userEvent);
             }
 
             if (
-                $event->hasChangedField('enabled') &&
-                false === $event->getNewValue('enabled')
+                $event->hasChangedField('enabled')
+                && false === $event->getNewValue('enabled')
             ) {
                 $userEvent = new UserDisabledEvent($user);
                 $this->dispatcher->dispatch($userEvent);
@@ -89,14 +62,15 @@ final class UserLifeCycleSubscriber implements EventSubscriber
             if ($event->hasChangedField('facebookName')) {
                 if ('' != $event->getNewValue('facebookName')) {
                     try {
-                        $facebook = new FacebookPictureFinder($user->getFacebookName());
-                        $url = $facebook->getPictureUrl();
+                        $url = $this->facebookPictureFinder->getPictureUrl($user->getFacebookName());
                         $user->setPictureUrl($url);
                     } catch (\Exception $e) {
                         $user->setFacebookName('');
-                        $user->setPictureUrl($user->getGravatarUrl());
+                        if ($this->useGravatar) {
+                            $user->setPictureUrl($user->getGravatarUrl());
+                        }
                     }
-                } else {
+                } elseif ($this->useGravatar) {
                     $user->setPictureUrl($user->getGravatarUrl());
                 }
             }
@@ -104,9 +78,9 @@ final class UserLifeCycleSubscriber implements EventSubscriber
              * Encode user password
              */
             if (
-                $event->hasChangedField('password') &&
-                null !== $user->getPlainPassword() &&
-                '' !== $user->getPlainPassword()
+                $event->hasChangedField('password')
+                && null !== $user->getPlainPassword()
+                && '' !== $user->getPlainPassword()
             ) {
                 $this->setPassword($user, $user->getPlainPassword());
                 $userEvent = new UserPasswordChangedEvent($user);
@@ -115,10 +89,6 @@ final class UserLifeCycleSubscriber implements EventSubscriber
         }
     }
 
-    /**
-     * @param User $user
-     * @param string|null $plainPassword
-     */
     protected function setPassword(User $user, ?string $plainPassword): void
     {
         if (null !== $plainPassword) {
@@ -128,9 +98,6 @@ final class UserLifeCycleSubscriber implements EventSubscriber
         }
     }
 
-    /**
-     * @param LifecycleEventArgs $event
-     */
     public function postUpdate(LifecycleEventArgs $event): void
     {
         $user = $event->getObject();
@@ -140,9 +107,6 @@ final class UserLifeCycleSubscriber implements EventSubscriber
         }
     }
 
-    /**
-     * @param LifecycleEventArgs $event
-     */
     public function postRemove(LifecycleEventArgs $event): void
     {
         $user = $event->getObject();
@@ -153,8 +117,6 @@ final class UserLifeCycleSubscriber implements EventSubscriber
     }
 
     /**
-     * @param LifecycleEventArgs $event
-     *
      * @throws \Exception
      */
     public function postPersist(LifecycleEventArgs $event): void
@@ -167,18 +129,16 @@ final class UserLifeCycleSubscriber implements EventSubscriber
     }
 
     /**
-     * @param LifecycleEventArgs $event
-     *
-     * @throws \Exception
+     * @throws \Throwable
      */
     public function prePersist(LifecycleEventArgs $event): void
     {
         $user = $event->getObject();
         if ($user instanceof User) {
             if (
-                $user->willSendCreationConfirmationEmail() &&
-                (null === $user->getPlainPassword() ||
-                $user->getPlainPassword() === '')
+                $user->willSendCreationConfirmationEmail()
+                && (null === $user->getPlainPassword()
+                || '' === $user->getPlainPassword())
             ) {
                 /*
                  * Do not generate password for new users
@@ -189,8 +149,8 @@ final class UserLifeCycleSubscriber implements EventSubscriber
                 $user->setPasswordRequestedAt(new \DateTime());
                 $user->setConfirmationToken($tokenGenerator->generateToken());
 
-                $this->userViewer->setUser($user);
                 $this->userViewer->sendPasswordResetLink(
+                    $user,
                     'loginResetPage',
                     '@RoadizCore/email/users/welcome_user_email.html.twig',
                     '@RoadizCore/email/users/welcome_user_email.txt.twig'
@@ -202,7 +162,7 @@ final class UserLifeCycleSubscriber implements EventSubscriber
             /*
              * Force a Gravatar image if not defined
              */
-            if (empty($user->getPictureUrl())) {
+            if (empty($user->getPictureUrl()) && $this->useGravatar) {
                 $user->setPictureUrl($user->getGravatarUrl());
             }
         }

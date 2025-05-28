@@ -4,42 +4,28 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\TwigExtension;
 
+use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\Persistence\ManagerRegistry;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\EntityApi\NodeSourceApi;
-use RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory;
-use RZ\Roadiz\CoreBundle\EntityHandler\NodesSourcesHandler;
+use RZ\Roadiz\CoreBundle\Entity\Tag;
 use Twig\Error\RuntimeError;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
 use Twig\TwigTest;
 
 /**
- * Extension that allow to gather nodes-source from hierarchy
+ * Extension that allow to gather nodes-source from hierarchy.
  */
 final class NodesSourcesExtension extends AbstractExtension
 {
-    protected NodeSourceApi $nodeSourceApi;
-    protected HandlerFactory $handlerFactory;
-    private bool $throwExceptions;
-    private NodeTypes $nodeTypesBag;
-
-    /**
-     * @param NodeSourceApi $nodeSourceApi
-     * @param HandlerFactory $handlerFactory
-     * @param NodeTypes $nodeTypesBag
-     * @param bool $throwExceptions
-     */
     public function __construct(
-        NodeSourceApi $nodeSourceApi,
-        HandlerFactory $handlerFactory,
-        NodeTypes $nodeTypesBag,
-        bool $throwExceptions = false
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly NodeTypes $nodeTypesBag,
+        private readonly bool $throwExceptions = false,
     ) {
-        $this->throwExceptions = $throwExceptions;
-        $this->handlerFactory = $handlerFactory;
-        $this->nodeTypesBag = $nodeTypesBag;
-        $this->nodeSourceApi = $nodeSourceApi;
     }
 
     public function getFilters(): array
@@ -73,135 +59,105 @@ final class NodesSourcesExtension extends AbstractExtension
     }
 
     /**
-     * @param NodesSources|null $ns
-     * @param array|null $criteria
-     * @param array|null $order
-     * @return array
+     * @return iterable<NodesSources>
+     *
      * @throws RuntimeError
      */
-    public function getChildren(NodesSources $ns = null, array $criteria = null, array $order = null)
+    public function getChildren(?NodesSources $ns = null, ?array $criteria = null, ?array $order = null): iterable
     {
         if (null === $ns) {
             if ($this->throwExceptions) {
-                throw new RuntimeError("Cannot get children from a NULL node-source.");
+                throw new RuntimeError('Cannot get children from a NULL node-source.');
             } else {
                 return [];
             }
         }
-        $defaultCrit = [
-            'node.parent' => $ns->getNode(),
-            'translation' => $ns->getTranslation(),
-        ];
 
-        if (null !== $order) {
-            $defaultOrder = $order;
-        } else {
-            $defaultOrder = [
-                'node.position' => 'ASC',
-            ];
-        }
-
-        if (null !== $criteria) {
-            $defaultCrit = array_merge($defaultCrit, $criteria);
-        }
-
-        return $this->nodeSourceApi->getBy($defaultCrit, $defaultOrder);
+        return $this->managerRegistry
+            ->getRepository(NodesSources::class)
+            ->findChildren($ns, $criteria, $order);
     }
 
     /**
-     * @param NodesSources|null $ns
-     * @param array|null $criteria
-     * @param array|null $order
-     * @return NodesSources|null
      * @throws RuntimeError
      */
-    public function getNext(NodesSources $ns = null, array $criteria = null, array $order = null)
+    public function getNext(?NodesSources $ns = null, ?array $criteria = null, ?array $order = null): ?NodesSources
     {
         if (null === $ns) {
             if ($this->throwExceptions) {
-                throw new RuntimeError("Cannot get next sibling from a NULL node-source.");
+                throw new RuntimeError('Cannot get next sibling from a NULL node-source.');
             } else {
                 return null;
             }
         }
-        /** @var NodesSourcesHandler $nodeSourceHandler */
-        $nodeSourceHandler = $this->handlerFactory->getHandler($ns);
-        return $nodeSourceHandler->getNext($criteria, $order);
+
+        return $this->managerRegistry
+            ->getRepository(NodesSources::class)
+            ->findNext($ns, $criteria, $order);
     }
 
     /**
-     * @param NodesSources|null $ns
-     * @param array|null $criteria
-     * @param array|null $order
-     * @return NodesSources|null
      * @throws RuntimeError
      */
-    public function getPrevious(NodesSources $ns = null, array $criteria = null, array $order = null)
+    public function getPrevious(?NodesSources $ns = null, ?array $criteria = null, ?array $order = null): ?NodesSources
     {
         if (null === $ns) {
             if ($this->throwExceptions) {
-                throw new RuntimeError("Cannot get previous sibling from a NULL node-source.");
+                throw new RuntimeError('Cannot get previous sibling from a NULL node-source.');
             } else {
                 return null;
             }
         }
-        /** @var NodesSourcesHandler $nodeSourceHandler */
-        $nodeSourceHandler = $this->handlerFactory->getHandler($ns);
-        return $nodeSourceHandler->getPrevious($criteria, $order);
+
+        return $this->managerRegistry
+            ->getRepository(NodesSources::class)
+            ->findPrevious($ns, $criteria, $order);
     }
 
     /**
-     * @param NodesSources|null $ns
-     * @param array|null $criteria
-     * @param array|null $order
-     * @return NodesSources|null
      * @throws RuntimeError
      */
-    public function getLastSibling(NodesSources $ns = null, array $criteria = null, array $order = null)
+    public function getLastSibling(?NodesSources $ns = null, ?array $criteria = null, ?array $order = null): ?NodesSources
     {
         if (null === $ns) {
             if ($this->throwExceptions) {
-                throw new RuntimeError("Cannot get last sibling from a NULL node-source.");
+                throw new RuntimeError('Cannot get last sibling from a NULL node-source.');
             } else {
                 return null;
             }
         }
-        /** @var NodesSourcesHandler $nodeSourceHandler */
-        $nodeSourceHandler = $this->handlerFactory->getHandler($ns);
-        return $nodeSourceHandler->getLastSibling($criteria, $order);
+
+        return $this->managerRegistry
+            ->getRepository(NodesSources::class)
+            ->findLastSibling($ns, $criteria, $order);
     }
 
     /**
-     * @param NodesSources|null $ns
-     * @param array|null $criteria
-     * @param array|null $order
-     * @return NodesSources|null
      * @throws RuntimeError
      */
-    public function getFirstSibling(NodesSources $ns = null, array $criteria = null, array $order = null)
+    public function getFirstSibling(?NodesSources $ns = null, ?array $criteria = null, ?array $order = null): ?NodesSources
     {
         if (null === $ns) {
             if ($this->throwExceptions) {
-                throw new RuntimeError("Cannot get first sibling from a NULL node-source.");
+                throw new RuntimeError('Cannot get first sibling from a NULL node-source.');
             } else {
                 return null;
             }
         }
-        /** @var NodesSourcesHandler $nodeSourceHandler */
-        $nodeSourceHandler = $this->handlerFactory->getHandler($ns);
-        return $nodeSourceHandler->getFirstSibling($criteria, $order);
+
+        return $this->managerRegistry
+            ->getRepository(NodesSources::class)
+            ->findFirstSibling($ns, $criteria, $order);
     }
 
     /**
-     * @param NodesSources|null $ns
-     * @return NodesSources|null
      * @throws RuntimeError
      */
-    public function getParent(NodesSources $ns = null)
+    public function getParent(?NodesSources $ns = null): ?NodesSources
     {
         if (null === $ns) {
             if ($this->throwExceptions) {
-                throw new RuntimeError("Cannot get parent from a NULL node-source.");
+                throw new RuntimeError('Cannot get parent from a NULL node-source.');
             } else {
                 return null;
             }
@@ -211,41 +167,45 @@ final class NodesSourcesExtension extends AbstractExtension
     }
 
     /**
-     * @param NodesSources|null $ns
-     * @param array|null $criteria
-     * @return array
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      * @throws RuntimeError
+     * @throws NonUniqueResultException
      */
-    public function getParents(NodesSources $ns = null, array $criteria = null)
+    public function getParents(?NodesSources $ns = null, ?array $criteria = null): array
     {
         if (null === $ns) {
             if ($this->throwExceptions) {
-                throw new RuntimeError("Cannot get parents from a NULL node-source.");
+                throw new RuntimeError('Cannot get parents from a NULL node-source.');
             } else {
                 return [];
             }
         }
-        /** @var NodesSourcesHandler $nodeSourceHandler */
-        $nodeSourceHandler = $this->handlerFactory->getHandler($ns);
-        return $nodeSourceHandler->getParents($criteria);
+
+        return $this->managerRegistry
+            ->getRepository(NodesSources::class)
+            ->findParents($ns, $criteria);
     }
 
     /**
-     * @param NodesSources|null $ns
-     * @return array
+     * @return iterable<Tag>
+     *
      * @throws RuntimeError
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      */
-    public function getTags(NodesSources $ns = null)
+    public function getTags(?NodesSources $ns = null): iterable
     {
         if (null === $ns) {
             if ($this->throwExceptions) {
-                throw new RuntimeError("Cannot get tags from a NULL node-source.");
+                throw new RuntimeError('Cannot get tags from a NULL node-source.');
             } else {
                 return [];
             }
         }
-        /** @var NodesSourcesHandler $nodeSourceHandler */
-        $nodeSourceHandler = $this->handlerFactory->getHandler($ns);
-        return $nodeSourceHandler->getTags();
+
+        return $this->managerRegistry
+            ->getRepository(Tag::class)
+            ->findByNodesSources($ns);
     }
 }

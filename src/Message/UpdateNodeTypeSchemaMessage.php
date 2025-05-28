@@ -4,25 +4,18 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Message;
 
-/*
- * UpdateNodeTypeSchemaMessage must be handled synchronous
+/**
+ * UpdateNodeTypeSchemaMessage must be handled synchronous.
+ *
+ * @deprecated nodeTypes will be static in future Roadiz versions
  */
-final class UpdateNodeTypeSchemaMessage
+final readonly class UpdateNodeTypeSchemaMessage
 {
-    private int $nodeTypeId;
-
-    /**
-     * @param int $nodeTypeId
-     */
-    public function __construct(int $nodeTypeId)
+    public function __construct(private int|string|null $nodeTypeId)
     {
-        $this->nodeTypeId = $nodeTypeId;
     }
 
-    /**
-     * @return int
-     */
-    public function getNodeTypeId(): int
+    public function getNodeTypeId(): int|string|null
     {
         return $this->nodeTypeId;
     }

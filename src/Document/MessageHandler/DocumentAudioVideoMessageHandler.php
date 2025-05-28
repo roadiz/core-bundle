@@ -25,40 +25,30 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  *
  * Detect Audio and Video files metadata using https://github.com/JamesHeinrich/getID3 lib
  * And extract video thumbnail using local ffmpeg.
+ *
  * @see https://github.com/JamesHeinrich/getID3
  */
 final class DocumentAudioVideoMessageHandler extends AbstractLockingDocumentMessageHandler
 {
-    private DocumentFactory $documentFactory;
-    private EventDispatcherInterface $eventDispatcher;
-    private ?string $ffmpegPath;
-
     public function __construct(
-        DocumentFactory $documentFactory,
-        EventDispatcherInterface $eventDispatcher,
-        ?string $ffmpegPath,
+        private readonly DocumentFactory $documentFactory,
+        private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly ?string $ffmpegPath,
         ManagerRegistry $managerRegistry,
         LoggerInterface $messengerLogger,
-        FilesystemOperator $documentsStorage
+        FilesystemOperator $documentsStorage,
     ) {
         parent::__construct($managerRegistry, $messengerLogger, $documentsStorage);
-        $this->ffmpegPath = $ffmpegPath;
-        $this->documentFactory = $documentFactory;
-        $this->eventDispatcher = $eventDispatcher;
     }
 
-    /**
-     * @param  DocumentInterface $document
-     * @return bool
-     */
     protected function supports(DocumentInterface $document): bool
     {
         /*
          * If none of AV tool are available, do not stream media for nothing.
          */
-        return $document->isLocal() &&
-            ($document->isVideo() || $document->isAudio()) &&
-            (\class_exists('getID3') || is_string($this->ffmpegPath));
+        return $document->isLocal()
+            && ($document->isVideo() || $document->isAudio())
+            && (\class_exists('getID3') || is_string($this->ffmpegPath));
     }
 
     protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
@@ -67,12 +57,18 @@ final class DocumentAudioVideoMessageHandler extends AbstractLockingDocumentMess
          * This process requires document files to be locally stored!
          */
         $videoPath = \tempnam(\sys_get_temp_dir(), 'video_');
+        if (false === $videoPath) {
+            throw new UnrecoverableMessageHandlingException('Unable to create temporary file for video processing.');
+        }
         \rename($videoPath, $videoPath .= $document->getFilename());
 
         /*
         * Copy AV locally
         */
         $videoPathResource = \fopen($videoPath, 'w');
+        if (false === $videoPathResource) {
+            throw new UnrecoverableMessageHandlingException('Unable to open temporary file for video processing.');
+        }
         \stream_copy_to_stream($this->documentsStorage->readStream($document->getMountPath()), $videoPathResource);
         \fclose($videoPathResource);
 
@@ -114,6 +110,9 @@ final class DocumentAudioVideoMessageHandler extends AbstractLockingDocumentMess
         }
 
         $thumbnailPath = \tempnam(\sys_get_temp_dir(), 'thumbnail_');
+        if (false === $thumbnailPath) {
+            throw new UnrecoverableMessageHandlingException('Unable to create temporary file for thumbnail processing.');
+        }
         \rename($thumbnailPath, $thumbnailPath .= '.jpg');
 
         $process = new Process([$this->ffmpegPath, '-y', '-i', $localMediaPath, '-vframes', '1', $thumbnailPath]);
@@ -133,13 +132,7 @@ final class DocumentAudioVideoMessageHandler extends AbstractLockingDocumentMess
                 $this->eventDispatcher->dispatch(new DocumentCreatedEvent($thumbnailDocument));
             }
         } catch (ProcessFailedException $exception) {
-            throw new UnrecoverableMessageHandlingException(
-                sprintf(
-                    'Cannot extract thumbnail from %s video file : %s',
-                    $localMediaPath,
-                    $exception->getMessage()
-                ),
-            );
+            throw new UnrecoverableMessageHandlingException(sprintf('Cannot extract thumbnail from %s video file : %s', $localMediaPath, $exception->getMessage()));
         }
     }
 }

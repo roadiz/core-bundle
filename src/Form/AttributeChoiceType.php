@@ -16,13 +16,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class AttributeChoiceType extends AbstractType
 {
-    public function __construct(private ManagerRegistry $managerRegistry)
+    public function __construct(private readonly ManagerRegistry $managerRegistry)
     {
     }
 
-    /**
-     * @inheritDoc
-     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer(new CallbackTransformer(
@@ -30,6 +27,7 @@ final class AttributeChoiceType extends AbstractType
                 if ($dataToForm instanceof Attribute) {
                     return $dataToForm->getId();
                 }
+
                 return null;
             },
             function ($formToData) {
@@ -38,9 +36,6 @@ final class AttributeChoiceType extends AbstractType
         ));
     }
 
-    /**
-     * @inheritDoc
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
@@ -55,22 +50,24 @@ final class AttributeChoiceType extends AbstractType
                 ['code' => 'ASC']
             );
             foreach ($attributes as $attribute) {
-                if (null !== $attribute->getGroup()) {
-                    if (!isset($choices[$attribute->getGroup()->getName()])) {
-                        $choices[$attribute->getGroup()->getName()] = [];
+                $label = $attribute->getLabelOrCode($options['translation']);
+                if (
+                    null !== $attribute->getGroup()
+                    && null !== $groupName = $attribute->getGroup()->getName()
+                ) {
+                    if (!isset($choices[$groupName]) || !is_array($choices[$groupName])) {
+                        $choices[$groupName] = [];
                     }
-                    $choices[$attribute->getGroup()->getName()][$attribute->getLabelOrCode($options['translation'])] = $attribute->getId();
+                    $choices[$groupName][$label] = $attribute->getId();
                 } else {
-                    $choices[$attribute->getLabelOrCode($options['translation'])] = $attribute->getId();
+                    $choices[$label] = $attribute->getId();
                 }
             }
+
             return $choices;
         });
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getParent(): ?string
     {
         return ChoiceType::class;

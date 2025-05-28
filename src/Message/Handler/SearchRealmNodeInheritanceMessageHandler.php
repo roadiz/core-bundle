@@ -14,28 +14,20 @@ use RZ\Roadiz\CoreBundle\Message\ApplyRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Message\CleanRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Message\SearchRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
+use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
-use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-final class SearchRealmNodeInheritanceMessageHandler implements MessageHandlerInterface
+#[AsMessageHandler]
+final readonly class SearchRealmNodeInheritanceMessageHandler
 {
-    private ManagerRegistry $managerRegistry;
-    private HandlerFactoryInterface $handlerFactory;
-    private MessageBusInterface $bus;
-    private LoggerInterface $logger;
-
     public function __construct(
-        ManagerRegistry $managerRegistry,
-        HandlerFactoryInterface $handlerFactory,
-        MessageBusInterface $bus,
-        LoggerInterface $logger
+        private ManagerRegistry $managerRegistry,
+        private HandlerFactoryInterface $handlerFactory,
+        private MessageBusInterface $bus,
+        private LoggerInterface $logger,
     ) {
-        $this->managerRegistry = $managerRegistry;
-        $this->handlerFactory = $handlerFactory;
-        $this->bus = $bus;
-        $this->logger = $logger;
     }
 
     public function __invoke(SearchRealmNodeInheritanceMessage $message): void
@@ -55,7 +47,7 @@ final class SearchRealmNodeInheritanceMessageHandler implements MessageHandlerIn
         /** @var RealmNode[] $autoRealmNodes */
         $autoRealmNodes = $this->managerRegistry->getRepository(RealmNode::class)->findBy([
             'node' => $node,
-            'inheritanceType' => RealmInterface::INHERITANCE_AUTO
+            'inheritanceType' => RealmInterface::INHERITANCE_AUTO,
         ]);
 
         /*
@@ -65,7 +57,7 @@ final class SearchRealmNodeInheritanceMessageHandler implements MessageHandlerIn
             $this->logger->info('Clean existing RealmNode information');
             $this->bus->dispatch(new Envelope(new CleanRealmNodeInheritanceMessage(
                 $autoRealmNode->getNode()->getId(),
-                null !== $autoRealmNode->getRealm() ? $autoRealmNode->getRealm()->getId() : null
+                $autoRealmNode->getRealm()->getId()
             )));
         }
     }
@@ -76,7 +68,7 @@ final class SearchRealmNodeInheritanceMessageHandler implements MessageHandlerIn
         $nodeHandler = $this->handlerFactory->getHandler($node);
         $parents = $nodeHandler->getParents();
 
-        if (count($parents) === 0) {
+        if (0 === count($parents)) {
             return;
         }
 
@@ -90,7 +82,7 @@ final class SearchRealmNodeInheritanceMessageHandler implements MessageHandlerIn
                 $this->logger->info('Apply new root RealmNode information');
                 $this->bus->dispatch(new Envelope(new ApplyRealmNodeInheritanceMessage(
                     $rootRealmNode->getNode()->getId(),
-                    null !== $rootRealmNode->getRealm() ? $rootRealmNode->getRealm()->getId() : null
+                    $rootRealmNode->getRealm()->getId()
                 )));
             }
         }

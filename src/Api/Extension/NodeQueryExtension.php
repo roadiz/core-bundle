@@ -4,23 +4,22 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Extension;
 
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Extension\QueryCollectionExtensionInterface;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Extension\QueryItemExtensionInterface;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryBuilderHelper;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use ApiPlatform\Doctrine\Orm\Extension\QueryCollectionExtensionInterface;
+use ApiPlatform\Doctrine\Orm\Extension\QueryItemExtensionInterface;
+use ApiPlatform\Doctrine\Orm\Util\QueryBuilderHelper;
+use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use ApiPlatform\Metadata\Operation;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use RZ\Roadiz\CoreBundle\Entity\Node;
+use RZ\Roadiz\CoreBundle\Enum\NodeStatus;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 
-final class NodeQueryExtension implements QueryItemExtensionInterface, QueryCollectionExtensionInterface
+final readonly class NodeQueryExtension implements QueryItemExtensionInterface, QueryCollectionExtensionInterface
 {
-    private PreviewResolverInterface $previewResolver;
-
     public function __construct(
-        PreviewResolverInterface $previewResolver
+        private PreviewResolverInterface $previewResolver,
     ) {
-        $this->previewResolver = $previewResolver;
     }
 
     public function applyToItem(
@@ -28,26 +27,26 @@ final class NodeQueryExtension implements QueryItemExtensionInterface, QueryColl
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
         array $identifiers,
-        string $operationName = null,
-        array $context = []
+        ?Operation $operation = null,
+        array $context = [],
     ): void {
-        $this->apply($queryBuilder, $queryNameGenerator, $resourceClass, $operationName);
+        $this->apply($queryBuilder, $queryNameGenerator, $resourceClass);
     }
 
     private function apply(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
-        string $operationName = null
     ): void {
-        if ($resourceClass !== Node::class) {
+        if (Node::class !== $resourceClass) {
             return;
         }
 
         if ($this->previewResolver->isPreview()) {
             $queryBuilder
                 ->andWhere($queryBuilder->expr()->lte('o.status', ':status'))
-                ->setParameter(':status', Node::PUBLISHED);
+                ->setParameter(':status', NodeStatus::PUBLISHED);
+
             return;
         }
 
@@ -59,10 +58,11 @@ final class NodeQueryExtension implements QueryItemExtensionInterface, QueryColl
             Join::INNER_JOIN
         );
         $queryBuilder
-            ->andWhere($queryBuilder->expr()->lte($alias . '.publishedAt', ':lte_published_at'))
+            ->andWhere($queryBuilder->expr()->lte($alias.'.publishedAt', ':lte_published_at'))
             ->andWhere($queryBuilder->expr()->eq('o.status', ':status'))
             ->setParameter(':lte_published_at', new \DateTime())
-            ->setParameter(':status', Node::PUBLISHED);
+            ->setParameter(':status', NodeStatus::PUBLISHED);
+
         return;
     }
 
@@ -70,8 +70,9 @@ final class NodeQueryExtension implements QueryItemExtensionInterface, QueryColl
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
-        string $operationName = null
+        ?Operation $operation = null,
+        array $context = [],
     ): void {
-        $this->apply($queryBuilder, $queryNameGenerator, $resourceClass, $operationName);
+        $this->apply($queryBuilder, $queryNameGenerator, $resourceClass);
     }
 }

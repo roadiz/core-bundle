@@ -12,22 +12,18 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\String\Slugger\AsciiSlugger;
-use ZipArchive;
 
-class FilesExportCommand extends Command
+final class FilesExportCommand extends Command
 {
     use FilesCommandTrait;
 
-    protected FileAwareInterface $fileAware;
-    protected string $exportDir;
-    protected string $appNamespace;
-
-    public function __construct(FileAwareInterface $fileAware, string $exportDir, string $appNamespace)
-    {
-        parent::__construct();
-        $this->fileAware = $fileAware;
-        $this->exportDir = $exportDir;
-        $this->appNamespace = $appNamespace;
+    public function __construct(
+        private readonly FileAwareInterface $fileAware,
+        private readonly string $exportDir,
+        private readonly string $appNamespace,
+        ?string $name = null,
+    ) {
+        parent::__construct($name);
     }
 
     protected function configure(): void
@@ -37,20 +33,11 @@ class FilesExportCommand extends Command
             ->setDescription('Export public files, private files and fonts into a single ZIP archive at root dir.');
     }
 
-    /**
-     * @param string $appName
-     * @return string
-     */
-    protected function getArchiveFileName(string $appName = "files_export"): string
+    protected function getArchiveFileName(string $appName = 'files_export'): string
     {
-        return $appName . '_' . date('Y-m-d') . '.zip';
+        return $appName.'_'.date('Y-m-d').'.zip';
     }
 
-    /**
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @return int
-     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $fs = new Filesystem();
@@ -60,14 +47,14 @@ class FilesExportCommand extends Command
         $fontFileFolder = $this->fileAware->getFontsFilesPath();
 
         $archiveName = $this->getArchiveFileName((new AsciiSlugger())->slug($this->appNamespace, '_')->toString());
-        $archivePath = $this->exportDir . DIRECTORY_SEPARATOR . $archiveName;
+        $archivePath = $this->exportDir.DIRECTORY_SEPARATOR.$archiveName;
 
         if (!$fs->exists($this->exportDir)) {
-            throw new \RuntimeException($archivePath . ': directory does not exist or is not writable');
+            throw new \RuntimeException($archivePath.': directory does not exist or is not writable');
         }
 
-        $zip = new ZipArchive();
-        $zip->open($archivePath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        $zip = new \ZipArchive();
+        $zip->open($archivePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
         if ($fs->exists($publicFileFolder)) {
             $this->zipFolder($zip, $publicFileFolder, $this->getPublicFolderName());
@@ -81,16 +68,11 @@ class FilesExportCommand extends Command
 
         // Zip archive will be created only after closing object
         $zip->close();
+
         return 0;
     }
 
-
-    /**
-     * @param ZipArchive $zip
-     * @param string $folder
-     * @param string $prefix
-     */
-    protected function zipFolder(ZipArchive $zip, string $folder, string $prefix = "/public"): void
+    protected function zipFolder(\ZipArchive $zip, string $folder, string $prefix = '/public'): void
     {
         $finder = new Finder();
         $files = $finder->files()
@@ -103,14 +85,15 @@ class FilesExportCommand extends Command
          */
         foreach ($files as $file) {
             // Skip directories (they would be added automatically)
-            if (!$file->isDir()) {
-                // Get real and relative path for current file
-                $filePath = $file->getRealPath();
-                $relativePath = \mb_substr($filePath, \mb_strlen($folder) + 1);
-
-                // Add current file to archive
-                $zip->addFile($filePath, $prefix . '/' . $relativePath);
+            if ($file->isDir()) {
+                continue;
             }
+            // Get real and relative path for current file
+            $filePath = $file->getRealPath();
+            $relativePath = \mb_substr($filePath, \mb_strlen($folder) + 1);
+
+            // Add current file to archive
+            $zip->addFile($filePath, $prefix.'/'.$relativePath);
         }
     }
 }

@@ -8,24 +8,19 @@ use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\Exception\ObjectConstructionException;
 use RZ\Roadiz\CoreBundle\Entity\Setting;
 
-class SettingObjectConstructor extends AbstractTypedObjectConstructor
+final class SettingObjectConstructor extends AbstractTypedObjectConstructor
 {
-    /**
-     * @inheritDoc
-     */
     public function supports(string $className, array $data): bool
     {
-        return $className === Setting::class && array_key_exists('name', $data);
+        return Setting::class === $className && array_key_exists('name', $data);
     }
 
-    /**
-     * @inheritDoc
-     */
-    protected function findObject($data, DeserializationContext $context): ?object
+    protected function findObject(mixed $data, DeserializationContext $context): ?object
     {
-        if (null === $data['name'] || $data['name'] === '') {
+        if (null === $data['name'] || '' === $data['name']) {
             throw new ObjectConstructionException('Setting name can not be empty');
         }
+
         return $this->entityManager->getRepository(Setting::class)->findOneByName($data['name']);
     }
 

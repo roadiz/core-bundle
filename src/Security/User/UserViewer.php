@@ -6,55 +6,40 @@ namespace RZ\Roadiz\CoreBundle\Security\User;
 
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
-use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\User;
-use RZ\Roadiz\CoreBundle\Mailer\EmailManager;
+use RZ\Roadiz\CoreBundle\Mailer\EmailManagerFactory;
+use RZ\Roadiz\CoreBundle\Security\LoginLink\LoginLinkSenderInterface;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
-use Symfony\Component\Mailer\Exception\TransportException;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Http\LoginLink\LoginLinkDetails;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
-class UserViewer
+final readonly class UserViewer
 {
-    protected Settings $settingsBag;
-    protected UrlGeneratorInterface $urlGenerator;
-    protected TranslatorInterface $translator;
-    protected EmailManager $emailManager;
-    protected LoggerInterface $logger;
-    protected ?User $user = null;
-
     public function __construct(
-        Settings $settingsBag,
-        UrlGeneratorInterface $urlGenerator,
-        TranslatorInterface $translator,
-        EmailManager $emailManager,
-        LoggerInterface $logger
+        private Settings $settingsBag,
+        private UrlGeneratorInterface $urlGenerator,
+        private TranslatorInterface $translator,
+        private EmailManagerFactory $emailManagerFactory,
+        private LoggerInterface $logger,
+        private LoginLinkSenderInterface $loginLinkSender,
     ) {
-        $this->settingsBag = $settingsBag;
-        $this->translator = $translator;
-        $this->emailManager = $emailManager;
-        $this->logger = $logger;
-        $this->urlGenerator = $urlGenerator;
     }
 
     /**
      * Send email to reset user password.
      *
-     * @param string|NodesSources $route
-     * @param string $htmlTemplate
-     * @param string $txtTemplate
-     *
-     * @return bool
-     * @throws \Exception
+     * @throws TransportExceptionInterface
      */
     public function sendPasswordResetLink(
-        $route = 'loginResetPage',
+        User $user,
+        object|string $route = 'loginResetPage',
         string $htmlTemplate = '@RoadizCore/email/users/reset_password_email.html.twig',
-        string $txtTemplate = '@RoadizCore/email/users/reset_password_email.txt.twig'
+        string $txtTemplate = '@RoadizCore/email/users/reset_password_email.txt.twig',
     ): bool {
-        if (null === $this->user) {
-            throw new \InvalidArgumentException('User should be defined before sending email.');
-        }
+        $emailManager = $this->emailManagerFactory->create();
         $emailContact = $this->getContactEmail();
         $siteName = $this->getSiteName();
 
@@ -62,7 +47,7 @@ class UserViewer
             $resetLink = $this->urlGenerator->generate(
                 $route,
                 [
-                    'token' => $this->user->getConfirmationToken(),
+                    'token' => $user->getConfirmationToken(),
                 ],
                 UrlGeneratorInterface::ABSOLUTE_URL
             );
@@ -71,80 +56,72 @@ class UserViewer
                 RouteObjectInterface::OBJECT_BASED_ROUTE_NAME,
                 [
                     RouteObjectInterface::ROUTE_OBJECT => $route,
-                    'token' => $this->user->getConfirmationToken(),
+                    'token' => $user->getConfirmationToken(),
                 ],
                 UrlGeneratorInterface::ABSOLUTE_URL
             );
         }
-        $this->emailManager->setAssignation([
+        $emailManager->setAssignation([
             'resetLink' => $resetLink,
-            'user' => $this->user,
+            'user' => $user,
             'site' => $siteName,
             'mailContact' => $emailContact,
         ]);
-        $this->emailManager->setEmailTemplate($htmlTemplate);
-        $this->emailManager->setEmailPlainTextTemplate($txtTemplate);
-        $this->emailManager->setSubject($this->translator->trans(
+        $emailManager->setEmailTemplate($htmlTemplate);
+        $emailManager->setEmailPlainTextTemplate($txtTemplate);
+        $emailManager->setSubject($this->translator->trans(
             'reset.password.request'
         ));
-        $this->emailManager->setReceiver($this->user->getEmail());
-        $this->emailManager->setSender([$emailContact => $siteName]);
 
         try {
+            $emailManager->setReceiver($user->getEmail());
+            $emailManager->setSender([$emailContact => $siteName]);
+
             // Send the message
-            $this->emailManager->send();
+            $emailManager->send();
+
             return true;
-        } catch (TransportException $e) {
+        } catch (\Exception $e) {
             // Silent error not to prevent user creation if mailer is not configured
             $this->logger->error('Unable to send password reset link', [
                 'exception' => get_class($e),
                 'message' => $e->getMessage(),
+                'entity' => $user,
             ]);
+
             return false;
         }
     }
 
     /**
-     * @return string
+     * @deprecated Use LoginLinkSenderInterface::sendLoginLink instead
      */
+    public function sendLoginLink(
+        UserInterface $user,
+        LoginLinkDetails $loginLinkDetails,
+        string $htmlTemplate = '@RoadizCore/email/users/login_link_email.html.twig',
+        string $txtTemplate = '@RoadizCore/email/users/login_link_email.txt.twig',
+    ): void {
+        $this->loginLinkSender->sendLoginLink($user, $loginLinkDetails);
+    }
+
     protected function getContactEmail(): string
     {
         $emailContact = $this->settingsBag->get('email_sender') ?? '';
         if (empty($emailContact)) {
-            $emailContact = "noreply@roadiz.io";
+            $emailContact = 'noreply@roadiz.io';
         }
 
         return $emailContact;
     }
 
-    /**
-     * @return string
-     */
     protected function getSiteName(): string
     {
         $siteName = $this->settingsBag->get('site_name') ?? '';
         if (empty($siteName)) {
-            $siteName = "Unnamed site";
+            $siteName = 'Unnamed site';
         }
 
         return $siteName;
-    }
-
-    /**
-     * @return null|User
-     */
-    public function getUser(): ?User
-    {
-        return $this->user;
-    }
-
-    /**
-     * @param null|User $user
-     * @return UserViewer
-     */
-    public function setUser(?User $user)
-    {
-        $this->user = $user;
-        return $this;
     }
 }

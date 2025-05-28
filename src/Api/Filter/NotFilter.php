@@ -4,35 +4,27 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Filter;
 
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\AbstractContextAwareFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use ApiPlatform\Doctrine\Orm\Filter\AbstractFilter;
+use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use ApiPlatform\Metadata\Operation;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 
-final class NotFilter extends AbstractContextAwareFilter
+final class NotFilter extends AbstractFilter
 {
     public const PARAMETER = 'not';
 
-    /**
-     * Passes a property through the filter.
-     *
-     * @param string $property
-     * @param mixed $value
-     * @param QueryBuilder $queryBuilder
-     * @param QueryNameGeneratorInterface $queryNameGenerator
-     * @param string $resourceClass
-     * @param string|null $operationName
-     * @throws \Exception
-     */
     protected function filterProperty(
         string $property,
-        $value,
+        mixed $value,
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
-        string $operationName = null
+        ?Operation $operation = null,
+        array $context = [],
     ): void {
-        if ($property !== self::PARAMETER || !\is_array($value)) {
+        if (self::PARAMETER !== $property || !\is_array($value)) {
             return;
         }
 
@@ -41,10 +33,17 @@ final class NotFilter extends AbstractContextAwareFilter
             $field = $property;
 
             if ($this->isPropertyNested($property, $resourceClass)) {
-                list($alias, $field) = $this->addJoinsForNestedProperty($property, $alias, $queryBuilder, $queryNameGenerator);
+                list($alias, $field) = $this->addJoinsForNestedProperty(
+                    $property,
+                    $alias,
+                    $queryBuilder,
+                    $queryNameGenerator,
+                    $resourceClass,
+                    Join::INNER_JOIN
+                );
             }
 
-            $placeholder = ':' . (new AsciiSlugger())->slug($alias . '_' . $field, '_')->toString();
+            $placeholder = ':'.(new AsciiSlugger())->slug($alias.'_'.$field, '_')->toString();
             if (\is_array($notValue)) {
                 $queryBuilder->andWhere(
                     $queryBuilder->expr()->notIn(sprintf('%s.%s', $alias, $field), $placeholder)
@@ -68,10 +67,6 @@ final class NotFilter extends AbstractContextAwareFilter
      *   - strategy: the used strategy
      *   - swagger (optional): additional parameters for the path operation, e.g. 'swagger' => ['description' => 'My Description']
      * The description can contain additional data specific to a filter.
-     *
-     * @param string $resourceClass
-     *
-     * @return array
      */
     public function getDescription(string $resourceClass): array
     {
@@ -90,8 +85,8 @@ final class NotFilter extends AbstractContextAwareFilter
                     'required' => false,
                     'description' => 'Filter items that are not equal.',
                     'openapi' => [
-                        'description' => 'Filter items that are not equal.'
-                    ]
+                        'description' => 'Filter items that are not equal.',
+                    ],
                 ];
                 $carry[sprintf('%s[%s][]', self::PARAMETER, $property)] = [
                     'property' => $property,
@@ -99,9 +94,10 @@ final class NotFilter extends AbstractContextAwareFilter
                     'required' => false,
                     'description' => 'Filter items that are not equal.',
                     'openapi' => [
-                        'description' => 'Filter items that are not equal.'
-                    ]
+                        'description' => 'Filter items that are not equal.',
+                    ],
                 ];
+
                 return $carry;
             },
             []

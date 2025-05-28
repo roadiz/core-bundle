@@ -9,20 +9,19 @@ use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
- * @package RZ\Roadiz\CoreBundle\Repository
+ * @deprecated nodeTypes will be static in future Roadiz versions
+ *
  * @extends EntityRepository<NodeType>
  */
 final class NodeTypeRepository extends EntityRepository
 {
     public function __construct(
         ManagerRegistry $registry,
-        EventDispatcherInterface $dispatcher
+        EventDispatcherInterface $dispatcher,
     ) {
         parent::__construct($registry, NodeType::class, $dispatcher);
     }
-    /**
-     * @return array
-     */
+
     public function findAll(): array
     {
         $qb = $this->createQueryBuilder('nt');

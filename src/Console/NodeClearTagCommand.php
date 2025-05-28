@@ -15,18 +15,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class NodeClearTagCommand extends Command
+final class NodeClearTagCommand extends Command
 {
-    protected SymfonyStyle $io;
-    protected ManagerRegistry $managerRegistry;
-
-    /**
-     * @param ManagerRegistry $managerRegistry
-     */
-    public function __construct(ManagerRegistry $managerRegistry)
-    {
-        parent::__construct();
-        $this->managerRegistry = $managerRegistry;
+    public function __construct(
+        private readonly ManagerRegistry $managerRegistry,
+        ?string $name = null,
+    ) {
+        parent::__construct($name);
     }
 
     protected function configure(): void
@@ -40,6 +35,7 @@ class NodeClearTagCommand extends Command
     protected function getNodeQueryBuilder(Tag $tag): QueryBuilder
     {
         $qb = $this->managerRegistry->getRepository(Node::class)->createQueryBuilder('n');
+
         return $qb->innerJoin('n.nodesTags', 'ntg')
             ->andWhere($qb->expr()->eq('ntg.tag', ':tagId'))
             ->setParameter(':tagId', $tag);
@@ -48,7 +44,7 @@ class NodeClearTagCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $em = $this->managerRegistry->getManagerForClass(Node::class);
-        $this->io = new SymfonyStyle($input, $output);
+        $io = new SymfonyStyle($input, $output);
 
         $tagId = (int) $input->getArgument('tagId');
         if ($tagId <= 0) {
@@ -56,7 +52,7 @@ class NodeClearTagCommand extends Command
         }
         /** @var Tag|null $tag */
         $tag = $em->find(Tag::class, $tagId);
-        if ($tag === null) {
+        if (null === $tag) {
             throw new \InvalidArgumentException(sprintf('Tag #%d does not exist.', $tagId));
         }
 
@@ -69,12 +65,13 @@ class NodeClearTagCommand extends Command
             ->getSingleScalarResult();
 
         if ($count <= 0) {
-            $this->io->warning('No nodes were found linked with this tag.');
+            $io->warning('No nodes were found linked with this tag.');
+
             return 0;
         }
 
         if (
-            $this->io->askQuestion(new ConfirmationQuestion(
+            $io->askQuestion(new ConfirmationQuestion(
                 sprintf('Are you sure to delete permanently %d nodes?', $count),
                 false
             ))
@@ -84,7 +81,7 @@ class NodeClearTagCommand extends Command
                 ->getQuery()
                 ->getResult();
 
-            $this->io->progressStart($count);
+            $io->progressStart($count);
             /** @var Node $node */
             foreach ($results as $node) {
                 $em->remove($node);
@@ -92,10 +89,10 @@ class NodeClearTagCommand extends Command
                     $em->flush(); // Executes all updates.
                 }
                 ++$i;
-                $this->io->progressAdvance();
+                $io->progressAdvance();
             }
             $em->flush();
-            $this->io->progressFinish();
+            $io->progressFinish();
         }
 
         return 0;

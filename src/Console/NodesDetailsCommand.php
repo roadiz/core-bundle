@@ -14,17 +14,13 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class NodesDetailsCommand extends Command
+final class NodesDetailsCommand extends Command
 {
-    protected ManagerRegistry $managerRegistry;
-
-    /**
-     * @param ManagerRegistry $managerRegistry
-     */
-    public function __construct(ManagerRegistry $managerRegistry)
-    {
-        parent::__construct();
-        $this->managerRegistry = $managerRegistry;
+    public function __construct(
+        private readonly ManagerRegistry $managerRegistry,
+        ?string $name = null,
+    ) {
+        parent::__construct($name);
     }
 
     protected function configure(): void
@@ -45,6 +41,7 @@ class NodesDetailsCommand extends Command
 
         /**
          * @var NodesSources|null $source
+         *
          * @phpstan-ignore-next-line
          */
         $source = $this->managerRegistry->getRepository(NodesSources::class)
@@ -67,7 +64,7 @@ class NodesDetailsCommand extends Command
                     if (is_array($data)) {
                         $data = implode(', ', $data);
                     }
-                    if ($data instanceof \DateTime) {
+                    if ($data instanceof \DateTimeInterface) {
                         $data = $data->format('c');
                     }
                     if ($data instanceof \stdClass) {
@@ -82,8 +79,10 @@ class NodesDetailsCommand extends Command
             }
         } else {
             $io->error('No node found.');
+
             return 1;
         }
+
         return 0;
     }
 }

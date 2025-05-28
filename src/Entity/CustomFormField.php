@@ -8,30 +8,29 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\AbstractField;
+use RZ\Roadiz\CoreBundle\Repository\CustomFormFieldRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
-use RZ\Roadiz\Core\AbstractEntities\AbstractField;
+use Symfony\Component\Validator\Constraints\Choice;
 
 /**
  * CustomFormField entities are used to create CustomForms with
  * custom data structure.
  */
 #[
-    ORM\Entity(repositoryClass: "RZ\Roadiz\CoreBundle\Repository\CustomFormFieldRepository"),
-    ORM\Table(name: "custom_form_fields"),
-    ORM\UniqueConstraint(columns: ["name", "custom_form_id"]),
-    ORM\Index(columns: ["position"]),
-    ORM\Index(columns: ["group_name"]),
-    ORM\Index(columns: ["type"]),
-    ORM\Index(columns: ["custom_form_id", "position"], name: "cfield_customform_position"),
+    ORM\Entity(repositoryClass: CustomFormFieldRepository::class),
+    ORM\Table(name: 'custom_form_fields'),
+    ORM\UniqueConstraint(columns: ['name', 'custom_form_id']),
+    ORM\Index(columns: ['position']),
+    ORM\Index(columns: ['group_name']),
+    ORM\Index(columns: ['type']),
+    ORM\Index(columns: ['custom_form_id', 'position'], name: 'cfield_customform_position'),
     ORM\HasLifecycleCallbacks,
-    UniqueEntity(fields: ["label", "customForm"])
+    UniqueEntity(fields: ['label', 'customForm'])
 ]
 class CustomFormField extends AbstractField
 {
-    /**
-     * @inheritdoc
-     */
     public static array $typeToHuman = [
         AbstractField::STRING_T => 'string.type',
         AbstractField::DATETIME_T => 'date-time.type',
@@ -49,29 +48,66 @@ class CustomFormField extends AbstractField
     ];
 
     #[
-        ORM\ManyToOne(targetEntity: CustomForm::class, inversedBy: "fields"),
-        ORM\JoinColumn(name: "custom_form_id", referencedColumnName: "id", onDelete: "CASCADE"),
+        ORM\ManyToOne(targetEntity: CustomForm::class, inversedBy: 'fields'),
+        ORM\JoinColumn(name: 'custom_form_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),
         Serializer\Exclude,
         SymfonySerializer\Ignore
     ]
-    private ?CustomForm $customForm = null;
+    private CustomForm $customForm;
 
     /**
      * @var Collection<int, CustomFormFieldAttribute>
      */
     #[
-        ORM\OneToMany(mappedBy: "customFormField", targetEntity: CustomFormFieldAttribute::class),
+        ORM\OneToMany(mappedBy: 'customFormField', targetEntity: CustomFormFieldAttribute::class),
         Serializer\Exclude,
         SymfonySerializer\Ignore
     ]
     private Collection $customFormFieldAttributes;
 
     #[
-        ORM\Column(name: "field_required", type: "boolean", nullable: false, options: ["default" => false]),
-        Serializer\Groups(["custom_form"]),
-        SymfonySerializer\Groups(["custom_form"])
+        ORM\Column(name: 'field_required', type: 'boolean', nullable: false, options: ['default' => false]),
+        Serializer\Groups(['custom_form']),
+        SymfonySerializer\Groups(['custom_form'])
     ]
     private bool $required = false;
+
+    /**
+     * @var string|null https://developer.mozilla.org/fr/docs/Web/HTML/Attributes/autocomplete
+     */
+    #[
+        ORM\Column(name: 'autocomplete', type: 'string', length: 18, nullable: true),
+        Serializer\Groups(['custom_form']),
+        SymfonySerializer\Groups(['custom_form']),
+        Choice([
+            'off',
+            'name',
+            'honorific-prefix',
+            'honorific-suffix',
+            'given-name',
+            'additional-name',
+            'family-name',
+            'nickname',
+            'email',
+            'username',
+            'organization-title',
+            'organization',
+            'street-address',
+            'country',
+            'country-name',
+            'postal-code',
+            'bday',
+            'bday-day',
+            'bday-month',
+            'bday-year',
+            'sex',
+            'tel',
+            'tel-national',
+            'url',
+            'photo',
+        ])
+    ]
+    private ?string $autocomplete = null;
 
     public function __construct()
     {
@@ -84,7 +120,7 @@ class CustomFormField extends AbstractField
      *
      * @return $this
      */
-    public function setLabel($label)
+    public function setLabel($label): CustomFormField
     {
         parent::setLabel($label);
         $this->setName($label);
@@ -92,32 +128,19 @@ class CustomFormField extends AbstractField
         return $this;
     }
 
-    /**
-     * @return CustomForm|null
-     */
-    public function getCustomForm(): ?CustomForm
+    public function getCustomForm(): CustomForm
     {
         return $this->customForm;
     }
 
-    /**
-     * @param CustomForm|null $customForm
-     *
-     * @return $this
-     */
-    public function setCustomForm(CustomForm $customForm = null): CustomFormField
+    public function setCustomForm(CustomForm $customForm): CustomFormField
     {
         $this->customForm = $customForm;
-        if (null !== $customForm) {
-            $this->customForm->addField($this);
-        }
+        $this->customForm->addField($this);
 
         return $this;
     }
 
-    /**
-     * @return Collection
-     */
     public function getCustomFormFieldAttribute(): Collection
     {
         return $this->customFormFieldAttributes;
@@ -132,27 +155,32 @@ class CustomFormField extends AbstractField
     }
 
     /**
-     * @param bool $required
-     *
      * @return $this
      */
     public function setRequired(bool $required): CustomFormField
     {
         $this->required = $required;
+
         return $this;
     }
 
-    /**
-     * @return string
-     */
-    public function getOneLineSummary(): string
+    public function getAutocomplete(): ?string
     {
-        return $this->getId() . " — " . $this->getName() . " — " . $this->getLabel() . PHP_EOL;
+        return $this->autocomplete;
     }
 
-    /**
-     * @return string
-     */
+    public function setAutocomplete(?string $autocomplete): CustomFormField
+    {
+        $this->autocomplete = $autocomplete;
+
+        return $this;
+    }
+
+    public function getOneLineSummary(): string
+    {
+        return $this->getId().' — '.$this->getName().' — '.$this->getLabel().PHP_EOL;
+    }
+
     public function __toString(): string
     {
         return (string) $this->getId();
@@ -162,7 +190,6 @@ class CustomFormField extends AbstractField
     {
         if ($this->id) {
             $this->id = null;
-            $this->customForm = null;
             $this->customFormFieldAttributes = new ArrayCollection();
         }
     }

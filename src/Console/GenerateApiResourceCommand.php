@@ -12,18 +12,14 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class GenerateApiResourceCommand extends Command
+final class GenerateApiResourceCommand extends Command
 {
-    protected ManagerRegistry $managerRegistry;
-    protected ApiResourceGenerator $apiResourceGenerator;
-
     public function __construct(
-        ManagerRegistry $managerRegistry,
-        ApiResourceGenerator $apiResourceGenerator
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly ApiResourceGenerator $apiResourceGenerator,
+        ?string $name = null,
     ) {
-        parent::__construct();
-        $this->managerRegistry = $managerRegistry;
-        $this->apiResourceGenerator = $apiResourceGenerator;
+        parent::__construct($name);
     }
 
     protected function configure(): void
@@ -42,17 +38,19 @@ class GenerateApiResourceCommand extends Command
             ->getRepository(NodeType::class)
             ->findAll();
 
-        if (count($nodeTypes) > 0) {
-            foreach ($nodeTypes as $nt) {
-                $resourcePath = $this->apiResourceGenerator->generate($nt);
-                if (null !== $resourcePath) {
-                    $io->writeln("* API resource <info>" . $resourcePath . "</info> has been generated.");
-                }
-            }
-            return 0;
-        } else {
+        if (0 === count($nodeTypes)) {
             $io->error('No available node-types…');
+
             return 1;
         }
+
+        foreach ($nodeTypes as $nt) {
+            $resourcePath = $this->apiResourceGenerator->generate($nt);
+            if (null !== $resourcePath) {
+                $io->writeln('* API resource <info>'.$resourcePath.'</info> has been generated.');
+            }
+        }
+
+        return 0;
     }
 }

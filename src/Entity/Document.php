@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
-use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Doctrine\Orm\Filter as BaseFilter;
 use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiProperty;
+use ApiPlatform\Serializer\Filter\PropertyFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
@@ -18,7 +20,6 @@ use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
 use RZ\Roadiz\CoreBundle\Api\Filter\CopyrightValidFilter;
 use RZ\Roadiz\CoreBundle\Repository\DocumentRepository;
 use RZ\Roadiz\Documents\Models\AdvancedDocumentInterface;
-use RZ\Roadiz\Documents\Models\DisplayableInterface;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
 use RZ\Roadiz\Documents\Models\DocumentTrait;
 use RZ\Roadiz\Documents\Models\FileHashInterface;
@@ -27,49 +28,50 @@ use RZ\Roadiz\Documents\Models\HasThumbnailInterface;
 use RZ\Roadiz\Documents\Models\TimeableInterface;
 use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Documents entity represent a file on server with datetime and naming.
  */
 #[
     ORM\Entity(repositoryClass: DocumentRepository::class),
-    ORM\Table(name: "documents"),
-    ORM\Index(columns: ["created_at"], name: "document_created_at"),
-    ORM\Index(columns: ["updated_at"], name: "document_updated_at"),
-    ORM\Index(columns: ["raw"]),
-    ORM\Index(columns: ["raw", "created_at"], name: "document_raw_created_at"),
-    ORM\Index(columns: ["private"]),
-    ORM\Index(columns: ["filename"], name: "document_filename"),
-    ORM\Index(columns: ["file_hash"], name: "document_file_hash"),
-    ORM\Index(columns: ["file_hash_algorithm"], name: "document_hash_algorithm"),
-    ORM\Index(columns: ["file_hash", "file_hash_algorithm"], name: "document_file_hash_algorithm"),
-    ORM\Index(columns: ["embedId"], name: "document_embed_id"),
-    ORM\Index(columns: ["embedId", "embedPlatform"], name: "document_embed_platform_id"),
-    ORM\Index(columns: ["embedPlatform"], name: "document_embed_platform"),
-    ORM\Index(columns: ["raw", "private"]),
-    ORM\Index(columns: ["duration"], name: "document_duration"),
-    ORM\Index(columns: ["filesize"], name: "document_filesize"),
-    ORM\Index(columns: ["imageWidth"], name: "document_image_width"),
-    ORM\Index(columns: ["imageHeight"], name: "document_image_height"),
-    ORM\Index(columns: ["mime_type"]),
-    Serializer\ExclusionPolicy("all"),
+    ORM\Table(name: 'documents'),
+    ORM\Index(columns: ['created_at'], name: 'document_created_at'),
+    ORM\Index(columns: ['updated_at'], name: 'document_updated_at'),
+    ORM\Index(columns: ['raw']),
+    ORM\Index(columns: ['raw', 'created_at'], name: 'document_raw_created_at'),
+    ORM\Index(columns: ['private']),
+    ORM\Index(columns: ['filename'], name: 'document_filename'),
+    ORM\Index(columns: ['file_hash'], name: 'document_file_hash'),
+    ORM\Index(columns: ['file_hash_algorithm'], name: 'document_hash_algorithm'),
+    ORM\Index(columns: ['file_hash', 'file_hash_algorithm'], name: 'document_file_hash_algorithm'),
+    ORM\Index(columns: ['embedId'], name: 'document_embed_id'),
+    ORM\Index(columns: ['embedId', 'embedPlatform'], name: 'document_embed_platform_id'),
+    ORM\Index(columns: ['embedPlatform'], name: 'document_embed_platform'),
+    ORM\Index(columns: ['raw', 'private']),
+    ORM\Index(columns: ['duration'], name: 'document_duration'),
+    ORM\Index(columns: ['filesize'], name: 'document_filesize'),
+    ORM\Index(columns: ['imageWidth'], name: 'document_image_width'),
+    ORM\Index(columns: ['imageHeight'], name: 'document_image_height'),
+    ORM\Index(columns: ['mime_type']),
+    Serializer\ExclusionPolicy('all'),
     ApiFilter(PropertyFilter::class),
     ApiFilter(BaseFilter\OrderFilter::class, properties: [
-        "createdAt",
-        "updatedAt",
-        "copyrightValidSince",
-        "copyrightValidUntil",
-        "filesize"
+        'createdAt',
+        'updatedAt',
+        'copyrightValidSince',
+        'copyrightValidUntil',
+        'filesize',
     ]),
     ApiFilter(BaseFilter\DateFilter::class, properties: [
-        "createdAt",
-        "updatedAt",
-        "copyrightValidSince" => "include_null_before",
-        "copyrightValidUntil" => "include_null_after"
+        'createdAt',
+        'updatedAt',
+        'copyrightValidSince' => 'include_null_before',
+        'copyrightValidUntil' => 'include_null_after',
     ]),
     ApiFilter(CopyrightValidFilter::class)
 ]
-class Document extends AbstractDateTimed implements AdvancedDocumentInterface, HasThumbnailInterface, TimeableInterface, DisplayableInterface, FileHashInterface
+class Document extends AbstractDateTimed implements AdvancedDocumentInterface, HasThumbnailInterface, TimeableInterface, FileHashInterface
 {
     use DocumentTrait;
 
@@ -79,6 +81,9 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     #[ORM\Column(name: 'copyright_valid_since', type: 'datetime', nullable: true)]
     #[SymfonySerializer\Groups(['document_copyright'])]
     #[Serializer\Groups(['document_copyright'])]
+    #[ApiProperty(
+        description: 'Document copyright starting date',
+    )]
     protected ?\DateTime $copyrightValidSince = null;
 
     /**
@@ -87,7 +92,41 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     #[ORM\Column(name: 'copyright_valid_until', type: 'datetime', nullable: true)]
     #[SymfonySerializer\Groups(['document_copyright'])]
     #[Serializer\Groups(['document_copyright'])]
+    #[ApiProperty(
+        description: 'Document copyright expiry date',
+    )]
     protected ?\DateTime $copyrightValidUntil = null;
+
+    /**
+     * @var string|null Image crop alignment.
+     *
+     * The possible values are:
+     *
+     * top-left
+     * top
+     * top-right
+     * left
+     * center (default)
+     * right
+     * bottom-left
+     * bottom
+     * bottom-right
+     */
+    #[ORM\Column(name: 'image_crop_alignment', type: 'string', length: 12, nullable: true)]
+    #[SymfonySerializer\Ignore]
+    #[Assert\Length(max: 12)]
+    #[Assert\Choice(choices: [
+        'top-left',
+        'top',
+        'top-right',
+        'left',
+        'center',
+        'right',
+        'bottom-left',
+        'bottom',
+        'bottom-right',
+    ])]
+    protected ?string $imageCropAlignment = null;
 
     #[ORM\ManyToOne(
         targetEntity: Document::class,
@@ -102,36 +141,48 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
 
     #[
         SymfonySerializer\Ignore,
-        Serializer\Groups(["document"]),
-        Serializer\Type("bool"),
+        Serializer\Groups(['document']),
+        Serializer\Type('bool'),
         ORM\Column(name: 'raw', type: 'boolean', nullable: false, options: ['default' => false])
     ]
     protected bool $raw = false;
 
-    #[ORM\Column(name: 'embedId', type: 'string', unique: false, nullable: true)]
+    #[ORM\Column(name: 'embedId', type: 'string', length: 250, unique: false, nullable: true)]
     #[SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
-    #[Serializer\Type("string")]
+    #[Serializer\Type('string')]
+    #[ApiProperty(
+        description: 'Embed ID on external platforms',
+        example: 'FORSwsjtQSE',
+    )]
+    #[Assert\Length(max: 250)]
     protected ?string $embedId = null;
 
     #[ORM\Column(name: 'file_hash', type: 'string', length: 64, unique: false, nullable: true)]
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]
     #[Serializer\Type('string')]
+    #[Assert\Length(max: 64)]
     protected ?string $fileHash = null;
 
     #[ORM\Column(name: 'file_hash_algorithm', type: 'string', length: 15, unique: false, nullable: true)]
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]
     #[Serializer\Type('string')]
+    #[Assert\Length(max: 15)]
     protected ?string $fileHashAlgorithm = null;
 
-    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "exact")]
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: 'exact')]
     #[ApiFilter(RoadizFilter\NotFilter::class)]
-    #[ORM\Column(name: 'embedPlatform', type: 'string', unique: false, nullable: true)]
+    #[ORM\Column(name: 'embedPlatform', type: 'string', length: 100, unique: false, nullable: true)]
     #[SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Type('string')]
+    #[Assert\Length(max: 100)]
+    #[ApiProperty(
+        description: 'Embed platform name',
+        example: 'youtube',
+    )]
     protected ?string $embedPlatform = null;
     /**
      * @var Collection<int, NodesSourcesDocuments>
@@ -174,31 +225,30 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     #[ORM\OneToMany(
         mappedBy: 'document',
         targetEntity: DocumentTranslation::class,
-        fetch: 'EAGER',
         orphanRemoval: true
     )]
     #[SymfonySerializer\Ignore]
     #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Type('ArrayCollection<RZ\Roadiz\CoreBundle\Entity\DocumentTranslation>')]
     protected Collection $documentTranslations;
-    /**
-     * @var string|null
-     */
-    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
-    #[ORM\Column(name: 'filename', type: 'string', nullable: true)]
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: 'partial')]
+    #[ORM\Column(name: 'filename', type: 'string', length: 250, nullable: true)]
     #[SymfonySerializer\Ignore]
     #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Type('string')]
+    #[Assert\Length(max: 250)]
     private ?string $filename = null;
-    /**
-     * @var string|null
-     */
-    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "exact")]
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: 'exact')]
     #[ApiFilter(RoadizFilter\NotFilter::class)]
-    #[ORM\Column(name: 'mime_type', type: 'string', nullable: true)]
+    #[ORM\Column(name: 'mime_type', type: 'string', length: 255, nullable: true)]
     #[SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Type('string')]
+    #[Assert\Length(max: 255)]
+    #[ApiProperty(
+        description: 'Document file mime type',
+        example: 'image/jpeg',
+    )]
     private ?string $mimeType = null;
     /**
      * @var Collection<int, DocumentInterface>
@@ -207,56 +257,56 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     #[SymfonySerializer\Ignore]
     #[Serializer\Exclude]
     private Collection $downscaledDocuments;
-    /**
-     * @var string
-     */
-    #[ORM\Column(type: 'string')]
+    #[ORM\Column(type: 'string', length: 100)]
     #[SymfonySerializer\Ignore]
+    #[Assert\Length(max: 100)]
     #[Serializer\Groups(['document', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Type('string')]
     private string $folder = '';
-    /**
-     * @var bool
-     */
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
     #[SymfonySerializer\Ignore]
     #[Serializer\Groups(['document', 'document_private', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Type('bool')]
     private bool $private = false;
-    /**
-     * @var integer
-     */
-    #[ORM\Column(name: 'imageWidth', type: 'integer', nullable: false, options: ['default' => 0])]
+    #[ORM\Column(name: 'imageWidth', type: Types::SMALLINT, nullable: false, options: ['default' => 0])]
     #[SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Type('int')]
+    #[ApiProperty(
+        description: 'When document has visual size: width in pixels',
+        example: '1280',
+    )]
     private int $imageWidth = 0;
-    /**
-     * @var integer
-     */
-    #[ORM\Column(name: 'imageHeight', type: 'integer', nullable: false, options: ['default' => 0])]
+    #[ORM\Column(name: 'imageHeight', type: Types::SMALLINT, nullable: false, options: ['default' => 0])]
     #[SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Type('int')]
+    #[ApiProperty(
+        description: 'When document has visual size: height in pixels',
+        example: '800',
+    )]
     private int $imageHeight = 0;
-    /**
-     * @var integer
-     */
-    #[ORM\Column(name: 'duration', type: 'integer', nullable: false, options: ['default' => 0])]
+    #[ORM\Column(name: 'duration', type: Types::INTEGER, nullable: false, options: ['default' => 0])]
     #[SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Type('int')]
+    #[ApiProperty(
+        description: 'When document is audio or video: duration in seconds',
+        example: '300',
+    )]
     private int $mediaDuration = 0;
-    /**
-     * @var string|null
-     */
     #[ORM\Column(name: 'average_color', type: 'string', length: 7, unique: false, nullable: true)]
     #[SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute'])]
     #[Serializer\Type('string')]
+    #[Assert\Length(max: 7)]
+    #[ApiProperty(
+        description: 'When document is image: average color in hexadecimal format',
+        example: '#ffffff'
+    )]
     private ?string $imageAverageColor = null;
     /**
-     * @var int|null The filesize in bytes.
+     * @var int|null the filesize in bytes
      */
     #[ORM\Column(name: 'filesize', type: 'integer', unique: false, nullable: true)]
     #[SymfonySerializer\Groups(['document_filesize'])]
@@ -273,9 +323,6 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     #[Serializer\Type('ArrayCollection<RZ\Roadiz\CoreBundle\Entity\Document>')]
     private Collection $thumbnails;
 
-    /**
-     * @var HasThumbnailInterface|null
-     */
     #[ORM\ManyToOne(targetEntity: Document::class, fetch: 'EXTRA_LAZY', inversedBy: 'thumbnails')]
     #[ORM\JoinColumn(name: 'original', nullable: true, onDelete: 'SET NULL')]
     #[SymfonySerializer\Groups(['document_original'])]
@@ -300,9 +347,6 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
         $this->thumbnails = new ArrayCollection();
     }
 
-    /**
-     * @return string|null
-     */
     public function getMimeType(): ?string
     {
         return $this->mimeType;
@@ -311,12 +355,10 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     public function setMimeType(?string $mimeType): static
     {
         $this->mimeType = $mimeType;
+
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function getFolder(): string
     {
         return $this->folder;
@@ -325,6 +367,7 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     public function setFolder(string $folder): static
     {
         $this->folder = $folder;
+
         return $this;
     }
 
@@ -349,11 +392,12 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
         return $this->rawDocument;
     }
 
-    public function setRawDocument(DocumentInterface $rawDocument = null): static
+    public function setRawDocument(?DocumentInterface $rawDocument = null): static
     {
         if (null === $rawDocument || $rawDocument instanceof Document) {
             $this->rawDocument = $rawDocument;
         }
+
         return $this;
     }
 
@@ -421,7 +465,6 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     }
 
     /**
-     * @param TranslationInterface $translation
      * @return Collection<int, DocumentTranslation>
      */
     #[SymfonySerializer\Ignore]
@@ -442,7 +485,6 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     }
 
     /**
-     * @param DocumentTranslation $documentTranslation
      * @return $this
      */
     public function addDocumentTranslation(DocumentTranslation $documentTranslation): static
@@ -462,9 +504,6 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
         return $this->documentTranslations;
     }
 
-    /**
-     * @return bool
-     */
     #[SymfonySerializer\Ignore]
     public function hasTranslations(): bool
     {
@@ -473,8 +512,6 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
 
     /**
      * Is document a raw one.
-     *
-     * @return bool
      */
     public function isRaw(): bool
     {
@@ -484,13 +521,12 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     public function setRaw(bool $raw): static
     {
         $this->raw = $raw;
+
         return $this;
     }
 
     /**
      * Gets the downscaledDocument.
-     *
-     * @return DocumentInterface|null
      */
     #[SymfonySerializer\Ignore]
     public function getDownscaledDocument(): ?DocumentInterface
@@ -498,21 +534,16 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
         return $this->downscaledDocuments->first() ?: null;
     }
 
-    /**
-     * @return float|null
-     */
     #[SymfonySerializer\Ignore]
     public function getImageRatio(): ?float
     {
         if ($this->getImageWidth() > 0 && $this->getImageHeight() > 0) {
             return $this->getImageWidth() / $this->getImageHeight();
         }
+
         return null;
     }
 
-    /**
-     * @return int
-     */
     public function getImageWidth(): int
     {
         return $this->imageWidth;
@@ -525,9 +556,6 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
         return $this;
     }
 
-    /**
-     * @return int
-     */
     public function getImageHeight(): int
     {
         return $this->imageHeight;
@@ -540,9 +568,6 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
         return $this;
     }
 
-    /**
-     * @return int
-     */
     public function getMediaDuration(): int
     {
         return $this->mediaDuration;
@@ -551,12 +576,10 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     public function setMediaDuration(int $duration): static
     {
         $this->mediaDuration = $duration;
+
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
     public function getImageAverageColor(): ?string
     {
         return $this->imageAverageColor;
@@ -565,12 +588,10 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     public function setImageAverageColor(?string $imageAverageColor): static
     {
         $this->imageAverageColor = $imageAverageColor;
+
         return $this;
     }
 
-    /**
-     * @return int|null
-     */
     public function getFilesize(): ?int
     {
         return $this->filesize;
@@ -579,20 +600,26 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     public function setFilesize(?int $filesize): static
     {
         $this->filesize = $filesize;
+
         return $this;
     }
 
     #[
-        Serializer\Groups(["document", "document_display", "nodes_sources", "tag", "attribute"]),
-        Serializer\Type("string"),
+        Serializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute']),
+        Serializer\Type('string'),
         Serializer\VirtualProperty,
-        Serializer\SerializedName("alt"),
-        SymfonySerializer\Groups(["document", "document_display", "nodes_sources", "tag", "attribute"]),
-        SymfonySerializer\SerializedName("alt"),
+        Serializer\SerializedName('alt'),
+        SymfonySerializer\Groups(['document', 'document_display', 'nodes_sources', 'tag', 'attribute']),
+        SymfonySerializer\SerializedName('alt'),
+        ApiProperty(
+            description: 'Document alternative text, for img HTML tag.',
+            writable: false,
+        )
     ]
     public function getAlternativeText(): string
     {
         $documentTranslation = $this->getDocumentTranslations()->first();
+
         return $documentTranslation && !empty($documentTranslation->getName()) ?
             $documentTranslation->getName() :
             $this->getFilename();
@@ -606,20 +633,15 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
         }
     }
 
-    /**
-     * @return bool
-     */
     #[SymfonySerializer\Groups(['document'])]
+    #[SymfonySerializer\SerializedName('isThumbnail')] // to avoid conflict with thumbnail property
     #[Serializer\Groups(['document'])]
     #[Serializer\VirtualProperty]
     public function isThumbnail(): bool
     {
-        return $this->getOriginal() !== null;
+        return null !== $this->getOriginal();
     }
 
-    /**
-     * @return HasThumbnailInterface|null
-     */
     #[SymfonySerializer\Ignore]
     public function getOriginal(): ?HasThumbnailInterface
     {
@@ -635,9 +657,6 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
         return $this;
     }
 
-    /**
-     * @return bool
-     */
     #[SymfonySerializer\Groups(['document'])]
     #[Serializer\Groups(['document'])]
     #[Serializer\VirtualProperty]
@@ -646,9 +665,6 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
         return $this->getThumbnails()->count() > 0;
     }
 
-    /**
-     * @return Collection
-     */
     public function getThumbnails(): Collection
     {
         // Filter private thumbnails
@@ -678,9 +694,6 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
         return $this;
     }
 
-    /**
-     * @return DocumentInterface|null
-     */
     #[SymfonySerializer\Groups(['document_thumbnails'])]
     #[SymfonySerializer\SerializedName('thumbnail')]
     #[SymfonySerializer\MaxDepth(1)]
@@ -690,20 +703,15 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
         if ($this->isEmbed() || !$this->isImage()) {
             return $this->getThumbnails()->first() ?: null;
         }
+
         return null;
     }
 
-    /**
-     * @return bool
-     */
     public function needsThumbnail(): bool
     {
         return !$this->isProcessable();
     }
 
-    /**
-     * @return string|null
-     */
     public function getFileHash(): ?string
     {
         return $this->fileHash;
@@ -712,12 +720,10 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     public function setFileHash(?string $hash): static
     {
         $this->fileHash = $hash;
+
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
     public function getFileHashAlgorithm(): ?string
     {
         return $this->fileHashAlgorithm;
@@ -726,12 +732,10 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     public function setFileHashAlgorithm(?string $algorithm): static
     {
         $this->fileHashAlgorithm = $algorithm;
+
         return $this;
     }
 
-    /**
-     * @return \DateTime|null
-     */
     public function getCopyrightValidSince(): ?\DateTime
     {
         return $this->copyrightValidSince;
@@ -740,12 +744,10 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     public function setCopyrightValidSince(?\DateTime $copyrightValidSince): static
     {
         $this->copyrightValidSince = $copyrightValidSince;
+
         return $this;
     }
 
-    /**
-     * @return \DateTime|null
-     */
     public function getCopyrightValidUntil(): ?\DateTime
     {
         return $this->copyrightValidUntil;
@@ -754,12 +756,10 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     public function setCopyrightValidUntil(?\DateTime $copyrightValidUntil): static
     {
         $this->copyrightValidUntil = $copyrightValidUntil;
+
         return $this;
     }
 
-    /**
-     * @return string
-     */
     public function __toString(): string
     {
         if (!empty($this->getFilename())) {
@@ -770,14 +770,12 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
             return $translation->getName();
         }
         if (!empty($this->getEmbedPlatform())) {
-            return $this->getEmbedPlatform() . ' (' . $this->getEmbedId() . ')';
+            return $this->getEmbedPlatform().' ('.$this->getEmbedId().')';
         }
+
         return (string) $this->getId();
     }
 
-    /**
-     * @return string
-     */
     public function getFilename(): string
     {
         return $this->filename ?? '';
@@ -790,7 +788,6 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
         return $this;
     }
 
-
     public function getEmbedPlatform(): ?string
     {
         return $this->embedPlatform;
@@ -799,6 +796,7 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     public function setEmbedPlatform(?string $embedPlatform): static
     {
         $this->embedPlatform = $embedPlatform;
+
         return $this;
     }
 
@@ -810,6 +808,19 @@ class Document extends AbstractDateTimed implements AdvancedDocumentInterface, H
     public function setEmbedId(?string $embedId): static
     {
         $this->embedId = $embedId;
+
+        return $this;
+    }
+
+    public function getImageCropAlignment(): ?string
+    {
+        return $this->imageCropAlignment;
+    }
+
+    public function setImageCropAlignment(?string $imageCropAlignment): Document
+    {
+        $this->imageCropAlignment = $imageCropAlignment;
+
         return $this;
     }
 }

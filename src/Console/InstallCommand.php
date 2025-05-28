@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\Common\Cache\CacheProvider;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Importer\GroupsImporter;
@@ -16,81 +14,106 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Yaml\Yaml;
 
-/**
- * Command line utils for installing RZ-CMS v3 from terminal.
- */
-class InstallCommand extends Command
+final class InstallCommand extends Command
 {
-    protected ManagerRegistry $managerRegistry;
-    protected RolesImporter $rolesImporter;
-    protected GroupsImporter $groupsImporter;
-    protected SettingsImporter $settingsImporter;
+    use RunningCommandsTrait;
 
-    /**
-     * @param ManagerRegistry $managerRegistry
-     * @param RolesImporter $rolesImporter
-     * @param GroupsImporter $groupsImporter
-     * @param SettingsImporter $settingsImporter
-     */
     public function __construct(
-        ManagerRegistry $managerRegistry,
-        RolesImporter $rolesImporter,
-        GroupsImporter $groupsImporter,
-        SettingsImporter $settingsImporter
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly RolesImporter $rolesImporter,
+        private readonly GroupsImporter $groupsImporter,
+        private readonly SettingsImporter $settingsImporter,
+        #[Autowire('%kernel.project_dir%')]
+        private readonly string $projectDir,
+        ?string $name = null,
     ) {
-        parent::__construct();
-        $this->managerRegistry = $managerRegistry;
-        $this->rolesImporter = $rolesImporter;
-        $this->groupsImporter = $groupsImporter;
-        $this->settingsImporter = $settingsImporter;
+        parent::__construct($name);
+    }
+
+    public function getProjectDir(): string
+    {
+        return $this->projectDir;
     }
 
     protected function configure(): void
     {
         $this
             ->setName('install')
-            ->setDescription('Install Roadiz roles, settings, translations and default backend theme');
+            ->setDescription('Perform Doctrine migrations, install default Roadiz roles, settings and translation.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
-        $io->note('Before installing Roadiz, did you create database schema? ' . PHP_EOL .
-            'If not execute: bin/console doctrine:migrations:migrate');
         $question = new ConfirmationQuestion(
             '<question>Are you sure to perform installation?</question>',
             false
         );
 
         if (
-            $input->getOption('no-interaction') ||
-            $io->askQuestion($question)
+            $input->getOption('no-interaction')
+            || $io->askQuestion($question)
         ) {
-            $fixturesRoot = dirname(__DIR__) . '/../config';
-            $data = Yaml::parse(file_get_contents($fixturesRoot . "/fixtures.yaml"));
+            0 === $this->runCommand(
+                'doctrine:migrations:migrate',
+                '',
+                null,
+                false,
+                true
+            ) ? $io->success('doctrine:migrations:migrate') : $io->error('doctrine:migrations:migrate');
 
-            if (isset($data["importFiles"]['roles'])) {
-                foreach ($data["importFiles"]['roles'] as $filename) {
-                    $filePath = $fixturesRoot . "/" . $filename;
-                    $this->rolesImporter->import(file_get_contents($filePath));
-                    $io->success('Theme file “' . $filePath . '” has been imported.');
+            $fixturesRoot = dirname(__DIR__).'/../config';
+            $fixtureFile = file_get_contents($fixturesRoot.'/fixtures.yaml');
+
+            if (false === $fixtureFile) {
+                $io->error('No fixtures.yaml file found in '.$fixturesRoot);
+
+                return 1;
+            }
+
+            $data = Yaml::parse($fixtureFile);
+
+            if (isset($data['importFiles']['roles'])) {
+                foreach ($data['importFiles']['roles'] as $filename) {
+                    $filePath = $fixturesRoot.'/'.$filename;
+                    $fileContents = file_get_contents($filePath);
+                    if (false === $fileContents) {
+                        $io->error('No file found in '.$filePath);
+
+                        return 1;
+                    }
+                    $this->rolesImporter->import($fileContents);
+                    $io->success('Theme file “'.$filePath.'” has been imported.');
                 }
             }
-            if (isset($data["importFiles"]['groups'])) {
-                foreach ($data["importFiles"]['groups'] as $filename) {
-                    $filePath = $fixturesRoot . "/" . $filename;
-                    $this->groupsImporter->import(file_get_contents($filePath));
-                    $io->success('Theme file “' . $filePath . '” has been imported.');
+            if (isset($data['importFiles']['groups'])) {
+                foreach ($data['importFiles']['groups'] as $filename) {
+                    $filePath = $fixturesRoot.'/'.$filename;
+                    $fileContents = file_get_contents($filePath);
+                    if (false === $fileContents) {
+                        $io->error('No file found in '.$filePath);
+
+                        return 1;
+                    }
+                    $this->groupsImporter->import($fileContents);
+                    $io->success('Theme file “'.$filePath.'” has been imported.');
                 }
             }
-            if (isset($data["importFiles"]['settings'])) {
-                foreach ($data["importFiles"]['settings'] as $filename) {
-                    $filePath = $fixturesRoot . "/" . $filename;
-                    $this->settingsImporter->import(file_get_contents($filePath));
-                    $io->success('Theme files “' . $filePath . '” has been imported.');
+            if (isset($data['importFiles']['settings'])) {
+                foreach ($data['importFiles']['settings'] as $filename) {
+                    $filePath = $fixturesRoot.'/'.$filename;
+                    $fileContents = file_get_contents($filePath);
+                    if (false === $fileContents) {
+                        $io->error('No file found in '.$filePath);
+
+                        return 1;
+                    }
+                    $this->settingsImporter->import($fileContents);
+                    $io->success('Theme files “'.$filePath.'” has been imported.');
                 }
             }
             $manager = $this->managerRegistry->getManagerForClass(Translation::class);
@@ -101,8 +124,8 @@ class InstallCommand extends Command
                 $defaultTrans = new Translation();
                 $defaultTrans
                     ->setDefaultTranslation(true)
-                    ->setLocale("en")
-                    ->setName("Default translation");
+                    ->setLocale('en')
+                    ->setName('Default translation');
 
                 $manager->persist($defaultTrans);
 
@@ -112,25 +135,17 @@ class InstallCommand extends Command
             }
             $manager->flush();
 
-            if ($manager instanceof EntityManagerInterface) {
-                // Clear result cache
-                $cacheDriver = $manager->getConfiguration()->getResultCacheImpl();
-                if ($cacheDriver instanceof CacheProvider) {
-                    $cacheDriver->deleteAll();
-                }
-            }
+            $this->clearCaches($io);
         }
+
         return 0;
     }
 
     /**
      * Tell if there is any translation.
-     *
-     * @return boolean
      */
     public function hasDefaultTranslation(): bool
     {
-        $default = $this->managerRegistry->getRepository(Translation::class)->findOneBy([]);
-        return $default !== null;
+        return null !== $this->managerRegistry->getRepository(Translation::class)->findDefault();
     }
 }

@@ -16,24 +16,16 @@ class ExplorerProviderItemTransformer implements DataTransformerInterface
     protected bool $multiple;
     protected bool $useCollection;
 
-    /**
-     * @param ExplorerProviderInterface $explorerProvider
-     * @param bool $multiple
-     * @param bool $useCollection
-     */
     public function __construct(
         ExplorerProviderInterface $explorerProvider,
         bool $multiple = true,
-        bool $useCollection = false
+        bool $useCollection = false,
     ) {
         $this->explorerProvider = $explorerProvider;
         $this->multiple = $multiple;
         $this->useCollection = $useCollection;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function transform(mixed $value): array|string
     {
         if (!empty($value) && $this->explorerProvider->supports($value)) {
@@ -41,6 +33,7 @@ class ExplorerProviderItemTransformer implements DataTransformerInterface
             if (!$item instanceof ExplorerItemInterface) {
                 throw new TransformationFailedException('Cannot transform model to ExplorerItem.');
             }
+
             return [$item];
         } elseif (!empty($value) && is_iterable($value)) {
             $idArray = [];
@@ -58,19 +51,17 @@ class ExplorerProviderItemTransformer implements DataTransformerInterface
 
             return array_filter($idArray);
         }
+
         return '';
     }
 
-    /**
-     * @inheritDoc
-     */
     public function reverseTransform(mixed $value): mixed
     {
         if (empty($value)) {
             $items = [];
         } elseif ($value instanceof ExplorerItemInterface) {
             $items = [$value];
-        } elseif (is_scalar($value)) {
+        } elseif (\is_string($value) || \is_int($value)) {
             $items = $this->explorerProvider->getItemsById([$value]);
         } elseif (\is_array($value) && is_scalar(reset($value))) {
             $items = $this->explorerProvider->getItemsById($value);
@@ -89,8 +80,10 @@ class ExplorerProviderItemTransformer implements DataTransformerInterface
             if ($this->useCollection) {
                 return new ArrayCollection(array_filter($originals));
             }
+
             return array_filter($originals);
         }
+
         return array_filter($originals)[0] ?? null;
     }
 }

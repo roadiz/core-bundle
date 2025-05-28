@@ -56,9 +56,7 @@ class NodesSourcesIndexer extends AbstractIndexer implements BatchIndexer
     }
 
     /**
-     * Overridable
-     *
-     * @return QueryBuilder
+     * Overridable.
      */
     protected function getAllQueryBuilder(): QueryBuilder
     {
@@ -71,8 +69,9 @@ class NodesSourcesIndexer extends AbstractIndexer implements BatchIndexer
     /**
      * Loop over every NodesSources to index them again.
      *
-     * @param int $batchCount Split reindex span to several batches.
-     * @param int $batchNumber Execute reindex on a specific batch.
+     * @param int $batchCount  split reindex span to several batches
+     * @param int $batchNumber execute reindex on a specific batch
+     *
      * @throws \Doctrine\ORM\NoResultException
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
@@ -115,9 +114,8 @@ class NodesSourcesIndexer extends AbstractIndexer implements BatchIndexer
          */
         $paginator = new Paginator($baseQb->getQuery(), true);
 
-        if (null !== $this->io) {
-            $this->io->progressStart($count);
-        }
+        $this->io?->title(get_class($this));
+        $this->io?->progressStart($count);
 
         foreach ($paginator as $row) {
             $solarium = $this->solariumFactory->createWithNodesSources($row);
@@ -125,9 +123,7 @@ class NodesSourcesIndexer extends AbstractIndexer implements BatchIndexer
             $solarium->index();
             $buffer->addDocument($solarium->getDocument());
 
-            if (null !== $this->io) {
-                $this->io->progressAdvance();
-            }
+            $this->io?->progressAdvance();
             // detach from Doctrine, so that it can be Garbage-Collected immediately
             $this->managerRegistry->getManager()->detach($row);
         }
@@ -137,8 +133,6 @@ class NodesSourcesIndexer extends AbstractIndexer implements BatchIndexer
         // optimize the index
         $this->optimizeSolr();
 
-        if (null !== $this->io) {
-            $this->io->progressFinish();
-        }
+        $this->io?->progressFinish();
     }
 }

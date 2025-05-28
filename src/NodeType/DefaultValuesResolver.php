@@ -10,19 +10,13 @@ use RZ\Roadiz\CoreBundle\DependencyInjection\Configuration;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\EntityGenerator\Field\DefaultValuesResolverInterface;
 
-final class DefaultValuesResolver implements DefaultValuesResolverInterface
+final readonly class DefaultValuesResolver implements DefaultValuesResolverInterface
 {
-    private ManagerRegistry $managerRegistry;
-    private string $inheritanceType;
-
     public function __construct(
-        ManagerRegistry $managerRegistry,
-        string $inheritanceType
+        private ManagerRegistry $managerRegistry,
+        private string $inheritanceType,
     ) {
-        $this->managerRegistry = $managerRegistry;
-        $this->inheritanceType = $inheritanceType;
     }
-
 
     public function getDefaultValuesAmongAllFields(NodeTypeFieldInterface $field): array
     {
@@ -30,8 +24,8 @@ final class DefaultValuesResolver implements DefaultValuesResolverInterface
          * With joined inheritance, we can use current field default values because
          * SQL field won't be shared between all node types.
          */
-        if ($this->inheritanceType === Configuration::INHERITANCE_TYPE_JOINED) {
-            return array_map('trim', explode(',', $field->getDefaultValues()));
+        if (Configuration::INHERITANCE_TYPE_JOINED === $this->inheritanceType) {
+            return array_map('trim', explode(',', $field->getDefaultValues() ?? ''));
         } else {
             /*
              * With single table inheritance, we need to get all default values
@@ -43,8 +37,9 @@ final class DefaultValuesResolver implements DefaultValuesResolverInterface
                 'type' => $field->getType(),
             ]);
             foreach ($nodeTypeFields as $nodeTypeField) {
-                $defaultValues = array_merge($defaultValues, array_map('trim', explode(',', $nodeTypeField->getDefaultValues())));
+                $defaultValues = array_merge($defaultValues, array_map('trim', explode(',', $nodeTypeField->getDefaultValues() ?? '')));
             }
+
             return $defaultValues;
         }
     }

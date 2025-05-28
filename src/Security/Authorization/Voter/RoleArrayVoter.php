@@ -13,9 +13,6 @@ use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
  */
 class RoleArrayVoter extends RoleVoter
 {
-    /**
-     * {@inheritdoc}
-     */
     public function vote(TokenInterface $token, $subject, array $attributes): int
     {
         if (isset($attributes[0]) && !\is_array($attributes[0])) {
@@ -40,10 +37,8 @@ class RoleArrayVoter extends RoleVoter
                 }
 
                 $result = VoterInterface::ACCESS_DENIED;
-                foreach ($roles as $role) {
-                    if ($singleAttribute === $role) {
-                        return VoterInterface::ACCESS_GRANTED;
-                    }
+                if (\in_array($singleAttribute, $roles, true)) {
+                    return VoterInterface::ACCESS_GRANTED;
                 }
             }
         }

@@ -21,33 +21,16 @@ use Symfony\Component\Routing\RouterInterface;
 
 final class TranslationViewer
 {
-    private Settings $settingsBag;
-    private ManagerRegistry $managerRegistry;
-    private RouterInterface $router;
-    private PreviewResolverInterface $previewResolver;
     private ?TranslationInterface $translation = null;
 
-    /**
-     * @param ManagerRegistry $managerRegistry
-     * @param Settings $settingsBag
-     * @param RouterInterface $router
-     * @param PreviewResolverInterface $previewResolver
-     */
     public function __construct(
-        ManagerRegistry $managerRegistry,
-        Settings $settingsBag,
-        RouterInterface $router,
-        PreviewResolverInterface $previewResolver
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly Settings $settingsBag,
+        private readonly RouterInterface $router,
+        private readonly PreviewResolverInterface $previewResolver,
     ) {
-        $this->settingsBag = $settingsBag;
-        $this->router = $router;
-        $this->previewResolver = $previewResolver;
-        $this->managerRegistry = $managerRegistry;
     }
 
-    /**
-     * @return TranslationRepository
-     */
     public function getRepository(): TranslationRepository
     {
         return $this->managerRegistry->getRepository(Translation::class);
@@ -85,10 +68,8 @@ final class TranslationViewer
      *             'active' => boolean false
      *             'translation' => string 'Spanish'
      *
-     * @param Request $request
      * @param bool $absolute Generate absolute url or relative paths
      *
-     * @return array
      * @throws ORMException
      */
     public function getTranslationMenuAssignation(Request $request, bool $absolute = false): array
@@ -97,9 +78,9 @@ final class TranslationViewer
         $query = $request->query->all();
         $name = '';
         $forceLocale = (bool) $this->settingsBag->get('force_locale');
-        $useStaticRouting = !empty($attr['_route']) &&
-            is_string($attr['_route']) &&
-            $attr['_route'] !== RouteObjectInterface::OBJECT_BASED_ROUTE_NAME;
+        $useStaticRouting = !empty($attr['_route'])
+            && is_string($attr['_route'])
+            && RouteObjectInterface::OBJECT_BASED_ROUTE_NAME !== $attr['_route'];
 
         /*
          * Fix absolute boolean to Int constant.
@@ -107,7 +88,7 @@ final class TranslationViewer
         $absolute = $absolute ? UrlGeneratorInterface::ABSOLUTE_URL : UrlGeneratorInterface::ABSOLUTE_PATH;
 
         if (key_exists('node', $attr) && $attr['node'] instanceof Node) {
-            $node = $attr["node"];
+            $node = $attr['node'];
             $this->managerRegistry->getManagerForClass(Node::class)->refresh($node);
         } else {
             $node = null;
@@ -120,9 +101,9 @@ final class TranslationViewer
             /*
              * Search for a route without Locale suffix
              */
-            $baseRoute = RouteHandler::getBaseRoute($attr["_route"]);
+            $baseRoute = RouteHandler::getBaseRoute($attr['_route']);
             if (null !== $this->router->getRouteCollection()->get($baseRoute)) {
-                $attr["_route"] = $baseRoute;
+                $attr['_route'] = $baseRoute;
             }
         } elseif (null !== $node) {
             /*
@@ -133,7 +114,7 @@ final class TranslationViewer
             } else {
                 $translations = $this->getRepository()->findStrictlyAvailableTranslationsForNode($node);
             }
-            $name = "node";
+            $name = 'node';
         } else {
             return [];
         }
@@ -146,7 +127,7 @@ final class TranslationViewer
              * Remove existing _locale in query string
              */
             if (key_exists('_locale', $query)) {
-                unset($query["_locale"]);
+                unset($query['_locale']);
             }
             /*
              * Remove existing page parameter in query string
@@ -168,8 +149,8 @@ final class TranslationViewer
                     /*
                      * Search for a Locale suffixed route
                      */
-                    if (null !== $this->router->getRouteCollection()->get($attr['_route'] . "Locale")) {
-                        $name = $attr['_route'] . 'Locale';
+                    if (null !== $this->router->getRouteCollection()->get($attr['_route'].'Locale')) {
+                        $name = $attr['_route'].'Locale';
                     }
 
                     $attr['_route_params']['_locale'] = $translation->getPreferredLocale();
@@ -199,7 +180,7 @@ final class TranslationViewer
                     $url = $this->router->generate(
                         RouteObjectInterface::OBJECT_BASED_ROUTE_NAME,
                         array_merge($attr['_route_params'], $query, [
-                            RouteObjectInterface::ROUTE_OBJECT => $name
+                            RouteObjectInterface::ROUTE_OBJECT => $name,
                         ]),
                         $absolute
                     );
@@ -210,7 +191,7 @@ final class TranslationViewer
                     $url = $this->router->generate(
                         RouteObjectInterface::OBJECT_BASED_ROUTE_NAME,
                         array_merge($query, [
-                            RouteObjectInterface::ROUTE_OBJECT => $nodesSources
+                            RouteObjectInterface::ROUTE_OBJECT => $nodesSources,
                         ]),
                         $absolute
                     );
@@ -227,24 +208,22 @@ final class TranslationViewer
                 ];
             }
         }
+
         return $return;
     }
 
-    /**
-     * @return TranslationInterface|null
-     */
     public function getTranslation(): ?TranslationInterface
     {
         return $this->translation;
     }
 
     /**
-     * @param TranslationInterface|null $translation
      * @return TranslationViewer
      */
     public function setTranslation(?TranslationInterface $translation)
     {
         $this->translation = $translation;
+
         return $this;
     }
 }

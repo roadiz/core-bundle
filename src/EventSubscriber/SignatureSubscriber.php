@@ -8,18 +8,15 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
-final class SignatureSubscriber implements EventSubscriberInterface
+final readonly class SignatureSubscriber implements EventSubscriberInterface
 {
-    private string $version;
-    private bool $debug;
-    private bool $hideRoadizVersion;
-
-    public function __construct(string $cmsVersion, bool $hideRoadizVersion, bool $debug = false)
-    {
-        $this->version = $cmsVersion;
-        $this->debug = $debug;
-        $this->hideRoadizVersion = $hideRoadizVersion;
+    public function __construct(
+        private string $cmsVersion,
+        private bool $hideRoadizVersion,
+        private bool $debug = false,
+    ) {
     }
+
     /**
      * Filters the Response.
      *
@@ -34,8 +31,8 @@ final class SignatureSubscriber implements EventSubscriberInterface
         $response = $event->getResponse();
         $response->headers->add(['X-Powered-By' => 'Roadiz CMS']);
 
-        if ($this->debug && $this->version) {
-            $response->headers->add(['X-Version' => $this->version]);
+        if ($this->debug && $this->cmsVersion) {
+            $response->headers->add(['X-Version' => $this->cmsVersion]);
         }
     }
 

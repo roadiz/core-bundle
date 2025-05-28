@@ -13,11 +13,12 @@ use RZ\Roadiz\CoreBundle\Entity\RealmNode;
  * @method RealmNode|null findOneBy(array $criteria, array $orderBy = null)
  * @method RealmNode[]    findAll()
  * @method RealmNode[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ *
  * @extends EntityRepository<RealmNode>
  */
 final class RealmNodeRepository extends EntityRepository
 {
-    public function findByNodeIdsAndRealmId(array $nodeIds, int $realmId): array
+    public function findByNodeIdsAndRealmId(array $nodeIds, int|string $realmId): array
     {
         $nodeIds = array_filter($nodeIds);
         if (empty($nodeIds)) {

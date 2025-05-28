@@ -17,21 +17,12 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-final class RealmNodeInheritanceSubscriber implements EventSubscriberInterface
+final readonly class RealmNodeInheritanceSubscriber implements EventSubscriberInterface
 {
-    private MessageBusInterface $bus;
-
-    /**
-     * @param MessageBusInterface $bus
-     */
-    public function __construct(MessageBusInterface $bus)
+    public function __construct(private MessageBusInterface $bus)
     {
-        $this->bus = $bus;
     }
 
-    /**
-     * @inheritDoc
-     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -59,7 +50,7 @@ final class RealmNodeInheritanceSubscriber implements EventSubscriberInterface
          */
         $this->bus->dispatch(new Envelope(new ApplyRealmNodeInheritanceMessage(
             $event->getRealmNode()->getNode()->getId(),
-            $event->getRealmNode()->getRealm()?->getId()
+            $event->getRealmNode()->getRealm()->getId()
         )));
     }
 
@@ -70,7 +61,7 @@ final class RealmNodeInheritanceSubscriber implements EventSubscriberInterface
          */
         $this->bus->dispatch(new Envelope(new CleanRealmNodeInheritanceMessage(
             $event->getRealmNode()->getNode()->getId(),
-            $event->getRealmNode()->getRealm()?->getId()
+            $event->getRealmNode()->getRealm()->getId()
         )));
     }
 }

@@ -23,64 +23,40 @@ use RZ\Roadiz\Documents\Events\DocumentUpdatedEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Workflow\Event\Event;
 
-final class AutomaticWebhookSubscriber implements EventSubscriberInterface
+final readonly class AutomaticWebhookSubscriber implements EventSubscriberInterface
 {
-    private WebhookDispatcher $webhookDispatcher;
-    private HandlerFactoryInterface $handlerFactory;
-    private ManagerRegistry $managerRegistry;
-
-    /**
-     * @param WebhookDispatcher $webhookDispatcher
-     * @param ManagerRegistry $managerRegistry
-     * @param HandlerFactoryInterface $handlerFactory
-     */
     public function __construct(
-        WebhookDispatcher $webhookDispatcher,
-        ManagerRegistry $managerRegistry,
-        HandlerFactoryInterface $handlerFactory
+        private WebhookDispatcher $webhookDispatcher,
+        private ManagerRegistry $managerRegistry,
+        private HandlerFactoryInterface $handlerFactory,
     ) {
-        $this->webhookDispatcher = $webhookDispatcher;
-        $this->handlerFactory = $handlerFactory;
-        $this->managerRegistry = $managerRegistry;
     }
 
     public static function getSubscribedEvents(): array
     {
         return [
-            'workflow.node.completed' => ['onAutomaticWebhook'],
+            'workflow.node.completed' => 'onAutomaticWebhook',
             NodeVisibilityChangedEvent::class => 'onAutomaticWebhook',
-            '\RZ\Roadiz\Core\Events\Node\NodeVisibilityChangedEvent' => 'onAutomaticWebhook',
             NodesSourcesPreUpdatedEvent::class => 'onAutomaticWebhook',
-            '\RZ\Roadiz\Core\Events\NodesSources\NodesSourcesPreUpdatedEvent' => 'onAutomaticWebhook',
             NodesSourcesDeletedEvent::class => 'onAutomaticWebhook',
-            '\RZ\Roadiz\Core\Events\NodesSources\NodesSourcesDeletedEvent' => 'onAutomaticWebhook',
             NodeUpdatedEvent::class => 'onAutomaticWebhook',
-            '\RZ\Roadiz\Core\Events\Node\NodeUpdatedEvent' => 'onAutomaticWebhook',
             NodeDeletedEvent::class => 'onAutomaticWebhook',
-            '\RZ\Roadiz\Core\Events\Node\NodeDeletedEvent' => 'onAutomaticWebhook',
             NodeTaggedEvent::class => 'onAutomaticWebhook',
-            '\RZ\Roadiz\Core\Events\Node\NodeTaggedEvent' => 'onAutomaticWebhook',
             TagUpdatedEvent::class => 'onAutomaticWebhook',
-            '\RZ\Roadiz\Core\Events\Tag\TagUpdatedEvent' => 'onAutomaticWebhook',
             DocumentTranslationUpdatedEvent::class => 'onAutomaticWebhook',
-            '\RZ\Roadiz\Core\Events\DocumentTranslationUpdatedEvent' => 'onAutomaticWebhook',
             DocumentUpdatedEvent::class => 'onAutomaticWebhook',
         ];
     }
 
-    /**
-     * @param mixed $event
-     * @return bool
-     */
     protected function isEventRelatedToNode(mixed $event): bool
     {
-        return $event instanceof Event ||
-            $event instanceof NodeVisibilityChangedEvent ||
-            $event instanceof NodesSourcesPreUpdatedEvent ||
-            $event instanceof NodesSourcesDeletedEvent ||
-            $event instanceof NodeUpdatedEvent ||
-            $event instanceof NodeDeletedEvent ||
-            $event instanceof NodeTaggedEvent;
+        return $event instanceof Event
+            || $event instanceof NodeVisibilityChangedEvent
+            || $event instanceof NodesSourcesPreUpdatedEvent
+            || $event instanceof NodesSourcesDeletedEvent
+            || $event instanceof NodeUpdatedEvent
+            || $event instanceof NodeDeletedEvent
+            || $event instanceof NodeTaggedEvent;
     }
 
     /**
@@ -90,7 +66,7 @@ final class AutomaticWebhookSubscriber implements EventSubscriberInterface
     {
         /** @var Webhook[] $webhooks */
         $webhooks = $this->managerRegistry->getRepository(Webhook::class)->findBy([
-            'automatic' => true
+            'automatic' => true,
         ]);
         foreach ($webhooks as $webhook) {
             if (!$this->isEventRelatedToNode($event) || $this->isEventSubjectInRootNode($event, $webhook->getRootNode())) {
@@ -115,8 +91,6 @@ final class AutomaticWebhookSubscriber implements EventSubscriberInterface
              */
             return true;
         }
-        /** @var Node|null $subject */
-        $subject = null;
 
         switch (true) {
             case $event instanceof Event:

@@ -8,20 +8,21 @@ use ApiPlatform\OpenApi\Factory\OpenApiFactoryInterface;
 use ApiPlatform\OpenApi\Model;
 use ApiPlatform\OpenApi\OpenApi;
 
-final class WebResponseDecorator implements OpenApiFactoryInterface
+final readonly class WebResponseDecorator implements OpenApiFactoryInterface
 {
-    private OpenApiFactoryInterface $decorated;
-
     public function __construct(
-        OpenApiFactoryInterface $decorated
+        private OpenApiFactoryInterface $decorated,
     ) {
-        $this->decorated = $decorated;
     }
 
     public function __invoke(array $context = []): OpenApi
     {
         $openApi = ($this->decorated)($context);
         $pathItem = $openApi->getPaths()->getPath('/api/web_response_by_path');
+        if (null === $pathItem) {
+            return $openApi;
+        }
+
         $operation = $pathItem->getGet();
 
         $openApi->getPaths()->addPath('/api/web_response_by_path', $pathItem->withGet(
@@ -38,7 +39,7 @@ final class WebResponseDecorator implements OpenApiFactoryInterface
                     'query',
                     'Enables preview mode (requires a valid bearer JWT token)',
                     false
-                ))->withSchema(['type' => 'boolean'])->withExample('1')
+                ))->withSchema(['type' => 'boolean'])->withExample('1'),
             ])
         ));
 

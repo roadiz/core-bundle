@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\EntityGenerator\Field\DefaultValuesResolverInterface;
@@ -15,16 +14,14 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class NodeTypesDefaultValuesCommand extends Command
+final class NodeTypesDefaultValuesCommand extends Command
 {
-    private DefaultValuesResolverInterface $defaultValuesResolver;
-    private ManagerRegistry $managerRegistry;
-
-    public function __construct(DefaultValuesResolverInterface $defaultValuesResolver, ManagerRegistry $managerRegistry, string $name = null)
-    {
+    public function __construct(
+        private readonly DefaultValuesResolverInterface $defaultValuesResolver,
+        private readonly ManagerRegistry $managerRegistry,
+        ?string $name = null,
+    ) {
         parent::__construct($name);
-        $this->defaultValuesResolver = $defaultValuesResolver;
-        $this->managerRegistry = $managerRegistry;
     }
 
     protected function configure(): void
@@ -60,7 +57,7 @@ class NodeTypesDefaultValuesCommand extends Command
             throw new \InvalidArgumentException('Field name must be a valid field name.');
         }
         if (!$oneField->isEnum()) {
-            throw new \InvalidArgumentException('Field name must be an enum field. Valid fields names are: ' . implode(', ', $enumFieldsNames));
+            throw new \InvalidArgumentException('Field name must be an enum field. Valid fields names are: '.implode(', ', $enumFieldsNames));
         }
 
         $defaultValues = $this->defaultValuesResolver->getDefaultValuesAmongAllFields($oneField);
@@ -73,9 +70,10 @@ class NodeTypesDefaultValuesCommand extends Command
                 $oneField->getLabel(),
                 $oneField->getDescription(),
                 implode(', ', array_unique($defaultValues)),
-                $maxDefaultValuesLength
+                $maxDefaultValuesLength,
             ],
         ]);
+
         return 0;
     }
 }

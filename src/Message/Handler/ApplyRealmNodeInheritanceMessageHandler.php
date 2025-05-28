@@ -5,30 +5,27 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Message\Handler;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\Realm;
 use RZ\Roadiz\CoreBundle\Entity\RealmNode;
-use RZ\Roadiz\CoreBundle\EntityHandler\NodeHandler;
 use RZ\Roadiz\CoreBundle\Message\ApplyRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
+use RZ\Roadiz\CoreBundle\Node\NodeOffspringResolverInterface;
+use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
-use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
-final class ApplyRealmNodeInheritanceMessageHandler implements MessageHandlerInterface
+#[AsMessageHandler]
+final readonly class ApplyRealmNodeInheritanceMessageHandler
 {
-    private ManagerRegistry $managerRegistry;
-    private HandlerFactoryInterface $handlerFactory;
-
-    public function __construct(ManagerRegistry $managerRegistry, HandlerFactoryInterface $handlerFactory)
-    {
-        $this->managerRegistry = $managerRegistry;
-        $this->handlerFactory = $handlerFactory;
+    public function __construct(
+        private ManagerRegistry $managerRegistry,
+        private NodeOffspringResolverInterface $nodeOffspringResolver,
+    ) {
     }
 
     public function __invoke(ApplyRealmNodeInheritanceMessage $message): void
     {
-        if ($message->getRealmId() === null) {
+        if (null === $message->getRealmId()) {
             return;
         }
         $node = $this->managerRegistry->getRepository(Node::class)->find($message->getNodeId());
@@ -49,19 +46,16 @@ final class ApplyRealmNodeInheritanceMessageHandler implements MessageHandlerInt
         /*
          * Do not propagate if realm node inheritance type is not ROOT
          */
-        if (null === $realmNode || $realmNode->getInheritanceType() !== RealmInterface::INHERITANCE_ROOT) {
+        if (null === $realmNode || RealmInterface::INHERITANCE_ROOT !== $realmNode->getInheritanceType()) {
             return;
         }
 
-        /** @var NodeHandler $nodeHandler */
-        $nodeHandler = $this->handlerFactory->getHandler($node);
-        $childrenIds = $nodeHandler->getAllOffspringId();
+        $nodeRepository = $this->managerRegistry->getRepository(Node::class);
+        $childrenIds = $this->nodeOffspringResolver->getAllOffspringIds($node);
 
         foreach ($childrenIds as $childId) {
             /** @var Node|null $child */
-            $child = $this->managerRegistry
-                ->getRepository(Node::class)
-                ->find($childId);
+            $child = $nodeRepository->find($childId);
             if (null === $child) {
                 continue;
             }

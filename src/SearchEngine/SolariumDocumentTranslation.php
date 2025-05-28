@@ -14,28 +14,20 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
 
 /**
  * Wrap a Solarium and a DocumentTranslation together to ease indexing.
- *
- * @package RZ\Roadiz\CoreBundle\SearchEngine
  */
 class SolariumDocumentTranslation extends AbstractSolarium
 {
     public const DOCUMENT_TYPE = 'DocumentTranslation';
     public const IDENTIFIER_KEY = 'document_translation_id_i';
 
-    protected DocumentTranslation $documentTranslation;
-    protected EventDispatcherInterface $dispatcher;
-
     public function __construct(
-        DocumentTranslation $documentTranslation,
+        protected readonly DocumentTranslation $documentTranslation,
         ClientRegistry $clientRegistry,
-        EventDispatcherInterface $dispatcher,
+        protected readonly EventDispatcherInterface $dispatcher,
         LoggerInterface $searchEngineLogger,
-        MarkdownInterface $markdown
+        MarkdownInterface $markdown,
     ) {
         parent::__construct($clientRegistry, $searchEngineLogger, $markdown);
-
-        $this->documentTranslation = $documentTranslation;
-        $this->dispatcher = $dispatcher;
     }
 
     public function getDocumentId(): int|string
@@ -46,22 +38,21 @@ class SolariumDocumentTranslation extends AbstractSolarium
     public function getFieldsAssoc(bool $subResource = false): array
     {
         $event = new DocumentTranslationIndexingEvent($this->documentTranslation, [], $this);
+        /** @var DocumentTranslationIndexingEvent $event */
+        $event = $this->dispatcher->dispatch($event);
 
-        return $this->dispatcher->dispatch($event)->getAssociations();
+        return $event->getAssociations();
     }
 
     /**
      * Remove any document linked to current node-source.
-     *
-     * @param Query $update
-     * @return boolean
      */
     public function clean(Query $update): bool
     {
         $update->addDeleteQuery(
-            static::IDENTIFIER_KEY . ':"' . $this->documentTranslation->getId() . '"' .
-            '&' . static::TYPE_DISCRIMINATOR . ':"' . static::DOCUMENT_TYPE . '"' .
-            '&locale_s:"' . $this->documentTranslation->getTranslation()->getLocale() . '"'
+            static::IDENTIFIER_KEY.':"'.$this->documentTranslation->getId().'"'.
+            '&'.static::TYPE_DISCRIMINATOR.':"'.static::DOCUMENT_TYPE.'"'.
+            '&locale_s:"'.$this->documentTranslation->getTranslation()->getLocale().'"'
         );
 
         return true;
@@ -72,6 +63,7 @@ class SolariumDocumentTranslation extends AbstractSolarium
         $namespace = explode('\\', get_class($this->documentTranslation));
         // get last 3 parts of namespace
         $namespace = array_slice($namespace, -3);
-        return (new AsciiSlugger())->slug(implode(' ', $namespace))->lower()->snake() . '.' . $this->documentTranslation->getId();
+
+        return (new AsciiSlugger())->slug(implode(' ', $namespace))->lower()->snake().'.'.$this->documentTranslation->getId();
     }
 }

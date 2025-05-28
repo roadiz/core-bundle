@@ -10,17 +10,11 @@ use RZ\Roadiz\CoreBundle\Event\FilterUserEvent;
 
 final class UserLeavedGroupEvent extends FilterUserEvent
 {
-    private Group $group;
-
-    public function __construct(User $user, Group $group)
+    public function __construct(User $user, private readonly Group $group)
     {
         parent::__construct($user);
-        $this->group = $group;
     }
 
-    /**
-     * @return Group
-     */
     public function getGroup(): Group
     {
         return $this->group;

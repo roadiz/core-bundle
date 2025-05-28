@@ -11,16 +11,39 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 interface RealmResolverInterface
 {
     /**
-     * @param Node|null $node
+     * @return bool Does current application has realms?
+     */
+    public function hasRealms(): bool;
+
+    /**
+     * @return bool Does current application has realms with serialization groups?
+     */
+    public function hasRealmsWithSerializationGroup(): bool;
+
+    /**
      * @return RealmInterface[]
      */
     public function getRealms(?Node $node): array;
+
+    /**
+     * @return RealmInterface[]
+     */
+    public function getRealmsWithSerializationGroup(?Node $node): array;
+
     public function isGranted(RealmInterface $realm): bool;
 
     /**
-     * @param RealmInterface $realm
-     * @return void
      * @throws UnauthorizedHttpException
      */
     public function denyUnlessGranted(RealmInterface $realm): void;
+
+    /**
+     * @return RealmInterface[] return all realms granted to current user
+     */
+    public function getGrantedRealms(): array;
+
+    /**
+     * @return RealmInterface[] return all realms denied from current user
+     */
+    public function getDeniedRealms(): array;
 }

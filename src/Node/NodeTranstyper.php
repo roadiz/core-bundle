@@ -13,7 +13,6 @@ use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use RZ\Roadiz\CoreBundle\Entity\Log;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments;
@@ -27,13 +26,9 @@ final class NodeTranstyper
     private ManagerRegistry $managerRegistry;
     private LoggerInterface $logger;
 
-    /**
-     * @param ManagerRegistry $managerRegistry
-     * @param LoggerInterface|null $logger
-     */
     public function __construct(
         ManagerRegistry $managerRegistry,
-        ?LoggerInterface $logger = null
+        ?LoggerInterface $logger = null,
     ) {
         $this->logger = $logger ?? new NullLogger();
         $this->managerRegistry = $managerRegistry;
@@ -45,24 +40,23 @@ final class NodeTranstyper
         if (null === $manager) {
             throw new \RuntimeException('No manager was found during trans-typing.');
         }
+
         return $manager;
     }
 
     /**
-     * @param NodeTypeFieldInterface $oldField
-     * @param NodeTypeInterface $destinationNodeType
-     *
      * @return NodeTypeField|null
      */
     private function getMatchingNodeTypeField(
         NodeTypeFieldInterface $oldField,
-        NodeTypeInterface $destinationNodeType
+        NodeTypeInterface $destinationNodeType,
     ): ?NodeTypeFieldInterface {
         $criteria = Criteria::create();
         $criteria->andWhere(Criteria::expr()->eq('name', $oldField->getName()))
             ->andWhere(Criteria::expr()->eq('type', $oldField->getType()))
             ->setMaxResults(1);
         $field = $destinationNodeType->getFields()->matching($criteria)->first();
+
         return $field ? $field : null;
     }
 
@@ -70,13 +64,8 @@ final class NodeTranstyper
      * Warning, this method DOES NOT flush entityManager at the end.
      *
      * Trans-typing SHOULD be executed in one single transaction
+     *
      * @see https://www.doctrine-project.org/projects/doctrine-orm/en/latest/reference/transactions-and-concurrency.html
-     *
-     * @param Node $node
-     * @param NodeTypeInterface $destinationNodeType
-     * @param bool $mock
-     *
-     * @return Node
      */
     public function transtype(Node $node, NodeTypeInterface $destinationNodeType, bool $mock = true): Node
     {
@@ -98,6 +87,7 @@ final class NodeTranstyper
         }
         $this->logger->debug('Get matching fields');
 
+        /** @var class-string<NodesSources> $sourceClass */
         $sourceClass = $destinationNodeType->getSourceEntityFullQualifiedClassName();
 
         /*
@@ -113,19 +103,12 @@ final class NodeTranstyper
          * Perform actual trans-typing
          */
         $existingSources = $node->getNodeSources()->toArray();
-        $existingLogs = [];
-        /** @var NodesSources $existingSource */
-        foreach ($existingSources as $existingSource) {
-            $existingLogs[$existingSource->getTranslation()->getLocale()] = array_map(function (Log $log) {
-                $this->managerRegistry->getManager()->detach($log);
-                return $log;
-            }, $existingSource->getLogs()->toArray());
-        }
         $existingRedirections = [];
         /** @var NodesSources $existingSource */
         foreach ($existingSources as $existingSource) {
             $existingRedirections[$existingSource->getTranslation()->getLocale()] = array_map(function (Redirection $redirection) {
                 $this->managerRegistry->getManager()->detach($redirection);
+
                 return $redirection;
             }, $existingSource->getRedirections()->toArray());
         }
@@ -141,20 +124,16 @@ final class NodeTranstyper
                 $existingSource->getTranslation(),
                 $sourceClass,
                 $fieldAssociations,
-                $existingLogs,
                 $existingRedirections
             );
-            $this->logger->debug('Transtyped: ' . $existingSource->getTranslation()->getLocale());
+            $this->logger->debug('Transtyped: '.$existingSource->getTranslation()->getLocale());
         }
 
         $node->setNodeType($destinationNodeType);
+
         return $node;
     }
 
-    /**
-     * @param Node  $node
-     * @param array $sources
-     */
     protected function removeOldSources(Node $node, array &$sources): void
     {
         /** @var NodesSources $existingSource */
@@ -171,14 +150,7 @@ final class NodeTranstyper
     /**
      * Warning, this method DO NOT flush entityManager at the end.
      *
-     * @param Node $node
-     * @param NodesSources $existingSource
-     * @param TranslationInterface $translation
-     * @param string $sourceClass
-     * @param array $fieldAssociations
-     * @param array $existingLogs
-     * @param array $existingRedirections
-     * @return NodesSources
+     * @param class-string<NodesSources> $sourceClass
      */
     protected function doTranstypeSingleSource(
         Node $node,
@@ -186,13 +158,12 @@ final class NodeTranstyper
         TranslationInterface $translation,
         string $sourceClass,
         array &$fieldAssociations,
-        array &$existingLogs,
-        array &$existingRedirections
+        array &$existingRedirections,
     ): NodesSources {
         /** @var NodesSources $source */
         $source = new $sourceClass($node, $translation);
+        $source = $source->withNodesSources($existingSource);
         $this->getManager()->persist($source);
-        $source->setTitle($existingSource->getTitle());
 
         foreach ($fieldAssociations as $fields) {
             /** @var NodeTypeField $oldField */
@@ -207,13 +178,14 @@ final class NodeTranstyper
                 $setter = $oldField->getSetterName();
                 $getter = $oldField->getGetterName();
                 $source->$setter($existingSource->$getter());
-            } elseif ($oldField->getType() === AbstractField::DOCUMENTS_T) {
+            } elseif (AbstractField::DOCUMENTS_T === $oldField->getType()) {
                 /*
                  * Copy documents.
                  */
                 $documents = $existingSource->getDocumentsByFieldsWithName($oldField->getName());
                 foreach ($documents as $document) {
-                    $nsDoc = new NodesSourcesDocuments($source, $document, $matchingField);
+                    $nsDoc = new NodesSourcesDocuments($source, $document);
+                    $nsDoc->setFieldName($matchingField->getName());
                     $this->getManager()->persist($nsDoc);
                     $source->getDocumentsByFields()->add($nsDoc);
                 }
@@ -221,26 +193,13 @@ final class NodeTranstyper
         }
         $this->logger->debug('Fill existing data');
 
-
-        /** @var Log $log */
-        foreach ($existingLogs[$translation->getLocale()] as $log) {
-            $newLog = clone $log;
-            $newLog->setAdditionalData($log->getAdditionalData());
-            $newLog->setChannel($log->getChannel());
-            $newLog->setClientIp($log->getClientIp());
-            $newLog->setUser($log->getUser());
-            $newLog->setUsername($log->getUsername());
-            $this->getManager()->persist($newLog);
-            $newLog->setNodeSource($source);
-        }
-        $this->logger->debug('Recreate logs');
-
         /*
          * Recreate url-aliases too.
          */
         /** @var UrlAlias $urlAlias */
         foreach ($existingSource->getUrlAliases() as $urlAlias) {
-            $newUrlAlias = new UrlAlias($source);
+            $newUrlAlias = new UrlAlias();
+            $newUrlAlias->setNodeSource($source);
             $this->getManager()->persist($newUrlAlias);
             $newUrlAlias->setAlias($urlAlias->getAlias());
             $source->addUrlAlias($newUrlAlias);
@@ -266,14 +225,13 @@ final class NodeTranstyper
     /**
      * Warning, this method flushes entityManager.
      *
-     * @param NodeTypeInterface $nodeType
-     * @throws \InvalidArgumentException If mock fails due to Source class not existing.
+     * @throws \InvalidArgumentException if mock fails due to Source class not existing
      */
     protected function mockTranstype(NodeTypeInterface $nodeType): void
     {
         $sourceClass = $nodeType->getSourceEntityFullQualifiedClassName();
         if (!class_exists($sourceClass)) {
-            throw new \InvalidArgumentException($sourceClass . ' node-source class does not exist.');
+            throw new \InvalidArgumentException($sourceClass.' node-source class does not exist.');
         }
         $uniqueId = uniqid();
         /*
@@ -282,18 +240,19 @@ final class NodeTranstyper
          * transtype, not to get an orphan node.
          */
         $node = new Node();
-        $node->setNodeName('testing_before_transtype' . $uniqueId);
+        $node->setNodeType($nodeType);
+        $node->setNodeName('testing_before_transtype'.$uniqueId);
         $this->getManager()->persist($node);
 
         $translation = new Translation();
         $translation->setAvailable(true);
         $translation->setLocale(\mb_substr($uniqueId, 0, 10));
-        $translation->setName('test' . $uniqueId);
+        $translation->setName('test'.$uniqueId);
         $this->getManager()->persist($translation);
 
         /** @var NodesSources $testSource */
         $testSource = new $sourceClass($node, $translation);
-        $testSource->setTitle('testing_before_transtype' . $uniqueId);
+        $testSource->setTitle('testing_before_transtype'.$uniqueId);
         $this->getManager()->persist($testSource);
         $this->getManager()->flush();
 

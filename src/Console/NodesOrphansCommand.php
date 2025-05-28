@@ -13,20 +13,13 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-/**
- * @package RZ\Roadiz\CoreBundle\Console
- */
-class NodesOrphansCommand extends Command
+final class NodesOrphansCommand extends Command
 {
-    protected ManagerRegistry $managerRegistry;
-
-    /**
-     * @param ManagerRegistry $managerRegistry
-     */
-    public function __construct(ManagerRegistry $managerRegistry)
-    {
-        parent::__construct();
-        $this->managerRegistry = $managerRegistry;
+    public function __construct(
+        private readonly ManagerRegistry $managerRegistry,
+        ?string $name = null,
+    ) {
+        parent::__construct($name);
     }
 
     protected function configure(): void
@@ -42,10 +35,6 @@ class NodesOrphansCommand extends Command
     }
 
     /**
-     * @param InputInterface  $input
-     * @param OutputInterface $output
-     *
-     * @return int
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
@@ -66,37 +55,40 @@ class NodesOrphansCommand extends Command
         } catch (NoResultException $e) {
         }
 
-        if (count($orphans) > 0) {
-            $io->note(sprintf('You have %s orphan node(s)!', count($orphans)));
-            $tableContent = [];
-
-            /** @var Node $node */
-            foreach ($orphans as $node) {
-                $tableContent[] = [
-                    $node->getId(),
-                    $node->getNodeName(),
-                    null !== $node->getNodeType() ? $node->getNodeType()->getName() : '',
-                    (!$node->isVisible() ? 'X' : ''),
-                    ($node->isPublished() ? 'X' : ''),
-                ];
-            }
-
-            $io->table(['Id', 'Name', 'Type', 'Hidden', 'Published'], $tableContent);
-
-            if ($input->getOption('delete')) {
-                /** @var Node $orphan */
-                foreach ($orphans as $orphan) {
-                    $entityManager->remove($orphan);
-                }
-                $entityManager->flush();
-
-                $io->success('Orphan nodes have been removed from your database.');
-            } else {
-                $io->note('Use --delete option to actually remove these nodes.');
-            }
-        } else {
+        if (0 === count($orphans)) {
             $io->success('That’s OK, you don’t have any orphan node.');
+
+            return 0;
         }
+
+        $io->note(sprintf('You have %s orphan node(s)!', count($orphans)));
+        $tableContent = [];
+
+        /** @var Node $node */
+        foreach ($orphans as $node) {
+            $tableContent[] = [
+                $node->getId(),
+                $node->getNodeName(),
+                null !== $node->getNodeType() ? $node->getNodeType()->getName() : '',
+                !$node->isVisible() ? 'X' : '',
+                $node->isPublished() ? 'X' : '',
+            ];
+        }
+
+        $io->table(['Id', 'Name', 'Type', 'Hidden', 'Published'], $tableContent);
+
+        if ($input->getOption('delete')) {
+            /** @var Node $orphan */
+            foreach ($orphans as $orphan) {
+                $entityManager->remove($orphan);
+            }
+            $entityManager->flush();
+
+            $io->success('Orphan nodes have been removed from your database.');
+        } else {
+            $io->note('Use --delete option to actually remove these nodes.');
+        }
+
         return 0;
     }
 }

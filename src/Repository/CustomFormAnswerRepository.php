@@ -15,21 +15,22 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class CustomFormAnswerRepository extends EntityRepository
 {
-    public function __construct(ManagerRegistry $registry, EventDispatcherInterface $dispatcher)
-    {
+    public function __construct(
+        ManagerRegistry $registry,
+        EventDispatcherInterface $dispatcher,
+    ) {
         parent::__construct($registry, CustomFormAnswer::class, $dispatcher);
     }
 
     protected function getCustomFormSubmittedBeforeQueryBuilder(): QueryBuilder
     {
         $qb = $this->createQueryBuilder('cfa');
+
         return $qb->andWhere($qb->expr()->eq('cfa.customForm', ':customForm'))
                   ->andWhere($qb->expr()->lte('cfa.submittedAt', ':submittedAt'));
     }
 
     /**
-     * @param CustomForm $customForm
-     * @param \DateTime $submittedAt
      * @return Paginator<CustomFormAnswer>
      */
     public function findByCustomFormSubmittedBefore(CustomForm $customForm, \DateTime $submittedAt): Paginator
@@ -37,13 +38,11 @@ final class CustomFormAnswerRepository extends EntityRepository
         $qb = $this->getCustomFormSubmittedBeforeQueryBuilder()
             ->setParameter(':customForm', $customForm)
             ->setParameter(':submittedAt', $submittedAt);
+
         return new Paginator($qb->getQuery());
     }
 
     /**
-     * @param CustomForm $customForm
-     * @param \DateTime $submittedAt
-     * @return int
      * @throws NoResultException
      * @throws NonUniqueResultException
      */
@@ -53,6 +52,7 @@ final class CustomFormAnswerRepository extends EntityRepository
             ->delete()
             ->setParameter(':customForm', $customForm)
             ->setParameter(':submittedAt', $submittedAt);
-        return $qb->getQuery()->getSingleScalarResult();
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 }
