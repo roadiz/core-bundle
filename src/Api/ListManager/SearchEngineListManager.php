@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 #[Exclude]
-final class SolrSearchListManager extends AbstractEntityListManager
+final class SearchEngineListManager extends AbstractEntityListManager
 {
     private ?SearchResultsInterface $searchResults = null;
     private ?string $query = null;
@@ -39,7 +39,7 @@ final class SolrSearchListManager extends AbstractEntityListManager
             throw new BadRequestHttpException('Search param is required.');
         }
         /*
-         * Query must be longer than 3 chars or Solr might crash
+         * Query must be longer than 3 chars or Solr engine might crash
          * on highlighting fields.
          */
         if (\mb_strlen($this->query) > 3) {

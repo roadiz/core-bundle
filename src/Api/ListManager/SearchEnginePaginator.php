@@ -8,11 +8,11 @@ use ApiPlatform\State\Pagination\PaginatorInterface;
 use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
 #[Exclude]
-final class SolrPaginator implements PaginatorInterface, \IteratorAggregate
+final class SearchEnginePaginator implements PaginatorInterface, \IteratorAggregate
 {
     private bool $handled = false;
 
-    public function __construct(private readonly SolrSearchListManager $listManager)
+    public function __construct(private readonly SearchEngineListManager $listManager)
     {
     }
 
