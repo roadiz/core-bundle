@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
+use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\NodeType\ApiResourceGenerator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -14,7 +15,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class GenerateApiResourceCommand extends Command
 {
     public function __construct(
-        private readonly NodeTypes $nodeTypesBag,
+        private readonly ManagerRegistry $managerRegistry,
         private readonly ApiResourceGenerator $apiResourceGenerator,
         ?string $name = null,
     ) {
@@ -31,7 +32,11 @@ final class GenerateApiResourceCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $nodeTypes = $this->nodeTypesBag->all();
+
+        /** @var NodeType[] $nodeTypes */
+        $nodeTypes = $this->managerRegistry
+            ->getRepository(NodeType::class)
+            ->findAll();
 
         if (0 === count($nodeTypes)) {
             $io->error('No available node-types…');

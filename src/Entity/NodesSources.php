@@ -20,8 +20,6 @@ use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
-use RZ\Roadiz\CoreBundle\Api\Filter\NodeTypePublishableFilter;
-use RZ\Roadiz\CoreBundle\Api\Filter\NodeTypeReachableFilter;
 use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -54,10 +52,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     Gedmo\Loggable(logEntryClass: UserLogEntry::class),
     UniqueEntity(fields: ['node', 'translation']),
     ApiFilter(PropertyFilter::class),
-    ApiFilter(NodeTypeReachableFilter::class),
-    ApiFilter(NodeTypePublishableFilter::class),
-    ApiFilter(RoadizFilter\LocaleFilter::class),
-    ApiFilter(RoadizFilter\TagGroupFilter::class),
+    ApiFilter(RoadizFilter\LocaleFilter::class)
 ]
 class NodesSources extends AbstractEntity implements Loggable
 {
@@ -138,7 +133,8 @@ class NodesSources extends AbstractEntity implements Loggable
         'node.parent.nodeName' => 'exact',
         'node.nodesTags.tag' => 'exact',
         'node.nodesTags.tag.tagName' => 'exact',
-        'node.nodeTypeName' => 'exact',
+        'node.nodeType' => 'exact',
+        'node.nodeType.name' => 'exact',
     ])]
     #[ApiFilter(BaseFilter\OrderFilter::class, properties: [
         'node.position',
@@ -158,9 +154,11 @@ class NodesSources extends AbstractEntity implements Loggable
     #[ApiFilter(BaseFilter\BooleanFilter::class, properties: [
         'node.visible',
         'node.home',
+        'node.nodeType.reachable',
+        'node.nodeType.publishable',
     ])]
     #[ApiFilter(RoadizFilter\NotFilter::class, properties: [
-        'node.nodeTypeName',
+        'node.nodeType.name',
         'node.id',
         'node.nodesTags.tag.tagName',
     ])]
@@ -545,22 +543,12 @@ class NodesSources extends AbstractEntity implements Loggable
         return 'NodesSources';
     }
 
-    #[Serializer\VirtualProperty]
-    #[Serializer\Groups(['node_type'])]
-    #[Serializer\SerializedName('nodeTypeColor')]
-    #[SymfonySerializer\Groups(['node_type'])]
-    #[SymfonySerializer\SerializedName('nodeTypeColor')]
-    public function getNodeTypeColor(): string
-    {
-        return '#000000';
-    }
-
     /**
      * Overridden in NS classes.
      */
     public function isPublishable(): bool
     {
-        throw new \RuntimeException('This method should only be called from children classes');
+        return $this->getNode()->getNodeType()->isPublishable();
     }
 
     /**
@@ -568,7 +556,7 @@ class NodesSources extends AbstractEntity implements Loggable
      */
     public function isReachable(): bool
     {
-        throw new \RuntimeException('This method should only be called from children classes');
+        return $this->getNode()->getNodeType()->isReachable();
     }
 
     /**

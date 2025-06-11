@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Model;
 
+use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Core\AbstractEntities\NodeInterface;
 use RZ\Roadiz\CoreBundle\Enum\NodeStatus;
 
@@ -27,12 +28,27 @@ final class NodeTreeDto implements NodeInterface
         private readonly string $childrenOrderDirection,
         private readonly bool $locked,
         // NodeType
-        private readonly string $nodeTypeName,
+        string $nodeTypeName,
+        bool $nodeTypePublishable,
+        bool $nodeTypeReachable,
+        string $nodeTypeDisplayName,
+        string $nodeTypeColor,
+        bool $nodeTypeHidingNodes,
+        bool $nodeTypeHidingNonReachableNodes,
         // Node source
         ?int $sourceId,
         ?string $title,
         ?\DateTime $publishedAt,
     ) {
+        $this->nodeType = new NodeTypeTreeDto(
+            $nodeTypeName,
+            $nodeTypePublishable,
+            $nodeTypeReachable,
+            $nodeTypeDisplayName,
+            $nodeTypeColor,
+            $nodeTypeHidingNodes,
+            $nodeTypeHidingNonReachableNodes
+        );
         $this->nodeSource = new NodesSourcesTreeDto(
             $sourceId,
             $title,
@@ -115,13 +131,13 @@ final class NodeTreeDto implements NodeInterface
         return $this->status->isDeleted();
     }
 
+    public function getNodeType(): NodeTypeInterface
+    {
+        return $this->nodeType;
+    }
+
     public function getNodeSource(): NodesSourcesTreeDto
     {
         return $this->nodeSource;
-    }
-
-    public function getNodeTypeName(): string
-    {
-        return $this->nodeTypeName;
     }
 }

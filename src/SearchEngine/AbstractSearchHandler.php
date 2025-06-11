@@ -328,18 +328,16 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
 
     /**
      * Create Solr Select query. Override it to add DisMax fields and rules.
-     *
-     * @param array<string, mixed> $args
      */
     protected function createSolrQuery(array &$args = [], int $rows = 20, int $page = 1): Query
     {
         $query = $this->getSolr()->createSelect();
+
         foreach ($args as $key => $value) {
             if (is_array($value)) {
-                $value = array_unique($value);
                 foreach ($value as $k => $v) {
                     $query->addFilterQuery([
-                        'key' => 'fq_'.$key.'_'.$k,
+                        'key' => 'fq'.$k,
                         'query' => $v,
                     ]);
                 }

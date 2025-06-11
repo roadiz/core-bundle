@@ -9,6 +9,7 @@ use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\CoreBundle\Model\AttributeInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeTrait;
@@ -46,6 +47,8 @@ class Attribute extends AbstractEntity implements AttributeInterface
             orphanRemoval: true
         ),
         ORM\OrderBy(['position' => 'ASC']),
+        Serializer\Exclude,
+        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Entity\AttributeDocuments>"),
         SymfonySerializer\Ignore
     ]
     protected Collection $attributeDocuments;
@@ -59,6 +62,7 @@ class Attribute extends AbstractEntity implements AttributeInterface
         onDelete: 'SET NULL'
     )]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private ?RealmInterface $defaultRealm = null;
 
     /**
@@ -66,7 +70,9 @@ class Attribute extends AbstractEntity implements AttributeInterface
      */
     #[
         ORM\Column(type: 'integer', nullable: false, options: ['default' => 0]),
-        SymfonySerializer\Groups(['attribute', 'attribute:export', 'attribute:import', 'node', 'nodes_sources']),
+        Serializer\Type('integer'),
+        Serializer\Groups(['attribute', 'node', 'nodes_sources']),
+        SymfonySerializer\Groups(['attribute', 'node', 'nodes_sources']),
         ApiFilter(OrderFilter::class),
         Range(min: 0, max: 9999),
         NotNull,
@@ -123,6 +129,8 @@ class Attribute extends AbstractEntity implements AttributeInterface
      * @return Collection<int, Document>
      */
     #[
+        Serializer\VirtualProperty(),
+        Serializer\Groups(['attribute', 'node', 'nodes_sources']),
         SymfonySerializer\Groups(['attribute', 'node', 'nodes_sources']),
     ]
     public function getDocuments(): Collection

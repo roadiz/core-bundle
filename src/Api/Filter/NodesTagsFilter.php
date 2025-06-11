@@ -162,7 +162,8 @@ final class NodesTagsFilter extends AbstractFilter
 
         if (array_key_exists('nodeTypeName', $parameters) && is_array($parameters['nodeTypeName'])) {
             $ntgQb
-                ->andWhere($ntgQb->expr()->in('n.nodeTypeName', ':nodeTypeName'));
+                ->innerJoin('n.nodeType', 'nt')
+                ->andWhere($ntgQb->expr()->in('nt.name', ':nodeTypeName'));
             $queryBuilder->setParameter(':nodeTypeName', $parameters['nodeTypeName']);
         }
 

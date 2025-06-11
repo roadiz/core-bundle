@@ -13,7 +13,7 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class ExplorerProviderItemType extends AbstractType
+class ExplorerProviderItemType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {

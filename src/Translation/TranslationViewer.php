@@ -19,9 +19,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 
-/**
- * @deprecated translationViewer is no longer used and will be removed in future versions
- */
 final class TranslationViewer
 {
     private ?TranslationInterface $translation = null;
@@ -74,8 +71,6 @@ final class TranslationViewer
      * @param bool $absolute Generate absolute url or relative paths
      *
      * @throws ORMException
-     *
-     * @deprecated
      */
     public function getTranslationMenuAssignation(Request $request, bool $absolute = false): array
     {
@@ -159,8 +154,10 @@ final class TranslationViewer
                     }
 
                     $attr['_route_params']['_locale'] = $translation->getPreferredLocale();
-                } elseif (key_exists('_locale', $attr['_route_params'])) {
-                    unset($attr['_route_params']['_locale']);
+                } else {
+                    if (key_exists('_locale', $attr['_route_params'])) {
+                        unset($attr['_route_params']['_locale']);
+                    }
                 }
 
                 /*

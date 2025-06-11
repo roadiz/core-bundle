@@ -15,10 +15,13 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class TagTranslationDocumentType extends AbstractType
+class TagTranslationDocumentType extends AbstractType
 {
-    public function __construct(private readonly ManagerRegistry $managerRegistry)
+    protected ManagerRegistry $managerRegistry;
+
+    public function __construct(ManagerRegistry $managerRegistry)
     {
+        $this->managerRegistry = $managerRegistry;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options): void

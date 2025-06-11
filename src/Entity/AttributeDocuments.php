@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
 use RZ\Roadiz\CoreBundle\Repository\AttributeDocumentsRepository;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
@@ -34,6 +35,7 @@ class AttributeDocuments extends AbstractPositioned
             nullable: false,
             onDelete: 'CASCADE'
         ),
+        Serializer\Exclude(),
         SymfonySerializer\Ignore()
     ]
     protected Attribute $attribute;
@@ -51,7 +53,9 @@ class AttributeDocuments extends AbstractPositioned
             nullable: false,
             onDelete: 'CASCADE'
         ),
+        Serializer\Groups(['attribute']),
         SymfonySerializer\Groups(['attribute']),
+        Serializer\Type(Document::class)
     ]
     protected Document $document;
 

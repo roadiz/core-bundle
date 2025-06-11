@@ -33,10 +33,15 @@ class NodesCustomForms extends AbstractPositioned
     protected CustomForm $customForm;
 
     /**
-     * Create a new relation between a Node, a CustomForm and a NodeTypeFieldInterface.
+     * Create a new relation between a Node, a CustomForm and a NodeTypeField.
+     *
+     * @param NodeTypeFieldInterface|null $field NodeTypeField
      */
     public function __construct(Node $node, CustomForm $customForm, ?NodeTypeFieldInterface $field = null)
     {
+        if (!$field instanceof NodeTypeField) {
+            throw new \InvalidArgumentException('NodesCustomForms only accept NodeTypeField');
+        }
         $this->node = $node;
         $this->customForm = $customForm;
         $this->initializeFieldAwareEntityTrait($field);

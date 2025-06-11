@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Explorer;
 
-use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
-
-#[AutoconfigureTag('roadiz.explorer_provider')]
 interface ExplorerProviderInterface
 {
     public function toExplorerItem(mixed $item): ?ExplorerItemInterface;

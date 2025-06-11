@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Serializer\Normalizer;
 
 use League\Flysystem\FilesystemOperator;
-use Psr\Log\LoggerInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
-use RZ\Roadiz\Documents\Exceptions\InvalidEmbedId;
 use RZ\Roadiz\Documents\MediaFinders\EmbedFinderFactory;
 use RZ\Roadiz\Documents\Models\FolderInterface;
 use RZ\Roadiz\Documents\UrlGenerators\DocumentUrlGeneratorInterface;
@@ -29,7 +27,6 @@ final class DocumentNormalizer extends AbstractPathNormalizer
         private readonly FilesystemOperator $documentsStorage,
         private readonly EmbedFinderFactory $embedFinderFactory,
         private readonly DocumentUrlGeneratorInterface $documentUrlGenerator,
-        private readonly LoggerInterface $logger,
     ) {
         parent::__construct($decorated, $urlGenerator, $stopwatch);
     }
@@ -70,14 +67,6 @@ final class DocumentNormalizer extends AbstractPathNormalizer
             }
 
             if (
-                \in_array('document_raw_relative_path', $serializationGroups, true)
-                && !$object->isPrivate()
-                && null !== $rawDocument = $object->getRawDocument()
-            ) {
-                $data['rawRelativePath'] = $rawDocument->getRelativePath();
-            }
-
-            if (
                 \in_array('document_folders_all', $serializationGroups, true)
             ) {
                 $data['folders'] = $object->getFolders()
@@ -100,20 +89,12 @@ final class DocumentNormalizer extends AbstractPathNormalizer
                 $object->getEmbedPlatform()
                 && $object->getEmbedId()
             ) {
-                try {
-                    $embedFinder = $this->embedFinderFactory->createForPlatform(
-                        $object->getEmbedPlatform(),
-                        $object->getEmbedId()
-                    );
-                    if (null !== $embedFinder) {
-                        $data['embedUrl'] = $embedFinder->getSource();
-                    }
-                } catch (InvalidEmbedId $exception) {
-                    $this->logger->error($exception->getMessage(), [
-                        'document' => $object->getId(),
-                        'embedId' => $object->getEmbedId(),
-                        'embedPlatform' => $object->getEmbedPlatform(),
-                    ]);
+                $embedFinder = $this->embedFinderFactory->createForPlatform(
+                    $object->getEmbedPlatform(),
+                    $object->getEmbedId()
+                );
+                if (null !== $embedFinder) {
+                    $data['embedUrl'] = $embedFinder->getSource();
                 }
             }
 
