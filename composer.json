@@ -18,55 +18,54 @@
     "type": "symfony-bundle",
     "prefer-stable": true,
     "require": {
-        "php": ">=8.2",
+        "php": ">=8.1",
         "ext-ctype": "*",
         "ext-iconv": "*",
         "ext-zip": "*",
         "ext-json": "*",
-        "ext-mbstring": "*",
-        "api-platform/core": "~3.3.11",
-        "doctrine/annotations": "^2.0",
+        "api-platform/core": "~3.2.14",
+        "doctrine/annotations": "^1.0",
         "doctrine/doctrine-bundle": "^2.8.1",
         "doctrine/doctrine-migrations-bundle": "^3.1",
-        "doctrine/orm": "~2.20.0",
-        "gedmo/doctrine-extensions": "^3.19.0",
+        "doctrine/orm": "~2.19.0",
+        "gedmo/doctrine-extensions": "^3.10.0",
         "inlinestyle/inlinestyle": "~1.2.7",
         "james-heinrich/getid3": "^1.9",
-        "jms/serializer": "^3.32.3",
-        "jms/serializer-bundle": "^5.5.1",
+        "jms/serializer": "^3.9.0",
+        "jms/serializer-bundle": "^4.2.0",
         "league/flysystem": "^3.0",
         "league/flysystem-bundle": "^3.0",
-        "lexik/jwt-authentication-bundle": "^3.1.0",
+        "lexik/jwt-authentication-bundle": "^2.19",
         "phpdocumentor/reflection-docblock": "^5.2",
         "phpoffice/phpspreadsheet": "^1.15",
         "ramsey/uuid": "^4.7",
-        "rezozero/intervention-request-bundle": "~4.0.0",
-        "rezozero/liform-bundle": "^0.20.1",
+        "rezozero/intervention-request-bundle": "~3.0.0",
+        "rezozero/liform-bundle": "^0.19",
         "rezozero/tree-walker": "^1.5.0",
-        "roadiz/doc-generator": "2.5.*",
-        "roadiz/documents": "2.5.*",
-        "roadiz/dts-generator": "2.5.*",
-        "roadiz/entity-generator": "2.5.*",
-        "roadiz/jwt": "2.5.*",
-        "roadiz/markdown": "2.5.*",
-        "roadiz/models": "2.5.*",
-        "roadiz/nodetype-contracts": "^2.0.0",
-        "roadiz/random": "2.5.*",
-        "rollerworks/password-common-list": "^0.3.0",
-        "rollerworks/password-strength-bundle": "^3.0",
+        "roadiz/doc-generator": "2.3.*",
+        "roadiz/documents": "2.3.*",
+        "roadiz/dts-generator": "2.3.*",
+        "roadiz/entity-generator": "2.3.*",
+        "roadiz/jwt": "2.3.*",
+        "roadiz/markdown": "2.3.*",
+        "roadiz/models": "2.3.*",
+        "roadiz/nodetype-contracts": "~1.1.2",
+        "roadiz/random": "2.3.*",
+        "rollerworks/password-common-list": "^0.2.0",
+        "rollerworks/password-strength-bundle": "^2.2",
         "scienta/doctrine-json-functions": "^4.2",
-        "solarium/solarium": "^6.3.6",
-        "symfony-cmf/routing-bundle": "^3.1.0",
+        "sensio/framework-extra-bundle": "^6.1",
+        "solarium/solarium": "^6.0.4",
+        "symfony-cmf/routing-bundle": "^3.0.2",
         "symfony/asset": "6.4.*",
         "symfony/cache": "6.4.*",
         "symfony/console": "6.4.*",
         "symfony/dotenv": "6.4.*",
         "symfony/expression-language": "6.4.*",
-        "symfony/flex": "^2.4.7",
+        "symfony/flex": "^2.2.3",
         "symfony/form": "6.4.*",
         "symfony/framework-bundle": "6.4.*",
         "symfony/http-client": "6.4.*",
-        "symfony/http-client-contracts": "^3.5",
         "symfony/intl": "6.4.*",
         "symfony/lock": "6.4.*",
         "symfony/mailer": "6.4.*",
@@ -89,10 +88,10 @@
         "symfony/web-link": "6.4.*",
         "symfony/workflow": "6.4.*",
         "symfony/yaml": "6.4.*",
-        "twig/extra-bundle": "^3.16",
+        "twig/extra-bundle": "^3.0",
         "twig/intl-extra": "*",
         "twig/string-extra": "*",
-        "twig/twig": "^3.16"
+        "twig/twig": "^3.1"
     },
     "replace": {
         "roadiz/roadiz": "*"
@@ -100,9 +99,9 @@
     "require-dev": {
         "php-coveralls/php-coveralls": "^2.4",
         "phpstan/phpstan": "^1.5.3",
-        "phpstan/phpdoc-parser": "<2",
         "phpstan/phpstan-doctrine": "^1.3",
         "phpunit/phpunit": "^9.5",
+        "squizlabs/php_codesniffer": "^3.5",
         "symfony/browser-kit": "6.4.*",
         "symfony/phpunit-bridge": "^7.0",
         "symfony/stopwatch": "6.4.*"
@@ -122,10 +121,7 @@
     "autoload": {
         "psr-4": {
             "RZ\\Roadiz\\CoreBundle\\": "src/"
-        },
-        "files": [
-            "deprecated.php"
-        ]
+        }
     },
     "autoload-dev": {
         "psr-4": {
@@ -140,8 +136,8 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-main": "2.5.x-dev",
-            "dev-develop": "2.6.x-dev"
+            "dev-main": "2.3.x-dev",
+            "dev-develop": "2.4.x-dev"
         }
     }
 }

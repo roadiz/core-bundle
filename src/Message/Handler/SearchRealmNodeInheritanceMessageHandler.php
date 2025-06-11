@@ -14,19 +14,18 @@ use RZ\Roadiz\CoreBundle\Message\ApplyRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Message\CleanRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Message\SearchRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
-use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
+use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-#[AsMessageHandler]
-final readonly class SearchRealmNodeInheritanceMessageHandler
+final class SearchRealmNodeInheritanceMessageHandler implements MessageHandlerInterface
 {
     public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private HandlerFactoryInterface $handlerFactory,
-        private MessageBusInterface $bus,
-        private LoggerInterface $logger,
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly HandlerFactoryInterface $handlerFactory,
+        private readonly MessageBusInterface $bus,
+        private readonly LoggerInterface $logger
     ) {
     }
 
@@ -47,7 +46,7 @@ final readonly class SearchRealmNodeInheritanceMessageHandler
         /** @var RealmNode[] $autoRealmNodes */
         $autoRealmNodes = $this->managerRegistry->getRepository(RealmNode::class)->findBy([
             'node' => $node,
-            'inheritanceType' => RealmInterface::INHERITANCE_AUTO,
+            'inheritanceType' => RealmInterface::INHERITANCE_AUTO
         ]);
 
         /*
@@ -68,7 +67,7 @@ final readonly class SearchRealmNodeInheritanceMessageHandler
         $nodeHandler = $this->handlerFactory->getHandler($node);
         $parents = $nodeHandler->getParents();
 
-        if (0 === count($parents)) {
+        if (count($parents) === 0) {
             return;
         }
 

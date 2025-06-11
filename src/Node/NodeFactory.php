@@ -7,7 +7,6 @@ namespace RZ\Roadiz\CoreBundle\Node;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
@@ -16,12 +15,11 @@ use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
 use RZ\Roadiz\CoreBundle\Repository\NodeRepository;
 use RZ\Roadiz\CoreBundle\Repository\UrlAliasRepository;
 
-final readonly class NodeFactory
+final class NodeFactory
 {
     public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private NodeNamePolicyInterface $nodeNamePolicy,
-        private NodeTypes $nodeTypesBag,
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly NodeNamePolicyInterface $nodeNamePolicy
     ) {
     }
 
@@ -30,36 +28,34 @@ final readonly class NodeFactory
         ?NodeTypeInterface $type = null,
         ?TranslationInterface $translation = null,
         ?Node $node = null,
-        ?Node $parent = null,
+        ?Node $parent = null
     ): Node {
         /** @var NodeRepository $repository */
         $repository = $this->managerRegistry->getRepository(Node::class)
             ->setDisplayingAllNodesStatuses(true);
 
-        if (null === $node && null === $type) {
+        if ($node === null && $type === null) {
             throw new \RuntimeException('Cannot create node from null NodeType and null Node.');
         }
 
-        if (null === $translation) {
+        if ($translation === null) {
             $translation = $this->managerRegistry->getRepository(Translation::class)->findDefault();
         }
 
-        if (null === $node) {
+        if ($node === null) {
             $node = new Node();
-            $node->setNodeTypeName($type->getName());
+            $node->setNodeType($type);
         }
 
-        $nodeType = $this->nodeTypesBag->get($node->getNodeTypeName());
-        if (!$nodeType instanceof NodeType) {
-            throw new \RuntimeException('Cannot create node from invalid NodeType.');
+        if ($node->getNodeType() instanceof NodeType) {
+            $node->setTtl($node->getNodeType()->getDefaultTtl());
         }
-        $node->setTtl($nodeType->getDefaultTTL());
 
         if (null !== $parent) {
             $node->setParent($parent);
         }
 
-        $sourceClass = $nodeType->getSourceEntityFullQualifiedClassName();
+        $sourceClass = $node->getNodeType()->getSourceEntityFullQualifiedClassName();
         /** @var NodesSources $source */
         $source = new $sourceClass($node, $translation);
         $manager = $this->managerRegistry->getManagerForClass(NodesSources::class);
@@ -94,7 +90,7 @@ final readonly class NodeFactory
         ?NodeTypeInterface $type = null,
         ?TranslationInterface $translation = null,
         ?Node $node = null,
-        ?Node $parent = null,
+        ?Node $parent = null
     ): Node {
         $node = $this->create($title, $type, $translation, $node, $parent);
         $nodeSource = $node->getNodeSources()->first();

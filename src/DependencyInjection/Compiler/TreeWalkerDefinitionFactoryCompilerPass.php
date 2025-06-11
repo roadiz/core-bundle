@@ -11,6 +11,9 @@ use Symfony\Component\DependencyInjection\Reference;
 
 class TreeWalkerDefinitionFactoryCompilerPass implements CompilerPassInterface
 {
+    /**
+     * @inheritDoc
+     */
     public function process(ContainerBuilder $container): void
     {
         if ($container->has(TreeWalkerGenerator::class)) {
@@ -29,7 +32,7 @@ class TreeWalkerDefinitionFactoryCompilerPass implements CompilerPassInterface
                             [
                                 $tag['classname'],
                                 new Reference($serviceId),
-                                $tag['onlyVisible'] ?? true,
+                                $tag['onlyVisible'] ?? true
                             ]
                         );
                     }

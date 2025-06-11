@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
@@ -15,15 +14,11 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-/**
- * @deprecated
- */
 final class NodesDetailsCommand extends Command
 {
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
-        private readonly NodeTypes $nodeTypesBag,
-        ?string $name = null,
+        ?string $name = null
     ) {
         parent::__construct($name);
     }
@@ -46,7 +41,6 @@ final class NodesDetailsCommand extends Command
 
         /**
          * @var NodesSources|null $source
-         *
          * @phpstan-ignore-next-line
          */
         $source = $this->managerRegistry->getRepository(NodesSources::class)
@@ -60,10 +54,8 @@ final class NodesDetailsCommand extends Command
             $io->title('Title');
             $io->text($source->getTitle());
 
-            $fields = $this->nodeTypesBag->get($source->getNodeTypeName())->getFields();
-
             /** @var NodeTypeField $field */
-            foreach ($fields as $field) {
+            foreach ($source->getNode()->getNodeType()->getFields() as $field) {
                 if (!$field->isVirtual()) {
                     $getter = $field->getGetterName();
                     $data = $source->$getter();
@@ -86,10 +78,8 @@ final class NodesDetailsCommand extends Command
             }
         } else {
             $io->error('No node found.');
-
             return 1;
         }
-
         return 0;
     }
 }

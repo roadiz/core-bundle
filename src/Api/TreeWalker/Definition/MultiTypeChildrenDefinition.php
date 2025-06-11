@@ -46,7 +46,7 @@ final class MultiTypeChildrenDefinition
         }
 
         $this->context->getStopwatch()->start(self::class);
-        $queryBuilder = $this->getQueryBuilder($source, $this->onlyVisible);
+        $queryBuilder = $this->getQueryBuilder($source);
         $this->context->getStopwatch()->stop(self::class);
 
         return $queryBuilder->getQuery()->getResult();

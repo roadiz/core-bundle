@@ -9,26 +9,44 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 
 interface AttributeValueTranslationInterface extends PersistableInterface
 {
-    public function getValue(): mixed;
+    /**
+     * @return mixed
+     */
+    public function getValue();
 
     /**
-     * @return $this
+     * @param mixed $value
+     *
+     * @return mixed
      */
-    public function setValue(mixed $value): self;
+    public function setValue($value);
 
     /**
-     * @return $this
+     * @param TranslationInterface $translation
+     *
+     * @return mixed
      */
-    public function setTranslation(TranslationInterface $translation): self;
+    public function setTranslation(TranslationInterface $translation);
 
+    /**
+     * @return TranslationInterface|null
+     */
     public function getTranslation(): ?TranslationInterface;
 
+    /**
+     * @return AttributeInterface|null
+     */
     public function getAttribute(): ?AttributeInterface;
 
+    /**
+     * @return AttributeValueInterface
+     */
     public function getAttributeValue(): AttributeValueInterface;
 
     /**
-     * @return $this
+     * @param AttributeValueInterface $attributeValue
+     *
+     * @return mixed
      */
-    public function setAttributeValue(AttributeValueInterface $attributeValue): self;
+    public function setAttributeValue(AttributeValueInterface $attributeValue);
 }
