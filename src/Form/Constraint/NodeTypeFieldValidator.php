@@ -18,6 +18,9 @@ use Symfony\Component\Validator\ConstraintValidator;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
+/**
+ * @deprecated nodeTypes will be static in future Roadiz versions
+ */
 class NodeTypeFieldValidator extends ConstraintValidator
 {
     public function __construct(
@@ -29,6 +32,7 @@ class NodeTypeFieldValidator extends ConstraintValidator
     {
         if (!$value instanceof NodeTypeFieldEntity) {
             $this->context->buildViolation('Value is not a valid NodeTypeField.')->addViolation();
+
             return;
         }
 
@@ -63,10 +67,6 @@ class NodeTypeFieldValidator extends ConstraintValidator
         }
     }
 
-    /**
-     * @param NodeTypeFieldEntity $value
-     * @param Constraint $constraint
-     */
     protected function validateJoinTypes(NodeTypeFieldEntity $value, Constraint $constraint): void
     {
         try {
@@ -88,6 +88,7 @@ class NodeTypeFieldValidator extends ConstraintValidator
                         ->setParameter('%classname%', $configuration['classname'])
                         ->atPath('classname')
                         ->addViolation();
+
                     return;
                 }
 
@@ -135,9 +136,6 @@ class NodeTypeFieldValidator extends ConstraintValidator
     }
 
     /**
-     * @param NodeTypeFieldEntity $value
-     * @param Constraint $constraint
-     *
      * @throws \ReflectionException
      */
     protected function validateProviderTypes(NodeTypeFieldEntity $value, Constraint $constraint): void
@@ -164,6 +162,7 @@ class NodeTypeFieldValidator extends ConstraintValidator
                             ->setParameter('%classname%', $configuration['classname'])
                             ->atPath('defaultValues')
                             ->addViolation();
+
                         return;
                     }
 
@@ -183,10 +182,6 @@ class NodeTypeFieldValidator extends ConstraintValidator
         }
     }
 
-    /**
-     * @param NodeTypeFieldEntity $value
-     * @param Constraint $constraint
-     */
     protected function validateCollectionTypes(NodeTypeFieldEntity $value, Constraint $constraint): void
     {
         try {
@@ -208,6 +203,7 @@ class NodeTypeFieldValidator extends ConstraintValidator
                         ->setParameter('%classname%', $configuration['entry_type'])
                         ->atPath('defaultValues')
                         ->addViolation();
+
                     return;
                 }
 
@@ -226,9 +222,6 @@ class NodeTypeFieldValidator extends ConstraintValidator
         }
     }
 
-    /**
-     * @param NodeTypeFieldEntity $value
-     */
     protected function validateMarkdownOptions(NodeTypeFieldEntity $value): void
     {
         try {
