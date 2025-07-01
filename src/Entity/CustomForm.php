@@ -26,19 +26,22 @@ use Symfony\Component\Validator\Constraints as Assert;
     ORM\Entity(repositoryClass: CustomFormRepository::class),
     ORM\Table(name: "custom_forms"),
     ORM\HasLifecycleCallbacks,
-    UniqueEntity(fields: ["name"])
+    UniqueEntity(fields: ["name"]),
+    ORM\Index(columns: ["created_at"], name: "custom_form_created_at"),
+    ORM\Index(columns: ["updated_at"], name: "custom_form_updated_at"),
 ]
 class CustomForm extends AbstractDateTimed
 {
     #[
-        ORM\Column(name: "color", type: "string", unique: false, nullable: true),
+        ORM\Column(name: "color", type: "string", length: 7, unique: false, nullable: true),
         Serializer\Groups(["custom_form", "nodes_sources"]),
+        Assert\Length(max: 7),
         SymfonySerializer\Ignore()
     ]
     protected ?string $color = '#000000';
 
     #[
-        ORM\Column(type: "string", unique: true),
+        ORM\Column(type: "string", length: 250, unique: true),
         Serializer\Groups(["custom_form", "nodes_sources"]),
         SymfonySerializer\Groups(["custom_form", "nodes_sources"]),
         Assert\NotNull(),
@@ -49,7 +52,7 @@ class CustomForm extends AbstractDateTimed
     private string $name = 'Untitled';
 
     #[
-        ORM\Column(name: "display_name", type: "string"),
+        ORM\Column(name: "display_name", type: "string", length: 250),
         Serializer\Groups(["custom_form", "nodes_sources"]),
         SymfonySerializer\Groups(["custom_form", "nodes_sources"]),
         Assert\NotNull(),
@@ -79,6 +82,7 @@ class CustomForm extends AbstractDateTimed
         ORM\Column(type: "string", length: 15, nullable: true),
         Serializer\Groups(["custom_form"]),
         SymfonySerializer\Groups(["custom_form"]),
+        Assert\Length(max: 15),
         SymfonySerializer\Ignore()
     ]
     private ?string $retentionTime = null;
@@ -104,7 +108,12 @@ class CustomForm extends AbstractDateTimed
      * @var Collection<int, CustomFormField>
      */
     #[
-        ORM\OneToMany(mappedBy: "customForm", targetEntity: CustomFormField::class, cascade: ["ALL"]),
+        ORM\OneToMany(
+            mappedBy: "customForm",
+            targetEntity: CustomFormField::class,
+            cascade: ["ALL"],
+            orphanRemoval: true
+        ),
         ORM\OrderBy(["position" => "ASC"]),
         Serializer\Groups(["custom_form"]),
         SymfonySerializer\Groups(["custom_form"]),
@@ -119,7 +128,8 @@ class CustomForm extends AbstractDateTimed
         ORM\OneToMany(
             mappedBy: "customForm",
             targetEntity: CustomFormAnswer::class,
-            cascade: ["ALL"]
+            cascade: ["ALL"],
+            orphanRemoval: true
         ),
         Serializer\Exclude,
         SymfonySerializer\Ignore
@@ -173,10 +183,9 @@ class CustomForm extends AbstractDateTimed
     }
 
     /**
-     * @param string $description
      * @return $this
      */
-    public function setDescription(string $description): CustomForm
+    public function setDescription(?string $description): CustomForm
     {
         $this->description = $description;
         return $this;
@@ -259,13 +268,9 @@ class CustomForm extends AbstractDateTimed
     }
 
     /**
-     * Sets the value of color.
-     *
-     * @param string $color
-     *
      * @return $this
      */
-    public function setColor(string $color): CustomForm
+    public function setColor(?string $color): CustomForm
     {
         $this->color = $color;
         return $this;
@@ -335,14 +340,13 @@ class CustomForm extends AbstractDateTimed
     {
         if ($this->getFields()->contains($field)) {
             $this->getFields()->removeElement($field);
-            $field->setCustomForm(null);
         }
 
         return $this;
     }
 
     /**
-     * @return Collection
+     * @return Collection<int, CustomFormAnswer>
      */
     public function getCustomFormAnswers(): Collection
     {

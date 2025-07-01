@@ -4,36 +4,25 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Node;
 
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\CoreBundle\Entity\AttributeValue;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments;
 use RZ\Roadiz\CoreBundle\Entity\NodesToNodes;
+use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
 /**
  * Handles node duplication.
  */
+#[Exclude]
 final class NodeDuplicator
 {
-    private Node $originalNode;
-    private ObjectManager $objectManager;
-    private NodeNamePolicyInterface $nodeNamePolicy;
-
-    /**
-     * @param Node $originalNode
-     * @param ObjectManager $objectManager
-     * @param NodeNamePolicyInterface $nodeNamePolicy
-     */
     public function __construct(
-        Node $originalNode,
-        ObjectManager $objectManager,
-        NodeNamePolicyInterface $nodeNamePolicy
+        private readonly Node $originalNode,
+        private readonly ObjectManager $objectManager,
+        private readonly NodeNamePolicyInterface $nodeNamePolicy
     ) {
-        $this->objectManager = $objectManager;
-        $this->originalNode = $originalNode;
-        $this->nodeNamePolicy = $nodeNamePolicy;
     }
 
     /**
@@ -79,8 +68,12 @@ final class NodeDuplicator
      */
     private function doDuplicate(Node &$node): Node
     {
+        $nodeSource = $node->getNodeSources()->first();
+        if (false === $nodeSource) {
+            throw new \RuntimeException('Node source is missing.');
+        }
         $node->setNodeName(
-            $this->nodeNamePolicy->getSafeNodeName($node->getNodeSources()->first())
+            $this->nodeNamePolicy->getSafeNodeName($nodeSource)
         );
 
         /** @var Node $child */
@@ -98,8 +91,7 @@ final class NodeDuplicator
                 $nsDoc->setNodeSource($nodeSource);
                 $doc = $nsDoc->getDocument();
                 $nsDoc->setDocument($doc);
-                $f = $nsDoc->getField();
-                $nsDoc->setField($f);
+                $nsDoc->setFieldName($nsDoc->getFieldName());
                 $this->objectManager->persist($nsDoc);
             }
         }
@@ -133,17 +125,16 @@ final class NodeDuplicator
      * Warning, do not do any FLUSH here to preserve transactional integrity.
      *
      * @param Node $node
-     * @return Node
      */
-    private function doDuplicateNodeRelations(Node $node): Node
+    private function doDuplicateNodeRelations(Node $node): void
     {
-        $nodeRelations = new ArrayCollection($node->getBNodes()->toArray());
+        /** @var NodesToNodes[] $nodeRelations */
+        $nodeRelations = $node->getBNodes()->toArray();
         foreach ($nodeRelations as $position => $nodeRelation) {
-            $ntn = new NodesToNodes($node, $nodeRelation->getNodeB(), $nodeRelation->getField());
+            $ntn = new NodesToNodes($node, $nodeRelation->getNodeB());
+            $ntn->setFieldName($nodeRelation->getFieldName());
             $ntn->setPosition($position);
             $this->objectManager->persist($ntn);
         }
-
-        return $node;
     }
 }

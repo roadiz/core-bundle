@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter as BaseFilter;
-use ApiPlatform\Core\Serializer\Filter\PropertyFilter;
+use ApiPlatform\Doctrine\Orm\Filter as BaseFilter;
 use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiProperty;
+use ApiPlatform\Serializer\Filter\PropertyFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
-use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimedPositioned;
 use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
 use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Api\Filter\NodesTagsFilter;
 use RZ\Roadiz\CoreBundle\Api\Filter\NotFilter;
 use RZ\Roadiz\CoreBundle\Repository\TagRepository;
 use RZ\Roadiz\Utils\StringHandler;
@@ -40,6 +41,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     ORM\Index(columns: ["parent_tag_id", "visible", "position"], name: "tag_parent_visible_position"),
     UniqueEntity(fields: ["tagName"]),
     ApiFilter(PropertyFilter::class),
+    ApiFilter(NodesTagsFilter::class),
     ApiFilter(BaseFilter\OrderFilter::class, properties: [
         "position",
         "createdAt",
@@ -61,6 +63,10 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     #[SymfonySerializer\Groups(['tag', 'tag_color', 'color'])]
     #[Serializer\Groups(['tag', 'tag_color', 'color'])]
     #[Assert\Length(max: 7)]
+    #[ApiProperty(
+        description: 'Tag color in hexadecimal format.',
+        example: '#ff0000',
+    )]
     protected string $color = '#000000';
 
     /**
@@ -103,7 +109,6 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
         mappedBy: 'tag',
         targetEntity: TagTranslation::class,
         cascade: ['all'],
-        fetch: 'EAGER',
         orphanRemoval: true
     )]
     #[SymfonySerializer\Groups(['translated_tag'])]
@@ -111,13 +116,17 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     protected Collection $translatedTags;
 
     #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
-    #[ORM\Column(name: 'tag_name', type: 'string', unique: true)]
+    #[ORM\Column(name: 'tag_name', type: 'string', length: 250, unique: true)]
     #[SymfonySerializer\Ignore]
     #[Serializer\Groups(['tag'])]
     #[Serializer\Accessor(getter: "getTagName", setter: "setTagName")]
     #[Assert\NotNull]
     #[Assert\NotBlank]
     #[Assert\Length(max: 250)]
+    #[ApiProperty(
+        description: 'Unique tag name (slug) used to build content URL or filter queries.',
+        example: 'this-is-a-tag-name',
+    )]
     private string $tagName = '';
 
     #[SymfonySerializer\Ignore]
@@ -128,24 +137,50 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => true])]
     #[SymfonySerializer\Groups(['tag', 'tag_base', 'node', 'nodes_sources'])]
     #[Serializer\Groups(['tag', 'tag_base', 'node', 'nodes_sources'])]
+    #[ApiProperty(
+        description: 'Is this tag visible in website?',
+        example: 'true',
+    )]
     private bool $visible = true;
 
-    #[ORM\Column(name: 'children_order', type: 'string', options: ['default' => 'position'])]
+    #[ORM\Column(name: 'children_order', type: 'string', length: 60, options: ['default' => 'position'])]
     #[SymfonySerializer\Ignore]
     #[Serializer\Groups(["tag", "tag_children_order"])]
     #[Assert\Length(max: 60)]
+    #[ApiProperty(
+        description: 'This tag children will be sorted by a given field',
+        example: 'position',
+        schema: [
+            'type' => 'string',
+            'enum' => ['position', 'tagName', 'createdAt', 'updatedAt', 'publishedAt'],
+            'example' => 'position'
+        ],
+    )]
     private string $childrenOrder = 'position';
 
     #[ORM\Column(name: 'children_order_direction', type: 'string', length: 4, options: ['default' => 'ASC'])]
     #[SymfonySerializer\Ignore]
     #[Serializer\Groups(["tag", "tag_children_order"])]
     #[Assert\Length(max: 4)]
+    #[ApiProperty(
+        description: 'This tag children will be sorted ascendant or descendant',
+        example: 'ASC',
+        schema: [
+            'type' => 'string',
+            'enum' => ['ASC', 'DESC'],
+            'example' => 'ASC'
+        ],
+    )]
     private string $childrenOrderDirection = 'ASC';
 
     #[ApiFilter(BaseFilter\BooleanFilter::class)]
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
     #[SymfonySerializer\Ignore]
     #[Serializer\Groups(["tag"])]
+    #[ApiProperty(
+        description: 'Is this tag locked to prevent deletion and renaming?',
+        example: 'false',
+    )]
     private bool $locked = false;
 
     /**
@@ -476,5 +511,18 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
         $this->parent?->addChild($this);
 
         return $this;
+    }
+
+
+    #[ApiProperty(
+        description: 'Unique tag name (slug) used to build content URL or filter queries.',
+        example: 'this-is-a-tag-name',
+    )]
+    #[SymfonySerializer\SerializedName('slug')]
+    #[SymfonySerializer\Groups(['tag', 'tag_base', 'node', 'nodes_sources'])]
+    #[Serializer\Groups(['tag', 'tag_base', 'node', 'nodes_sources'])]
+    public function getSlug(): string
+    {
+        return $this->getTagName();
     }
 }

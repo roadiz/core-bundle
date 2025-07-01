@@ -8,22 +8,35 @@ use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Theme;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 /**
- * UrlMatcher which tries to grab Node and Translation
- * information for a route.
+ * UrlMatcher which tries to grab Node and Translation information for a route.
  */
 final class NodeUrlMatcher extends DynamicUrlMatcher implements NodeUrlMatcherInterface
 {
-    protected PathResolverInterface $pathResolver;
     /**
-     * @var class-string
+     * @param PathResolverInterface $pathResolver
+     * @param RequestContext $context
+     * @param PreviewResolverInterface $previewResolver
+     * @param Stopwatch $stopwatch
+     * @param LoggerInterface $logger
+     * @param class-string<AbstractController> $defaultControllerClass
      */
-    private string $defaultControllerClass;
+    public function __construct(
+        private readonly PathResolverInterface $pathResolver,
+        RequestContext $context,
+        PreviewResolverInterface $previewResolver,
+        Stopwatch $stopwatch,
+        LoggerInterface $logger,
+        private readonly string $defaultControllerClass
+    ) {
+        parent::__construct($context, $previewResolver, $stopwatch, $logger);
+    }
 
     /**
      * @return array
@@ -42,28 +55,7 @@ final class NodeUrlMatcher extends DynamicUrlMatcher implements NodeUrlMatcherIn
     }
 
     /**
-     * @param PathResolverInterface $pathResolver
-     * @param RequestContext $context
-     * @param PreviewResolverInterface $previewResolver
-     * @param Stopwatch $stopwatch
-     * @param LoggerInterface $logger
-     * @param class-string $defaultControllerClass
-     */
-    public function __construct(
-        PathResolverInterface $pathResolver,
-        RequestContext $context,
-        PreviewResolverInterface $previewResolver,
-        Stopwatch $stopwatch,
-        LoggerInterface $logger,
-        string $defaultControllerClass
-    ) {
-        parent::__construct($context, $previewResolver, $stopwatch, $logger);
-        $this->pathResolver = $pathResolver;
-        $this->defaultControllerClass = $defaultControllerClass;
-    }
-
-    /**
-     * {@inheritdoc}
+     * @inheritDoc
      */
     public function match(string $pathinfo): array
     {
@@ -89,7 +81,6 @@ final class NodeUrlMatcher extends DynamicUrlMatcher implements NodeUrlMatcherIn
      * @param string $decodedUrl
      * @param Theme|null $theme
      * @return array
-     * @throws \ReflectionException
      */
     public function matchNode(string $decodedUrl, ?Theme $theme): array
     {

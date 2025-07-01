@@ -17,8 +17,8 @@ final class ReachableNodeSourceDefinition
     use NodeSourceDefinitionTrait;
 
     public function __construct(
-        private WalkerContextInterface $context,
-        private bool $onlyVisible = true,
+        private readonly WalkerContextInterface $context,
+        private readonly bool $onlyVisible = true,
     ) {
     }
 

@@ -8,7 +8,6 @@ use League\Flysystem\FilesystemOperator;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
-use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\Documents\MediaFinders\EmbedFinderFactory;
 use RZ\Roadiz\Documents\Models\FolderInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -19,18 +18,13 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
  */
 final class DocumentNormalizer extends AbstractPathNormalizer
 {
-    private FilesystemOperator $documentsStorage;
-    private EmbedFinderFactory $embedFinderFactory;
-
     public function __construct(
-        FilesystemOperator $documentsStorage,
         NormalizerInterface $decorated,
         UrlGeneratorInterface $urlGenerator,
-        EmbedFinderFactory $embedFinderFactory
+        private readonly FilesystemOperator $documentsStorage,
+        private readonly EmbedFinderFactory $embedFinderFactory
     ) {
         parent::__construct($decorated, $urlGenerator);
-        $this->documentsStorage = $documentsStorage;
-        $this->embedFinderFactory = $embedFinderFactory;
     }
 
     /**
@@ -40,7 +34,7 @@ final class DocumentNormalizer extends AbstractPathNormalizer
      * @return array|\ArrayObject|bool|float|int|string|null
      * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
      */
-    public function normalize($object, $format = null, array $context = [])
+    public function normalize(mixed $object, ?string $format = null, array $context = []): mixed
     {
         $data = $this->decorated->normalize($object, $format, $context);
         if (
@@ -59,6 +53,14 @@ final class DocumentNormalizer extends AbstractPathNormalizer
                 if (null !== $mountPath) {
                     $data['publicUrl'] = $this->documentsStorage->publicUrl($mountPath);
                 }
+            }
+
+            if (
+                !$object->isPrivate() &&
+                $object->isProcessable() &&
+                null !== $alignment = $object->getImageCropAlignment()
+            ) {
+                $data['imageCropAlignment'] = $alignment;
             }
 
             if (
