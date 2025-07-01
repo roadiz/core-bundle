@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
 
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\AttributeTranslation;
 use RZ\Roadiz\CoreBundle\Form\DataTransformer\TranslationTransformer;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -14,11 +15,13 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\NotNull;
 
-final class AttributeTranslationType extends AbstractType
+class AttributeTranslationType extends AbstractType
 {
-    public function __construct(
-        private readonly TranslationTransformer $translationTransformer,
-    ) {
+    protected ManagerRegistry $managerRegistry;
+
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        $this->managerRegistry = $managerRegistry;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -49,7 +52,7 @@ final class AttributeTranslationType extends AbstractType
             ])
         ;
 
-        $builder->get('translation')->addModelTransformer($this->translationTransformer);
+        $builder->get('translation')->addModelTransformer(new TranslationTransformer($this->managerRegistry));
     }
 
     public function configureOptions(OptionsResolver $resolver): void

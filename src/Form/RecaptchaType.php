@@ -17,7 +17,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  *
  * @since 1.0
  */
-final class RecaptchaType extends AbstractType
+class RecaptchaType extends AbstractType
 {
     /**
      * (non-PHPdoc).

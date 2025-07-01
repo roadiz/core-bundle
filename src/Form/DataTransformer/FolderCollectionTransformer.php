@@ -7,7 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Form\DataTransformer;
 use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
 
-final readonly class FolderCollectionTransformer extends EntityCollectionTransformer
+class FolderCollectionTransformer extends EntityCollectionTransformer
 {
     public function __construct(ObjectManager $manager, bool $asCollection = false)
     {

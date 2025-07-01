@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Node;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
-use RZ\Roadiz\CoreBundle\Repository\NotPublishedNodeRepository;
+use RZ\Roadiz\CoreBundle\Repository\NodeRepository;
 use RZ\Roadiz\CoreBundle\Repository\UrlAliasRepository;
 use RZ\Roadiz\Utils\StringHandler;
 
@@ -17,7 +18,6 @@ final readonly class NodeNameChecker implements NodeNamePolicyInterface
 
     public function __construct(
         private ManagerRegistry $managerRegistry,
-        private readonly NotPublishedNodeRepository $notPublishedNodeRepository,
         private bool $useTypedSuffix = false,
     ) {
     }
@@ -134,10 +134,14 @@ final readonly class NodeNameChecker implements NodeNamePolicyInterface
         $nodeName = StringHandler::slugify($nodeName);
         /** @var UrlAliasRepository $urlAliasRepo */
         $urlAliasRepo = $this->managerRegistry->getRepository(UrlAlias::class);
+        /** @var NodeRepository $nodeRepo */
+        $nodeRepo = $this->managerRegistry
+            ->getRepository(Node::class)
+            ->setDisplayingNotPublishedNodes(true);
 
         if (
             false === $urlAliasRepo->exists($nodeName)
-            && false === $this->notPublishedNodeRepository->exists($nodeName)
+            && false === $nodeRepo->exists($nodeName)
         ) {
             return false;
         }

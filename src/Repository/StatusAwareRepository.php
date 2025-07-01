@@ -15,10 +15,8 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  * @template TEntityClass of object
  *
  * @extends EntityRepository<TEntityClass>
- *
- * @deprecated stateful repositories are deprecated and should not be used as services
  */
-abstract class StatusAwareRepository extends EntityRepository implements StatusAwareRepositoryInterface
+abstract class StatusAwareRepository extends EntityRepository
 {
     private bool $displayNotPublishedNodes;
     private bool $displayAllNodesStatuses;
@@ -39,9 +37,6 @@ abstract class StatusAwareRepository extends EntityRepository implements StatusA
         $this->displayAllNodesStatuses = false;
     }
 
-    /**
-     * @deprecated do not use repository stateful methods in services
-     */
     public function isDisplayingNotPublishedNodes(): bool
     {
         return $this->displayNotPublishedNodes;
@@ -49,8 +44,6 @@ abstract class StatusAwareRepository extends EntityRepository implements StatusA
 
     /**
      * @return $this
-     *
-     * @deprecated do not use repository stateful methods in services
      */
     public function setDisplayingNotPublishedNodes(bool $displayNotPublishedNodes): self
     {
@@ -59,9 +52,6 @@ abstract class StatusAwareRepository extends EntityRepository implements StatusA
         return $this;
     }
 
-    /**
-     * @deprecated do not use repository stateful methods in services
-     */
     public function isDisplayingAllNodesStatuses(): bool
     {
         return $this->displayAllNodesStatuses;
@@ -72,8 +62,6 @@ abstract class StatusAwareRepository extends EntityRepository implements StatusA
      * view deleted and archived nodes.
      *
      * @return $this
-     *
-     * @deprecated do not use repository stateful methods in services
      */
     public function setDisplayingAllNodesStatuses(bool $displayAllNodesStatuses): self
     {
@@ -82,9 +70,6 @@ abstract class StatusAwareRepository extends EntityRepository implements StatusA
         return $this;
     }
 
-    /**
-     * @deprecated do not use repository stateful methods in services
-     */
     public function alterQueryBuilderWithAuthorizationChecker(
         QueryBuilder $qb,
         string $prefix = EntityRepository::NODE_ALIAS,

@@ -4,16 +4,22 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\Persistence\ObjectManager;
+use JMS\Serializer\SerializationContext;
+use JMS\Serializer\SerializerInterface;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\Core\Handlers\AbstractHandler;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
+use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\NodeType\ApiResourceGenerator;
-use RZ\Roadiz\CoreBundle\Repository\NotPublishedNodeRepository;
 use RZ\Roadiz\EntityGenerator\EntityGeneratorFactory;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Yaml\Exception\ParseException;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * Handle operations with node-type entities.
@@ -45,10 +51,13 @@ final class NodeTypeHandler extends AbstractHandler
         ObjectManager $objectManager,
         private readonly EntityGeneratorFactory $entityGeneratorFactory,
         private readonly HandlerFactory $handlerFactory,
+        private readonly SerializerInterface $serializer,
         private readonly ApiResourceGenerator $apiResourceGenerator,
         private readonly LoggerInterface $logger,
-        private readonly NotPublishedNodeRepository $notPublishedNodeRepository,
         private readonly string $generatedEntitiesDir,
+        private readonly string $serializedNodeTypesDir,
+        private readonly string $importFilesConfigPath,
+        private readonly string $kernelProjectDir,
     ) {
         parent::__construct($objectManager);
     }
@@ -90,6 +99,104 @@ final class NodeTypeHandler extends AbstractHandler
         }
 
         return false;
+    }
+
+    public function exportNodeTypeJsonFile(): ?string
+    {
+        $fileSystem = new Filesystem();
+        if ($fileSystem->exists($this->serializedNodeTypesDir)) {
+            $content = $this->serializer->serialize(
+                $this->nodeType,
+                'json',
+                SerializationContext::create()->setGroups(['node_type', 'position'])
+            );
+            $file = $this->serializedNodeTypesDir.DIRECTORY_SEPARATOR.$this->nodeType->getName().'.json';
+            @file_put_contents($file, $content);
+
+            $this->addNodeTypeToImportFilesConfiguration($fileSystem, $file);
+
+            return $file;
+        }
+
+        return null;
+    }
+
+    protected function removeNodeTypeJsonFile(): void
+    {
+        $fileSystem = new Filesystem();
+        $file = $this->serializedNodeTypesDir.DIRECTORY_SEPARATOR.$this->nodeType->getName().'.json';
+        if ($fileSystem->exists($file)) {
+            @unlink($file);
+            $this->removeNodeTypeFromImportFilesConfiguration($fileSystem, $file);
+        }
+    }
+
+    protected function addNodeTypeToImportFilesConfiguration(Filesystem $fileSystem, string $file): void
+    {
+        if ($fileSystem->exists($this->importFilesConfigPath)) {
+            $configFile = new File($this->importFilesConfigPath);
+            if ($configFile->isWritable()) {
+                try {
+                    $config = Yaml::parseFile($this->importFilesConfigPath);
+                    if (!isset($config['importFiles'])) {
+                        $config['importFiles'] = [
+                            'nodetypes' => [],
+                        ];
+                    }
+                    if (!isset($config['importFiles']['nodetypes'])) {
+                        $config['importFiles']['nodetypes'] = [];
+                    }
+
+                    $relativePath = str_replace(
+                        $this->kernelProjectDir.DIRECTORY_SEPARATOR,
+                        '',
+                        $file
+                    );
+                    if (!in_array($relativePath, $config['importFiles']['nodetypes'])) {
+                        $config['importFiles']['nodetypes'][] = $relativePath;
+                        sort($config['importFiles']['nodetypes']);
+
+                        $yamlContent = Yaml::dump($config, 3);
+                        @file_put_contents($this->importFilesConfigPath, $yamlContent);
+                    }
+                } catch (ParseException $exception) {
+                    // Silent errors
+                }
+            }
+        }
+    }
+
+    protected function removeNodeTypeFromImportFilesConfiguration(Filesystem $fileSystem, string $file): void
+    {
+        if ($fileSystem->exists($this->importFilesConfigPath)) {
+            $configFile = new File($this->importFilesConfigPath);
+            if ($configFile->isWritable()) {
+                try {
+                    $config = Yaml::parseFile($this->importFilesConfigPath);
+                    if (!isset($config['importFiles'])) {
+                        return;
+                    }
+                    if (!isset($config['importFiles']['nodetypes'])) {
+                        return;
+                    }
+
+                    $relativePath = str_replace(
+                        $this->kernelProjectDir.DIRECTORY_SEPARATOR,
+                        '',
+                        $file
+                    );
+                    if (false !== $key = array_search($relativePath, $config['importFiles']['nodetypes'])) {
+                        unset($config['importFiles']['nodetypes'][$key]);
+                        $config['importFiles']['nodetypes'] = array_values(array_filter($config['importFiles']['nodetypes']));
+                        sort($config['importFiles']['nodetypes']);
+                        $yamlContent = Yaml::dump($config, 3);
+                        @file_put_contents($this->importFilesConfigPath, $yamlContent);
+                    }
+                } catch (ParseException $exception) {
+                    // Silent errors
+                }
+            }
+        }
     }
 
     /**
@@ -170,6 +277,7 @@ final class NodeTypeHandler extends AbstractHandler
     public function updateSchema(): NodeTypeHandler
     {
         $this->regenerateEntityClass();
+        $this->exportNodeTypeJsonFile();
 
         return $this;
     }
@@ -199,6 +307,7 @@ final class NodeTypeHandler extends AbstractHandler
             $this->apiResourceGenerator->remove($this->nodeType);
         }
         $this->removeSourceEntityClass();
+        $this->removeNodeTypeJsonFile();
 
         return $this;
     }
@@ -217,9 +326,11 @@ final class NodeTypeHandler extends AbstractHandler
         /*
          * Delete every nodes
          */
-        $nodes = $this->notPublishedNodeRepository
+        $nodes = $this->objectManager
+            ->getRepository(Node::class)
+            ->setDisplayingNotPublishedNodes(true)
             ->findBy([
-                'nodeTypeName' => $this->getNodeType()->getName(),
+                'nodeType' => $this->getNodeType(),
             ]);
 
         /** @var Node $node */
@@ -243,8 +354,23 @@ final class NodeTypeHandler extends AbstractHandler
         return $this;
     }
 
+    /**
+     * Reset current node-type fields positions.
+     *
+     * @return float Return the next position after the **last** field
+     */
     public function cleanPositions(bool $setPositions = false): float
     {
-        throw new \LogicException('Node-types are static, you can not clean their positions.');
+        $criteria = Criteria::create();
+        $criteria->orderBy(['position' => 'ASC']);
+        $fields = $this->nodeType->getFields()->matching($criteria);
+        $i = 1;
+        /** @var NodeTypeField $field */
+        foreach ($fields as $field) {
+            $field->setPosition($i);
+            ++$i;
+        }
+
+        return $i;
     }
 }

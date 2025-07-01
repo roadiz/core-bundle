@@ -7,7 +7,10 @@ namespace RZ\Roadiz\CoreBundle\Form;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class SeparatorType extends AbstractType
+/**
+ * Group selector form field type.
+ */
+class SeparatorType extends AbstractType
 {
     public function configureOptions(OptionsResolver $resolver): void
     {

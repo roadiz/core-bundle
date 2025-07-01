@@ -7,7 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
-final class ValidJsonValidator extends ConstraintValidator
+class ValidJsonValidator extends ConstraintValidator
 {
     /**
      * @param ValidJson $constraint

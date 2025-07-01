@@ -18,12 +18,17 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 /**
  * Group selector form field type.
  */
-final class GroupsType extends AbstractType
+class GroupsType extends AbstractType
 {
+    protected AuthorizationCheckerInterface $authorizationChecker;
+    protected ManagerRegistry $managerRegistry;
+
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly AuthorizationCheckerInterface $authorizationChecker,
+        ManagerRegistry $managerRegistry,
+        AuthorizationCheckerInterface $authorizationChecker,
     ) {
+        $this->authorizationChecker = $authorizationChecker;
+        $this->managerRegistry = $managerRegistry;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
