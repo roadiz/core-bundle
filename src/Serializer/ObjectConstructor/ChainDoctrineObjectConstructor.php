@@ -11,24 +11,44 @@ use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Visitor\DeserializationVisitorInterface;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 
-final class ChainDoctrineObjectConstructor implements ObjectConstructorInterface
+class ChainDoctrineObjectConstructor implements ObjectConstructorInterface
 {
+    protected ?ObjectManager $entityManager;
+    /**
+     * @var array<TypedObjectConstructorInterface>
+     */
+    protected array $typedObjectConstructors;
+    protected ObjectConstructorInterface $fallbackConstructor;
+
+    /**
+     * @param ObjectManager|null $entityManager
+     * @param ObjectConstructorInterface $fallbackConstructor
+     * @param array $typedObjectConstructors
+     */
     public function __construct(
-        private readonly ?ObjectManager $entityManager,
-        private readonly ObjectConstructorInterface $fallbackConstructor,
-        private readonly array $typedObjectConstructors,
+        ?ObjectManager $entityManager,
+        ObjectConstructorInterface $fallbackConstructor,
+        array $typedObjectConstructors
     ) {
+        $this->entityManager = $entityManager;
+        $this->typedObjectConstructors = $typedObjectConstructors;
+        $this->fallbackConstructor = $fallbackConstructor;
     }
 
     /**
+     * @param DeserializationVisitorInterface $visitor
+     * @param ClassMetadata $metadata
      * @param PersistableInterface|array<PersistableInterface> $data
+     * @param array $type
+     * @param DeserializationContext $context
+     * @return object|null
      */
     public function construct(
         DeserializationVisitorInterface $visitor,
         ClassMetadata $metadata,
         $data,
         array $type,
-        DeserializationContext $context,
+        DeserializationContext $context
     ): ?object {
         if (null === $this->entityManager) {
             // No ObjectManager found, proceed with normal deserialization
@@ -37,11 +57,9 @@ final class ChainDoctrineObjectConstructor implements ObjectConstructorInterface
 
         // Locate possible ClassMetadata
         $classMetadataFactory = $this->entityManager->getMetadataFactory();
-        /** @var class-string<PersistableInterface> $className */
-        $className = $metadata->name;
         try {
-            $doctrineMetadata = $classMetadataFactory->getMetadataFor($className);
-            if ($doctrineMetadata->getName() !== $className) {
+            $doctrineMetadata = $classMetadataFactory->getMetadataFor($metadata->name);
+            if ($doctrineMetadata->getName() !== $metadata->name) {
                 /*
                  * Doctrine resolveTargetEntity has found an alternative class
                  */
@@ -51,9 +69,7 @@ final class ChainDoctrineObjectConstructor implements ObjectConstructorInterface
             // Object class is not a valid doctrine entity
         }
 
-        /** @var class-string<PersistableInterface> $className */
-        $className = $metadata->name;
-        if ($classMetadataFactory->isTransient($className)) {
+        if ($classMetadataFactory->isTransient($metadata->name)) {
             // No ClassMetadata found, proceed with normal deserialization
             return $this->fallbackConstructor->construct($visitor, $metadata, $data, $type, $context);
         }
@@ -61,12 +77,12 @@ final class ChainDoctrineObjectConstructor implements ObjectConstructorInterface
         // Managed entity, check for proxy load
         if (!\is_array($data)) {
             // Single identifier, load proxy
-            return $this->entityManager->getReference($className, $data);
+            return $this->entityManager->getReference($metadata->name, $data);
         }
 
         /** @var TypedObjectConstructorInterface $typedObjectConstructor */
         foreach ($this->typedObjectConstructors as $typedObjectConstructor) {
-            if ($typedObjectConstructor->supports($className, $data)) {
+            if ($typedObjectConstructor->supports($metadata->name, $data)) {
                 return $typedObjectConstructor->construct(
                     $visitor,
                     $metadata,
@@ -77,12 +93,17 @@ final class ChainDoctrineObjectConstructor implements ObjectConstructorInterface
             }
         }
 
+        // PHPStan need to explicit classname
+        /** @var class-string<PersistableInterface> $className */
+        $className = $metadata->name;
+
         // Fallback to default constructor if missing identifier(s)
         $classMetadata = $this->entityManager->getClassMetadata($className);
         $identifierList = [];
 
         foreach ($classMetadata->getIdentifierFieldNames() as $name) {
             if (
+                isset($metadata->propertyMetadata[$name]) &&
                 isset($metadata->propertyMetadata[$name]->serializedName)
             ) {
                 $dataName = $metadata->propertyMetadata[$name]->serializedName;

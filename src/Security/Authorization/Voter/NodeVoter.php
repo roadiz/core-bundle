@@ -4,19 +4,17 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Security\Authorization\Voter;
 
-use RZ\Roadiz\Core\AbstractEntities\NodeInterface;
+use Psr\Cache\CacheItemPoolInterface;
+use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\Node\NodeOffspringResolverInterface;
+use RZ\Roadiz\CoreBundle\EntityHandler\NodeHandler;
 use RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\NodeChrootResolver;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-/**
- * @extends Voter<'CREATE'|'DUPLICATE'|'CREATE_AT_ROOT'|'SEARCH'|'READ'|'READ_AT_ROOT'|'EMPTY_TRASH'|'READ_LOGS'|'EDIT_CONTENT'|'EDIT_TAGS'|'EDIT_REALMS'|'EDIT_SETTING'|'EDIT_STATUS'|'EDIT_ATTRIBUTE'|'DELETE', Node>
- */
 final class NodeVoter extends Voter
 {
     public const CREATE = 'CREATE';
@@ -36,20 +34,21 @@ final class NodeVoter extends Voter
     public const DELETE = 'DELETE';
 
     public function __construct(
-        private readonly NodeChrootResolver $chrootResolver,
-        private readonly Security $security,
-        private readonly NodeOffspringResolverInterface $nodeOffspringResolver,
+        private NodeChrootResolver $chrootResolver,
+        private Security $security,
+        private HandlerFactoryInterface $handlerFactory,
+        private CacheItemPoolInterface $cache
     ) {
     }
 
-    protected function supports(string $attribute, mixed $subject): bool
+    protected function supports(string $attribute, $subject): bool
     {
         if (
             \in_array($attribute, [
-                self::CREATE_AT_ROOT,
-                self::READ_AT_ROOT,
-                self::SEARCH,
-                self::EMPTY_TRASH,
+            self::CREATE_AT_ROOT,
+            self::READ_AT_ROOT,
+            self::SEARCH,
+            self::EMPTY_TRASH,
             ])
         ) {
             return true;
@@ -57,30 +56,30 @@ final class NodeVoter extends Voter
 
         if (
             !\in_array($attribute, [
-                self::CREATE,
-                self::DUPLICATE,
-                self::READ,
-                self::READ_LOGS,
-                self::EDIT_CONTENT,
-                self::EDIT_SETTING,
-                self::EDIT_TAGS,
-                self::EDIT_REALMS,
-                self::EDIT_STATUS,
-                self::EDIT_ATTRIBUTE,
-                self::DELETE,
+            self::CREATE,
+            self::DUPLICATE,
+            self::READ,
+            self::READ_LOGS,
+            self::EDIT_CONTENT,
+            self::EDIT_SETTING,
+            self::EDIT_TAGS,
+            self::EDIT_REALMS,
+            self::EDIT_STATUS,
+            self::EDIT_ATTRIBUTE,
+            self::DELETE
             ])
         ) {
             return false;
         }
 
-        if ($subject instanceof NodeInterface || $subject instanceof NodesSources) {
+        if ($subject instanceof Node || $subject instanceof NodesSources) {
             return true;
         }
 
         return false;
     }
 
-    protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
+    protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token): bool
     {
         $user = $token->getUser();
 
@@ -109,11 +108,11 @@ final class NodeVoter extends Voter
             self::EDIT_ATTRIBUTE => $this->canEditAttribute($subject, $user),
             self::DELETE => $this->canDelete($subject, $user),
             self::EMPTY_TRASH => $this->canEmptyTrash($user),
-            default => throw new \LogicException('This code should not be reached!'),
+            default => throw new \LogicException('This code should not be reached!')
         };
     }
 
-    private function isNodeInsideUserChroot(NodeInterface $node, NodeInterface $chroot, bool $includeChroot = false): bool
+    private function isNodeInsideUserChroot(Node $node, Node $chroot, bool $includeChroot = false): bool
     {
         if (!$includeChroot && $chroot->getId() === $node->getId()) {
             return false;
@@ -123,31 +122,40 @@ final class NodeVoter extends Voter
          * Test if node is inside user chroot using all Chroot node offspring ids
          * to be able to cache all results.
          */
-        return \in_array($node->getId(), $this->nodeOffspringResolver->getAllOffspringIds($chroot), true);
+        $cacheItem = $this->cache->getItem('node_offspring_ids_' . $chroot->getId());
+        if (!$cacheItem->isHit()) {
+            /** @var NodeHandler $nodeHandler */
+            $nodeHandler = $this->handlerFactory->getHandler($chroot);
+            $offspringIds = $nodeHandler->getAllOffspringId();
+            $cacheItem->set($offspringIds);
+            $this->cache->save($cacheItem);
+        } else {
+            $offspringIds = $cacheItem->get();
+        }
+
+        return \in_array($node->getId(), $offspringIds, true);
     }
 
-    private function isGrantedWithUserChroot(NodeInterface $node, UserInterface $user, array|string $roles, bool $includeChroot): bool
+    private function isGrantedWithUserChroot(Node $node, UserInterface $user, array|string $roles, bool $includeChroot): bool
     {
         $chroot = $this->chrootResolver->getChroot($user);
         if (null === $chroot) {
             return $this->security->isGranted($roles);
         }
 
-        return $this->security->isGranted($roles)
-            && $this->isNodeInsideUserChroot($node, $chroot, $includeChroot);
+        return $this->security->isGranted($roles) &&
+            $this->isNodeInsideUserChroot($node, $chroot, $includeChroot);
     }
 
     private function canCreateAtRoot(UserInterface $user): bool
     {
         $chroot = $this->chrootResolver->getChroot($user);
-
         return null === $chroot && $this->security->isGranted('ROLE_ACCESS_NODES');
     }
 
     private function canReadAtRoot(UserInterface $user): bool
     {
         $chroot = $this->chrootResolver->getChroot($user);
-
         return null === $chroot && $this->security->isGranted('ROLE_ACCESS_NODES');
     }
 
@@ -162,11 +170,11 @@ final class NodeVoter extends Voter
     private function canEmptyTrash(UserInterface $user): bool
     {
         $chroot = $this->chrootResolver->getChroot($user);
-
         return null === $chroot && $this->security->isGranted('ROLE_ACCESS_NODES_DELETE');
     }
 
-    private function canCreate(NodeInterface $node, UserInterface $user): bool
+
+    private function canCreate(Node $node, UserInterface $user): bool
     {
         /*
          * Creation is allowed only if node is inside user chroot,
@@ -175,7 +183,7 @@ final class NodeVoter extends Voter
         return $this->isGrantedWithUserChroot($node, $user, 'ROLE_ACCESS_NODES', true);
     }
 
-    private function canRead(NodeInterface $node, UserInterface $user): bool
+    private function canRead(Node $node, UserInterface $user): bool
     {
         /*
          * Read is allowed only if node is inside user chroot,
@@ -184,12 +192,12 @@ final class NodeVoter extends Voter
         return $this->isGrantedWithUserChroot($node, $user, 'ROLE_ACCESS_NODES', true);
     }
 
-    private function canReadLogs(NodeInterface $node, UserInterface $user): bool
+    private function canReadLogs(Node $node, UserInterface $user): bool
     {
         return $this->isGrantedWithUserChroot($node, $user, ['ROLE_ACCESS_NODES', 'ROLE_ACCESS_LOGS'], false);
     }
 
-    private function canEditContent(NodeInterface $node, UserInterface $user): bool
+    private function canEditContent(Node $node, UserInterface $user): bool
     {
         /*
          * Edition is allowed only if node is inside user chroot,
@@ -198,17 +206,17 @@ final class NodeVoter extends Voter
         return $this->isGrantedWithUserChroot($node, $user, 'ROLE_ACCESS_NODES', false);
     }
 
-    private function canEditTags(NodeInterface $node, UserInterface $user): bool
+    private function canEditTags(Node $node, UserInterface $user): bool
     {
         return $this->isGrantedWithUserChroot($node, $user, ['ROLE_ACCESS_NODES', 'ROLE_ACCESS_TAGS'], false);
     }
 
-    private function canEditRealms(NodeInterface $node, UserInterface $user): bool
+    private function canEditRealms(Node $node, UserInterface $user): bool
     {
         return $this->isGrantedWithUserChroot($node, $user, ['ROLE_ACCESS_NODES', 'ROLE_ACCESS_REALM_NODES'], false);
     }
 
-    private function canDuplicate(NodeInterface $node, UserInterface $user): bool
+    private function canDuplicate(Node $node, UserInterface $user): bool
     {
         /*
          * Duplication is allowed only if node is inside user chroot,
@@ -217,22 +225,22 @@ final class NodeVoter extends Voter
         return $this->isGrantedWithUserChroot($node, $user, 'ROLE_ACCESS_NODES', false);
     }
 
-    private function canEditSetting(NodeInterface $node, UserInterface $user): bool
+    private function canEditSetting(Node $node, UserInterface $user): bool
     {
         return $this->isGrantedWithUserChroot($node, $user, 'ROLE_ACCESS_NODES_SETTING', false);
     }
 
-    private function canEditStatus(NodeInterface $node, UserInterface $user): bool
+    private function canEditStatus(Node $node, UserInterface $user): bool
     {
         return $this->isGrantedWithUserChroot($node, $user, 'ROLE_ACCESS_NODES_STATUS', false);
     }
 
-    private function canDelete(NodeInterface $node, UserInterface $user): bool
+    private function canDelete(Node $node, UserInterface $user): bool
     {
         return $this->isGrantedWithUserChroot($node, $user, 'ROLE_ACCESS_NODES_DELETE', false);
     }
 
-    private function canEditAttribute(NodeInterface $node, UserInterface $user): bool
+    private function canEditAttribute(Node $node, UserInterface $user): bool
     {
         return $this->isGrantedWithUserChroot($node, $user, 'ROLE_ACCESS_NODE_ATTRIBUTES', false);
     }

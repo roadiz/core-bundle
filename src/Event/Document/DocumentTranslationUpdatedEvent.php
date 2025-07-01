@@ -10,13 +10,17 @@ use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 final class DocumentTranslationUpdatedEvent extends FilterDocumentEvent
 {
-    public function __construct(
-        DocumentInterface $document,
-        private readonly ?DocumentTranslation $documentTranslation = null,
-    ) {
+    protected ?DocumentTranslation $documentTranslation;
+
+    public function __construct(DocumentInterface $document, ?DocumentTranslation $documentTranslation = null)
+    {
         parent::__construct($document);
+        $this->documentTranslation = $documentTranslation;
     }
 
+    /**
+     * @return DocumentTranslation|null
+     */
     public function getDocumentTranslation(): ?DocumentTranslation
     {
         return $this->documentTranslation;

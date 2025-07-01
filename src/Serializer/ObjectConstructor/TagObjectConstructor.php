@@ -9,19 +9,25 @@ use JMS\Serializer\Exception\ObjectConstructionException;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Exception\EntityAlreadyExistsException;
 
-final class TagObjectConstructor extends AbstractTypedObjectConstructor
+class TagObjectConstructor extends AbstractTypedObjectConstructor
 {
     public const EXCEPTION_ON_EXISTING_TAG = 'exception_on_existing_tag';
 
+    /**
+     * @inheritDoc
+     */
     public function supports(string $className, array $data): bool
     {
-        return Tag::class === $className && (
-            \array_key_exists('tagName', $data)
-            || \array_key_exists('tag_name', $data)
+        return $className === Tag::class && (
+            \array_key_exists('tagName', $data) ||
+            \array_key_exists('tag_name', $data)
         );
     }
 
-    protected function findObject(mixed $data, DeserializationContext $context): ?object
+    /**
+     * @inheritDoc
+     */
+    protected function findObject($data, DeserializationContext $context): ?object
     {
         if (empty($data['tagName']) && empty($data['tag_name'])) {
             throw new ObjectConstructionException('Tag name can not be empty');
@@ -31,9 +37,9 @@ final class TagObjectConstructor extends AbstractTypedObjectConstructor
             ->findOneByTagName($data['tagName'] ?? $data['tag_name']);
 
         if (
-            null !== $tag
-            && $context->hasAttribute(static::EXCEPTION_ON_EXISTING_TAG)
-            && true === $context->hasAttribute(static::EXCEPTION_ON_EXISTING_TAG)
+            null !== $tag &&
+            $context->hasAttribute(static::EXCEPTION_ON_EXISTING_TAG) &&
+            true === $context->hasAttribute(static::EXCEPTION_ON_EXISTING_TAG)
         ) {
             throw new EntityAlreadyExistsException('Tag already exists in database.');
         }

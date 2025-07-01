@@ -13,15 +13,24 @@ use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
+/**
+ * @package RZ\Roadiz\CoreBundle\Doctrine\ORM\Filter
+ */
 final class NodesSourcesReachableFilter implements EventSubscriberInterface
 {
+    private NodeTypes $nodeTypesBag;
+
     public const PARAMETER = [
         'node.nodeType.reachable',
-        'reachable',
+        'reachable'
     ];
 
-    public function __construct(private readonly NodeTypes $nodeTypesBag)
+    /**
+     * @param NodeTypes $nodeTypesBag
+     */
+    public function __construct(NodeTypes $nodeTypesBag)
     {
+        $this->nodeTypesBag = $nodeTypesBag;
     }
 
     public static function getSubscribedEvents(): array
@@ -33,13 +42,21 @@ final class NodesSourcesReachableFilter implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * @param FilterNodesSourcesQueryBuilderCriteriaEvent $event
+     *
+     * @return bool
+     */
     protected function supports(FilterNodesSourcesQueryBuilderCriteriaEvent $event): bool
     {
-        return $event->supports()
-            && in_array($event->getProperty(), self::PARAMETER)
-            && is_bool($event->getValue());
+        return $event->supports() &&
+            in_array($event->getProperty(), self::PARAMETER) &&
+            is_bool($event->getValue());
     }
 
+    /**
+     * @param QueryBuilderNodesSourcesBuildEvent $event
+     */
     public function onNodesSourcesQueryBuilderBuild(QueryBuilderNodesSourcesBuildEvent $event): void
     {
         if ($this->supports($event)) {

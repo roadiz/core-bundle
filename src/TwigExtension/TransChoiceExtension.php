@@ -15,8 +15,14 @@ use Twig\TwigFilter;
  */
 final class TransChoiceExtension extends AbstractExtension
 {
-    public function __construct(private readonly TranslatorInterface $translator)
+    private TranslatorInterface $translator;
+
+    /**
+     * @param TranslatorInterface $translator
+     */
+    public function __construct(TranslatorInterface $translator)
     {
+        $this->translator = $translator;
     }
 
     public function getFilters(): array
@@ -49,7 +55,7 @@ final class TransChoiceExtension extends AbstractExtension
         int $count,
         array $arguments = [],
         ?string $domain = null,
-        ?string $locale = null,
+        ?string $locale = null
     ): string {
         return $this->translator->trans($message, array_merge(['%count%' => $count], $arguments), $domain, $locale);
     }

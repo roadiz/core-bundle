@@ -9,6 +9,7 @@ use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
 use Gedmo\Loggable\Entity\Repository\LogEntryRepository;
+use LogicException;
 use RZ\Roadiz\CoreBundle\Entity\UserLogEntry;
 
 /**
@@ -17,6 +18,7 @@ use RZ\Roadiz\CoreBundle\Entity\UserLogEntry;
  * @method UserLogEntry|null findOneBy(array $criteria, array $orderBy = null)
  * @method UserLogEntry[]    findAll()
  * @method UserLogEntry[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @extends LogEntryRepository<UserLogEntry>
  */
 final class UserLogEntryRepository extends LogEntryRepository implements ServiceEntityRepositoryInterface
 {
@@ -26,22 +28,24 @@ final class UserLogEntryRepository extends LogEntryRepository implements Service
         $manager = $registry->getManagerForClass($entityClass);
 
         if (!$manager instanceof \Doctrine\ORM\EntityManagerInterface) {
-            throw new \LogicException(sprintf('Could not find the entity manager for class "%s". Check your Doctrine configuration to make sure it is configured to load this entity’s metadata.', $entityClass));
+            throw new LogicException(sprintf(
+                'Could not find the entity manager for class "%s". Check your Doctrine configuration to make sure it is configured to load this entity’s metadata.',
+                $entityClass
+            ));
         }
 
         parent::__construct($manager, $manager->getClassMetadata($entityClass));
     }
 
     /**
+     * @param \DateTime $dateTime
      * @return int The number of entries
-     *
      * @throws NoResultException
      * @throws NonUniqueResultException
      */
     public function countAllBeforeLoggedIn(\DateTime $dateTime): int
     {
         $qb = $this->createQueryBuilder('l');
-
         // @phpstan-ignore-next-line
         return $qb
             ->select($qb->expr()->countDistinct('l'))
@@ -53,12 +57,12 @@ final class UserLogEntryRepository extends LogEntryRepository implements Service
     }
 
     /**
+     * @param \DateTime $dateTime
      * @return int The number of deleted entries
      */
     public function deleteAllBeforeLoggedIn(\DateTime $dateTime): int
     {
         $qb = $this->createQueryBuilder('l');
-
         return $qb->delete(UserLogEntry::class, 'l')
             ->where($qb->expr()->lt('l.loggedAt', ':loggedAt'))
             ->setParameter('loggedAt', $dateTime)
@@ -94,7 +98,7 @@ final class UserLogEntryRepository extends LogEntryRepository implements Service
                 $deleteCount += $deleteQuery->execute([
                     'objectId' => $object['objectId'],
                     'objectClass' => $object['objectClass'],
-                    'lowestVersion' => $lowestVersion,
+                    'lowestVersion' => $lowestVersion
                 ]);
             }
         }

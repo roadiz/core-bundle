@@ -14,15 +14,12 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  * @method Group|null findOneBy(array $criteria, array $orderBy = null)
  * @method Group[]    findAll()
  * @method Group[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
- *
  * @extends EntityRepository<Group>
  */
 final class GroupRepository extends EntityRepository
 {
-    public function __construct(
-        ManagerRegistry $registry,
-        EventDispatcherInterface $dispatcher,
-    ) {
+    public function __construct(ManagerRegistry $registry, EventDispatcherInterface $dispatcher)
+    {
         parent::__construct($registry, Group::class, $dispatcher);
     }
 }

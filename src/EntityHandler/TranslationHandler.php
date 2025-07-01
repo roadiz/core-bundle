@@ -14,17 +14,29 @@ use Symfony\Component\Cache\ResettableInterface;
 /**
  * Handle operations with translations entities.
  */
-final class TranslationHandler extends AbstractHandler
+class TranslationHandler extends AbstractHandler
 {
     private ?TranslationInterface $translation = null;
 
     /**
+     * @return TranslationInterface
+     */
+    public function getTranslation(): TranslationInterface
+    {
+        if (null === $this->translation) {
+            throw new \BadMethodCallException('Translation is null');
+        }
+        return $this->translation;
+    }
+
+    /**
+     * @param TranslationInterface $translation
+     *
      * @return $this
      */
-    public function setTranslation(TranslationInterface $translation): self
+    public function setTranslation(TranslationInterface $translation)
     {
         $this->translation = $translation;
-
         return $this;
     }
 
@@ -33,7 +45,7 @@ final class TranslationHandler extends AbstractHandler
      *
      * @return $this
      */
-    public function makeDefault(): self
+    public function makeDefault()
     {
         $defaults = $this->objectManager
             ->getRepository(Translation::class)

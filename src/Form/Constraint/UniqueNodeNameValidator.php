@@ -18,14 +18,17 @@ class UniqueNodeNameValidator extends ConstraintValidator
 {
     protected ManagerRegistry $managerRegistry;
 
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
     public function __construct(ManagerRegistry $managerRegistry)
     {
         $this->managerRegistry = $managerRegistry;
     }
 
     /**
+     * @param mixed $value
      * @param UniqueNodeName $constraint
-     *
      * @throws NoResultException
      * @throws NonUniqueResultException
      */
@@ -48,20 +51,27 @@ class UniqueNodeNameValidator extends ConstraintValidator
         }
     }
 
+    /**
+     * @param string $name
+     *
+     * @return bool
+     */
     protected function urlAliasExists(string $name): bool
     {
         return (bool) $this->managerRegistry->getRepository(UrlAlias::class)->exists($name);
     }
 
     /**
-     * @throws NonUniqueResultException|NoResultException
+     * @param string $name
+     *
+     * @return bool
+     * @throws \Doctrine\ORM\NonUniqueResultException|\Doctrine\ORM\NoResultException
      */
     protected function nodeNameExists(string $name): bool
     {
         /** @var NodeRepository $nodeRepo */
         $nodeRepo = $this->managerRegistry->getRepository(Node::class);
         $nodeRepo->setDisplayingNotPublishedNodes(true);
-
         return $nodeRepo->exists($name);
     }
 }

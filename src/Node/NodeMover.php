@@ -8,15 +8,15 @@ use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Log\LoggerInterface;
-use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
+use Psr\Log\NullLogger;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Redirection;
+use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
 use RZ\Roadiz\CoreBundle\EntityHandler\NodeHandler;
-use RZ\Roadiz\CoreBundle\Event\Redirection\PostUpdatedRedirectionEvent;
-use RZ\Roadiz\CoreBundle\Node\Exception\SameNodeUrlException;
 use RZ\Roadiz\CoreBundle\Repository\EntityRepository;
 use RZ\Roadiz\CoreBundle\Routing\NodeRouter;
+use RZ\Roadiz\CoreBundle\Node\Exception\SameNodeUrlException;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\Cache\ResettableInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,16 +24,37 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-final readonly class NodeMover
+class NodeMover
 {
+    protected ManagerRegistry $managerRegistry;
+    protected UrlGeneratorInterface $urlGenerator;
+    protected HandlerFactoryInterface $handlerFactory;
+    protected EventDispatcherInterface $dispatcher;
+    protected CacheItemPoolInterface $cacheAdapter;
+    protected LoggerInterface $logger;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param UrlGeneratorInterface $urlGenerator
+     * @param HandlerFactoryInterface $handlerFactory
+     * @param EventDispatcherInterface $dispatcher
+     * @param CacheItemPoolInterface $cacheAdapter
+     * @param LoggerInterface|null $logger
+     */
     public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private UrlGeneratorInterface $urlGenerator,
-        private HandlerFactoryInterface $handlerFactory,
-        private EventDispatcherInterface $dispatcher,
-        private CacheItemPoolInterface $cacheAdapter,
-        private LoggerInterface $logger,
+        ManagerRegistry $managerRegistry,
+        UrlGeneratorInterface $urlGenerator,
+        HandlerFactoryInterface $handlerFactory,
+        EventDispatcherInterface $dispatcher,
+        CacheItemPoolInterface $cacheAdapter,
+        ?LoggerInterface $logger = null
     ) {
+        $this->urlGenerator = $urlGenerator;
+        $this->logger = $logger ?? new NullLogger();
+        $this->dispatcher = $dispatcher;
+        $this->handlerFactory = $handlerFactory;
+        $this->managerRegistry = $managerRegistry;
+        $this->cacheAdapter = $cacheAdapter;
     }
 
     private function getManager(): ObjectManager
@@ -42,21 +63,28 @@ final readonly class NodeMover
         if (null === $manager) {
             throw new \RuntimeException('No manager was found during transtyping.');
         }
-
         return $manager;
     }
 
     /**
      * Warning: this method DOES NOT flush entity manager.
+     *
+     * @param Node      $node
+     * @param Node|null $parentNode
+     * @param float     $position
+     * @param bool      $force
+     * @param bool      $cleanPosition
+     *
+     * @return Node
      */
     public function move(
         Node $node,
         ?Node $parentNode,
         float $position,
         bool $force = false,
-        bool $cleanPosition = true,
+        bool $cleanPosition = true
     ): Node {
-        if ($node->isLocked() && false === $force) {
+        if ($node->isLocked() && $force === false) {
             throw new BadRequestHttpException('Locked node cannot be moved.');
         }
 
@@ -81,6 +109,11 @@ final readonly class NodeMover
         return $node;
     }
 
+    /**
+     * @param Node $node
+     *
+     * @return array
+     */
     public function getNodeSourcesUrls(Node $node): array
     {
         $paths = [];
@@ -98,14 +131,18 @@ final readonly class NodeMover
             }
             $paths[$nodeSource->getTranslation()->getLocale()] = $url;
             $this->logger->debug(
-                'Redirect '.$nodeSource->getId().' '.$nodeSource->getTranslation()->getLocale().': '.$url
+                'Redirect ' . $nodeSource->getId() . ' ' . $nodeSource->getTranslation()->getLocale() . ': ' . $url
             );
             $lastUrl = $url;
         }
-
         return $paths;
     }
 
+    /**
+     * @param Node  $node
+     * @param array $previousPaths
+     * @param bool  $permanently
+     */
     public function redirectAll(Node $node, array $previousPaths, bool $permanently = true): void
     {
         if (count($previousPaths) > 0) {
@@ -124,12 +161,17 @@ final readonly class NodeMover
 
     /**
      * Warning: this method DOES NOT flush entity manager.
+     *
+     * @param NodesSources   $nodeSource
+     * @param string         $previousPath
+     * @param bool           $permanently
+     *
+     * @return NodesSources
      */
     protected function redirect(NodesSources $nodeSource, string $previousPath, bool $permanently = true): NodesSources
     {
-        if (empty($previousPath) || '/' === $previousPath) {
-            $this->logger->warning('Cannot redirect empty or root path: '.$nodeSource->getTitle());
-
+        if (empty($previousPath) || $previousPath === '/') {
+            $this->logger->warning('Cannot redirect empty or root path: ' . $nodeSource->getTitle());
             return $nodeSource;
         }
 
@@ -137,7 +179,7 @@ final readonly class NodeMover
             RouteObjectInterface::OBJECT_BASED_ROUTE_NAME,
             [
                 RouteObjectInterface::ROUTE_OBJECT => $nodeSource,
-                NodeRouter::NO_CACHE_PARAMETER => true, // do not use nodeSourceUrl cache provider
+                NodeRouter::NO_CACHE_PARAMETER => true // do not use nodeSourceUrl cache provider
             ]
         );
 
@@ -159,7 +201,6 @@ final readonly class NodeMover
                 $this->getManager()->remove($loopingRedirection);
             }
 
-            /** @var Redirection|null $existingRedirection */
             $existingRedirection = $redirectionRepo->findOneBy([
                 'query' => $previousPath,
             ]);
@@ -169,7 +210,7 @@ final readonly class NodeMover
                 $existingRedirection->setQuery($previousPath);
                 $this->logger->info('New redirection created', [
                     'oldPath' => $previousPath,
-                    'nodeSource' => $nodeSource,
+                    'nodeSource' => $nodeSource->getId(),
                 ]);
             }
             $existingRedirection->setRedirectNodeSource($nodeSource);
@@ -178,7 +219,6 @@ final readonly class NodeMover
             } else {
                 $existingRedirection->setType(Response::HTTP_FOUND);
             }
-            $this->dispatcher->dispatch(new PostUpdatedRedirectionEvent($existingRedirection));
         }
 
         return $nodeSource;

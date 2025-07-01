@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Extension;
 
-use ApiPlatform\Doctrine\Orm\Extension\QueryResultCollectionExtensionInterface;
-use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
-use ApiPlatform\Metadata\Operation;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Extension\QueryResultCollectionExtensionInterface;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
+use ApiPlatform\Core\Metadata\Resource\ResourceMetadata;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use RZ\Roadiz\CoreBundle\Api\Dto\Archive;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -19,7 +21,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * pagination_client_enabled: false
  * archive_enabled: true
  * archive_publication_field_name: publishedAt
- * ```.
+ * ```
  *
  * ```
  * "hydra:member": [
@@ -41,22 +43,29 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *  ],
  * ```
  */
-final readonly class ArchiveExtension implements QueryResultCollectionExtensionInterface
+final class ArchiveExtension implements QueryResultCollectionExtensionInterface
 {
+    private ResourceMetadataFactoryInterface $resourceMetadataFactory;
+    private RequestStack $requestStack;
+    private string $defaultPublicationFieldName;
+
     public function __construct(
-        private RequestStack $requestStack,
-        private string $defaultPublicationFieldName = 'publishedAt',
+        ResourceMetadataFactoryInterface $resourceMetadataFactory,
+        RequestStack $requestStack,
+        string $defaultPublicationFieldName = 'publishedAt'
     ) {
+        $this->resourceMetadataFactory = $resourceMetadataFactory;
+        $this->requestStack = $requestStack;
+        $this->defaultPublicationFieldName = $defaultPublicationFieldName;
     }
 
     public function applyToCollection(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
-        ?Operation $operation = null,
-        array $context = [],
+        string $operationName = null
     ): void {
-        if (!$this->supportsResult($resourceClass, $operation)) {
+        if (!$this->supportsResult($resourceClass, $operationName)) {
             return;
         }
         if (null === $request = $this->requestStack->getCurrentRequest()) {
@@ -64,29 +73,25 @@ final readonly class ArchiveExtension implements QueryResultCollectionExtensionI
         }
         $aliases = $queryBuilder->getRootAliases();
         $alias = reset($aliases);
-        $publicationFieldName = $this->getPublicationFieldName($operation);
-        $publicationField = $alias.'.'.$publicationFieldName;
+        $publicationFieldName = $this->getPublicationFieldName($request, $this->resourceMetadataFactory->create($resourceClass), $operationName);
+        $publicationField = $alias . '.' . $publicationFieldName;
 
         $queryBuilder->select($publicationField)
             ->addGroupBy($publicationField)
             ->orderBy($publicationField, 'DESC');
     }
 
-    public function supportsResult(string $resourceClass, ?Operation $operation = null, array $context = []): bool
+    public function supportsResult(string $resourceClass, string $operationName = null): bool
     {
         if (null === $request = $this->requestStack->getCurrentRequest()) {
             return false;
         }
 
-        return $this->isArchiveEnabled($operation);
+        return $this->isArchiveEnabled($request, $this->resourceMetadataFactory->create($resourceClass), $operationName);
     }
 
-    public function getResult(
-        QueryBuilder $queryBuilder,
-        ?string $resourceClass = null,
-        ?Operation $operation = null,
-        array $context = [],
-    ): iterable {
+    public function getResult(QueryBuilder $queryBuilder): iterable
+    {
         $entities = [];
         $dates = [];
         $paginator = new Paginator($queryBuilder, false);
@@ -99,7 +104,7 @@ final readonly class ArchiveExtension implements QueryResultCollectionExtensionI
 
         foreach ($paginator as $result) {
             $dateTimeField = reset($result);
-            if ($dateTimeField instanceof \DateTimeInterface) {
+            if ($dateTimeField instanceof \DateTime) {
                 $year = $dateTimeField->format('Y');
                 $month = $dateTimeField->format('Y-m');
 
@@ -114,7 +119,7 @@ final readonly class ArchiveExtension implements QueryResultCollectionExtensionI
 
         foreach ($dates as $year => $months) {
             $entity = new Archive();
-            $entity->year = (int) $year;
+            $entity->year = $year;
             $entity->months = $months;
             $entities[] = $entity;
         }
@@ -123,14 +128,28 @@ final readonly class ArchiveExtension implements QueryResultCollectionExtensionI
     }
 
     private function isArchiveEnabled(
-        ?Operation $operation = null,
+        Request $request,
+        ResourceMetadata $resourceMetadata,
+        string $operationName = null
     ): bool {
-        return $operation->getExtraProperties()['archive_enabled'] ?? false;
+        return $resourceMetadata->getCollectionOperationAttribute(
+            $operationName,
+            'archive_enabled',
+            false,
+            true
+        );
     }
 
     private function getPublicationFieldName(
-        ?Operation $operation = null,
+        Request $request,
+        ResourceMetadata $resourceMetadata,
+        string $operationName = null
     ): string {
-        return $operation->getExtraProperties()['archive_publication_field_name'] ?? $this->defaultPublicationFieldName;
+        return $resourceMetadata->getCollectionOperationAttribute(
+            $operationName,
+            'archive_publication_field_name',
+            $this->defaultPublicationFieldName,
+            true
+        );
     }
 }

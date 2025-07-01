@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Node;
 
-use Doctrine\ORM\OptimisticLockException;
-use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
@@ -13,43 +11,53 @@ use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
-use RZ\Roadiz\CoreBundle\Security\Authorization\Voter\NodeVoter;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 
-final readonly class UniqueNodeGenerator
+class UniqueNodeGenerator
 {
-    public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private NodeNamePolicyInterface $nodeNamePolicy,
-        private Security $security,
-    ) {
+    protected NodeNamePolicyInterface $nodeNamePolicy;
+    private ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param NodeNamePolicyInterface $nodeNamePolicy
+     */
+    public function __construct(ManagerRegistry $managerRegistry, NodeNamePolicyInterface $nodeNamePolicy)
+    {
+        $this->nodeNamePolicy = $nodeNamePolicy;
+        $this->managerRegistry = $managerRegistry;
     }
 
     /**
      * Generate a node with a unique name.
      *
-     * This method flush entity-manager by default.
+     * This method flush entity-manager.
+     *
+     * @param NodeType $nodeType
+     * @param TranslationInterface $translation
+     * @param Node|null $parent
+     * @param Tag|null $tag
+     * @param bool $pushToTop
+     * @return NodesSources
      */
     public function generate(
         NodeType $nodeType,
         TranslationInterface $translation,
-        ?Node $parent = null,
-        ?Tag $tag = null,
-        bool $pushToTop = false,
-        bool $flush = true,
+        Node $parent = null,
+        Tag $tag = null,
+        bool $pushToTop = false
     ): NodesSources {
-        $name = $nodeType->getDisplayName().' '.uniqid();
-        $node = new Node();
-        $node->setNodeType($nodeType);
+        $name = $nodeType->getDisplayName() . " " . uniqid();
+        $node = new Node($nodeType);
         $node->setTtl($nodeType->getDefaultTtl());
 
         if (null !== $tag) {
             $node->addTag($tag);
         }
-        $parent?->addChild($node);
+        if (null !== $parent) {
+            $parent->addChild($node);
+        }
 
         if ($pushToTop) {
             /*
@@ -58,8 +66,7 @@ final readonly class UniqueNodeGenerator
             $node->setPosition(0.5);
         }
 
-        /** @var class-string<NodesSources> $sourceClass */ // phpstan hint
-        $sourceClass = NodeType::getGeneratedEntitiesNamespace().'\\'.$nodeType->getSourceEntityClassName();
+        $sourceClass = NodeType::getGeneratedEntitiesNamespace() . "\\" . $nodeType->getSourceEntityClassName();
 
         $source = new $sourceClass($node, $translation);
         $source->setTitle($name);
@@ -70,9 +77,7 @@ final readonly class UniqueNodeGenerator
         if (null !== $manager) {
             $manager->persist($node);
             $manager->persist($source);
-            if ($flush) {
-                $manager->flush();
-            }
+            $manager->flush();
         }
 
         return $source;
@@ -81,14 +86,17 @@ final readonly class UniqueNodeGenerator
     /**
      * Try to generate a unique node from request variables.
      *
-     * @throws ORMException
-     * @throws OptimisticLockException
+     * @param Request $request
+     *
+     * @return NodesSources
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
      */
     public function generateFromRequest(Request $request): NodesSources
     {
         $pushToTop = false;
 
-        if (1 == $request->get('pushTop')) {
+        if ($request->get('pushTop') == 1) {
             $pushToTop = true;
         }
 
@@ -104,19 +112,13 @@ final readonly class UniqueNodeGenerator
             $parent = $this->managerRegistry
                 ->getRepository(Node::class)
                 ->find((int) $request->get('parentNodeId'));
-            if (null === $parent || !$this->security->isGranted(NodeVoter::CREATE, $parent)) {
-                throw new BadRequestHttpException('Parent node does not exist.');
-            }
         } else {
-            if (!$this->security->isGranted(NodeVoter::CREATE_AT_ROOT)) {
-                throw new AccessDeniedException('You are not allowed to create a node at root.');
-            }
             $parent = null;
         }
 
         $nodeTypeId = $request->get('nodeTypeId');
         if (!is_numeric($nodeTypeId) || $nodeTypeId < 1) {
-            throw new BadRequestHttpException('No node-type ID has been given.');
+            throw new BadRequestHttpException("No node-type ID has been given.");
         }
 
         /** @var NodeType|null $nodeType */
@@ -125,7 +127,7 @@ final readonly class UniqueNodeGenerator
             ->find((int) $nodeTypeId);
 
         if (null === $nodeType) {
-            throw new BadRequestHttpException('Node-type does not exist.');
+            throw new BadRequestHttpException("Node-type does not exist.");
         }
 
         if ($request->get('translationId') > 0) {
@@ -137,8 +139,8 @@ final readonly class UniqueNodeGenerator
             /*
              * If parent has only on translation, use parent translation instead of default one.
              */
-            if (null !== $parent && false !== $parentNodeSource = $parent->getNodeSources()->first()) {
-                $translation = $parentNodeSource->getTranslation();
+            if (null !== $parent && $parent->getNodeSources()->count() === 1) {
+                $translation = $parent->getNodeSources()->first()->getTranslation();
             } else {
                 /** @var Translation $translation */
                 $translation = $this->managerRegistry

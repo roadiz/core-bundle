@@ -17,8 +17,8 @@ final class NonReachableNodeSourceBlockDefinition
     use NodeSourceDefinitionTrait;
 
     public function __construct(
-        private readonly WalkerContextInterface $context,
-        private readonly bool $onlyVisible = true,
+        private WalkerContextInterface $context,
+        private bool $onlyVisible = true,
     ) {
     }
 

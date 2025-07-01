@@ -10,12 +10,27 @@ use Symfony\Contracts\EventDispatcher\Event;
 
 final class NodesSourcesIndexingEvent extends Event
 {
+    protected NodesSources $nodeSource;
+    protected array $associations;
+    protected AbstractSolarium $solariumDocument;
+    protected bool $subResource;
+
+    /**
+     * @param NodesSources     $nodeSource
+     * @param array            $associations
+     * @param AbstractSolarium $solariumDocument
+     * @param bool             $subResource
+     */
     public function __construct(
-        private readonly NodesSources $nodeSource,
-        private array $associations,
-        private readonly AbstractSolarium $solariumDocument,
-        private readonly bool $subResource = false,
+        NodesSources $nodeSource,
+        array $associations,
+        AbstractSolarium $solariumDocument,
+        bool $subResource = false
     ) {
+        $this->nodeSource = $nodeSource;
+        $this->associations = $associations;
+        $this->solariumDocument = $solariumDocument;
+        $this->subResource = $subResource;
     }
 
     public function getNodeSource(): NodesSources
@@ -25,6 +40,8 @@ final class NodesSourcesIndexingEvent extends Event
 
     /**
      * Get Solr document data to index.
+     *
+     * @return array
      */
     public function getAssociations(): array
     {
@@ -33,19 +50,39 @@ final class NodesSourcesIndexingEvent extends Event
 
     /**
      * Set Solr document data to index.
+     *
+     * @param array $associations
+     * @return NodesSourcesIndexingEvent
      */
     public function setAssociations(array $associations): NodesSourcesIndexingEvent
     {
         $this->associations = $associations;
-
         return $this;
     }
 
+    /**
+     * @return AbstractSolarium
+     */
     public function getSolariumDocument(): AbstractSolarium
     {
         return $this->solariumDocument;
     }
 
+    /**
+     * @param AbstractSolarium $solariumDocument
+     *
+     * @return NodesSourcesIndexingEvent
+     */
+    public function setSolariumDocument(AbstractSolarium $solariumDocument): NodesSourcesIndexingEvent
+    {
+        $this->solariumDocument = $solariumDocument;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
     public function isSubResource(): bool
     {
         return $this->subResource;

@@ -25,11 +25,16 @@ final class TranslationExtension extends AbstractExtension
     public function getTests(): array
     {
         return [
-            new TwigTest('rtl', [$this, 'isLocaleRtl']),
+            new TwigTest('rtl', [$this, 'isLocaleRtl'])
         ];
     }
 
-    public function isLocaleRtl(mixed $mixed): bool
+    /**
+     * @param mixed $mixed
+     *
+     * @return bool
+     */
+    public function isLocaleRtl($mixed)
     {
         if ($mixed instanceof TranslationInterface) {
             return $mixed->isRtl();
@@ -42,11 +47,22 @@ final class TranslationExtension extends AbstractExtension
         return false;
     }
 
+    /**
+     * @param string $iso
+     * @param string|null $locale
+     * @return string
+     */
     public function getCountryName(string $iso, ?string $locale = null): string
     {
         return Countries::getName($iso, $locale);
     }
 
+    /**
+     * @param string      $iso
+     * @param string|null $locale
+     *
+     * @return string
+     */
     public function getLocaleName(string $iso, ?string $locale = null): string
     {
         return Locales::getName($iso, $locale);

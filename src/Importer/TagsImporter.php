@@ -10,17 +10,29 @@ use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TagObjectConstructor;
 use RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TypedObjectConstructorInterface;
 
-final readonly class TagsImporter implements EntityImporterInterface
+class TagsImporter implements EntityImporterInterface
 {
-    public function __construct(private SerializerInterface $serializer)
+    protected SerializerInterface $serializer;
+
+    /**
+     * @param SerializerInterface $serializer
+     */
+    public function __construct(SerializerInterface $serializer)
     {
+        $this->serializer = $serializer;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function supports(string $entityClass): bool
     {
-        return Tag::class === $entityClass;
+        return $entityClass === Tag::class;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function import(string $serializedData): bool
     {
         $this->serializer->deserialize(

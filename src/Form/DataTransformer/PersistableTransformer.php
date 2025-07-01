@@ -20,6 +20,7 @@ class PersistableTransformer implements DataTransformerInterface
     private EntityManagerInterface $entityManager;
 
     /**
+     * @param EntityManagerInterface $entityManager
      * @param class-string<PersistableInterface> $doctrineEntity
      */
     public function __construct(EntityManagerInterface $entityManager, string $doctrineEntity)
@@ -38,7 +39,6 @@ class PersistableTransformer implements DataTransformerInterface
         if ($value instanceof PersistableInterface) {
             return $value->getId();
         }
-
         return null;
     }
 
@@ -47,9 +47,8 @@ class PersistableTransformer implements DataTransformerInterface
         if (null === $value) {
             return null;
         }
-
         return $this->entityManager->getRepository($this->doctrineEntity)->findBy([
-            'id' => $value,
+            'id' => $value
         ]);
     }
 }

@@ -9,10 +9,12 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 class MediaFinderCompilerPass implements CompilerPassInterface
 {
+    /**
+     * @inheritDoc
+     */
     public function process(ContainerBuilder $container): void
     {
         if ($container->hasParameter('roadiz_core.medias.supported_platforms')) {
-            /** @var array $parameter */
             $parameter = $container->getParameter('roadiz_core.medias.supported_platforms');
             $taggedServices = $container->findTaggedServiceIds(
                 'roadiz_core.media_finder'

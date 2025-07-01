@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\DataTransformer;
 
-use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\Api\Model\WebResponseInterface;
 
 interface WebResponseDataTransformerInterface
 {
     /**
-     * @template T of PersistableInterface
+     * Transforms the given object to something else, usually another object.
+     * This must return the original object if no transformations have been done.
      *
-     * @param T                         $object
-     * @param WebResponseInterface|null $output pass an existing WebResponseInterface instance to avoid creating a new one
-     *
-     * @return WebResponseInterface<T>|null
+     * @param object $object
+     * @param string $to
+     * @param array $context
+     * @return WebResponseInterface|null
      */
-    public function transform(
-        PersistableInterface $object,
-        string $to,
-        array $context = [],
-        ?WebResponseInterface $output = null,
-    ): ?WebResponseInterface;
+    public function transform($object, string $to, array $context = []): ?WebResponseInterface;
 
-    public function createWebResponse(): WebResponseInterface;
+    /**
+     * Checks whether the transformation is supported for a given data and context.
+     *
+     * @param object|array $data object on normalize / array on denormalize
+     */
+    public function supportsTransformation($data, string $to, array $context = []): bool;
 }

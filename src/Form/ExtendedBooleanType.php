@@ -13,6 +13,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  */
 class ExtendedBooleanType extends AbstractType
 {
+    /**
+     * {@inheritdoc}
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -25,12 +28,16 @@ class ExtendedBooleanType extends AbstractType
             'expanded' => true,
         ]);
     }
-
+    /**
+     * {@inheritdoc}
+     */
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
-
+    /**
+     * {@inheritdoc}
+     */
     public function getBlockPrefix(): string
     {
         return 'extendedboolean';

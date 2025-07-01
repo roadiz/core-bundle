@@ -6,12 +6,13 @@ namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
 use Doctrine\Common\Collections\Criteria;
 use RZ\Roadiz\Core\Handlers\AbstractHandler;
+use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
 
 /**
  * Handle operations with folders entities.
  */
-final class FolderHandler extends AbstractHandler
+class FolderHandler extends AbstractHandler
 {
     protected ?Folder $folder = null;
 
@@ -20,17 +21,16 @@ final class FolderHandler extends AbstractHandler
         if (null === $this->folder) {
             throw new \BadMethodCallException('Folder is null');
         }
-
         return $this->folder;
     }
 
     /**
+     * @param Folder $folder
      * @return $this
      */
-    public function setFolder(Folder $folder): self
+    public function setFolder(Folder $folder)
     {
         $this->folder = $folder;
-
         return $this;
     }
 
@@ -39,7 +39,7 @@ final class FolderHandler extends AbstractHandler
      *
      * @return $this
      */
-    private function removeChildren(): self
+    private function removeChildren()
     {
         /** @var Folder $folder */
         foreach ($this->getFolder()->getChildren() as $folder) {
@@ -57,7 +57,7 @@ final class FolderHandler extends AbstractHandler
      *
      * @return $this
      */
-    public function removeWithChildrenAndAssociations(): self
+    public function removeWithChildrenAndAssociations()
     {
         $this->removeChildren();
         $this->objectManager->remove($this->getFolder());
@@ -66,23 +66,65 @@ final class FolderHandler extends AbstractHandler
          * Final flush
          */
         $this->objectManager->flush();
-
         return $this;
+    }
+
+    /**
+     * Return every folder’s parents.
+     *
+     * @deprecated Use directly Folder::getParents method.
+     * @return array<Folder>
+     */
+    public function getParents(): array
+    {
+        $parentsArray = [];
+        $parent = $this->getFolder();
+
+        do {
+            $parent = $parent->getParent();
+            if ($parent !== null) {
+                $parentsArray[] = $parent;
+            } else {
+                break;
+            }
+        } while ($parent !== null);
+
+        return array_reverse($parentsArray);
+    }
+
+    /**
+     * Get folder full path using folder names.
+     *
+     * @deprecated Use directly Folder::getFullPath method.
+     * @return string
+     */
+    public function getFullPath(): string
+    {
+        $parents = $this->getParents();
+        $path = [];
+
+        foreach ($parents as $parent) {
+            $path[] = $parent->getFolderName();
+        }
+
+        $path[] = $this->getFolder()->getFolderName();
+
+        return implode('/', $path);
     }
 
     /**
      * Clean position for current folder siblings.
      *
+     * @param bool $setPositions
      * @return float Return the next position after the **last** folder
      */
     public function cleanPositions(bool $setPositions = true): float
     {
-        if (null !== $this->getFolder()->getParent()) {
+        if ($this->getFolder()->getParent() !== null) {
             $parentHandler = new FolderHandler($this->objectManager);
             /** @var Folder|null $parent */
             $parent = $this->getFolder()->getParent();
             $parentHandler->setFolder($parent);
-
             return $parentHandler->cleanChildrenPositions($setPositions);
         } else {
             return $this->cleanRootFoldersPositions($setPositions);
@@ -94,6 +136,7 @@ final class FolderHandler extends AbstractHandler
      *
      * Warning, this method does not flush.
      *
+     * @param bool $setPositions
      * @return float Return the next position after the **last** folder
      */
     public function cleanChildrenPositions(bool $setPositions = true): float
@@ -103,7 +146,7 @@ final class FolderHandler extends AbstractHandler
          */
         $sort = Criteria::create();
         $sort->orderBy([
-            'position' => Criteria::ASC,
+            'position' => Criteria::ASC
         ]);
 
         $children = $this->getFolder()->getChildren()->matching($sort);
@@ -113,7 +156,7 @@ final class FolderHandler extends AbstractHandler
             if ($setPositions) {
                 $child->setPosition($i);
             }
-            ++$i;
+            $i++;
         }
 
         return $i;
@@ -124,6 +167,7 @@ final class FolderHandler extends AbstractHandler
      *
      * Warning, this method does not flush.
      *
+     * @param bool $setPositions
      * @return float Return the next position after the **last** folder
      */
     public function cleanRootFoldersPositions(bool $setPositions = true): float
@@ -138,7 +182,7 @@ final class FolderHandler extends AbstractHandler
             if ($setPositions) {
                 $child->setPosition($i);
             }
-            ++$i;
+            $i++;
         }
 
         return $i;

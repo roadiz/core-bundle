@@ -18,31 +18,37 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 /**
  * Subscribe to Translation event to clear result cache.
  */
-final readonly class TranslationSubscriber implements EventSubscriberInterface
+class TranslationSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private ManagerRegistry $managerRegistry)
+    protected ManagerRegistry $managerRegistry;
+
+    public function __construct(ManagerRegistry $managerRegistry)
     {
+        $this->managerRegistry = $managerRegistry;
     }
 
     public static function getSubscribedEvents(): array
     {
         return [
             TranslationCreatedEvent::class => 'purgeCache',
+            '\RZ\Roadiz\Core\Events\Translation\TranslationCreatedEvent' => 'purgeCache',
             TranslationUpdatedEvent::class => 'purgeCache',
+            '\RZ\Roadiz\Core\Events\Translation\TranslationUpdatedEvent' => 'purgeCache',
             TranslationDeletedEvent::class => 'purgeCache',
+            '\RZ\Roadiz\Core\Events\Translation\TranslationDeletedEvent' => 'purgeCache',
         ];
     }
 
     /**
-     * Empty nodeSources Url cache.
+     * Empty nodeSources Url cache
      */
     public function purgeCache(Event $event, string $eventName, EventDispatcherInterface $dispatcher): void
     {
         $manager = $this->managerRegistry->getManager();
         // Clear result cache
         if (
-            $manager instanceof EntityManagerInterface
-            && $manager->getConfiguration()->getResultCacheImpl() instanceof CacheProvider
+            $manager instanceof EntityManagerInterface &&
+            $manager->getConfiguration()->getResultCacheImpl() instanceof CacheProvider
         ) {
             $manager->getConfiguration()->getResultCacheImpl()->deleteAll();
         }

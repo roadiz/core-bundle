@@ -21,14 +21,20 @@ class SettingType extends AbstractType
 {
     protected SettingTypeResolver $settingTypeResolver;
 
+    /**
+     * @param SettingTypeResolver $settingTypeResolver
+     */
     public function __construct(SettingTypeResolver $settingTypeResolver)
     {
         $this->settingTypeResolver = $settingTypeResolver;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        if (false === $options['shortEdit']) {
+        if ($options['shortEdit'] === false) {
             $builder
                 ->add('name', TextType::class, [
                     'empty_data' => '',
@@ -40,6 +46,10 @@ class SettingType extends AbstractType
                 ])
                 ->add('visible', CheckboxType::class, [
                     'label' => 'visible',
+                    'required' => false,
+                ])
+                ->add('encrypted', CheckboxType::class, [
+                    'label' => 'encrypted',
                     'required' => false,
                 ])
                 ->add('type', ChoiceType::class, [
@@ -67,7 +77,7 @@ class SettingType extends AbstractType
             $form = $event->getForm();
 
             if ($setting instanceof Setting) {
-                if (AbstractField::DOCUMENTS_T === $setting->getType()) {
+                if ($setting->getType() === AbstractField::DOCUMENTS_T) {
                     $form->add(
                         'value',
                         SettingDocumentType::class,
@@ -92,6 +102,9 @@ class SettingType extends AbstractType
         });
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefault('data_class', Setting::class);
@@ -110,13 +123,12 @@ class SettingType extends AbstractType
                 $values = array_map(function ($item) {
                     return trim($item);
                 }, $values);
-
                 return [
                     'label' => $label,
                     'placeholder' => 'choose.value',
                     'required' => false,
                     'choices' => array_combine($values, $values),
-                    'multiple' => AbstractField::MULTIPLE_T === $setting->getType(),
+                    'multiple' => $setting->getType() === AbstractField::MULTIPLE_T
                 ];
             case AbstractField::EMAIL_T:
                 return [
@@ -124,7 +136,7 @@ class SettingType extends AbstractType
                     'required' => false,
                     'constraints' => [
                         new Email(),
-                    ],
+                    ]
                 ];
             case AbstractField::DATETIME_T:
                 return [
