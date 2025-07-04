@@ -15,10 +15,10 @@ use RZ\Roadiz\CoreBundle\Repository\NodesCustomFormsRepository;
  */
 #[
     ORM\Entity(repositoryClass: NodesCustomFormsRepository::class),
-    ORM\Table(name: "nodes_custom_forms"),
-    ORM\Index(columns: ["position"]),
-    ORM\Index(columns: ["node_id", "position"], name: "customform_node_position"),
-    ORM\Index(columns: ["node_id", "field_name", "position"], name: "customform_node_field_position")
+    ORM\Table(name: 'nodes_custom_forms'),
+    ORM\Index(columns: ['position']),
+    ORM\Index(columns: ['node_id', 'position'], name: 'customform_node_position'),
+    ORM\Index(columns: ['node_id', 'field_name', 'position'], name: 'customform_node_field_position')
 ]
 class NodesCustomForms extends AbstractPositioned
 {
@@ -33,17 +33,10 @@ class NodesCustomForms extends AbstractPositioned
     protected CustomForm $customForm;
 
     /**
-     * Create a new relation between a Node, a CustomForm and a NodeTypeField.
-     *
-     * @param Node $node
-     * @param CustomForm $customForm
-     * @param NodeTypeFieldInterface|null $field NodeTypeField
+     * Create a new relation between a Node, a CustomForm and a NodeTypeFieldInterface.
      */
     public function __construct(Node $node, CustomForm $customForm, ?NodeTypeFieldInterface $field = null)
     {
-        if (!$field instanceof NodeTypeField) {
-            throw new \InvalidArgumentException('NodesCustomForms only accept NodeTypeField');
-        }
         $this->node = $node;
         $this->customForm = $customForm;
         $this->initializeFieldAwareEntityTrait($field);
@@ -58,8 +51,6 @@ class NodesCustomForms extends AbstractPositioned
 
     /**
      * Gets the value of node.
-     *
-     * @return Node
      */
     public function getNode(): Node
     {
@@ -70,19 +61,16 @@ class NodesCustomForms extends AbstractPositioned
      * Sets the value of node.
      *
      * @param Node $node the node
-     *
-     * @return self
      */
     public function setNode(Node $node): NodesCustomForms
     {
         $this->node = $node;
+
         return $this;
     }
 
     /**
      * Gets the value of customForm.
-     *
-     * @return CustomForm
      */
     public function getCustomForm(): CustomForm
     {
@@ -93,12 +81,11 @@ class NodesCustomForms extends AbstractPositioned
      * Sets the value of customForm.
      *
      * @param CustomForm $customForm the custom form
-     *
-     * @return self
      */
     public function setCustomForm(CustomForm $customForm): NodesCustomForms
     {
         $this->customForm = $customForm;
+
         return $this;
     }
 }

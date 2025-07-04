@@ -6,18 +6,22 @@ namespace RZ\Roadiz\CoreBundle\Node;
 
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
-use RZ\Roadiz\Core\AbstractEntities\AbstractField;
+use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
-use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
+use RZ\Roadiz\CoreBundle\Enum\FieldType;
+use RZ\Roadiz\CoreBundle\Repository\AllStatusesNodesSourcesRepository;
 use RZ\Roadiz\CoreBundle\Repository\TranslationRepository;
 
-final class UniversalDataDuplicator
+final readonly class UniversalDataDuplicator
 {
-    public function __construct(private readonly ManagerRegistry $managerRegistry)
-    {
+    public function __construct(
+        private ManagerRegistry $managerRegistry,
+        private AllStatusesNodesSourcesRepository $allStatusesNodesSourcesRepository,
+        private NodeTypes $nodeTypesBag,
+    ) {
     }
 
     /**
@@ -25,8 +29,6 @@ final class UniversalDataDuplicator
      *
      * **Be careful, this method does not flush.**
      *
-     * @param NodesSources $source
-     * @return bool
      * @throws \Doctrine\ORM\NoResultException
      * @throws \Doctrine\ORM\NonUniqueResultException
      * @throws \Doctrine\ORM\ORMException
@@ -38,20 +40,18 @@ final class UniversalDataDuplicator
          * Non-default translation source should not contain universal fields.
          */
         if ($source->getTranslation()->isDefaultTranslation() || !$this->hasDefaultTranslation($source)) {
-            $nodeTypeFieldRepository = $this->managerRegistry->getRepository(NodeTypeField::class);
-            $universalFields = $nodeTypeFieldRepository->findAllUniversal($source->getNode()->getNodeType());
+            $fields = $this->nodeTypesBag->get($source->getNodeTypeName())->getFields();
+            /** @var NodeTypeField[] $universalFields */
+            $universalFields = $fields->filter(function (NodeTypeField $field) {
+                return $field->isUniversal();
+            });
 
             if (count($universalFields) > 0) {
-                $repository = $this->managerRegistry->getRepository(NodesSources::class);
-                $repository->setDisplayingAllNodesStatuses(true)
-                    ->setDisplayingNotPublishedNodes(true)
-                ;
-                $otherSources = $repository->findBy([
+                $otherSources = $this->allStatusesNodesSourcesRepository->findBy([
                     'node' => $source->getNode(),
                     'id' => ['!=', $source->getId()],
                 ]);
 
-                /** @var NodeTypeField $universalField */
                 foreach ($universalFields as $universalField) {
                     /** @var NodesSources $otherSource */
                     foreach ($otherSources as $otherSource) {
@@ -59,19 +59,20 @@ final class UniversalDataDuplicator
                             $this->duplicateNonVirtualField($source, $otherSource, $universalField);
                         } else {
                             switch ($universalField->getType()) {
-                                case AbstractField::DOCUMENTS_T:
+                                case FieldType::DOCUMENTS_T:
                                     $this->duplicateDocumentsField($source, $otherSource, $universalField);
                                     break;
-                                case AbstractField::MULTI_PROVIDER_T:
-                                case AbstractField::SINGLE_PROVIDER_T:
-                                case AbstractField::MANY_TO_ONE_T:
-                                case AbstractField::MANY_TO_MANY_T:
+                                case FieldType::MULTI_PROVIDER_T:
+                                case FieldType::SINGLE_PROVIDER_T:
+                                case FieldType::MANY_TO_ONE_T:
+                                case FieldType::MANY_TO_MANY_T:
                                     $this->duplicateNonVirtualField($source, $otherSource, $universalField);
                                     break;
                             }
                         }
                     }
                 }
+
                 return true;
             }
         }
@@ -80,9 +81,6 @@ final class UniversalDataDuplicator
     }
 
     /**
-     * @param NodesSources $source
-     *
-     * @return bool
      * @throws \Doctrine\ORM\NoResultException
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
@@ -93,22 +91,18 @@ final class UniversalDataDuplicator
         /** @var Translation $defaultTranslation */
         $defaultTranslation = $translationRepository->findDefault();
 
-        /** @var NodesSourcesRepository $repository */
-        $repository = $this->managerRegistry->getRepository(NodesSources::class);
-        $sourceCount = $repository->setDisplayingAllNodesStatuses(true)
-            ->setDisplayingNotPublishedNodes(true)
-            ->countBy([
-                'node' => $source->getNode(),
-                'translation' => $defaultTranslation,
-            ]);
+        $sourceCount = $this->allStatusesNodesSourcesRepository->countBy([
+            'node' => $source->getNode(),
+            'translation' => $defaultTranslation,
+        ]);
 
-        return $sourceCount === 1;
+        return 1 === $sourceCount;
     }
 
     protected function duplicateNonVirtualField(
         NodesSources $universalSource,
         NodesSources $destSource,
-        NodeTypeFieldInterface $field
+        NodeTypeFieldInterface $field,
     ): void {
         $getter = $field->getGetterName();
         $setter = $field->getSetterName();
@@ -119,7 +113,7 @@ final class UniversalDataDuplicator
     protected function duplicateDocumentsField(
         NodesSources $universalSource,
         NodesSources $destSource,
-        NodeTypeFieldInterface $field
+        NodeTypeFieldInterface $field,
     ): void {
         $newDocuments = $this->managerRegistry
             ->getRepository(NodesSourcesDocuments::class)
@@ -147,7 +141,7 @@ final class UniversalDataDuplicator
             foreach ($newDocuments as $newDocument) {
                 $nsDoc = new NodesSourcesDocuments($destSource, $newDocument->getDocument(), $field);
                 $nsDoc->setPosition($position);
-                $position++;
+                ++$position;
 
                 $manager->persist($nsDoc);
             }

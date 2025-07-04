@@ -9,18 +9,13 @@ use League\Flysystem\FilesystemOperator;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
-class UniqueFilenameValidator extends ConstraintValidator
+final class UniqueFilenameValidator extends ConstraintValidator
 {
-    protected FilesystemOperator $documentsStorage;
-
-    public function __construct(FilesystemOperator $documentsStorage)
+    public function __construct(private readonly FilesystemOperator $documentsStorage)
     {
-        $this->documentsStorage = $documentsStorage;
     }
 
     /**
-     * @param mixed $value
-     * @param Constraint $constraint
      * @throws FilesystemException
      */
     public function validate(mixed $value, Constraint $constraint): void
@@ -32,15 +27,15 @@ class UniqueFilenameValidator extends ConstraintValidator
              * do nothing.
              */
             if (
-                null !== $document &&
-                $value == $document->getFilename()
+                null !== $document
+                && $value == $document->getFilename()
             ) {
                 return;
             }
 
             $folder = $document->getMountFolderPath();
 
-            if ($this->documentsStorage->fileExists($folder . '/' . $value)) {
+            if ($this->documentsStorage->fileExists($folder.'/'.$value)) {
                 $this->context->addViolation($constraint->message);
             }
         }

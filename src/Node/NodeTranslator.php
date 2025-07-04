@@ -9,13 +9,15 @@ use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Event\NodesSources\NodesSourcesCreatedEvent;
+use RZ\Roadiz\CoreBundle\Repository\AllStatusesNodesSourcesRepository;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class NodeTranslator
 {
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
-        private readonly EventDispatcherInterface $dispatcher
+        private readonly AllStatusesNodesSourcesRepository $allStatusesNodesSourcesRepository,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -23,7 +25,7 @@ final class NodeTranslator
         ?Translation $sourceTranslation,
         Translation $destinationTranslation,
         Node $node,
-        bool $translateChildren = false
+        bool $translateChildren = false,
     ): Node {
         $this->translateSingleNode($sourceTranslation, $destinationTranslation, $node);
 
@@ -40,14 +42,10 @@ final class NodeTranslator
     private function translateSingleNode(
         ?Translation $sourceTranslation,
         Translation $destinationTranslation,
-        Node $node
+        Node $node,
     ): NodesSources {
         /** @var NodesSources|null $existing */
-        $existing = $this->managerRegistry
-            ->getRepository(NodesSources::class)
-            ->setDisplayingAllNodesStatuses(true)
-            ->setDisplayingNotPublishedNodes(true)
-            ->findOneByNodeAndTranslation($node, $destinationTranslation);
+        $existing = $this->allStatusesNodesSourcesRepository->findOneByNodeAndTranslation($node, $destinationTranslation);
 
         if (null === $existing) {
             /** @var NodesSources|false $baseSource */

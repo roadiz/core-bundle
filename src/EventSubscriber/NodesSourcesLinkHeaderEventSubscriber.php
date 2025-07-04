@@ -8,6 +8,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Psr\Link\EvolvableLinkProviderInterface;
 use RZ\Roadiz\CoreBundle\Api\Model\WebResponseInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
+use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ViewEvent;
@@ -15,21 +16,18 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\WebLink\GenericLinkProvider;
 use Symfony\Component\WebLink\Link;
 
-final class NodesSourcesLinkHeaderEventSubscriber implements EventSubscriberInterface
+final readonly class NodesSourcesLinkHeaderEventSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly UrlGeneratorInterface $urlGenerator
+        private ManagerRegistry $managerRegistry,
+        private UrlGeneratorInterface $urlGenerator,
     ) {
     }
 
-    /**
-     * @inheritDoc
-     */
     public static function getSubscribedEvents(): array
     {
         return [
-            ViewEvent::class => ['onKernelView', 15]
+            ViewEvent::class => ['onKernelView', 15],
         ];
     }
 
@@ -51,17 +49,21 @@ final class NodesSourcesLinkHeaderEventSubscriber implements EventSubscriberInte
         /*
          * Preview and authentication is handled at repository level.
          */
+        $repository = $this->managerRegistry->getRepository(get_class($resources));
+        if (!$repository instanceof NodesSourcesRepository) {
+            return;
+        }
+        $repository->setDisplayingAllNodesStatuses(false);
+        $repository->setDisplayingNotPublishedNodes(false);
         /** @var NodesSources[] $allSources */
-        $allSources = $this->managerRegistry
-            ->getRepository(get_class($resources))
-            ->findByNode($resources->getNode());
+        $allSources = $repository->findByNode($resources->getNode());
 
         foreach ($allSources as $singleSource) {
             $linkProvider = $linkProvider->withLink(
                 (new Link(
                     'alternate',
                     $this->urlGenerator->generate(RouteObjectInterface::OBJECT_BASED_ROUTE_NAME, [
-                        RouteObjectInterface::ROUTE_OBJECT => $singleSource
+                        RouteObjectInterface::ROUTE_OBJECT => $singleSource,
                     ])
                 ))
                     ->withAttribute('hreflang', $singleSource->getTranslation()->getLocale())
