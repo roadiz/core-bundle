@@ -18,15 +18,26 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 /**
  * Group selector form field type.
  */
-final class GroupsType extends AbstractType
+class GroupsType extends AbstractType
 {
+    protected AuthorizationCheckerInterface $authorizationChecker;
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param AuthorizationCheckerInterface $authorizationChecker
+     */
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly AuthorizationCheckerInterface $authorizationChecker,
+        ManagerRegistry $managerRegistry,
+        AuthorizationCheckerInterface $authorizationChecker
     ) {
+        $this->authorizationChecker = $authorizationChecker;
+        $this->managerRegistry = $managerRegistry;
     }
 
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer(new CallbackTransformer(function ($modelToForm) {
@@ -34,23 +45,25 @@ final class GroupsType extends AbstractType
                 if ($modelToForm instanceof Collection) {
                     $modelToForm = $modelToForm->toArray();
                 }
-
-                return array_map(fn (Group $group) => $group->getId(), $modelToForm);
+                return array_map(function (Group $group) {
+                    return $group->getId();
+                }, $modelToForm);
             }
-
             return null;
         }, function ($formToModels) {
-            if (null === $formToModels || (is_array($formToModels) && 0 === count($formToModels))) {
+            if (null === $formToModels || (is_array($formToModels) && count($formToModels) === 0)) {
                 return [];
             }
-
             return $this->managerRegistry->getRepository(Group::class)->findBy([
-                'id' => $formToModels,
+                'id' => $formToModels
             ]);
         }));
     }
 
-    #[\Override]
+
+    /**
+     * {@inheritdoc}
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([]);
@@ -67,18 +80,19 @@ final class GroupsType extends AbstractType
                     $choices[$group->getName()] = $group->getId();
                 }
             }
-
             return $choices;
         });
     }
-
-    #[\Override]
+    /**
+     * {@inheritdoc}
+     */
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
-
-    #[\Override]
+    /**
+     * {@inheritdoc}
+     */
     public function getBlockPrefix(): string
     {
         return 'groups';

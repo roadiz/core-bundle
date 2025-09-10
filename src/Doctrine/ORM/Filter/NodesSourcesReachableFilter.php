@@ -13,18 +13,20 @@ use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-final readonly class NodesSourcesReachableFilter implements EventSubscriberInterface
+/**
+ * @package RZ\Roadiz\CoreBundle\Doctrine\ORM\Filter
+ */
+final class NodesSourcesReachableFilter implements EventSubscriberInterface
 {
-    public const array PARAMETER = [
+    public const PARAMETER = [
         'node.nodeType.reachable',
-        'reachable',
+        'reachable'
     ];
 
-    public function __construct(private NodeTypes $nodeTypesBag)
+    public function __construct(private readonly NodeTypes $nodeTypesBag)
     {
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [
@@ -34,13 +36,21 @@ final readonly class NodesSourcesReachableFilter implements EventSubscriberInter
         ];
     }
 
+    /**
+     * @param FilterNodesSourcesQueryBuilderCriteriaEvent $event
+     *
+     * @return bool
+     */
     protected function supports(FilterNodesSourcesQueryBuilderCriteriaEvent $event): bool
     {
-        return $event->supports()
-            && in_array($event->getProperty(), self::PARAMETER)
-            && is_bool($event->getValue());
+        return $event->supports() &&
+            in_array($event->getProperty(), self::PARAMETER) &&
+            is_bool($event->getValue());
     }
 
+    /**
+     * @param QueryBuilderNodesSourcesBuildEvent $event
+     */
     public function onNodesSourcesQueryBuilderBuild(QueryBuilderNodesSourcesBuildEvent $event): void
     {
         if ($this->supports($event)) {
@@ -50,7 +60,9 @@ final readonly class NodesSourcesReachableFilter implements EventSubscriberInter
             $simpleQB = new SimpleQueryBuilder($event->getQueryBuilder());
             $value = (bool) $event->getValue();
 
-            $nodeTypes = array_unique(array_filter($this->nodeTypesBag->all(), fn (NodeType $nodeType) => $nodeType->getReachable() === $value));
+            $nodeTypes = array_unique(array_filter($this->nodeTypesBag->all(), function (NodeType $nodeType) use ($value) {
+                return $nodeType->getReachable() === $value;
+            }));
 
             if (count($nodeTypes) > 0) {
                 $orX = $qb->expr()->orX();

@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * pagination_client_enabled: false
  * archive_enabled: true
  * archive_publication_field_name: publishedAt
- * ```.
+ * ```
  *
  * ```
  * "hydra:member": [
@@ -41,57 +41,51 @@ use Symfony\Component\HttpFoundation\RequestStack;
  *  ],
  * ```
  */
-final readonly class ArchiveExtension implements QueryResultCollectionExtensionInterface
+final class ArchiveExtension implements QueryResultCollectionExtensionInterface
 {
     public function __construct(
-        private RequestStack $requestStack,
-        private string $defaultPublicationFieldName = 'publishedAt',
+        private readonly RequestStack $requestStack,
+        private readonly string $defaultPublicationFieldName = 'publishedAt'
     ) {
     }
 
-    #[\Override]
     public function applyToCollection(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
         ?Operation $operation = null,
-        array $context = [],
+        array $context = []
     ): void {
         if (!$this->supportsResult($resourceClass, $operation)) {
             return;
         }
-        if (null === $this->requestStack->getCurrentRequest()) {
+        if (null === $request = $this->requestStack->getCurrentRequest()) {
             return;
         }
         $aliases = $queryBuilder->getRootAliases();
         $alias = reset($aliases);
         $publicationFieldName = $this->getPublicationFieldName($operation);
-        $publicationField = $alias.'.'.$publicationFieldName;
+        $publicationField = $alias . '.' . $publicationFieldName;
 
         $queryBuilder->select($publicationField)
             ->addGroupBy($publicationField)
             ->orderBy($publicationField, 'DESC');
     }
 
-    #[\Override]
     public function supportsResult(string $resourceClass, ?Operation $operation = null, array $context = []): bool
     {
-        if (null === $this->requestStack->getCurrentRequest()) {
+        if (null === $request = $this->requestStack->getCurrentRequest()) {
             return false;
         }
 
         return $this->isArchiveEnabled($operation);
     }
 
-    /**
-     * @return iterable<Archive>
-     */
-    #[\Override]
     public function getResult(
         QueryBuilder $queryBuilder,
         ?string $resourceClass = null,
         ?Operation $operation = null,
-        array $context = [],
+        array $context = []
     ): iterable {
         $entities = [];
         $dates = [];
@@ -119,20 +113,23 @@ final readonly class ArchiveExtension implements QueryResultCollectionExtensionI
         }
 
         foreach ($dates as $year => $months) {
-            $entities[] = new Archive($year, $months);
+            $entity = new Archive();
+            $entity->year = (int) $year;
+            $entity->months = $months;
+            $entities[] = $entity;
         }
 
         return $entities;
     }
 
     private function isArchiveEnabled(
-        ?Operation $operation = null,
+        ?Operation $operation = null
     ): bool {
         return $operation->getExtraProperties()['archive_enabled'] ?? false;
     }
 
     private function getPublicationFieldName(
-        ?Operation $operation = null,
+        ?Operation $operation = null
     ): string {
         return $operation->getExtraProperties()['archive_publication_field_name'] ?? $this->defaultPublicationFieldName;
     }

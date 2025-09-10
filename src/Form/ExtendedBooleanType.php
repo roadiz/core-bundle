@@ -8,9 +8,14 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class ExtendedBooleanType extends AbstractType
+/**
+ * Node state selector form field type.
+ */
+class ExtendedBooleanType extends AbstractType
 {
-    #[\Override]
+    /**
+     * {@inheritdoc}
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -23,14 +28,16 @@ final class ExtendedBooleanType extends AbstractType
             'expanded' => true,
         ]);
     }
-
-    #[\Override]
+    /**
+     * {@inheritdoc}
+     */
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
-
-    #[\Override]
+    /**
+     * {@inheritdoc}
+     */
     public function getBlockPrefix(): string
     {
         return 'extendedboolean';

@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use RZ\Roadiz\Core\AbstractEntities\DateTimedInterface;
-use RZ\Roadiz\Core\AbstractEntities\DateTimedTrait;
-use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
-use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
+use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
 use RZ\Roadiz\CoreBundle\Repository\RedirectionRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,22 +16,19 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 #[
     ORM\Entity(repositoryClass: RedirectionRepository::class),
-    ORM\Table(name: 'redirections'),
+    ORM\Table(name: "redirections"),
     ORM\HasLifecycleCallbacks,
-    UniqueEntity(fields: ['query']),
-    ORM\Index(columns: ['use_count'], name: 'redirection_use_count'),
-    ORM\Index(columns: ['created_at'], name: 'redirection_created_at'),
-    ORM\Index(columns: ['updated_at'], name: 'redirection_updated_at'),
+    UniqueEntity(fields: ["query"]),
+    ORM\Index(columns: ["use_count"], name: 'redirection_use_count'),
+    ORM\Index(columns: ["created_at"], name: "redirection_created_at"),
+    ORM\Index(columns: ["updated_at"], name: "redirection_updated_at"),
 ]
-class Redirection implements DateTimedInterface, PersistableInterface
+class Redirection extends AbstractDateTimed
 {
-    use SequentialIdTrait;
-    use DateTimedTrait;
-
     #[ORM\Column(type: 'string', length: 255, unique: true)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
-    private string $query = '';
+    private string $query = "";
 
     #[ORM\Column(name: 'redirectUri', type: 'text', length: 2048, nullable: true)]
     #[Assert\Length(max: 2048)]
@@ -45,54 +38,84 @@ class Redirection implements DateTimedInterface, PersistableInterface
     #[Assert\Length(max: 2048)]
     private int $useCount = 0;
 
+    /**
+     * @var NodesSources|null
+     */
     #[ORM\ManyToOne(targetEntity: NodesSources::class, cascade: ['persist'], inversedBy: 'redirections')]
     #[ORM\JoinColumn(name: 'ns_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     private ?NodesSources $redirectNodeSource = null;
 
-    #[ORM\Column(type: Types::SMALLINT)]
+    /**
+     * @var int
+     */
+    #[ORM\Column(type: 'integer')]
     private int $type = 301;
 
+    /**
+     * @return string
+     */
     public function getQuery(): string
     {
         return $this->query;
     }
 
+    /**
+     * @param string|null $query
+     * @return Redirection
+     */
     public function setQuery(?string $query): Redirection
     {
         $this->query = $query ?? '';
-
         return $this;
     }
 
+    /**
+     * @return string|null
+     */
     public function getRedirectUri(): ?string
     {
         return $this->redirectUri;
     }
 
+    /**
+     * @param string|null $redirectUri
+     * @return Redirection
+     */
     public function setRedirectUri(?string $redirectUri): Redirection
     {
         $this->redirectUri = $redirectUri;
-
         return $this;
     }
 
+    /**
+     * @return NodesSources|null
+     */
     public function getRedirectNodeSource(): ?NodesSources
     {
         return $this->redirectNodeSource;
     }
 
-    public function setRedirectNodeSource(?NodesSources $redirectNodeSource = null): Redirection
+    /**
+     * @param NodesSources|null $redirectNodeSource
+     * @return Redirection
+     */
+    public function setRedirectNodeSource(NodesSources $redirectNodeSource = null): Redirection
     {
         $this->redirectNodeSource = $redirectNodeSource;
-
         return $this;
     }
 
+    /**
+     * @return int
+     */
     public function getType(): int
     {
         return $this->type;
     }
 
+    /**
+     * @return string
+     */
     public function getTypeAsString(): string
     {
         $types = [
@@ -103,19 +126,25 @@ class Redirection implements DateTimedInterface, PersistableInterface
         return $types[$this->type] ?? '';
     }
 
+    /**
+     * @param int $type
+     * @return Redirection
+     */
     public function setType(int $type): Redirection
     {
         $this->type = $type;
-
         return $this;
     }
 
     public function __construct()
     {
         $this->type = Response::HTTP_MOVED_PERMANENTLY;
-        $this->initDateTimedTrait();
+        $this->initAbstractDateTimed();
     }
 
+    /**
+     * @return int
+     */
     public function getUseCount(): int
     {
         return $this->useCount;
@@ -123,8 +152,7 @@ class Redirection implements DateTimedInterface, PersistableInterface
 
     public function incrementUseCount(): self
     {
-        ++$this->useCount;
-
+        $this->useCount++;
         return $this;
     }
 }

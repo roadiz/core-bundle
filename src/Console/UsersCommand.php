@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CoreBundle\Entity\Role;
 use RZ\Roadiz\CoreBundle\Entity\User;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
@@ -17,12 +18,11 @@ class UsersCommand extends Command
 {
     public function __construct(
         protected readonly ManagerRegistry $managerRegistry,
-        ?string $name = null,
+        string $name = null
     ) {
         parent::__construct($name);
     }
 
-    #[\Override]
     protected function configure(): void
     {
         $this->setName('users:list')
@@ -47,7 +47,6 @@ class UsersCommand extends Command
         ];
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -59,8 +58,8 @@ class UsersCommand extends Command
                 ->getRepository(User::class)
                 ->findOneBy(['username' => $name]);
 
-            if (null === $user) {
-                $io->error('User “'.$name.'” does not exist… use users:create to add a new user.');
+            if ($user === null) {
+                $io->error('User “' . $name . '” does not exist… use users:create to add a new user.');
             } else {
                 $tableContent = [
                     $this->getUserTableRow($user),
@@ -89,7 +88,6 @@ class UsersCommand extends Command
                 $io->warning('No available users.');
             }
         }
-
         return 0;
     }
 
@@ -107,9 +105,30 @@ class UsersCommand extends Command
             ->findOneBy(['username' => $name]);
 
         if (!($user instanceof User)) {
-            throw new InvalidArgumentException('User “'.$name.'” does not exist.');
+            throw new InvalidArgumentException('User “' . $name . '” does not exist.');
         }
 
         return $user;
+    }
+
+    /**
+     * Get role by name, and create it if it does not exist.
+     *
+     * @param string $roleName
+     * @return Role
+     */
+    public function getRole(string $roleName = Role::ROLE_SUPERADMIN): Role
+    {
+        $role = $this->managerRegistry
+            ->getRepository(Role::class)
+            ->findOneBy(['name' => $roleName]);
+
+        if ($role === null) {
+            $role = new Role($roleName);
+            $this->managerRegistry->getManagerForClass(Role::class)->persist($role);
+            $this->managerRegistry->getManagerForClass(Role::class)->flush();
+        }
+
+        return $role;
     }
 }

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\Persistence\ManagerRegistry;
@@ -12,24 +10,21 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Scheduler\Attribute\AsCronTask;
 
 #[AsCommand(
     name: 'cron:set-last-exec-date',
     description: 'Persist last execution date of cron job into database.',
 )]
-#[AsCronTask(expression: '2 3 * * *', jitter: 60, arguments: '-n -q')]
 final class RegisterCronLastExecDateCommand extends Command
 {
     public function __construct(
         private readonly SettingRepository $settingRepository,
         private readonly ManagerRegistry $managerRegistry,
-        ?string $name = null,
+        string $name = null
     ) {
         parent::__construct($name);
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);

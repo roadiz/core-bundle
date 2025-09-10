@@ -6,14 +6,8 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
-use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
-use RZ\Roadiz\Core\AbstractEntities\PositionedInterface;
-use RZ\Roadiz\Core\AbstractEntities\PositionedTrait;
-use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
+use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
 use RZ\Roadiz\CoreBundle\Repository\NodesSourcesDocumentsRepository;
-use RZ\Roadiz\Documents\Models\ContextualizedDocumentInterface;
-use RZ\Roadiz\Documents\Models\ContextualizedDocumentTrait;
-use RZ\Roadiz\Documents\Models\DocumentInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -22,43 +16,55 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 #[
     ORM\Entity(repositoryClass: NodesSourcesDocumentsRepository::class),
-    ORM\Table(name: 'nodes_sources_documents'),
-    ORM\HasLifecycleCallbacks,
-    ORM\Index(columns: ['position']),
-    ORM\Index(columns: ['ns_id', 'field_name'], name: 'nsdoc_field'),
-    ORM\Index(columns: ['ns_id', 'field_name', 'position'], name: 'nsdoc_field_position')
+    ORM\Table(name: "nodes_sources_documents"),
+    ORM\Index(columns: ["position"]),
+    ORM\Index(columns: ["ns_id", "field_name"], name: "nsdoc_field"),
+    ORM\Index(columns: ["ns_id", "field_name", "position"], name: "nsdoc_field_position")
 ]
-class NodesSourcesDocuments implements PositionedInterface, PersistableInterface, ContextualizedDocumentInterface
+class NodesSourcesDocuments extends AbstractPositioned
 {
-    use SequentialIdTrait;
-    use PositionedTrait;
     use FieldAwareEntityTrait;
-    use ContextualizedDocumentTrait;
 
     /**
-     * Create a new relation between NodeSource, a Document for a NodeTypeField.
+     * @var NodesSources
      */
-    public function __construct(
-        #[ORM\ManyToOne(
-            targetEntity: NodesSources::class,
-            cascade: ['persist'],
-            fetch: 'EAGER',
-            inversedBy: 'documentsByFields'
-        )]
-        #[Assert\NotNull]
-        #[ORM\JoinColumn(name: 'ns_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-        protected NodesSources $nodeSource,
-        #[ORM\ManyToOne(
-            targetEntity: DocumentInterface::class,
-            cascade: ['persist'],
-            fetch: 'EAGER',
-            inversedBy: 'nodesSourcesByFields'
-        )]
-        #[Assert\NotNull]
-        #[ORM\JoinColumn(name: 'document_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-        protected DocumentInterface $document,
-        ?NodeTypeFieldInterface $field = null,
-    ) {
+    #[ORM\ManyToOne(
+        targetEntity: NodesSources::class,
+        cascade: ['persist'],
+        fetch: 'EAGER',
+        inversedBy: 'documentsByFields'
+    )]
+    #[Assert\NotNull]
+    #[ORM\JoinColumn(name: 'ns_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    protected NodesSources $nodeSource;
+
+    /**
+     * @var Document
+     */
+    #[ORM\ManyToOne(
+        targetEntity: Document::class,
+        cascade: ['persist'],
+        fetch: 'EAGER',
+        inversedBy: 'nodesSourcesByFields'
+    )]
+    #[Assert\NotNull]
+    #[ORM\JoinColumn(name: 'document_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    protected Document $document;
+
+    /**
+     * Create a new relation between NodeSource, a Document and a NodeTypeField.
+     *
+     * @param NodesSources  $nodeSource NodesSources and inherited types
+     * @param Document $document Document to link
+     * @param NodeTypeFieldInterface|null $field  NodeTypeField
+     */
+    public function __construct(NodesSources $nodeSource, Document $document, ?NodeTypeFieldInterface $field = null)
+    {
+        if (!$field instanceof NodeTypeField) {
+            throw new \InvalidArgumentException('NodesSourcesDocuments field must be a NodeTypeField instance.');
+        }
+        $this->nodeSource = $nodeSource;
+        $this->document = $document;
         $this->initializeFieldAwareEntityTrait($field);
     }
 
@@ -71,6 +77,8 @@ class NodesSourcesDocuments implements PositionedInterface, PersistableInterface
 
     /**
      * Gets the value of nodeSource.
+     *
+     * @return NodesSources
      */
     public function getNodeSource(): NodesSources
     {
@@ -81,6 +89,8 @@ class NodesSourcesDocuments implements PositionedInterface, PersistableInterface
      * Sets the value of nodeSource.
      *
      * @param NodesSources $nodeSource the node source
+     *
+     * @return self
      */
     public function setNodeSource(NodesSources $nodeSource): NodesSourcesDocuments
     {
@@ -89,11 +99,26 @@ class NodesSourcesDocuments implements PositionedInterface, PersistableInterface
         return $this;
     }
 
-    public function copyFrom(NodesSourcesDocuments $source): NodesSourcesDocuments
+    /**
+     * Gets the value of document.
+     *
+     * @return Document
+     */
+    public function getDocument(): Document
     {
-        $this->setDocument($source->getDocument());
-        $this->setHotspot($source->getHotspot());
-        $this->setImageCropAlignment($source->getImageCropAlignment());
+        return $this->document;
+    }
+
+    /**
+     * Sets the value of document.
+     *
+     * @param Document $document the document
+     *
+     * @return self
+     */
+    public function setDocument(Document $document): NodesSourcesDocuments
+    {
+        $this->document = $document;
 
         return $this;
     }

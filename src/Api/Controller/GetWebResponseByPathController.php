@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Controller;
 
-use ApiPlatform\Metadata\Exception\InvalidArgumentException;
+use ApiPlatform\Api\IriConverterInterface;
+use ApiPlatform\Exception\InvalidArgumentException;
+use ApiPlatform\Exception\ResourceClassNotFoundException;
 use ApiPlatform\Metadata\Exception\OperationNotFoundException;
-use ApiPlatform\Metadata\Exception\ResourceClassNotFoundException;
-use ApiPlatform\Metadata\HttpOperation;
-use ApiPlatform\Metadata\IriConverterInterface;
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
@@ -33,16 +32,16 @@ final class GetWebResponseByPathController extends AbstractController
         private readonly IriConverterInterface $iriConverter,
         private readonly PreviewResolverInterface $previewResolver,
         private readonly ApiResourceOperationNameGenerator $apiResourceOperationNameGenerator,
-        private readonly LoggerInterface $logger,
+        private readonly LoggerInterface $logger
     ) {
     }
 
-    public function __invoke(?Request $request): WebResponseInterface
+    public function __invoke(?Request $request): ?WebResponseInterface
     {
         try {
             if (
-                null === $request
-                || empty($request->query->get('path'))
+                null === $request ||
+                empty($request->query->get('path'))
             ) {
                 throw new InvalidArgumentException('path query parameter is mandatory');
             }
@@ -57,29 +56,18 @@ final class GetWebResponseByPathController extends AbstractController
                 'path' => (string) $request->query->get('path'),
             ]);
 
-            $resourceClass = $resource::class;
-            $isNodeSource = $resource instanceof NodesSources;
-
             try {
                 /*
                  * Force API Platform to look for real resource configuration and serialization
                  * context. You must define "%entity%_get_by_path" operation for your WebResponse resource configuration.
                  * It should be generated automatically by Roadiz when you create new reachable NodeTypes.
                  */
+                $resourceClass = get_class($resource);
                 $operationName = $this->apiResourceOperationNameGenerator->generateGetByPath($resourceClass);
                 $webResponseClass = $request->attributes->get('_api_resource_class');
                 $operation = $this->resourceMetadataCollectionFactory
                     ->create($webResponseClass)
                     ->getOperation($operationName);
-                /*
-                 * Add shared_max_age against Node TTL to the WebResponse cache headers if resource is a NodesSources
-                 */
-                if ($operation instanceof HttpOperation && $isNodeSource) {
-                    $operation = $operation->withCacheHeaders([
-                        ...$operation->getCacheHeaders(),
-                        'shared_max_age' => $resource->getNode()->getTtl() * 60,
-                    ]);
-                }
                 $request->attributes->set('_api_operation', $operation);
                 $request->attributes->set('_web_response_item_class', $resourceClass);
                 $request->attributes->set('_api_operation_name', $operationName);
@@ -91,7 +79,7 @@ final class GetWebResponseByPathController extends AbstractController
 
             $request->attributes->set('_stateless', true);
 
-            if ($isNodeSource) {
+            if ($resource instanceof NodesSources) {
                 $request->attributes->set('_translation', $resource->getTranslation());
                 $request->attributes->set('_locale', $resource->getTranslation()->getPreferredLocale());
             }
@@ -100,7 +88,7 @@ final class GetWebResponseByPathController extends AbstractController
             $request->attributes->set('data', $data);
 
             return $data;
-        } catch (ResourceNotFoundException|ResourceClassNotFoundException $exception) {
+        } catch (ResourceNotFoundException | ResourceClassNotFoundException $exception) {
             throw $this->createNotFoundException($exception->getMessage(), $exception);
         }
     }
@@ -133,8 +121,8 @@ final class GetWebResponseByPathController extends AbstractController
                 }
                 $resource = $nodeSource;
             } elseif (
-                null !== $resource->getRedirectUri()
-                && (new UnicodeString($resource->getRedirectUri()))->startsWith('/')
+                null !== $resource->getRedirectUri() &&
+                (new UnicodeString($resource->getRedirectUri()))->startsWith('/')
             ) {
                 /*
                  * Recursive call to normalize path coming from Redirection if redirected path
@@ -165,7 +153,7 @@ final class GetWebResponseByPathController extends AbstractController
     {
         if (null !== $request) {
             $iri = $this->iriConverter->getIriFromResource($resource);
-            $request->attributes->set('_resources', $request->attributes->get('_resources', []) + [$iri => $iri]);
+            $request->attributes->set('_resources', $request->attributes->get('_resources', []) + [ $iri => $iri ]);
         }
     }
 }

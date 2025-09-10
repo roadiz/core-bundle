@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Form\DataTransformer;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Persistence\ObjectManager;
+use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\Attribute;
 use RZ\Roadiz\CoreBundle\Entity\AttributeDocuments;
-use RZ\Roadiz\CoreBundle\Entity\Document;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
 
-final readonly class AttributeDocumentsTransformer implements DataTransformerInterface
+final class AttributeDocumentsTransformer implements DataTransformerInterface
 {
-    public function __construct(private ManagerRegistry $managerRegistry, private Attribute $attribute)
+    public function __construct(private readonly ObjectManager $manager, private readonly Attribute $attribute)
     {
     }
 
@@ -23,10 +23,8 @@ final readonly class AttributeDocumentsTransformer implements DataTransformerInt
      * to Document entities for displaying in document VueJS component.
      *
      * @param AttributeDocuments[]|null $value
-     *
      * @return Document[]
      */
-    #[\Override]
     public function transform(mixed $value): array
     {
         if (empty($value)) {
@@ -42,8 +40,8 @@ final readonly class AttributeDocumentsTransformer implements DataTransformerInt
 
     /**
      * @param array $value
+     * @return ArrayCollection
      */
-    #[\Override]
     public function reverseTransform(mixed $value): ArrayCollection
     {
         if (!$value) {
@@ -53,20 +51,23 @@ final readonly class AttributeDocumentsTransformer implements DataTransformerInt
         $documents = new ArrayCollection();
         $position = 0;
         foreach ($value as $documentId) {
-            $document = $this->managerRegistry
+            $document = $this->manager
                 ->getRepository(Document::class)
                 ->find($documentId)
             ;
             if (null === $document) {
-                throw new TransformationFailedException(sprintf('A document with id "%s" does not exist!', $documentId));
+                throw new TransformationFailedException(sprintf(
+                    'A document with id "%s" does not exist!',
+                    $documentId
+                ));
             }
 
             $ttd = new AttributeDocuments($this->attribute, $document);
             $ttd->setPosition($position);
-            $this->managerRegistry->getManagerForClass(class: AttributeDocuments::class)->persist($ttd);
+            $this->manager->persist($ttd);
             $documents->add($ttd);
 
-            ++$position;
+            $position++;
         }
 
         return $documents;

@@ -4,77 +4,77 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
 
-use Symfony\Bundle\SecurityBundle\Security;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CoreBundle\Entity\Role;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
-final class RolesType extends AbstractType
+/**
+ * Roles selector form field type.
+ */
+class RolesType extends AbstractType
 {
+    protected ManagerRegistry $managerRegistry;
+    protected AuthorizationCheckerInterface $authorizationChecker;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param AuthorizationCheckerInterface $authorizationChecker
+     */
     public function __construct(
-        private readonly Security $security,
-        #[Autowire(param: 'security.role_hierarchy.roles')]
-        private readonly array $rolesHierarchy,
+        ManagerRegistry $managerRegistry,
+        AuthorizationCheckerInterface $authorizationChecker
     ) {
+        $this->authorizationChecker = $authorizationChecker;
+        $this->managerRegistry = $managerRegistry;
     }
 
-    #[\Override]
+    /**
+     * {@inheritdoc}
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'roles' => [],
+            'roles' => new ArrayCollection(),
             'multiple' => false,
         ]);
 
         $resolver->setAllowedTypes('multiple', ['bool']);
-        $resolver->setAllowedTypes('roles', ['array']);
+        $resolver->setAllowedTypes('roles', [Collection::class]);
 
         /*
          * Use normalizer to populate choices from ChoiceType
          */
         $resolver->setNormalizer('choices', function (Options $options, $choices) {
-            foreach ($this->flattenRoles($this->rolesHierarchy) as $role) {
+            $roles = $this->managerRegistry->getRepository(Role::class)->findAll();
+
+            /** @var Role $role */
+            foreach ($roles as $role) {
                 if (
-                    $this->security->isGranted($role)
-                    && !in_array($role, $options['roles'])
+                    $this->authorizationChecker->isGranted($role->getRole()) &&
+                    !$options['roles']->contains($role)
                 ) {
-                    $choices[$role] = $role;
+                    $choices[$role->getRole()] = $role->getId();
                 }
             }
-
-            ksort($choices);
-
             return $choices;
         });
     }
-
-    private function flattenRoles(array $rolesHierarchy): array
-    {
-        $flattened = [];
-        foreach ($rolesHierarchy as $role => $subRoles) {
-            if (is_array($subRoles)) {
-                $flattened = [
-                    ...$flattened,
-                    $role,
-                    ...$this->flattenRoles($subRoles),
-                ];
-            } else {
-                $flattened[] = $subRoles;
-            }
-        }
-
-        return array_unique($flattened);
-    }
-
-    #[\Override]
+    /**
+     * {@inheritdoc}
+     */
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
-
-    #[\Override]
+    /**
+     * {@inheritdoc}
+     */
     public function getBlockPrefix(): string
     {
         return 'roles';

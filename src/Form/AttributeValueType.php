@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
 
+use Doctrine\ORM\EntityManagerInterface;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class AttributeValueType extends AbstractType
+class AttributeValueType extends AbstractType
 {
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('attribute', AttributeChoiceType::class, [
@@ -20,7 +23,9 @@ final class AttributeValueType extends AbstractType
         ]);
     }
 
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
@@ -29,7 +34,9 @@ final class AttributeValueType extends AbstractType
         $resolver->setAllowedTypes('translation', [Translation::class]);
     }
 
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public function getBlockPrefix(): string
     {
         return 'attribute_value';

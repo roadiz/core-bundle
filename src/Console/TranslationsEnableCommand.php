@@ -16,7 +16,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 final class TranslationsEnableCommand extends TranslationsCommand
 {
-    #[\Override]
     protected function configure(): void
     {
         $this->setName('translations:enable')
@@ -28,7 +27,6 @@ final class TranslationsEnableCommand extends TranslationsCommand
             );
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -38,26 +36,24 @@ final class TranslationsEnableCommand extends TranslationsCommand
             ->getRepository(Translation::class)
             ->findOneByLocale($locale);
 
-        if (null === $translation) {
-            $io->error('Translation for locale '.$locale.' does not exist.');
-
+        if ($translation !== null) {
+            $confirmation = new ConfirmationQuestion(
+                '<question>Are you sure to enable ' . $translation->getName() . ' (' . $translation->getLocale() . ') translation?</question>',
+                false
+            );
+            if (
+                $io->askQuestion(
+                    $confirmation
+                )
+            ) {
+                $translation->setAvailable(true);
+                $this->managerRegistry->getManagerForClass(Translation::class)->flush();
+                $io->success('Translation enabled.');
+            }
+        } else {
+            $io->error('Translation for locale ' . $locale . ' does not exist.');
             return 1;
         }
-
-        $confirmation = new ConfirmationQuestion(
-            '<question>Are you sure to enable '.$translation->getName().' ('.$translation->getLocale().') translation?</question>',
-            false
-        );
-        if (
-            $io->askQuestion(
-                $confirmation
-            )
-        ) {
-            $translation->setAvailable(true);
-            $this->managerRegistry->getManagerForClass(Translation::class)->flush();
-            $io->success('Translation enabled.');
-        }
-
         return 0;
     }
 }

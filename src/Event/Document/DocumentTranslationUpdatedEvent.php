@@ -12,11 +12,14 @@ final class DocumentTranslationUpdatedEvent extends FilterDocumentEvent
 {
     public function __construct(
         DocumentInterface $document,
-        private readonly ?DocumentTranslation $documentTranslation = null,
+        private readonly ?DocumentTranslation $documentTranslation = null
     ) {
         parent::__construct($document);
     }
 
+    /**
+     * @return DocumentTranslation|null
+     */
     public function getDocumentTranslation(): ?DocumentTranslation
     {
         return $this->documentTranslation;

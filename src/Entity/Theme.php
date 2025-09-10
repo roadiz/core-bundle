@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
+use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+
 /**
  * Themes describe a database entity to store
  * front-end and back-end controllers.
- *
- * @deprecated since 2.6, Themes will be definitly dropped
  */
-class Theme
+class Theme extends AbstractEntity
 {
     protected string $hostname = '*';
     protected bool $staticTheme = false;
@@ -22,24 +22,30 @@ class Theme
     private string $routePrefix = '';
     private bool $backendTheme = false;
 
+    /**
+     * @return boolean
+     */
     public function isAvailable(): bool
     {
         return $this->available;
     }
 
     /**
+     * @param boolean $available
+     *
      * @return $this
      */
     public function setAvailable(bool $available): Theme
     {
         $this->available = $available;
-
         return $this;
     }
 
     /**
      * Static means that your theme is not suitable for responding from
      * nodes urls but only static routes.
+     *
+     * @return boolean
      */
     public function isStaticTheme(): bool
     {
@@ -47,17 +53,19 @@ class Theme
     }
 
     /**
+     * @param boolean $staticTheme
      * @return $this
      */
     public function setStaticTheme(bool $staticTheme): Theme
     {
         $this->staticTheme = (bool) $staticTheme;
-
         return $this;
     }
 
     /**
      * Alias for getInformations.
+     *
+     * @return array
      */
     public function getInformation(): array
     {
@@ -71,6 +79,8 @@ class Theme
      * - author
      * - copyright
      * - dir
+     *
+     * @return array
      */
     public function getInformations(): array
     {
@@ -81,7 +91,6 @@ class Theme
             $authorCallable = [$class, 'getThemeAuthor'];
             $copyrightCallable = [$class, 'getThemeCopyright'];
             $dirCallable = [$class, 'getThemeDir'];
-
             return [
                 'name' => \is_callable($nameCallable) ? call_user_func($nameCallable) : null,
                 'author' => \is_callable($authorCallable) ? call_user_func($authorCallable) : null,
@@ -103,58 +112,67 @@ class Theme
 
     /**
      * @param class-string $className
-     *
      * @return $this
      */
     public function setClassName(string $className): Theme
     {
         $this->className = $className;
-
         return $this;
     }
 
+    /**
+     * @return string
+     */
     public function getHostname(): string
     {
         return $this->hostname;
     }
 
     /**
+     * @param string $hostname
+     *
      * @return $this
      */
     public function setHostname(string $hostname): Theme
     {
         $this->hostname = $hostname;
-
         return $this;
     }
 
+    /**
+     * @return string
+     */
     public function getRoutePrefix(): string
     {
         return $this->routePrefix;
     }
 
     /**
+     * @param string $routePrefix
+     *
      * @return $this
      */
     public function setRoutePrefix(string $routePrefix): Theme
     {
         $this->routePrefix = $routePrefix;
-
         return $this;
     }
 
+    /**
+     * @return boolean
+     */
     public function isBackendTheme(): bool
     {
         return $this->backendTheme;
     }
 
     /**
+     * @param boolean $backendTheme
      * @return $this
      */
     public function setBackendTheme(bool $backendTheme): Theme
     {
         $this->backendTheme = $backendTheme;
-
         return $this;
     }
 }

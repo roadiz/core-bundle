@@ -4,56 +4,70 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\SearchEngine;
 
+use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
+use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
-use RZ\Roadiz\CoreBundle\Enum\NodeStatus;
-use RZ\Roadiz\CoreBundle\Repository\AllStatusesNodesSourcesRepository;
-use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
 
-final readonly class GlobalNodeSourceSearchHandler
+/**
+ * @package RZ\Roadiz\CoreBundle\SearchEngine
+ */
+class GlobalNodeSourceSearchHandler
 {
-    public function __construct(
-        private AllStatusesNodesSourcesRepository $allStatusesNodesSourcesRepository,
-        private ?NodeSourceSearchHandlerInterface $nodeSourceSearchHandler = null,
-    ) {
-    }
+    private ObjectManager $em;
 
-    protected function getRepository(): NodesSourcesRepository
+    public function __construct(ObjectManager $em)
     {
-        return $this->allStatusesNodesSourcesRepository;
+        $this->em = $em;
     }
 
     /**
-     * @return array<NodesSources|object>
+     * @return EntityRepository<NodesSources>
+     */
+    protected function getRepository(): EntityRepository
+    {
+        return $this->em->getRepository(NodesSources::class);
+    }
+
+    /**
+     * @param bool $displayNonPublishedNodes
+     *
+     * @return $this
+     */
+    public function setDisplayNonPublishedNodes(bool $displayNonPublishedNodes): self
+    {
+        $this->getRepository()->setDisplayingNotPublishedNodes($displayNonPublishedNodes);
+        return $this;
+    }
+
+    /**
+     * @param string $searchTerm
+     * @param int $resultCount
+     * @param Translation|null $translation
+     * @return NodesSources[]
      */
     public function getNodeSourcesBySearchTerm(
         string $searchTerm,
         int $resultCount,
-        ?Translation $translation = null,
+        ?Translation $translation = null
     ): array {
         $safeSearchTerms = strip_tags($searchTerm);
 
         /**
-         * First try with Search engine.
+         * First try with Solr.
+         *
+         * @var array<SolrSearchResultItem<NodesSources>> $nodesSources
          */
-        $nodesSources = [];
-        $resultCount = $resultCount > 0 ? $resultCount : 999999;
-
-        if (null !== $this->nodeSourceSearchHandler) {
-            try {
-                $this->nodeSourceSearchHandler->boostByUpdateDate();
-                $arguments = [
-                    'status' => ['<=', NodeStatus::PUBLISHED],
-                ];
-
-                $nodesSources = $this->nodeSourceSearchHandler->search($safeSearchTerms, $arguments, $resultCount)->getResultItems();
-            } catch (SearchEngineServerException) {
-            }
-        }
+        $nodesSources = $this->getRepository()->findBySearchQuery(
+            $safeSearchTerms,
+            $resultCount
+        );
 
         if (count($nodesSources) > 0) {
-            return array_map(fn (SearchResultItemInterface $item) => $item->getItem(), $nodesSources);
+            return array_map(function (SolrSearchResultItem $item) {
+                return $item->getItem();
+            }, $nodesSources);
         }
 
         /*
@@ -66,7 +80,7 @@ final readonly class GlobalNodeSourceSearchHandler
             $resultCount
         );
 
-        if (0 === count($nodesSources)) {
+        if (count($nodesSources) === 0) {
             /*
              * Then try with node name.
              */
@@ -79,7 +93,7 @@ final readonly class GlobalNodeSourceSearchHandler
                     $qb->expr()->like('ns.title', ':nodeName')
                 ))
                 ->setMaxResults($resultCount)
-                ->setParameter('nodeName', '%'.$safeSearchTerms.'%');
+                ->setParameter('nodeName', '%' . $safeSearchTerms . '%');
 
             if (null !== $translation) {
                 $qb->andWhere($qb->expr()->eq('ns.translation', ':translation'))
@@ -87,7 +101,7 @@ final readonly class GlobalNodeSourceSearchHandler
             }
             try {
                 return $qb->getQuery()->getResult();
-            } catch (NoResultException) {
+            } catch (NoResultException $e) {
                 return [];
             }
         }

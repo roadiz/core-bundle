@@ -13,17 +13,19 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
-final readonly class PreviewModeSubscriber implements EventSubscriberInterface
+final class PreviewModeSubscriber implements EventSubscriberInterface
 {
-    public const string QUERY_PARAM_NAME = '_preview';
+    public const QUERY_PARAM_NAME = '_preview';
 
     public function __construct(
-        private PreviewResolverInterface $previewResolver,
-        private Security $security,
+        private readonly PreviewResolverInterface $previewResolver,
+        private readonly Security $security
     ) {
     }
 
-    #[\Override]
+    /**
+     * @return array
+     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -34,18 +36,24 @@ final readonly class PreviewModeSubscriber implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * @return bool
+     */
     protected function supports(): bool
     {
         return $this->previewResolver->isPreview();
     }
 
+    /**
+     * @param RequestEvent $event
+     */
     public function onKernelRequest(RequestEvent $event): void
     {
         $request = $event->getRequest();
         if (
-            $event->isMainRequest()
-            && $request->query->has(self::QUERY_PARAM_NAME)
-            && \in_array(
+            $event->isMainRequest() &&
+            $request->query->has(self::QUERY_PARAM_NAME) &&
+            \in_array(
                 $request->query->get(self::QUERY_PARAM_NAME, 0),
                 ['true', true, '1', 1, 'on', 'yes', 'y'],
                 true
@@ -60,6 +68,7 @@ final readonly class PreviewModeSubscriber implements EventSubscriberInterface
      * You MUST check here is user can use preview mode BEFORE going
      * any further into your app logic.
      *
+     * @param ControllerEvent $event
      * @throws PreviewNotAllowedException
      */
     public function onControllerMatched(ControllerEvent $event): void
@@ -73,6 +82,8 @@ final readonly class PreviewModeSubscriber implements EventSubscriberInterface
 
     /**
      * Enforce cache disabling.
+     *
+     * @param ResponseEvent $event
      */
     public function onResponse(ResponseEvent $event): void
     {

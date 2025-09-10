@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 
-use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Event\Cache\CachePurgeRequestEvent;
 use RZ\Roadiz\CoreBundle\Event\Node\NodePathChangedEvent;
 use RZ\Roadiz\CoreBundle\Node\NodeMover;
@@ -15,17 +14,15 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 /**
  * Subscribe to Node, NodesSources and UrlAlias event to clear ns url cache.
  */
-final readonly class NodeRedirectionSubscriber implements EventSubscriberInterface
+class NodeRedirectionSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private NodeMover $nodeMover,
-        private string $kernelEnvironment,
-        private PreviewResolverInterface $previewResolver,
-        private NodeTypes $nodeTypesBag,
+        protected readonly NodeMover $nodeMover,
+        protected readonly string $kernelEnvironment,
+        protected readonly PreviewResolverInterface $previewResolver
     ) {
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [
@@ -34,20 +31,24 @@ final readonly class NodeRedirectionSubscriber implements EventSubscriberInterfa
     }
 
     /**
-     * Empty nodeSources Url cache.
+     * Empty nodeSources Url cache
+     *
+     * @param NodePathChangedEvent     $event
+     * @param string                   $eventName
+     * @param EventDispatcherInterface $dispatcher
      */
     public function redirectOldPaths(
         NodePathChangedEvent $event,
         string $eventName,
-        EventDispatcherInterface $dispatcher,
+        EventDispatcherInterface $dispatcher
     ): void {
         if (
-            'prod' === $this->kernelEnvironment
-            && !$this->previewResolver->isPreview()
-            && null !== $event->getNode()
-            && $event->getNode()->isPublished()
-            && $this->nodeTypesBag->get($event->getNode()->getNodeTypeName())?->isReachable()
-            && count($event->getPaths()) > 0
+            $this->kernelEnvironment === 'prod' &&
+            !$this->previewResolver->isPreview() &&
+            null !== $event->getNode() &&
+            $event->getNode()->isPublished() &&
+            $event->getNode()->getNodeType()->isReachable() &&
+            count($event->getPaths()) > 0
         ) {
             $this->nodeMover->redirectAll($event->getNode(), $event->getPaths());
             $dispatcher->dispatch(new CachePurgeRequestEvent());

@@ -13,9 +13,8 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class RealmType extends AbstractType
+class RealmType extends AbstractType
 {
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('name', TextType::class, [
@@ -28,19 +27,19 @@ final class RealmType extends AbstractType
             'help' => 'realm.type.help',
             'required' => true,
             'choices' => [
-                'realm.'.RealmInterface::TYPE_PLAIN_PASSWORD => RealmInterface::TYPE_PLAIN_PASSWORD,
-                'realm.'.RealmInterface::TYPE_ROLE => RealmInterface::TYPE_ROLE,
-                'realm.'.RealmInterface::TYPE_USER => RealmInterface::TYPE_USER,
-            ],
+                'realm.' . RealmInterface::TYPE_PLAIN_PASSWORD => RealmInterface::TYPE_PLAIN_PASSWORD,
+                'realm.' . RealmInterface::TYPE_ROLE => RealmInterface::TYPE_ROLE,
+                'realm.' . RealmInterface::TYPE_USER => RealmInterface::TYPE_USER,
+            ]
         ])->add('behaviour', ChoiceType::class, [
             'label' => 'realm.behaviour',
             'help' => 'realm.behaviour.help',
             'required' => true,
             'choices' => [
-                'realm.behaviour_'.RealmInterface::BEHAVIOUR_NONE => RealmInterface::BEHAVIOUR_NONE,
-                'realm.behaviour_'.RealmInterface::BEHAVIOUR_DENY => RealmInterface::BEHAVIOUR_DENY,
-                'realm.behaviour_'.RealmInterface::BEHAVIOUR_HIDE_BLOCKS => RealmInterface::BEHAVIOUR_HIDE_BLOCKS,
-            ],
+                'realm.behaviour_' . RealmInterface::BEHAVIOUR_NONE => RealmInterface::BEHAVIOUR_NONE,
+                'realm.behaviour_' . RealmInterface::BEHAVIOUR_DENY => RealmInterface::BEHAVIOUR_DENY,
+                'realm.behaviour_' . RealmInterface::BEHAVIOUR_HIDE_BLOCKS => RealmInterface::BEHAVIOUR_HIDE_BLOCKS,
+            ]
         ])->add('plainPassword', TextType::class, [
             'label' => 'realm.plainPassword',
             'help' => 'realm.plainPassword.help',
@@ -52,10 +51,9 @@ final class RealmType extends AbstractType
             'empty_data' => null,
             'by_reference' => true,
             'required' => false,
-        ])->add('role', RolesType::class, [
+        ])->add('roleEntity', RoleEntityType::class, [
             'label' => 'realm.role',
             'help' => 'realm.role.help',
-            'multiple' => false,
             'required' => false,
             'placeholder' => 'realm.role.placeholder',
         ])->add('users', UserCollectionType::class, [
@@ -65,13 +63,12 @@ final class RealmType extends AbstractType
         ]);
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefault('data_class', Realm::class);
         $resolver->setDefault('constraints', [
             new UniqueEntity(['name']),
-            new UniqueEntity(['serializationGroup']),
+            new UniqueEntity(['serializationGroup'])
         ]);
     }
 }

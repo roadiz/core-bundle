@@ -5,17 +5,22 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Model;
 
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Entity\AttributeGroup;
+use RZ\Roadiz\CoreBundle\Entity\AttributeTranslation;
 use RZ\Roadiz\Utils\StringHandler;
-use Symfony\Component\Serializer\Attribute as Serializer;
+use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 trait AttributeTrait
 {
     #[
-        ORM\Column(type: 'string', length: 255, unique: true, nullable: false),
-        Serializer\Groups(['attribute', 'attribute:export', 'attribute:import', 'node', 'nodes_sources']),
+        ORM\Column(type: "string", length: 255, unique: true, nullable: false),
+        Serializer\Groups(["attribute", "node", "nodes_sources"]),
+        SymfonySerializer\Groups(["attribute", "node", "nodes_sources"]),
+        Serializer\Type("string"),
         Assert\NotNull(),
         Assert\NotBlank(),
         Assert\Length(max: 255)
@@ -23,20 +28,26 @@ trait AttributeTrait
     protected string $code = '';
 
     #[
-        ORM\Column(type: 'boolean', unique: false, nullable: false, options: ['default' => false]),
-        Serializer\Groups(['attribute', 'attribute:export', 'attribute:import']),
+        ORM\Column(type: "boolean", unique: false, nullable: false, options: ["default" => false]),
+        Serializer\Groups(["attribute"]),
+        SymfonySerializer\Groups(["attribute"]),
+        Serializer\Type("boolean")
     ]
     protected bool $searchable = false;
 
     #[
-        ORM\Column(type: 'integer', unique: false, nullable: false),
-        Serializer\Groups(['attribute', 'attribute:export', 'attribute:import']),
+        ORM\Column(type: "integer", unique: false, nullable: false),
+        Serializer\Groups(["attribute"]),
+        SymfonySerializer\Groups(["attribute"]),
+        Serializer\Type("integer")
     ]
     protected int $type = AttributeInterface::STRING_T;
 
     #[
-        ORM\Column(type: 'string', length: 7, unique: false, nullable: true),
-        Serializer\Groups(['attribute', 'node', 'nodes_sources', 'attribute:export', 'attribute:import']),
+        ORM\Column(type: "string", length: 7, unique: false, nullable: true),
+        Serializer\Groups(["attribute", "node", "nodes_sources"]),
+        SymfonySerializer\Groups(["attribute", "node", "nodes_sources"]),
+        Serializer\Type("string"),
         Assert\Length(max: 7)
     ]
     protected ?string $color = null;
@@ -44,27 +55,32 @@ trait AttributeTrait
     #[
         ORM\ManyToOne(
             targetEntity: AttributeGroupInterface::class,
-            cascade: ['persist', 'merge'],
-            fetch: 'EAGER',
-            inversedBy: 'attributes'
+            cascade: ["persist", "merge"],
+            fetch: "EAGER",
+            inversedBy: "attributes"
         ),
-        ORM\JoinColumn(name: 'group_id', onDelete: 'SET NULL'),
-        Serializer\Groups(['attribute', 'node', 'nodes_sources', 'attribute:export', 'attribute:import']),
+        ORM\JoinColumn(name: "group_id", onDelete: "SET NULL"),
+        Serializer\Groups(["attribute", "node", "nodes_sources"]),
+        SymfonySerializer\Groups(["attribute", "node", "nodes_sources"]),
+        Serializer\Type(AttributeGroup::class)
     ]
     protected ?AttributeGroupInterface $group = null;
 
     /**
-     * @var Collection<int, AttributeTranslationInterface>
+     * @var Collection<int, AttributeTranslation>
      */
     #[
         ORM\OneToMany(
-            mappedBy: 'attribute',
+            mappedBy: "attribute",
             targetEntity: AttributeTranslationInterface::class,
-            cascade: ['all'],
-            fetch: 'EAGER',
+            cascade: ["all"],
+            fetch: "EAGER",
             orphanRemoval: true
         ),
-        Serializer\Groups(['attribute', 'node', 'nodes_sources', 'attribute:export']),
+        Serializer\Groups(["attribute", "node", "nodes_sources"]),
+        SymfonySerializer\Groups(["attribute", "node", "nodes_sources"]),
+        Serializer\Type("ArrayCollection<" . AttributeTranslation::class . ">"),
+        Serializer\Accessor(getter: "getAttributeTranslations", setter: "setAttributeTranslations")
     ]
     protected Collection $attributeTranslations;
 
@@ -73,101 +89,129 @@ trait AttributeTrait
      */
     #[
         ORM\OneToMany(
-            mappedBy: 'attribute',
+            mappedBy: "attribute",
             targetEntity: AttributeValueInterface::class,
-            cascade: ['persist', 'remove'],
-            fetch: 'EXTRA_LAZY',
+            cascade: ["persist", "remove"],
+            fetch: "EXTRA_LAZY",
             orphanRemoval: true
         ),
-        Serializer\Ignore
+        Serializer\Exclude,
+        SymfonySerializer\Ignore
     ]
     protected Collection $attributeValues;
 
+    /**
+     * @return string
+     */
     public function getCode(): string
     {
         return $this->code;
     }
 
     /**
+     * @param string|null $code
+     *
      * @return $this
      */
     public function setCode(?string $code): self
     {
         $this->code = StringHandler::slugify($code ?? '');
-
         return $this;
     }
 
+    /**
+     * @return int
+     */
     public function getType(): int
     {
         return $this->type;
     }
 
     /**
+     * @param int $type
+     *
      * @return $this
      */
     public function setType(int $type): self
     {
         $this->type = $type;
-
         return $this;
     }
 
+    /**
+     * @return string|null
+     */
     public function getColor(): ?string
     {
         return $this->color;
     }
 
     /**
+     * @param string|null $color
+     *
      * @return $this
      */
     public function setColor(?string $color): self
     {
         $this->color = $color;
-
         return $this;
     }
 
+    /**
+     * @return AttributeGroupInterface|null
+     */
     public function getGroup(): ?AttributeGroupInterface
     {
         return $this->group;
     }
 
     /**
+     * @param AttributeGroupInterface|null $group
+     *
      * @return $this
      */
     public function setGroup(?AttributeGroupInterface $group): self
     {
         $this->group = $group;
-
         return $this;
     }
 
+    /**
+     * @return bool
+     */
     public function isSearchable(): bool
     {
         return (bool) $this->searchable;
     }
 
     /**
+     * @param bool $searchable
+     *
      * @return $this
      */
     public function setSearchable(bool $searchable): self
     {
         $this->searchable = $searchable;
-
         return $this;
     }
 
+    /**
+     * @param TranslationInterface|null $translation
+     *
+     * @return string
+     */
     public function getLabelOrCode(?TranslationInterface $translation = null): string
     {
         if (null !== $translation) {
             $attributeTranslation = $this->getAttributeTranslations()->filter(
-                fn (AttributeTranslationInterface $attributeTranslation) => $attributeTranslation->getTranslation() === $translation
+                function (AttributeTranslationInterface $attributeTranslation) use ($translation) {
+                    return $attributeTranslation->getTranslation() === $translation;
+                }
             );
 
             if (
-                $attributeTranslation->first()
-                && '' !== $attributeTranslation->first()->getLabel()
+                $attributeTranslation->first() &&
+                $attributeTranslation->first()->getLabel() !== ''
             ) {
                 return $attributeTranslation->first()->getLabel();
             }
@@ -176,10 +220,17 @@ trait AttributeTrait
         return $this->getCode();
     }
 
+    /**
+     * @param TranslationInterface $translation
+     *
+     * @return array|null
+     */
     public function getOptions(TranslationInterface $translation): ?array
     {
         $attributeTranslation = $this->getAttributeTranslations()->filter(
-            fn (AttributeTranslationInterface $attributeTranslation) => $attributeTranslation->getTranslation() === $translation
+            function (AttributeTranslationInterface $attributeTranslation) use ($translation) {
+                return $attributeTranslation->getTranslation() === $translation;
+            }
         )->first();
         if (false !== $attributeTranslation) {
             return $attributeTranslation->getOptions();
@@ -197,6 +248,8 @@ trait AttributeTrait
     }
 
     /**
+     * @param Collection $attributeTranslations
+     *
      * @return $this
      */
     public function setAttributeTranslations(Collection $attributeTranslations): self
@@ -206,11 +259,12 @@ trait AttributeTrait
         foreach ($this->attributeTranslations as $attributeTranslation) {
             $attributeTranslation->setAttribute($this);
         }
-
         return $this;
     }
 
     /**
+     * @param AttributeTranslationInterface $attributeTranslation
+     *
      * @return $this
      */
     public function addAttributeTranslation(AttributeTranslationInterface $attributeTranslation): self
@@ -219,11 +273,12 @@ trait AttributeTrait
             $this->getAttributeTranslations()->add($attributeTranslation);
             $attributeTranslation->setAttribute($this);
         }
-
         return $this;
     }
 
     /**
+     * @param AttributeTranslationInterface $attributeTranslation
+     *
      * @return $this
      */
     public function removeAttributeTranslation(AttributeTranslationInterface $attributeTranslation): self
@@ -231,53 +286,52 @@ trait AttributeTrait
         if ($this->getAttributeTranslations()->contains($attributeTranslation)) {
             $this->getAttributeTranslations()->removeElement($attributeTranslation);
         }
-
         return $this;
     }
 
     public function isString(): bool
     {
-        return AttributeInterface::STRING_T === $this->getType();
+        return $this->getType() === AttributeInterface::STRING_T;
     }
 
     public function isDate(): bool
     {
-        return AttributeInterface::DATE_T === $this->getType();
+        return $this->getType() === AttributeInterface::DATE_T;
     }
 
     public function isDateTime(): bool
     {
-        return AttributeInterface::DATETIME_T === $this->getType();
+        return $this->getType() === AttributeInterface::DATETIME_T;
     }
 
     public function isBoolean(): bool
     {
-        return AttributeInterface::BOOLEAN_T === $this->getType();
+        return $this->getType() === AttributeInterface::BOOLEAN_T;
     }
 
     public function isInteger(): bool
     {
-        return AttributeInterface::INTEGER_T === $this->getType();
+        return $this->getType() === AttributeInterface::INTEGER_T;
     }
 
     public function isDecimal(): bool
     {
-        return AttributeInterface::DECIMAL_T === $this->getType();
+        return $this->getType() === AttributeInterface::DECIMAL_T;
     }
 
     public function isPercent(): bool
     {
-        return AttributeInterface::PERCENT_T === $this->getType();
+        return $this->getType() === AttributeInterface::PERCENT_T;
     }
 
     public function isEmail(): bool
     {
-        return AttributeInterface::EMAIL_T === $this->getType();
+        return $this->getType() === AttributeInterface::EMAIL_T;
     }
 
     public function isColor(): bool
     {
-        return AttributeInterface::COLOUR_T === $this->getType();
+        return $this->getType() === AttributeInterface::COLOUR_T;
     }
 
     public function isColour(): bool
@@ -287,28 +341,28 @@ trait AttributeTrait
 
     public function isEnum(): bool
     {
-        return AttributeInterface::ENUM_T === $this->getType();
+        return $this->getType() === AttributeInterface::ENUM_T;
     }
 
     public function isCountry(): bool
     {
-        return AttributeInterface::COUNTRY_T === $this->getType();
+        return $this->getType() === AttributeInterface::COUNTRY_T;
     }
 
     public function getTypeLabel(): string
     {
         return match ($this->getType()) {
-            AttributeInterface::DATETIME_T => 'attributes.form.type.datetime',
-            AttributeInterface::BOOLEAN_T => 'attributes.form.type.boolean',
-            AttributeInterface::INTEGER_T => 'attributes.form.type.integer',
-            AttributeInterface::DECIMAL_T => 'attributes.form.type.decimal',
-            AttributeInterface::PERCENT_T => 'attributes.form.type.percent',
-            AttributeInterface::EMAIL_T => 'attributes.form.type.email',
-            AttributeInterface::COLOUR_T => 'attributes.form.type.colour',
-            AttributeInterface::ENUM_T => 'attributes.form.type.enum',
-            AttributeInterface::DATE_T => 'attributes.form.type.date',
-            AttributeInterface::COUNTRY_T => 'attributes.form.type.country',
-            default => 'attributes.form.type.string',
+             AttributeInterface::DATETIME_T => 'attributes.form.type.datetime',
+             AttributeInterface::BOOLEAN_T => 'attributes.form.type.boolean',
+             AttributeInterface::INTEGER_T => 'attributes.form.type.integer',
+             AttributeInterface::DECIMAL_T => 'attributes.form.type.decimal',
+             AttributeInterface::PERCENT_T => 'attributes.form.type.percent',
+             AttributeInterface::EMAIL_T => 'attributes.form.type.email',
+             AttributeInterface::COLOUR_T => 'attributes.form.type.colour',
+             AttributeInterface::ENUM_T => 'attributes.form.type.enum',
+             AttributeInterface::DATE_T => 'attributes.form.type.date',
+             AttributeInterface::COUNTRY_T => 'attributes.form.type.country',
+             default => 'attributes.form.type.string',
         };
     }
 

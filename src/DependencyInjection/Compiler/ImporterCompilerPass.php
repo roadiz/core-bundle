@@ -11,7 +11,9 @@ use Symfony\Component\DependencyInjection\Reference;
 
 class ImporterCompilerPass implements CompilerPassInterface
 {
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public function process(ContainerBuilder $container): void
     {
         if ($container->has(ChainImporter::class)) {

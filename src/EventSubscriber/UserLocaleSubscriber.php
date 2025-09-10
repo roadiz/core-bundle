@@ -13,15 +13,17 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
 use Symfony\Component\Security\Http\SecurityEvents;
 
-final readonly class UserLocaleSubscriber implements EventSubscriberInterface
+final class UserLocaleSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private RequestStack $requestStack,
-        private TokenStorageInterface $tokenStorage,
+        private readonly RequestStack $requestStack,
+        private readonly TokenStorageInterface $tokenStorage
     ) {
     }
 
-    #[\Override]
+    /**
+     * @return array
+     */
     public static function getSubscribedEvents(): array
     {
         // must be registered after the default Locale listener
@@ -31,6 +33,9 @@ final readonly class UserLocaleSubscriber implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * @param InteractiveLoginEvent $event
+     */
     public function onInteractiveLogin(InteractiveLoginEvent $event): void
     {
         if ($this->requestStack->getMainRequest()?->attributes->getBoolean('_stateless')) {
@@ -40,13 +45,16 @@ final readonly class UserLocaleSubscriber implements EventSubscriberInterface
         $user = $event->getAuthenticationToken()->getUser();
 
         if (
-            $user instanceof User
-            && null !== $user->getLocale()
+            $user instanceof User &&
+            null !== $user->getLocale()
         ) {
             $this->requestStack->getSession()->set('_locale', $user->getLocale());
         }
     }
 
+    /**
+     * @param FilterUserEvent $event
+     */
     public function onUserUpdated(FilterUserEvent $event): void
     {
         if ($this->requestStack->getMainRequest()?->attributes->getBoolean('_stateless')) {
@@ -55,9 +63,9 @@ final readonly class UserLocaleSubscriber implements EventSubscriberInterface
         $user = $event->getUser();
 
         if (
-            null !== $this->tokenStorage->getToken()
-            && $this->tokenStorage->getToken()->getUser() instanceof User
-            && $this->tokenStorage->getToken()->getUserIdentifier() === $user->getUserIdentifier()
+            null !== $this->tokenStorage->getToken() &&
+            $this->tokenStorage->getToken()->getUser() instanceof User &&
+            $this->tokenStorage->getToken()->getUserIdentifier() === $user->getUserIdentifier()
         ) {
             if (null === $user->getLocale()) {
                 $this->requestStack->getSession()->remove('_locale');

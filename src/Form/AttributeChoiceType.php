@@ -20,7 +20,9 @@ final class AttributeChoiceType extends AbstractType
     {
     }
 
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer(new CallbackTransformer(
@@ -28,14 +30,17 @@ final class AttributeChoiceType extends AbstractType
                 if ($dataToForm instanceof Attribute) {
                     return $dataToForm->getId();
                 }
-
                 return null;
             },
-            fn ($formToData) => $this->managerRegistry->getRepository(Attribute::class)->find($formToData)
+            function ($formToData) {
+                return $this->managerRegistry->getRepository(Attribute::class)->find($formToData);
+            }
         ));
     }
 
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
@@ -52,8 +57,8 @@ final class AttributeChoiceType extends AbstractType
             foreach ($attributes as $attribute) {
                 $label = $attribute->getLabelOrCode($options['translation']);
                 if (
-                    null !== $attribute->getGroup()
-                    && null !== $groupName = $attribute->getGroup()->getName()
+                    null !== $attribute->getGroup() &&
+                    null !== $groupName = $attribute->getGroup()->getName()
                 ) {
                     if (!isset($choices[$groupName]) || !is_array($choices[$groupName])) {
                         $choices[$groupName] = [];
@@ -63,12 +68,13 @@ final class AttributeChoiceType extends AbstractType
                     $choices[$label] = $attribute->getId();
                 }
             }
-
             return $choices;
         });
     }
 
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public function getParent(): ?string
     {
         return ChoiceType::class;

@@ -13,7 +13,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class RealmNodeType extends AbstractType
 {
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('realm', RealmChoiceType::class, [
@@ -26,14 +25,13 @@ final class RealmNodeType extends AbstractType
             'help' => 'realm_node.inheritanceType.help',
             'required' => true,
             'choices' => [
-                'realm_node.'.RealmInterface::INHERITANCE_ROOT => RealmInterface::INHERITANCE_ROOT,
-                'realm_node.'.RealmInterface::INHERITANCE_AUTO => RealmInterface::INHERITANCE_AUTO,
-                'realm_node.'.RealmInterface::INHERITANCE_NONE => RealmInterface::INHERITANCE_NONE,
-            ],
+                'realm_node.' . RealmInterface::INHERITANCE_ROOT => RealmInterface::INHERITANCE_ROOT,
+                'realm_node.' . RealmInterface::INHERITANCE_AUTO => RealmInterface::INHERITANCE_AUTO,
+                'realm_node.' . RealmInterface::INHERITANCE_NONE => RealmInterface::INHERITANCE_NONE,
+            ]
         ]);
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefault('data_class', RealmNode::class);

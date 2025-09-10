@@ -14,15 +14,19 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class HoneypotType extends AbstractType
+class HoneypotType extends AbstractType
 {
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public function getParent(): ?string
     {
         return TextType::class;
     }
 
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
@@ -30,22 +34,26 @@ final class HoneypotType extends AbstractType
         $view->vars['attr'] = [
             'autocomplete' => 'nope',
             'tabindex' => -1,
-            'style' => 'position: fixed; left: -100vw; top: -100vh;',
+            'style' => 'position: fixed; left: -100vw; top: -100vh;'
         ];
     }
 
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'label' => false,
             'required' => false,
-            'mapped' => false,
-            'data' => '',
+            'mapped'   => false,
+            'data'     => '',
         ]);
     }
 
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) {

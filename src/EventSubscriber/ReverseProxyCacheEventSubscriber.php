@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 
+use GuzzleHttp\Psr7\Request;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Cache\ReverseProxyCacheLocator;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Event\Cache\CachePurgeRequestEvent;
 use RZ\Roadiz\CoreBundle\Event\NodesSources\NodesSourcesUpdatedEvent;
-use RZ\Roadiz\CoreBundle\Message\HttpRequestMessage;
-use RZ\Roadiz\CoreBundle\Message\HttpRequestMessageInterface;
+use RZ\Roadiz\CoreBundle\Message\GuzzleRequestMessage;
 use RZ\Roadiz\CoreBundle\Message\PurgeReverseProxyCacheMessage;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\Envelope;
@@ -19,16 +19,17 @@ use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Workflow\Event\Event;
 
-final readonly class ReverseProxyCacheEventSubscriber implements EventSubscriberInterface
+final class ReverseProxyCacheEventSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private ReverseProxyCacheLocator $reverseProxyCacheLocator,
-        private MessageBusInterface $bus,
-        private LoggerInterface $logger,
+        private readonly ReverseProxyCacheLocator $reverseProxyCacheLocator,
+        private readonly MessageBusInterface $bus,
+        private readonly LoggerInterface $logger
     ) {
     }
-
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -38,11 +39,17 @@ final readonly class ReverseProxyCacheEventSubscriber implements EventSubscriber
         ];
     }
 
+    /**
+     * @return bool
+     */
     protected function supportConfig(): bool
     {
         return count($this->reverseProxyCacheLocator->getFrontends()) > 0;
     }
 
+    /**
+     * @param Event $event
+     */
     public function onNodeWorkflowCompleted(Event $event): void
     {
         $node = $event->getSubject();
@@ -56,6 +63,9 @@ final readonly class ReverseProxyCacheEventSubscriber implements EventSubscriber
         }
     }
 
+    /**
+     * @param CachePurgeRequestEvent $event
+     */
     public function onBanRequest(CachePurgeRequestEvent $event): void
     {
         if (!$this->supportConfig()) {
@@ -67,11 +77,14 @@ final readonly class ReverseProxyCacheEventSubscriber implements EventSubscriber
             $event->addMessage(
                 'Reverse proxy cache cleared.',
                 self::class,
-                'Reverse proxy cache ['.$name.']'
+                'Reverse proxy cache [' . $name . ']'
             );
         }
     }
 
+    /**
+     * @param NodesSourcesUpdatedEvent $event
+     */
     public function onPurgeRequest(NodesSourcesUpdatedEvent $event): void
     {
         if (!$this->supportConfig()) {
@@ -82,7 +95,7 @@ final readonly class ReverseProxyCacheEventSubscriber implements EventSubscriber
     }
 
     /**
-     * @return HttpRequestMessageInterface[]
+     * @return Request[]
      */
     protected function createBanRequests(): array
     {
@@ -91,25 +104,24 @@ final readonly class ReverseProxyCacheEventSubscriber implements EventSubscriber
             // Add protocol if host does not start with it
             if (!\str_starts_with($frontend->getHost(), 'http')) {
                 // Use HTTP to be able to call Varnish from a Docker network
-                $uri = 'http://'.$frontend->getHost();
+                $uri = 'http://' . $frontend->getHost();
             } else {
                 $uri = $frontend->getHost();
             }
-            $requests[$frontend->getName()] = new HttpRequestMessage(
+            $requests[$frontend->getName()] = new Request(
                 'BAN',
                 $uri,
                 [
-                    'timeout' => 3,
-                    'headers' => [
-                        'Host' => $frontend->getDomainName(),
-                    ],
+                    'Host' => $frontend->getDomainName()
                 ]
             );
         }
-
         return $requests;
     }
 
+    /**
+     * @param NodesSources $nodeSource
+     */
     protected function purgeNodesSources(NodesSources $nodeSource): void
     {
         try {
@@ -119,10 +131,17 @@ final readonly class ReverseProxyCacheEventSubscriber implements EventSubscriber
         }
     }
 
-    protected function sendRequest(HttpRequestMessageInterface $requestMessage): void
+    /**
+     * @param Request $request
+     * @return void
+     */
+    protected function sendRequest(Request $request): void
     {
         try {
-            $this->bus->dispatch(new Envelope($requestMessage));
+            $this->bus->dispatch(new Envelope(new GuzzleRequestMessage($request, [
+                'debug' => false,
+                'timeout' => 3
+            ])));
         } catch (ExceptionInterface $exception) {
             $this->logger->error($exception->getMessage());
         }

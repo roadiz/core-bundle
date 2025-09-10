@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
 
-use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\CoreBundle\Entity\Attribute;
-use RZ\Roadiz\CoreBundle\Entity\AttributeDocuments;
+use Doctrine\ORM\EntityManagerInterface;
 use RZ\Roadiz\CoreBundle\Form\DataTransformer\AttributeDocumentsTransformer;
 use RZ\Roadiz\CoreBundle\Model\AttributeInterface;
+use RZ\Roadiz\CoreBundle\Entity\Attribute;
+use RZ\Roadiz\CoreBundle\Entity\AttributeDocuments;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -16,27 +16,37 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class AttributeDocumentType extends AbstractType
+class AttributeDocumentType extends AbstractType
 {
-    public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-    ) {
+    protected EntityManagerInterface $entityManager;
+
+    /**
+     * @param EntityManagerInterface $entityManager
+     */
+    public function __construct(EntityManagerInterface $entityManager)
+    {
+        $this->entityManager = $entityManager;
     }
 
-    #[\Override]
+    /**
+     * @param FormBuilderInterface $builder
+     * @param array $options
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addEventListener(
             FormEvents::POST_SUBMIT,
-            $this->onPostSubmit(...)
+            [$this, 'onPostSubmit']
         );
         $builder->addModelTransformer(new AttributeDocumentsTransformer(
-            $this->managerRegistry,
+            $this->entityManager,
             $options['attribute']
         ));
     }
 
-    #[\Override]
+    /**
+     * @param OptionsResolver $resolver
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -50,13 +60,17 @@ final class AttributeDocumentType extends AbstractType
         $resolver->setAllowedTypes('attribute', [AttributeInterface::class]);
     }
 
-    #[\Override]
+    /**
+     * {@inheritdoc}
+     */
     public function getBlockPrefix(): string
     {
         return 'documents';
     }
 
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public function getParent(): ?string
     {
         return CollectionType::class;
@@ -64,6 +78,8 @@ final class AttributeDocumentType extends AbstractType
 
     /**
      * Delete existing document association.
+     *
+     * @param FormEvent $event
      */
     public function onPostSubmit(FormEvent $event): void
     {
@@ -72,7 +88,7 @@ final class AttributeDocumentType extends AbstractType
             $attribute = $event->getForm()->getConfig()->getOption('attribute');
 
             if ($attribute instanceof Attribute && $attribute->getId()) {
-                $qb = $this->managerRegistry->getRepository(AttributeDocuments::class)
+                $qb = $this->entityManager->getRepository(AttributeDocuments::class)
                     ->createQueryBuilder('ad');
                 $qb->delete()
                     ->andWhere($qb->expr()->eq('ad.attribute', ':attribute'))

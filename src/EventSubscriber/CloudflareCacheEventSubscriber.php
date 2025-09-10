@@ -4,33 +4,36 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\EventSubscriber;
 
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Psr7\Request;
+use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Cache\CloudflareProxyCache;
 use RZ\Roadiz\CoreBundle\Cache\ReverseProxyCacheLocator;
 use RZ\Roadiz\CoreBundle\Event\Cache\CachePurgeRequestEvent;
 use RZ\Roadiz\CoreBundle\Event\NodesSources\NodesSourcesUpdatedEvent;
-use RZ\Roadiz\CoreBundle\Message\HttpRequestMessage;
-use RZ\Roadiz\CoreBundle\Message\HttpRequestMessageInterface;
+use RZ\Roadiz\CoreBundle\Message\GuzzleRequestMessage;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\Envelope;
-use Symfony\Component\Messenger\Exception\ExceptionInterface as MessengerExceptionInterface;
+use Symfony\Component\Messenger\Exception\ExceptionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\HttpExceptionInterface;
 
-final readonly class CloudflareCacheEventSubscriber implements EventSubscriberInterface
+final class CloudflareCacheEventSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private MessageBusInterface $bus,
-        private ReverseProxyCacheLocator $reverseProxyCacheLocator,
-        private UrlGeneratorInterface $urlGenerator,
-        private LoggerInterface $logger,
+        private readonly MessageBusInterface $bus,
+        private readonly ReverseProxyCacheLocator $reverseProxyCacheLocator,
+        private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly LoggerInterface $logger
     ) {
     }
-
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -41,11 +44,7 @@ final readonly class CloudflareCacheEventSubscriber implements EventSubscriberIn
 
     protected function supportConfig(): bool
     {
-        return null !== $this->reverseProxyCacheLocator->getCloudflareProxyCache()
-           && (
-               null !== $this->reverseProxyCacheLocator->getCloudflareProxyCache()->getBearer()
-               || null !== $this->reverseProxyCacheLocator->getCloudflareProxyCache()->getEmail()
-           );
+        return null !== $this->reverseProxyCacheLocator->getCloudflareProxyCache();
     }
 
     public function onBanRequest(CachePurgeRequestEvent $event): void
@@ -61,14 +60,22 @@ final readonly class CloudflareCacheEventSubscriber implements EventSubscriberIn
                 self::class,
                 'Cloudflare proxy cache'
             );
-        } catch (HttpExceptionInterface $e) {
-            $data = \json_decode($e->getResponse()->getContent(false), true);
-            $event->addError(
-                $data['errors'][0]['message'] ?? $e->getMessage(),
-                self::class,
-                'Cloudflare proxy cache'
-            );
-        } catch (ExceptionInterface $e) {
+        } catch (RequestException $e) {
+            if (null !== $e->getResponse()) {
+                $data = \json_decode($e->getResponse()->getBody()->getContents(), true);
+                $event->addError(
+                    $data['errors'][0]['message'] ?? $e->getMessage(),
+                    self::class,
+                    'Cloudflare proxy cache'
+                );
+            } else {
+                $event->addError(
+                    $e->getMessage(),
+                    self::class,
+                    'Cloudflare proxy cache'
+                );
+            }
+        } catch (ConnectException $e) {
             $event->addError(
                 $e->getMessage(),
                 self::class,
@@ -100,7 +107,7 @@ final readonly class CloudflareCacheEventSubscriber implements EventSubscriberIn
                 UrlGeneratorInterface::ABSOLUTE_URL
             )]);
             $this->sendRequest($purgeRequest);
-        } catch (ExceptionInterface) {
+        } catch (ClientException $e) {
             // do nothing
         }
     }
@@ -111,24 +118,22 @@ final readonly class CloudflareCacheEventSubscriber implements EventSubscriberIn
         if (null === $proxy) {
             throw new \RuntimeException('Cloudflare cache proxy is not configured');
         }
-
         return $proxy;
     }
 
     /**
+     * @param array $body
+     * @return Request
      * @throws \JsonException
      */
-    protected function createRequest(array $body): HttpRequestMessageInterface
+    protected function createRequest(array $body): Request
     {
         $headers = [
             'Content-type' => 'application/json',
         ];
-        if (null !== $this->getCloudflareCacheProxy()->getBearer()) {
-            $headers['Authorization'] = 'Bearer '.trim($this->getCloudflareCacheProxy()->getBearer());
-        } else {
-            $headers['X-Auth-Email'] = $this->getCloudflareCacheProxy()->getEmail();
-            $headers['X-Auth-Key'] = $this->getCloudflareCacheProxy()->getKey();
-        }
+        $headers['Authorization'] = 'Bearer ' . trim($this->getCloudflareCacheProxy()->getBearer());
+        $headers['X-Auth-Email'] = $this->getCloudflareCacheProxy()->getEmail();
+        $headers['X-Auth-Key'] = $this->getCloudflareCacheProxy()->getKey();
 
         $uri = sprintf(
             'https://api.cloudflare.com/client/%s/zones/%s/purge_cache',
@@ -136,22 +141,19 @@ final readonly class CloudflareCacheEventSubscriber implements EventSubscriberIn
             $this->getCloudflareCacheProxy()->getZone()
         );
         $body = \json_encode($body, JSON_THROW_ON_ERROR);
-
-        return new HttpRequestMessage(
+        return new Request(
             'POST',
             $uri,
-            [
-                'timeout' => $this->getCloudflareCacheProxy()->getTimeout(),
-                'headers' => $headers,
-                'body' => $body,
-            ],
+            $headers,
+            $body
         );
     }
 
     /**
+     * @return Request
      * @throws \JsonException
      */
-    protected function createBanRequest(): HttpRequestMessageInterface
+    protected function createBanRequest(): Request
     {
         return $this->createRequest([
             'purge_everything' => true,
@@ -160,21 +162,28 @@ final readonly class CloudflareCacheEventSubscriber implements EventSubscriberIn
 
     /**
      * @param string[] $uris
-     *
+     * @return Request
      * @throws \JsonException
      */
-    protected function createPurgeRequest(array $uris = []): HttpRequestMessageInterface
+    protected function createPurgeRequest(array $uris = []): Request
     {
         return $this->createRequest([
-            'files' => $uris,
+            'files' => $uris
         ]);
     }
 
-    protected function sendRequest(HttpRequestMessageInterface $requestMessage): void
+    /**
+     * @param RequestInterface $request
+     * @return void
+     */
+    protected function sendRequest(RequestInterface $request): void
     {
         try {
-            $this->bus->dispatch(new Envelope($requestMessage));
-        } catch (MessengerExceptionInterface $exception) {
+            $this->bus->dispatch(new Envelope(new GuzzleRequestMessage($request, [
+                'debug' => false,
+                'timeout' => $this->getCloudflareCacheProxy()->getTimeout()
+            ])));
+        } catch (ExceptionInterface $exception) {
             $this->logger->error($exception->getMessage());
         }
     }

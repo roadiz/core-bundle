@@ -7,13 +7,12 @@ namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
-final class SimpleLatinStringValidator extends ConstraintValidator
+class SimpleLatinStringValidator extends ConstraintValidator
 {
-    #[\Override]
     public function validate(mixed $value, Constraint $constraint): void
     {
         if ($constraint instanceof SimpleLatinString) {
-            if (null !== $value && 1 === preg_match('#[^a-z_\s\-]#', \mb_strtolower((string) $value))) {
+            if (null !== $value && preg_match('#[^a-z_\s\-]#', \mb_strtolower($value)) === 1) {
                 $this->context->addViolation($constraint->message);
             }
         }

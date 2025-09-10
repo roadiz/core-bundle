@@ -19,27 +19,30 @@ use RZ\Roadiz\Documents\Models\DocumentInterface;
  */
 class PrivateDocumentFactory extends AbstractDocumentFactory
 {
+    private ManagerRegistry $managerRegistry;
+
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
+        ManagerRegistry $managerRegistry,
         FilesystemOperator $documentsStorage,
         DocumentFinderInterface $documentFinder,
-        ?LoggerInterface $logger = null,
+        ?LoggerInterface $logger = null
     ) {
         parent::__construct($documentsStorage, $documentFinder, $logger);
+        $this->managerRegistry = $managerRegistry;
     }
 
-    #[\Override]
     protected function persistDocument(DocumentInterface $document): void
     {
         $this->managerRegistry->getManagerForClass(Document::class)->persist($document);
     }
 
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     protected function createDocument(): DocumentInterface
     {
         $document = new Document();
         $document->setPrivate(true);
-
         return $document;
     }
 }
