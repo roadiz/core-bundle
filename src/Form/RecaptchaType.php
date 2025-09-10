@@ -16,8 +16,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * @author Nikolay Georgiev <symfonist@gmail.com>
  *
  * @since 1.0
+ * @deprecated since v2.5.30, use `RZ\Roadiz\CoreBundle\Form\CaptchaType` instead.
  */
-class RecaptchaType extends AbstractType
+final class RecaptchaType extends AbstractType
 {
     /**
      * (non-PHPdoc).
