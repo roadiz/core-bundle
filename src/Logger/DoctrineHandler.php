@@ -7,6 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Logger;
 use Doctrine\Persistence\ManagerRegistry;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
+use Monolog\LogRecord;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
@@ -30,7 +31,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
         private readonly RequestStack $requestStack,
         private readonly DocumentUrlGeneratorInterface $documentUrlGenerator,
         $level = Logger::INFO,
-        $bubble = true
+        $bubble = true,
     ) {
         parent::__construct($level, $bubble);
     }
@@ -40,11 +41,12 @@ final class DoctrineHandler extends AbstractProcessingHandler
         if (null === $thumbnail || $thumbnail->isPrivate()) {
             return null;
         }
+
         return $this->documentUrlGenerator
             ->setDocument($thumbnail)
             ->setOptions([
-                "fit" => "150x150",
-                "quality" => 70,
+                'fit' => '150x150',
+                'quality' => 70,
             ])
             ->getUrl();
     }
@@ -109,10 +111,8 @@ final class DoctrineHandler extends AbstractProcessingHandler
         }
     }
 
-    /**
-     * @param array  $record
-     */
-    public function write(array $record): void
+    #[\Override]
+    protected function write(LogRecord $record): void
     {
         try {
             $manager = $this->managerRegistry->getManagerForClass(Log::class);
@@ -121,13 +121,13 @@ final class DoctrineHandler extends AbstractProcessingHandler
             }
 
             $log = new Log(
-                $record['level'],
-                $record['message']
+                $record->level->value,
+                $record->message
             );
 
-            $log->setChannel((string) $record['channel']);
-            $data = $record['extra'];
-            $context = $record['context'];
+            $log->setChannel((string) $record->channel);
+            $data = $record->extra;
+            $context = $record->context;
 
             if (\is_array($context)) {
                 foreach ($context as $key => $value) {
@@ -135,8 +135,8 @@ final class DoctrineHandler extends AbstractProcessingHandler
                         $this->populateForNode($value, $log, $data);
                     } elseif ($value instanceof NodesSources) {
                         $this->populateForNodesSources($value, $log, $data);
-                    } elseif ($key === 'entity' && $value instanceof PersistableInterface) {
-                        $log->setEntityClass(get_class($value));
+                    } elseif ('entity' === $key && $value instanceof PersistableInterface) {
+                        $log->setEntityClass($value::class);
                         $log->setEntityId($value->getId());
 
                         $texteable = ['getTitle', 'getName', '__toString'];
@@ -145,7 +145,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
                                 $data = array_merge(
                                     $data,
                                     [
-                                        'entity_title' => $value->{$method}()
+                                        'entity_title' => $value->{$method}(),
                                     ]
                                 );
                                 break;
@@ -156,8 +156,8 @@ final class DoctrineHandler extends AbstractProcessingHandler
                         $data = array_merge(
                             $data,
                             [
-                                'exception_class' => get_class($value),
-                                'message' => $value->getMessage()
+                                'exception_class' => $value::class,
+                                'message' => $value->getMessage(),
                             ]
                         );
                     }
@@ -170,7 +170,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
                             ]
                         );
                     }
-                    if ($key === 'request' && \is_array($value)) {
+                    if ('request' === $key && \is_array($value)) {
                         $data = array_merge(
                             $data,
                             $value
@@ -202,7 +202,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
                                 'user_email' => $user->getEmail(),
                                 'user_public_name' => $user->getPublicName(),
                                 'user_picture_url' => $user->getPictureUrl(),
-                                'user_id' => $user->getId()
+                                'user_id' => $user->getId(),
                             ]
                         );
                     } else {
@@ -224,7 +224,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
 
             $manager->persist($log);
             $manager->flush();
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             /*
              * Need to prevent SQL errors over throwing
              * if PDO has faulted

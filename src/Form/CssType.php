@@ -13,26 +13,21 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 /**
  * Css editor form field type.
  */
-class CssType extends AbstractType
+final class CssType extends AbstractType
 {
-    /**
-     * {@inheritdoc}
-     */
+    #[\Override]
     public function getParent(): ?string
     {
         return TextareaType::class;
     }
-    /**
-     * {@inheritdoc}
-     */
+
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'css';
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
@@ -40,6 +35,7 @@ class CssType extends AbstractType
         $view->vars['attr']['class'] = 'css_textarea';
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([

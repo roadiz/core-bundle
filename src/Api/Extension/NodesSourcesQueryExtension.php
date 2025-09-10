@@ -11,68 +11,58 @@ use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use ApiPlatform\Metadata\Operation;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
-use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
+use RZ\Roadiz\CoreBundle\Enum\NodeStatus;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 
-final class NodesSourcesQueryExtension implements QueryItemExtensionInterface, QueryCollectionExtensionInterface
+final readonly class NodesSourcesQueryExtension implements QueryItemExtensionInterface, QueryCollectionExtensionInterface
 {
     public function __construct(
-        private readonly PreviewResolverInterface $previewResolver,
-        private readonly string $generatedEntityNamespacePattern = '#^App\\\GeneratedEntity\\\NS(?:[a-zA-Z]+)$#'
+        private PreviewResolverInterface $previewResolver,
+        private string $generatedEntityNamespacePattern = '#^App\\\GeneratedEntity\\\NS(?:[a-zA-Z]+)$#',
     ) {
     }
 
+    #[\Override]
     public function applyToItem(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
         array $identifiers,
         ?Operation $operation = null,
-        array $context = []
+        array $context = [],
     ): void {
         $this->apply($queryBuilder, $queryNameGenerator, $resourceClass);
     }
 
+    #[\Override]
     public function applyToCollection(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
         ?Operation $operation = null,
-        array $context = []
+        array $context = [],
     ): void {
         $this->apply($queryBuilder, $queryNameGenerator, $resourceClass);
     }
 
+    /**
+     * Should be identical to NodesSourcesRepository::alterQueryBuilderWithAuthorizationChecker().
+     */
     private function apply(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
-        string $resourceClass
+        string $resourceClass,
     ): void {
         if (
-            $resourceClass !== NodesSources::class &&
-            preg_match($this->generatedEntityNamespacePattern, $resourceClass) === 0
+            NodesSources::class !== $resourceClass
+            && 0 === preg_match($this->generatedEntityNamespacePattern, $resourceClass)
         ) {
             return;
         }
 
         if (preg_match($this->generatedEntityNamespacePattern, $resourceClass) > 0) {
-            $queryBuilder
-                ->andWhere($queryBuilder->expr()->isInstanceOf('o', $resourceClass));
-        }
-
-        if ($this->previewResolver->isPreview()) {
-            $alias = QueryBuilderHelper::addJoinOnce(
-                $queryBuilder,
-                $queryNameGenerator,
-                'o',
-                'node',
-                Join::INNER_JOIN
-            );
-            $queryBuilder
-                ->andWhere($queryBuilder->expr()->lte($alias . '.status', ':status'))
-                ->setParameter(':status', Node::PUBLISHED);
-            return;
+            $queryBuilder->andWhere($queryBuilder->expr()->isInstanceOf('o', $resourceClass));
         }
 
         $alias = QueryBuilderHelper::addJoinOnce(
@@ -82,11 +72,19 @@ final class NodesSourcesQueryExtension implements QueryItemExtensionInterface, Q
             'node',
             Join::INNER_JOIN
         );
+
+        if ($this->previewResolver->isPreview()) {
+            $queryBuilder
+                ->andWhere($queryBuilder->expr()->lte($alias.'.status', ':status'))
+                ->setParameter(':status', NodeStatus::PUBLISHED);
+
+            return;
+        }
+
         $queryBuilder
             ->andWhere($queryBuilder->expr()->lte('o.publishedAt', ':lte_published_at'))
-            ->andWhere($queryBuilder->expr()->eq($alias . '.status', ':status'))
+            ->andWhere($queryBuilder->expr()->eq($alias.'.status', ':status'))
             ->setParameter(':lte_published_at', new \DateTime())
-            ->setParameter(':status', Node::PUBLISHED);
-        return;
+            ->setParameter(':status', NodeStatus::PUBLISHED);
     }
 }

@@ -4,55 +4,45 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\DataTransformer;
 
-use Doctrine\Persistence\ObjectManager;
+use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
 
-class NodeTypeTransformer implements DataTransformerInterface
+final readonly class NodeTypeTransformer implements DataTransformerInterface
 {
-    private ObjectManager $manager;
-
-    public function __construct(ObjectManager $manager)
-    {
-        $this->manager = $manager;
+    public function __construct(
+        private NodeTypes $nodeTypesBag,
+    ) {
     }
 
     /**
      * @param NodeType|null $value
-     * @return int|string
      */
+    #[\Override]
     public function transform(mixed $value): int|string
     {
         if (!$value instanceof NodeType) {
             return '';
         }
-        return $value->getId();
+
+        return $value->getName();
     }
 
-    /**
-     * @param mixed $value
-     * @return null|NodeType
-     */
+    #[\Override]
     public function reverseTransform(mixed $value): ?NodeType
     {
-        if (!$value) {
+        if (!$value || !is_string($value)) {
             return null;
         }
 
-        $nodeType = $this->manager
-            ->getRepository(NodeType::class)
-            ->find($value)
-        ;
+        $nodeType = $this->nodeTypesBag->get($value);
 
         if (null === $nodeType) {
             // causes a validation error
             // this message is not shown to the user
             // see the invalid_message option
-            throw new TransformationFailedException(sprintf(
-                'A node-type with id "%s" does not exist!',
-                $value
-            ));
+            throw new TransformationFailedException(sprintf('A node-type with id "%s" does not exist!', $value));
         }
 
         return $nodeType;

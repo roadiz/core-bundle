@@ -4,35 +4,37 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Message\Handler;
 
-use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
-use RZ\Roadiz\CoreBundle\Entity\RealmNode;
 use RZ\Roadiz\CoreBundle\EntityHandler\NodeHandler;
 use RZ\Roadiz\CoreBundle\Message\ApplyRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Message\CleanRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Message\SearchRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
+use RZ\Roadiz\CoreBundle\Repository\AllStatusesNodeRepository;
+use RZ\Roadiz\CoreBundle\Repository\RealmNodeRepository;
+use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
-use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-final class SearchRealmNodeInheritanceMessageHandler implements MessageHandlerInterface
+#[AsMessageHandler]
+final readonly class SearchRealmNodeInheritanceMessageHandler
 {
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly HandlerFactoryInterface $handlerFactory,
-        private readonly MessageBusInterface $bus,
-        private readonly LoggerInterface $logger
+        private HandlerFactoryInterface $handlerFactory,
+        private AllStatusesNodeRepository $allStatusesNodeRepository,
+        private RealmNodeRepository $realmNodeRepository,
+        private MessageBusInterface $bus,
+        private LoggerInterface $logger,
     ) {
     }
 
     public function __invoke(SearchRealmNodeInheritanceMessage $message): void
     {
         /** @var Node|null $node */
-        $node = $this->managerRegistry->getRepository(Node::class)->find($message->getNodeId());
+        $node = $this->allStatusesNodeRepository->find($message->getNodeId());
         if (null === $node) {
             throw new UnrecoverableMessageHandlingException('Node does not exist');
         }
@@ -43,10 +45,9 @@ final class SearchRealmNodeInheritanceMessageHandler implements MessageHandlerIn
 
     private function clearAnyExistingRealmNodes(Node $node): void
     {
-        /** @var RealmNode[] $autoRealmNodes */
-        $autoRealmNodes = $this->managerRegistry->getRepository(RealmNode::class)->findBy([
+        $autoRealmNodes = $this->realmNodeRepository->findBy([
             'node' => $node,
-            'inheritanceType' => RealmInterface::INHERITANCE_AUTO
+            'inheritanceType' => RealmInterface::INHERITANCE_AUTO,
         ]);
 
         /*
@@ -67,13 +68,12 @@ final class SearchRealmNodeInheritanceMessageHandler implements MessageHandlerIn
         $nodeHandler = $this->handlerFactory->getHandler($node);
         $parents = $nodeHandler->getParents();
 
-        if (count($parents) === 0) {
+        if (0 === count($parents)) {
             return;
         }
 
         foreach ($parents as $parent) {
-            /** @var RealmNode[] $rootRealmNodes */
-            $rootRealmNodes = $this->managerRegistry->getRepository(RealmNode::class)->findBy([
+            $rootRealmNodes = $this->realmNodeRepository->findBy([
                 'node' => $parent,
                 'inheritanceType' => RealmInterface::INHERITANCE_ROOT,
             ]);

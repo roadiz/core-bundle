@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Controller;
 
 use Doctrine\Persistence\ManagerRegistry;
-use Exception;
 use League\Flysystem\FilesystemException;
 use Limenius\Liform\LiformInterface;
 use Psr\Log\LoggerInterface;
@@ -22,12 +21,11 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -42,12 +40,12 @@ final class CustomFormController extends AbstractController
         private readonly SerializerInterface $serializer,
         private readonly FormErrorSerializerInterface $formErrorSerializer,
         private readonly ManagerRegistry $registry,
-        private readonly RateLimiterFactory $customFormLimiter,
+        private readonly RateLimiterFactoryInterface $customFormLimiter,
         private readonly MessageBusInterface $messageBus,
     ) {
     }
 
-    protected function validateCustomForm(?CustomForm $customForm): void
+    private function validateCustomForm(?CustomForm $customForm): void
     {
         if (null === $customForm) {
             throw new NotFoundHttpException('Custom form not found');
@@ -57,11 +55,6 @@ final class CustomFormController extends AbstractController
         }
     }
 
-    /**
-     * @param Request $request
-     * @param int $id
-     * @return JsonResponse
-     */
     public function definitionAction(Request $request, int $id): JsonResponse
     {
         /** @var CustomForm|null $customForm */
@@ -80,10 +73,7 @@ final class CustomFormController extends AbstractController
     }
 
     /**
-     * @param Request $request
-     * @param int $id
-     * @return Response
-     * @throws Exception|FilesystemException
+     * @throws \Exception|FilesystemException
      */
     public function postAction(Request $request, int $id): Response
     {
@@ -108,13 +98,12 @@ final class CustomFormController extends AbstractController
             $request,
             $customForm,
             new JsonResponse(null, Response::HTTP_ACCEPTED, $headers),
-            false,
-            null,
-            false
+            prefix: false
         );
 
         if ($mixed instanceof Response) {
             $mixed->prepare($request);
+
             return $mixed;
         }
 
@@ -122,8 +111,9 @@ final class CustomFormController extends AbstractController
             if ($mixed['formObject']->isSubmitted()) {
                 $errorPayload = [
                     'status' => Response::HTTP_BAD_REQUEST,
-                    'errorsPerForm' => $this->formErrorSerializer->getErrorsAsArray($mixed['formObject'])
+                    'errorsPerForm' => $this->formErrorSerializer->getErrorsAsArray($mixed['formObject']),
                 ];
+
                 return new JsonResponse(
                     $this->serializer->serialize($errorPayload, 'json'),
                     Response::HTTP_BAD_REQUEST,
@@ -137,14 +127,11 @@ final class CustomFormController extends AbstractController
     }
 
     /**
-     * @param Request $request
-     * @param int $customFormId
-     * @return Response
      * @throws FilesystemException
      */
     public function addAction(Request $request, int $customFormId): Response
     {
-        /** @var CustomForm $customForm */
+        /** @var CustomForm|null $customForm */
         $customForm = $this->registry->getRepository(CustomForm::class)->find($customFormId);
         $this->validateCustomForm($customForm);
 
@@ -154,7 +141,7 @@ final class CustomFormController extends AbstractController
             new RedirectResponse(
                 $this->generateUrl(
                     'customFormSentAction',
-                    ["customFormId" => $customFormId]
+                    ['customFormId' => $customFormId]
                 )
             )
         );
@@ -166,11 +153,6 @@ final class CustomFormController extends AbstractController
         }
     }
 
-    /**
-     * @param Request $request
-     * @param int $customFormId
-     * @return Response
-     */
     public function sentAction(Request $request, int $customFormId): Response
     {
         $assignation = [];
@@ -179,6 +161,7 @@ final class CustomFormController extends AbstractController
         $this->validateCustomForm($customForm);
 
         $assignation['customForm'] = $customForm;
+
         return $this->render('@RoadizCore/customForm/customFormSent.html.twig', $assignation);
     }
 
@@ -191,36 +174,27 @@ final class CustomFormController extends AbstractController
      *     * form
      * * If form is validated, **RedirectResponse** will be returned.
      *
-     * @param Request $request
-     * @param CustomForm $customFormsEntity
-     * @param Response $response
-     * @param boolean $forceExpanded
-     * @param string|null $emailSender
-     * @param bool $prefix
      * @return array|Response
+     *
      * @throws FilesystemException
      */
-    public function prepareAndHandleCustomFormAssignation(
+    private function prepareAndHandleCustomFormAssignation(
         Request $request,
         CustomForm $customFormsEntity,
         Response $response,
-        bool $forceExpanded = false,
-        ?string $emailSender = null,
-        bool $prefix = true
+        bool $prefix = true,
     ) {
         $assignation = [
             'customForm' => $customFormsEntity,
             'fields' => $customFormsEntity->getFields(),
             'head' => [
                 'siteTitle' => $this->settingsBag->get('site_name'),
-                'mainColor' => $this->settingsBag->get('main_color'),
-            ]
+            ],
         ];
         $helper = $this->customFormHelperFactory->createHelper($customFormsEntity);
         $form = $helper->getForm(
             $request,
-            $forceExpanded,
-            $prefix
+            prefix: $prefix
         );
         $form->handleRequest($request);
 
@@ -230,26 +204,18 @@ final class CustomFormController extends AbstractController
                  * Parse form data and create answer.
                  */
                 $answer = $helper->parseAnswerFormData($form, null, $request->getClientIp());
-
                 $answerId = $answer->getId();
                 if (!is_int($answerId)) {
                     throw new \RuntimeException('Answer ID is null');
-                }
-
-                if (null === $emailSender || false === filter_var($answer->getEmail(), FILTER_VALIDATE_EMAIL)) {
-                    $emailSender = $answer->getEmail();
-                }
-                if (null === $emailSender || false === filter_var($emailSender, FILTER_VALIDATE_EMAIL)) {
-                    $emailSender = $this->settingsBag->get('email_sender');
                 }
 
                 $this->messageBus->dispatch(new CustomFormAnswerNotifyMessage(
                     $answerId,
                     $this->translator->trans(
                         'new.answer.form.%site%',
-                        ['%site%' => $customFormsEntity->getDisplayName()]
+                        ['%site%' => $customFormsEntity->getDisplayName()],
+                        locale: $request->getLocale(),
                     ),
-                    $emailSender,
                     $request->getLocale()
                 ));
 
@@ -257,13 +223,6 @@ final class CustomFormController extends AbstractController
                     'customForm.%name%.send',
                     ['%name%' => $customFormsEntity->getDisplayName()]
                 );
-
-                if (!$request->attributes->getBoolean('_stateless') && $request->hasPreviousSession()) {
-                    $session = $request->getSession();
-                    if ($session instanceof Session) {
-                        $session->getFlashBag()->add('confirm', $msg);
-                    }
-                }
 
                 $this->logger->info($msg);
 
@@ -275,6 +234,7 @@ final class CustomFormController extends AbstractController
 
         $assignation['form'] = $form->createView();
         $assignation['formObject'] = $form;
+
         return $assignation;
     }
 }

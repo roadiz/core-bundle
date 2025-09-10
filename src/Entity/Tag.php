@@ -11,16 +11,19 @@ use ApiPlatform\Serializer\Filter\PropertyFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\DateTimedInterface;
+use RZ\Roadiz\Core\AbstractEntities\DateTimedTrait;
 use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
 use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
+use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
+use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Api\Filter\NodesTagsFilter;
 use RZ\Roadiz\CoreBundle\Api\Filter\NotFilter;
 use RZ\Roadiz\CoreBundle\Repository\TagRepository;
 use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Serializer\Attribute as SymfonySerializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -29,27 +32,30 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[
     ORM\Entity(repositoryClass: TagRepository::class),
     ORM\HasLifecycleCallbacks,
-    ORM\Table(name: "tags"),
-    ORM\Index(columns: ["visible"]),
-    ORM\Index(columns: ["locked"]),
-    ORM\Index(columns: ["position"]),
-    ORM\Index(columns: ["created_at"]),
-    ORM\Index(columns: ["updated_at"]),
-    ORM\Index(columns: ["parent_tag_id", "position"], name: "tag_parent_position"),
-    ORM\Index(columns: ["visible", "position"], name: "tag_visible_position"),
-    ORM\Index(columns: ["parent_tag_id", "visible"], name: "tag_parent_visible"),
-    ORM\Index(columns: ["parent_tag_id", "visible", "position"], name: "tag_parent_visible_position"),
-    UniqueEntity(fields: ["tagName"]),
+    ORM\Table(name: 'tags'),
+    ORM\Index(columns: ['visible']),
+    ORM\Index(columns: ['locked']),
+    ORM\Index(columns: ['position']),
+    ORM\Index(columns: ['created_at']),
+    ORM\Index(columns: ['updated_at']),
+    ORM\Index(columns: ['parent_tag_id', 'position'], name: 'tag_parent_position'),
+    ORM\Index(columns: ['visible', 'position'], name: 'tag_visible_position'),
+    ORM\Index(columns: ['parent_tag_id', 'visible'], name: 'tag_parent_visible'),
+    ORM\Index(columns: ['parent_tag_id', 'visible', 'position'], name: 'tag_parent_visible_position'),
+    UniqueEntity(fields: ['tagName']),
     ApiFilter(PropertyFilter::class),
     ApiFilter(NodesTagsFilter::class),
     ApiFilter(BaseFilter\OrderFilter::class, properties: [
-        "position",
-        "createdAt",
-        "updatedAt"
+        'tagName',
+        'position',
+        'createdAt',
+        'updatedAt',
     ])
 ]
-class Tag extends AbstractDateTimedPositioned implements LeafInterface
+class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \Stringable
 {
+    use SequentialIdTrait;
+    use DateTimedTrait;
     use LeafTrait;
 
     #[ORM\Column(
@@ -61,7 +67,6 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
         options: ['default' => '#000000']
     )]
     #[SymfonySerializer\Groups(['tag', 'tag_color', 'color'])]
-    #[Serializer\Groups(['tag', 'tag_color', 'color'])]
     #[Assert\Length(max: 7)]
     #[ApiProperty(
         description: 'Tag color in hexadecimal format.',
@@ -73,16 +78,15 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * @var Tag|null
      */
     #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
-        "parent.id" => "exact",
-        "parent.tagName" => "exact"
+        'parent.id' => 'exact',
+        'parent.tagName' => 'exact',
     ])]
     #[ApiFilter(NotFilter::class, properties: [
-        "parent.id",
-        "parent.tagName"
+        'parent.id',
+        'parent.tagName',
     ])]
     #[ORM\ManyToOne(targetEntity: Tag::class, fetch: 'EXTRA_LAZY', inversedBy: 'children')]
     #[ORM\JoinColumn(name: 'parent_tag_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
-    #[Serializer\Exclude]
     #[SymfonySerializer\MaxDepth(2)]
     #[SymfonySerializer\Groups(['tag_parent'])]
     protected ?LeafInterface $parent = null;
@@ -98,8 +102,6 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     )]
     #[ORM\OrderBy(['position' => 'ASC'])]
     #[SymfonySerializer\Groups(['tag_children'])]
-    #[Serializer\Groups(['tag_children'])]
-    #[Serializer\AccessType(type: "public_method")]
     protected Collection $children;
 
     /**
@@ -112,14 +114,11 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
         orphanRemoval: true
     )]
     #[SymfonySerializer\Groups(['translated_tag'])]
-    #[Serializer\Groups(['translated_tag'])]
     protected Collection $translatedTags;
 
-    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: "partial")]
+    #[ApiFilter(BaseFilter\SearchFilter::class, strategy: 'partial')]
     #[ORM\Column(name: 'tag_name', type: 'string', length: 250, unique: true)]
     #[SymfonySerializer\Ignore]
-    #[Serializer\Groups(['tag'])]
-    #[Serializer\Accessor(getter: "getTagName", setter: "setTagName")]
     #[Assert\NotNull]
     #[Assert\NotBlank]
     #[Assert\Length(max: 250)]
@@ -130,13 +129,11 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     private string $tagName = '';
 
     #[SymfonySerializer\Ignore]
-    #[Serializer\Exclude]
     private string $dirtyTagName = '';
 
     #[ApiFilter(BaseFilter\BooleanFilter::class)]
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => true])]
     #[SymfonySerializer\Groups(['tag', 'tag_base', 'node', 'nodes_sources'])]
-    #[Serializer\Groups(['tag', 'tag_base', 'node', 'nodes_sources'])]
     #[ApiProperty(
         description: 'Is this tag visible in website?',
         example: 'true',
@@ -145,7 +142,6 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
 
     #[ORM\Column(name: 'children_order', type: 'string', length: 60, options: ['default' => 'position'])]
     #[SymfonySerializer\Ignore]
-    #[Serializer\Groups(["tag", "tag_children_order"])]
     #[Assert\Length(max: 60)]
     #[ApiProperty(
         description: 'This tag children will be sorted by a given field',
@@ -153,14 +149,13 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
         schema: [
             'type' => 'string',
             'enum' => ['position', 'tagName', 'createdAt', 'updatedAt', 'publishedAt'],
-            'example' => 'position'
+            'example' => 'position',
         ],
     )]
     private string $childrenOrder = 'position';
 
     #[ORM\Column(name: 'children_order_direction', type: 'string', length: 4, options: ['default' => 'ASC'])]
     #[SymfonySerializer\Ignore]
-    #[Serializer\Groups(["tag", "tag_children_order"])]
     #[Assert\Length(max: 4)]
     #[ApiProperty(
         description: 'This tag children will be sorted ascendant or descendant',
@@ -168,7 +163,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
         schema: [
             'type' => 'string',
             'enum' => ['ASC', 'DESC'],
-            'example' => 'ASC'
+            'example' => 'ASC',
         ],
     )]
     private string $childrenOrderDirection = 'ASC';
@@ -176,7 +171,6 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     #[ApiFilter(BaseFilter\BooleanFilter::class)]
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
     #[SymfonySerializer\Ignore]
-    #[Serializer\Groups(["tag"])]
     #[ApiProperty(
         description: 'Is this tag locked to prevent deletion and renaming?',
         example: 'false',
@@ -194,55 +188,42 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     )]
     #[ORM\OrderBy(['position' => 'ASC'])]
     #[SymfonySerializer\Ignore]
-    #[Serializer\Exclude]
     #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
-        "nodesTags.node" => "exact",
-        "nodesTags.node.nodeName" => "exact",
-        "nodesTags.node.parent" => "exact",
-        "nodesTags.node.parent.nodeName" => "exact",
-        "nodesTags.node.nodeType" => "exact",
-        "nodesTags.node.nodeType.name" => "exact",
-        "nodesTags.node.nodesTags.tag" => "exact",
-        "nodesTags.node.nodesTags.tag.tagName" => "exact",
+        'nodesTags.node' => 'exact',
+        'nodesTags.node.nodeName' => 'exact',
+        'nodesTags.node.parent' => 'exact',
+        'nodesTags.node.parent.nodeName' => 'exact',
+        'nodesTags.node.nodeTypeName' => 'exact',
+        'nodesTags.node.nodesTags.tag' => 'exact',
+        'nodesTags.node.nodesTags.tag.tagName' => 'exact',
     ])]
     #[ApiFilter(BaseFilter\BooleanFilter::class, properties: [
-        "nodesTags.node.visible",
-        "nodesTags.node.nodeType.reachable",
+        'nodesTags.node.visible',
     ])]
     private Collection $nodesTags;
 
-    /**
-     * Create a new Tag.
-     */
     public function __construct()
     {
         $this->nodesTags = new ArrayCollection();
         $this->translatedTags = new ArrayCollection();
         $this->children = new ArrayCollection();
-        $this->initAbstractDateTimed();
+        $this->initDateTimedTrait();
     }
 
     /**
      * Gets the value of dirtyTagName.
-     *
-     * @return string
      */
     public function getDirtyTagName(): string
     {
         return $this->dirtyTagName;
     }
 
-    /**
-     * @return boolean
-     */
     public function isLocked(): bool
     {
         return $this->locked;
     }
 
     /**
-     * @param boolean $locked
-     *
      * @return $this
      */
     public function setLocked(bool $locked): static
@@ -257,15 +238,11 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      */
     public function getNodes(): Collection
     {
-        return $this->nodesTags->map(function (NodesTags $nodesTags) {
-            return $nodesTags->getNode();
-        });
+        return $this->nodesTags->map(fn (NodesTags $nodesTags) => $nodesTags->getNode());
     }
 
     /**
      * Get tag full path using tag names.
-     *
-     * @return string
      */
     public function getFullPath(): string
     {
@@ -283,17 +260,12 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
         return implode('/', $path);
     }
 
-    /**
-     * @return string
-     */
     public function getTagName(): string
     {
         return $this->tagName;
     }
 
     /**
-     * @param string $tagName
-     *
      * @return $this
      */
     public function setTagName(string $tagName): static
@@ -305,57 +277,43 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
     }
 
     /**
-     * @param TranslationInterface $translation
      * @return Collection<int, TagTranslation>
      */
     #[SymfonySerializer\Ignore]
     public function getTranslatedTagsByTranslation(TranslationInterface $translation): Collection
     {
-        return $this->translatedTags->filter(function (TagTranslation $tagTranslation) use ($translation) {
-            return $tagTranslation->getTranslation()->getLocale() === $translation->getLocale();
-        });
+        return $this->translatedTags->filter(fn (TagTranslation $tagTranslation) => $tagTranslation->getTranslation()->getLocale() === $translation->getLocale());
     }
 
     #[SymfonySerializer\Ignore]
     public function getTranslatedTagsByDefaultTranslation(): ?TagTranslation
     {
-        return $this->translatedTags->findFirst(function (int $key, TagTranslation $tagTranslation) {
-            return $tagTranslation->getTranslation()->isDefaultTranslation();
-        });
+        return $this->translatedTags->findFirst(fn (int $key, TagTranslation $tagTranslation) => $tagTranslation->getTranslation()->isDefaultTranslation());
     }
 
-    /**
-     * @return string
-     */
     public function getOneLineSummary(): string
     {
-        return $this->getId() . " — " . $this->getTagName() .
-            " — Visible : " . ($this->isVisible() ? 'true' : 'false') . PHP_EOL;
+        return $this->getId().' — '.$this->getTagName().
+            ' — Visible : '.($this->isVisible() ? 'true' : 'false').PHP_EOL;
     }
 
-    /**
-     * @return boolean
-     */
     public function isVisible(): bool
     {
         return $this->visible;
     }
 
     /**
-     * @param boolean $visible
-     *
      * @return $this
      */
     public function setVisible(bool $visible): static
     {
         $this->visible = $visible;
+
         return $this;
     }
 
     /**
      * Gets the value of color.
-     *
-     * @return string
      */
     public function getColor(): string
     {
@@ -366,8 +324,6 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * Sets the value of color.
      *
      * @param string|null $color the color
-     *
-     * @return static
      */
     public function setColor(?string $color): static
     {
@@ -378,8 +334,6 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
 
     /**
      * Gets the value of childrenOrder.
-     *
-     * @return string
      */
     public function getChildrenOrder(): string
     {
@@ -390,8 +344,6 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * Sets the value of childrenOrder.
      *
      * @param string $childrenOrder the children order
-     *
-     * @return static
      */
     public function setChildrenOrder(string $childrenOrder): static
     {
@@ -402,8 +354,6 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
 
     /**
      * Gets the value of childrenOrderDirection.
-     *
-     * @return string
      */
     public function getChildrenOrderDirection(): string
     {
@@ -414,8 +364,6 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
      * Sets the value of childrenOrderDirection.
      *
      * @param string $childrenOrderDirection the children order direction
-     *
-     * @return static
      */
     public function setChildrenOrderDirection(string $childrenOrderDirection): static
     {
@@ -424,21 +372,12 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
         return $this;
     }
 
-    /**
-     * @return string
-     */
+    #[\Override]
     public function __toString(): string
     {
         return (string) $this->getId();
     }
 
-    /**
-     * @return string|null
-     *
-     * @Serializer\Groups({"tag", "tag_base", "node", "nodes_sources"})
-     * @Serializer\VirtualProperty
-     * @Serializer\Type("string|null")
-     */
     #[SymfonySerializer\Ignore]
     public function getName(): ?string
     {
@@ -457,6 +396,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
 
     /**
      * @param Collection<int, TagTranslation> $translatedTags
+     *
      * @return $this
      */
     public function setTranslatedTags(Collection $translatedTags): static
@@ -466,16 +406,10 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
         foreach ($this->translatedTags as $translatedTag) {
             $translatedTag->setTag($this);
         }
+
         return $this;
     }
 
-    /**
-     * @return string|null
-     *
-     * @Serializer\Groups({"tag", "node", "nodes_sources"})
-     * @Serializer\VirtualProperty
-     * @Serializer\Type("string|null")
-     */
     #[SymfonySerializer\Ignore]
     public function getDescription(): ?string
     {
@@ -484,13 +418,6 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
             '';
     }
 
-    /**
-     * @return array
-     *
-     * @Serializer\Groups({"tag", "node", "nodes_sources"})
-     * @Serializer\VirtualProperty
-     * @Serializer\Type("array<RZ\Roadiz\CoreBundle\Entity\Document>")
-     */
     #[SymfonySerializer\Ignore]
     public function getDocuments(): array
     {
@@ -499,6 +426,7 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
             [];
     }
 
+    #[\Override]
     public function setParent(?LeafInterface $parent = null): static
     {
         if ($parent === $this) {
@@ -513,14 +441,12 @@ class Tag extends AbstractDateTimedPositioned implements LeafInterface
         return $this;
     }
 
-
     #[ApiProperty(
         description: 'Unique tag name (slug) used to build content URL or filter queries.',
         example: 'this-is-a-tag-name',
     )]
     #[SymfonySerializer\SerializedName('slug')]
     #[SymfonySerializer\Groups(['tag', 'tag_base', 'node', 'nodes_sources'])]
-    #[Serializer\Groups(['tag', 'tag_base', 'node', 'nodes_sources'])]
     public function getSlug(): string
     {
         return $this->getTagName();

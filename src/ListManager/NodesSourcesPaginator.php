@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\ListManager;
 
+use RZ\Roadiz\CoreBundle\Entity\NodesSources;
+use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
+use Symfony\Component\DependencyInjection\Attribute\Exclude;
+
 /**
  * A paginator class to filter node-sources entities with limit and search.
  *
- * This class add authorizationChecker filters
+ * This class add authorizationChecker filters.
+ *
+ * @extends Paginator<NodesSources>
  */
+#[Exclude]
 class NodesSourcesPaginator extends Paginator
 {
-    /**
-     * {@inheritdoc}
-     */
+    #[\Override]
     public function getTotalCount(): int
     {
         if (null === $this->totalCount) {
@@ -27,15 +32,8 @@ class NodesSourcesPaginator extends Paginator
         return $this->totalCount;
     }
 
-    /**
-     * Return entities filtered for current page.
-     *
-     * @param array   $order
-     * @param integer $page
-     *
-     * @return array|\Doctrine\ORM\Tools\Pagination\Paginator
-     */
-    public function findByAtPage(array $order = [], int $page = 1)
+    #[\Override]
+    public function findByAtPage(array $order = [], int $page = 1): array
     {
         if (null !== $this->searchPattern) {
             return $this->searchByAtPage($order, $page);
@@ -47,5 +45,16 @@ class NodesSourcesPaginator extends Paginator
                 $this->getItemsPerPage() * ($page - 1)
             );
         }
+    }
+
+    #[\Override]
+    protected function getRepository(): NodesSourcesRepository
+    {
+        /** @var NodesSourcesRepository $repository */
+        $repository = $this->em->getRepository($this->entityName);
+        $repository->setDisplayingNotPublishedNodes($this->isDisplayingNotPublishedNodes());
+        $repository->setDisplayingAllNodesStatuses($this->isDisplayingAllNodesStatuses());
+
+        return $repository;
     }
 }

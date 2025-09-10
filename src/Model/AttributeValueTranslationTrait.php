@@ -4,39 +4,35 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Model;
 
-use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use Doctrine\ORM\Mapping as ORM;
-use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use Symfony\Component\Serializer\Attribute as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 trait AttributeValueTranslationTrait
 {
     #[
         ORM\ManyToOne(targetEntity: TranslationInterface::class),
-        ORM\JoinColumn(name: "translation_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE"),
-        Serializer\Groups(["attribute", "node", "nodes_sources"]),
-        Serializer\Type("RZ\Roadiz\Core\AbstractEntities\TranslationInterface"),
-        Serializer\Accessor(getter: "getTranslation", setter: "setTranslation")
+        ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),
+        Serializer\Groups(['attribute', 'node', 'nodes_sources']),
     ]
     protected TranslationInterface $translation;
 
     #[
-        ORM\Column(type: "string", length: 255, unique: false, nullable: true),
-        Serializer\Groups(["attribute", "node", "nodes_sources"]),
-        Serializer\Type("string"),
+        ORM\Column(type: 'string', length: 255, unique: false, nullable: true),
+        Serializer\Groups(['attribute', 'node', 'nodes_sources']),
         Assert\Length(max: 255)
     ]
     protected ?string $value = null;
 
     #[
-        ORM\ManyToOne(targetEntity: AttributeValueInterface::class, cascade: ["persist"], inversedBy: "attributeValueTranslations"),
-        ORM\JoinColumn(name: "attribute_value", referencedColumnName: "id", nullable: false, onDelete: "CASCADE"),
-        Serializer\Exclude
+        ORM\ManyToOne(targetEntity: AttributeValueInterface::class, cascade: ['persist'], inversedBy: 'attributeValueTranslations'),
+        ORM\JoinColumn(name: 'attribute_value', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),
+        Serializer\Ignore
     ]
     protected AttributeValueInterface $attributeValue;
 
     /**
-     * @return bool|\DateTime|float|int|string|null
      * @throws \Exception
      */
     public function getValue(): bool|\DateTime|float|int|string|null
@@ -44,6 +40,7 @@ trait AttributeValueTranslationTrait
         if (null === $this->value) {
             return null;
         }
+
         return match ($this->getAttributeValue()->getType()) {
             AttributeInterface::DECIMAL_T => (float) $this->value,
             AttributeInterface::INTEGER_T => (int) $this->value,
@@ -56,9 +53,9 @@ trait AttributeValueTranslationTrait
     /**
      * @param mixed|null $value
      *
-     * @return self
+     * @return $this
      */
-    public function setValue(mixed $value)
+    public function setValue(mixed $value): self
     {
         if (null === $value) {
             $this->value = null;
@@ -69,6 +66,7 @@ trait AttributeValueTranslationTrait
                     throw new \InvalidArgumentException('Email is not valid');
                 }
                 $this->value = (string) $value;
+
                 return $this;
             case AttributeInterface::DATETIME_T:
             case AttributeInterface::DATE_T:
@@ -77,20 +75,22 @@ trait AttributeValueTranslationTrait
                 } else {
                     $this->value = (string) $value;
                 }
+
                 return $this;
             default:
                 $this->value = (string) $value;
+
                 return $this;
         }
     }
 
     /**
-     * @param TranslationInterface $translation
-     * @return self
+     * @return $this
      */
-    public function setTranslation(TranslationInterface $translation)
+    public function setTranslation(TranslationInterface $translation): self
     {
         $this->translation = $translation;
+
         return $this;
     }
 
@@ -99,21 +99,18 @@ trait AttributeValueTranslationTrait
         return $this->translation;
     }
 
-    /**
-     * @return AttributeValueInterface
-     */
     public function getAttributeValue(): AttributeValueInterface
     {
         return $this->attributeValue;
     }
 
     /**
-     * @param AttributeValueInterface $attributeValue
-     * @return self
+     * @return $this
      */
-    public function setAttributeValue(AttributeValueInterface $attributeValue)
+    public function setAttributeValue(AttributeValueInterface $attributeValue): self
     {
         $this->attributeValue = $attributeValue;
+
         return $this;
     }
 

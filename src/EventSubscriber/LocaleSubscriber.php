@@ -14,18 +14,16 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\Routing\RequestContextAwareInterface;
 
-final class LocaleSubscriber implements EventSubscriberInterface
+final readonly class LocaleSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private readonly PreviewResolverInterface $previewResolver,
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly RequestContextAwareInterface $router
+        private PreviewResolverInterface $previewResolver,
+        private ManagerRegistry $managerRegistry,
+        private RequestContextAwareInterface $router,
     ) {
     }
 
-    /**
-     * @return array
-     */
+    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [
@@ -46,7 +44,7 @@ final class LocaleSubscriber implements EventSubscriberInterface
 
     private function supportsLocale(?string $locale): bool
     {
-        if (null === $locale || $locale === '') {
+        if (null === $locale || '' === $locale) {
             return false;
         }
 
@@ -55,6 +53,7 @@ final class LocaleSubscriber implements EventSubscriberInterface
         } else {
             $locales = $this->getRepository()->getAvailableLocales();
         }
+
         return \in_array(
             $locale,
             $locales,
@@ -67,6 +66,7 @@ final class LocaleSubscriber implements EventSubscriberInterface
         if ($this->previewResolver->isPreview()) {
             return $this->getRepository()->findOneByLocaleOrOverrideLocale($locale);
         }
+
         return $this->getRepository()->findOneAvailableByLocaleOrOverrideLocale($locale);
     }
 
@@ -80,6 +80,7 @@ final class LocaleSubscriber implements EventSubscriberInterface
          */
         if ($this->supportsLocale($locale)) {
             $this->setTranslation($request, $this->getTranslationByLocale($locale));
+
             return;
         }
 
@@ -93,19 +94,22 @@ final class LocaleSubscriber implements EventSubscriberInterface
             'interventionRequestProcess',
         ];
         if (
-            !\in_array($request->attributes->getString('_route'), $statelessRoutes, true) &&
-            !$request->attributes->getBoolean('_stateless') &&
-            $request->hasPreviousSession()
+            null !== $request->attributes->get('_route')
+            && !\in_array($request->attributes->getString('_route'), $statelessRoutes, true)
+            && !$request->attributes->getBoolean('_stateless')
+            && $request->hasPreviousSession()
         ) {
             $sessionLocale = $request->getSession()->get('_locale', null);
             if ($this->supportsLocale($sessionLocale)) {
                 $this->setTranslation($request, $this->getTranslationByLocale($sessionLocale));
+
                 return;
             }
         }
 
         if (null !== $translation = $this->getDefaultTranslation()) {
             $this->setTranslation($request, $translation);
+
             return;
         }
     }

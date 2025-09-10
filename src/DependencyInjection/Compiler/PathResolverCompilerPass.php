@@ -6,16 +6,14 @@ namespace RZ\Roadiz\CoreBundle\DependencyInjection\Compiler;
 
 use RZ\Roadiz\CoreBundle\Routing\ChainResourcePathResolver;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Compiler\PriorityTaggedServiceTrait;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 class PathResolverCompilerPass implements CompilerPassInterface
 {
     use PriorityTaggedServiceTrait;
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public function process(ContainerBuilder $container): void
     {
         if ($container->has(ChainResourcePathResolver::class)) {

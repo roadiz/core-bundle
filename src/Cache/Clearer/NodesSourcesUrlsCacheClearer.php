@@ -13,14 +13,17 @@ final class NodesSourcesUrlsCacheClearer extends FileClearer
         parent::__construct('');
     }
 
+    #[\Override]
     public function clear(): bool
     {
         $this->output .= 'Node-sources URLs cache: ';
 
         if ($this->cacheProvider->clear()) {
             $this->output .= 'cleared';
+
             return true;
         }
+
         return false;
     }
 }

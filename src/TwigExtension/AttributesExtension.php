@@ -25,36 +25,39 @@ final class AttributesExtension extends AbstractExtension
     {
     }
 
+    #[\Override]
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('get_attributes', [$this, 'getAttributeValues']),
-            new TwigFunction('node_source_attributes', [$this, 'getNodeSourceAttributeValues']),
-            new TwigFunction('node_source_grouped_attributes', [$this, 'getNodeSourceGroupedAttributeValues']),
+            new TwigFunction('get_attributes', $this->getAttributeValues(...)),
+            new TwigFunction('node_source_attributes', $this->getNodeSourceAttributeValues(...)),
+            new TwigFunction('node_source_grouped_attributes', $this->getNodeSourceGroupedAttributeValues(...)),
         ];
     }
 
+    #[\Override]
     public function getFilters(): array
     {
         return [
-            new TwigFilter('attributes', [$this, 'getNodeSourceAttributeValues']),
-            new TwigFilter('grouped_attributes', [$this, 'getNodeSourceGroupedAttributeValues']),
-            new TwigFilter('attribute_label', [$this, 'getAttributeLabelOrCode']),
-            new TwigFilter('attribute_group_label', [$this, 'getAttributeGroupLabelOrCode']),
+            new TwigFilter('attributes', $this->getNodeSourceAttributeValues(...)),
+            new TwigFilter('grouped_attributes', $this->getNodeSourceGroupedAttributeValues(...)),
+            new TwigFilter('attribute_label', $this->getAttributeLabelOrCode(...)),
+            new TwigFilter('attribute_group_label', $this->getAttributeGroupLabelOrCode(...)),
         ];
     }
 
+    #[\Override]
     public function getTests(): array
     {
         return [
-            new TwigTest('datetime', [$this, 'isDateTime']),
-            new TwigTest('date', [$this, 'isDate']),
-            new TwigTest('country', [$this, 'isCountry']),
-            new TwigTest('boolean', [$this, 'isBoolean']),
-            new TwigTest('choice', [$this, 'isEnum']),
-            new TwigTest('enum', [$this, 'isEnum']),
-            new TwigTest('number', [$this, 'isNumber']),
-            new TwigTest('percent', [$this, 'isPercent']),
+            new TwigTest('datetime', $this->isDateTime(...)),
+            new TwigTest('date', $this->isDate(...)),
+            new TwigTest('country', $this->isCountry(...)),
+            new TwigTest('boolean', $this->isBoolean(...)),
+            new TwigTest('choice', $this->isEnum(...)),
+            new TwigTest('enum', $this->isEnum(...)),
+            new TwigTest('number', $this->isNumber(...)),
+            new TwigTest('percent', $this->isPercent(...)),
         ];
     }
 
@@ -90,23 +93,17 @@ final class AttributesExtension extends AbstractExtension
 
     public function isNumber(AttributeValueTranslationInterface $attributeValueTranslation): bool
     {
-        return $attributeValueTranslation->getAttributeValue()->getAttribute()->isInteger() ||
-            $attributeValueTranslation->getAttributeValue()->getAttribute()->isDecimal();
+        return $attributeValueTranslation->getAttributeValue()->getAttribute()->isInteger()
+            || $attributeValueTranslation->getAttributeValue()->getAttribute()->isDecimal();
     }
 
-
     /**
-     * @param AttributableInterface|null $attributable
-     * @param TranslationInterface $translation
-     * @param bool $hideNotTranslated
-     *
-     * @return array
      * @throws SyntaxError
      */
     public function getAttributeValues(
         ?AttributableInterface $attributable,
         TranslationInterface $translation,
-        bool $hideNotTranslated = false
+        bool $hideNotTranslated = false,
     ): array {
         if (null === $attributable) {
             throw new SyntaxError('Cannot call get_attributes on NULL');
@@ -150,10 +147,6 @@ final class AttributesExtension extends AbstractExtension
     }
 
     /**
-     * @param NodesSources|null $nodesSources
-     * @param bool $hideNotTranslated
-     *
-     * @return array
      * @throws SyntaxError
      */
     public function getNodeSourceAttributeValues(?NodesSources $nodesSources, bool $hideNotTranslated = false): array
@@ -161,14 +154,11 @@ final class AttributesExtension extends AbstractExtension
         if (null === $nodesSources) {
             throw new SyntaxError('Cannot call node_source_attributes on NULL');
         }
+
         return $this->getAttributeValues($nodesSources->getNode(), $nodesSources->getTranslation(), $hideNotTranslated);
     }
 
     /**
-     * @param NodesSources|null $nodesSources
-     * @param bool $hideNotTranslated
-     *
-     * @return array
      * @throws SyntaxError
      */
     public function getNodeSourceGroupedAttributeValues(?NodesSources $nodesSources, bool $hideNotTranslated = false): array
@@ -176,10 +166,10 @@ final class AttributesExtension extends AbstractExtension
         $groups = [
             INF => [
                 'group' => null,
-                'attributeValues' => []
-            ]
+                'attributeValues' => [],
+            ],
         ];
-        $attributeValueTranslations  = $this->getNodeSourceAttributeValues($nodesSources, $hideNotTranslated);
+        $attributeValueTranslations = $this->getNodeSourceAttributeValues($nodesSources, $hideNotTranslated);
         /** @var AttributeValueTranslationInterface $attributeValueTranslation */
         foreach ($attributeValueTranslations as $attributeValueTranslation) {
             $group = $attributeValueTranslation->getAttributeValue()->getAttribute()->getGroup();
@@ -187,7 +177,7 @@ final class AttributesExtension extends AbstractExtension
                 if (!isset($groups[$group->getCanonicalName()])) {
                     $groups[$group->getCanonicalName()] = [
                         'group' => $group,
-                        'attributeValues' => []
+                        'attributeValues' => [],
                     ];
                 }
                 $groups[$group->getCanonicalName()]['attributeValues'][] = $attributeValueTranslation;
@@ -196,18 +186,10 @@ final class AttributesExtension extends AbstractExtension
             }
         }
 
-        return array_filter($groups, function (array $group) {
-            return count($group['attributeValues']) > 0;
-        });
+        return array_filter($groups, fn (array $group) => count($group['attributeValues']) > 0);
     }
 
-    /**
-     * @param mixed $mixed
-     * @param TranslationInterface|null $translation
-     *
-     * @return string|null
-     */
-    public function getAttributeLabelOrCode(mixed $mixed, TranslationInterface $translation = null): ?string
+    public function getAttributeLabelOrCode(mixed $mixed, ?TranslationInterface $translation = null): ?string
     {
         if (null === $mixed) {
             return null;
@@ -223,18 +205,14 @@ final class AttributesExtension extends AbstractExtension
             if (null === $translation) {
                 $translation = $mixed->getTranslation();
             }
+
             return $mixed->getAttributeValue()->getAttribute()->getLabelOrCode($translation);
         }
 
         return null;
     }
 
-    /**
-     * @param mixed $mixed
-     * @param TranslationInterface|null $translation
-     * @return string|null
-     */
-    public function getAttributeGroupLabelOrCode(mixed $mixed, TranslationInterface $translation = null): ?string
+    public function getAttributeGroupLabelOrCode(mixed $mixed, ?TranslationInterface $translation = null): ?string
     {
         if (null === $mixed) {
             return null;
@@ -252,6 +230,7 @@ final class AttributesExtension extends AbstractExtension
             if (null === $translation) {
                 $translation = $mixed->getTranslation();
             }
+
             return $mixed->getAttribute()->getGroup()->getTranslatedName($translation);
         }
 

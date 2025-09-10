@@ -5,25 +5,22 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Model;
 
 use Doctrine\ORM\Mapping as ORM;
-use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use Symfony\Component\Serializer\Attribute as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 trait AttributeTranslationTrait
 {
     #[
         ORM\ManyToOne(targetEntity: TranslationInterface::class),
-        ORM\JoinColumn(name: "translation_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE"),
-        Serializer\Groups(["attribute", "node", "nodes_sources"]),
-        Serializer\Type("RZ\Roadiz\Core\AbstractEntities\TranslationInterface"),
-        Serializer\Accessor(getter: "getTranslation", setter: "setTranslation")
+        ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),
+        Serializer\Groups(['attribute', 'attribute:export', 'node', 'nodes_sources']),
     ]
     protected TranslationInterface $translation;
 
     #[
-        ORM\Column(type: "string", length: 250, unique: false, nullable: false),
-        Serializer\Groups(["attribute", "node", "nodes_sources"]),
-        Serializer\Type("string"),
+        ORM\Column(type: 'string', length: 250, unique: false, nullable: false),
+        Serializer\Groups(['attribute', 'attribute:export', 'node', 'nodes_sources']),
         Assert\Length(max: 250)
     ]
     protected string $label = '';
@@ -32,45 +29,40 @@ trait AttributeTranslationTrait
      * @var array<string>|null
      */
     #[
-        ORM\Column(type: "simple_array", unique: false, nullable: true),
-        Serializer\Groups(["attribute"]),
-        Serializer\Type("array")
+        ORM\Column(type: 'simple_array', unique: false, nullable: true),
+        Serializer\Groups(['attribute', 'attribute:export']),
     ]
     protected ?array $options = [];
 
     #[
-        ORM\ManyToOne(targetEntity: AttributeInterface::class, cascade: ["persist"], inversedBy: "attributeTranslations"),
-        ORM\JoinColumn(name: "attribute_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE"),
-        Serializer\Exclude
+        ORM\ManyToOne(targetEntity: AttributeInterface::class, cascade: ['persist'], inversedBy: 'attributeTranslations'),
+        ORM\JoinColumn(name: 'attribute_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),
+        Serializer\Ignore,
     ]
     protected AttributeInterface $attribute;
 
-    /**
-     * @return string|null
-     */
     public function getLabel(): ?string
     {
         return $this->label;
     }
 
     /**
-     * @param string|null $label
-     *
      * @return $this
      */
-    public function setLabel(?string $label)
+    public function setLabel(?string $label): self
     {
         $this->label = null !== $label ? trim($label) : null;
+
         return $this;
     }
 
     /**
-     * @param TranslationInterface $translation
      * @return $this
      */
-    public function setTranslation(TranslationInterface $translation)
+    public function setTranslation(TranslationInterface $translation): self
     {
         $this->translation = $translation;
+
         return $this;
     }
 
@@ -79,24 +71,20 @@ trait AttributeTranslationTrait
         return $this->translation;
     }
 
-    /**
-     * @return AttributeInterface
-     */
     public function getAttribute(): AttributeInterface
     {
         return $this->attribute;
     }
 
     /**
-     * @param AttributeInterface $attribute
      * @return $this
      */
-    public function setAttribute(AttributeInterface $attribute)
+    public function setAttribute(AttributeInterface $attribute): self
     {
         $this->attribute = $attribute;
+
         return $this;
     }
-
 
     /**
      * @return array<string>|null
@@ -111,9 +99,10 @@ trait AttributeTranslationTrait
      *
      * @return $this
      */
-    public function setOptions(?array $options)
+    public function setOptions(?array $options): self
     {
         $this->options = $options;
+
         return $this;
     }
 }
