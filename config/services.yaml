@@ -1,6 +1,6 @@
 ---
 parameters:
-    roadiz_core.cms_version: '2.3.39'
+    roadiz_core.cms_version: '2.4.25'
     roadiz_core.cms_version_prefix: 'main'
     env(APP_NAMESPACE): "roadiz"
     env(APP_VERSION): "0.1.0"
@@ -38,6 +38,7 @@ services:
             $importFilesConfigPath: '%roadiz_core.import_files_config_path%'
             $kernelProjectDir: '%kernel.project_dir%'
             $apiResourcesDir: '%kernel.project_dir%/config/api_resources'
+            $nodeTypesDir: '%kernel.project_dir%/config/node_types'
             $debug: '%kernel.debug%'
             $kernelEnvironment: '%kernel.environment%'
             $defaultControllerClass: '%roadiz_core.default_node_source_controller%'
@@ -52,6 +53,7 @@ services:
             $recaptchaPrivateKey: '%roadiz_core.medias.recaptcha_private_key%'
             $webResponseClass: '%roadiz_core.web_response_class%'
             $useGravatar: '%roadiz_core.use_gravatar%'
+            $useReplyTo: '%roadiz_core.use_email_reply_to%'
 
     RZ\Roadiz\CoreBundle\:
         resource: '../src/'
@@ -61,8 +63,11 @@ services:
             - '../src/Traits/'
             - '../src/Kernel.php'
             - '../src/Tests/'
-            - '../src/DataCollector/'
             - '../src/Event/'
+            - '../src/Model/'
+            - '../src/ListManager/'
+            - '../src/Serializer/Normalizer/'
+            - '../src/Importer/'
 
     RZ\Roadiz\CoreBundle\EntityHandler\:
         resource: '../src/EntityHandler/'
@@ -95,8 +100,6 @@ services:
         tags: [ { name: 'roadiz_core.media_finder', platform: 'ted' } ]
     RZ\Roadiz\CoreBundle\Document\MediaFinder\PodcastFinder:
         tags: [ { name: 'roadiz_core.media_finder', platform: 'podcast' } ]
-    RZ\Roadiz\CoreBundle\Document\MediaFinder\TwitchEmbedFinder:
-        tags: [ { name: 'roadiz_core.media_finder', platform: 'twitch' } ]
 
     # Removed DataTransformers
     RZ\Roadiz\CoreBundle\Api\DataTransformer\:
@@ -178,16 +181,6 @@ services:
         decorates: 'api_platform.serializer.normalizer.item'
         decoration_priority: 21
 
-    RZ\Roadiz\CoreBundle\DataCollector\RequestDataCollector:
-        autoconfigure: false
-        arguments: [ '%roadiz_core.cms_version%', '%roadiz_core.cms_version_prefix%']
-        tags:
-            -   name: data_collector
-                template: '@RoadizCore/DataCollector/request.html.twig'
-                # must match the value returned by the getName() method
-                id: 'roadiz.data_collector.request'
-                priority: 400
-
     # Document
     RZ\Roadiz\CoreBundle\Serializer\Normalizer\DocumentNormalizer:
         # By default, .inner is passed as argument
@@ -250,6 +243,10 @@ services:
         # By default, .inner is passed as argument
         decorates: 'api_platform.jsonld.normalizer.item'
         decoration_priority: 5
+    # NodesTypes
+    RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodeTypeFieldNormalizer:
+        tags:
+              - { name: 'serializer.normalizer', priority: 5 }
     # Need a different name to avoid duplicate YAML key
     roadiz_core.serializer.normalizer.nodes_sources_path.json:
         class: 'RZ\Roadiz\CoreBundle\Serializer\Normalizer\NodesSourcesPathNormalizer'
@@ -412,11 +409,6 @@ services:
     RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry:
         arguments: ['@service_container']
 
-    RZ\Roadiz\CoreBundle\SearchEngine\SolariumLogger:
-        tags:
-            - { name: data_collector, template: '@RoadizCore/DataCollector/solarium.html.twig', id: 'solarium' }
-            - { name: monolog.logger, channel: solr }
-
     RZ\Roadiz\CoreBundle\SearchEngine\Indexer\IndexerFactory:
         arguments: ['@service_container']
 
@@ -455,7 +447,12 @@ services:
         arguments: ['%kernel.project_dir%']
         public: true
 
-    RZ\Roadiz\Random\PasswordGenerator: ~
+    RZ\Roadiz\Random\PasswordGeneratorInterface:
+        class: RZ\Roadiz\Random\PasswordGenerator
+    RZ\Roadiz\Random\SaltGeneratorInterface:
+        class: RZ\Roadiz\Random\SaltGenerator
+    RZ\Roadiz\Random\TokenGeneratorInterface:
+        class: RZ\Roadiz\Random\TokenGenerator
 
     JMS\Serializer\Construction\ObjectConstructorInterface:
         alias: RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\ObjectConstructor
@@ -479,9 +476,6 @@ services:
 
     Solarium\Core\Client\Client:
         factory: ['RZ\Roadiz\CoreBundle\SearchEngine\ClientRegistry', 'getClient']
-
-    RZ\Roadiz\CoreBundle\Security\Authentication\JwtAuthenticationSuccessHandler:
-        decorates: 'lexik_jwt_authentication.handler.authentication_success'
 
     RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\NodeChrootResolver:
         alias: RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\NodeChrootChainResolver
@@ -534,6 +528,7 @@ services:
     #
     RZ\Roadiz\CoreBundle\Document\MediaFinder\UnsplashPictureFinder:
         arguments:
+            - '@http_client'
             - '%roadiz_core.medias.unsplash_client_id%'
     RZ\Roadiz\Documents\MediaFinders\RandomImageFinder:
         alias: RZ\Roadiz\CoreBundle\Document\MediaFinder\UnsplashPictureFinder
@@ -557,6 +552,7 @@ services:
         tags: [ 'roadiz_core.document_renderer' ]
     RZ\Roadiz\Documents\Renderer\RendererInterface:
         alias: RZ\Roadiz\Documents\Renderer\ChainRenderer
+    RZ\Roadiz\Documents\MediaFinders\FacebookPictureFinder:
 
     # Default AbstractDocumentFactory is the public one.
     RZ\Roadiz\Documents\AbstractDocumentFactory:
@@ -655,6 +651,7 @@ services:
 
     RZ\Roadiz\Documents\MediaFinders\EmbedFinderFactory:
         arguments:
+            - '@http_client'
             - '%roadiz_core.medias.supported_platforms%'
 
     RZ\Roadiz\Documents\Renderer\ChainRenderer:
