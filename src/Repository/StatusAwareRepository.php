@@ -15,8 +15,10 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  * @template TEntityClass of object
  *
  * @extends EntityRepository<TEntityClass>
+ *
+ * @deprecated stateful repositories are deprecated and should not be used as services
  */
-abstract class StatusAwareRepository extends EntityRepository
+abstract class StatusAwareRepository extends EntityRepository implements StatusAwareRepositoryInterface
 {
     private bool $displayNotPublishedNodes;
     private bool $displayAllNodesStatuses;
@@ -33,10 +35,23 @@ abstract class StatusAwareRepository extends EntityRepository
     ) {
         parent::__construct($registry, $entityClass, $dispatcher);
 
-        $this->displayNotPublishedNodes = false;
-        $this->displayAllNodesStatuses = false;
+        $this->resetStatuses();
     }
 
+    /**
+     * @deprecated do not use repository stateful methods in services
+     */
+    public function resetStatuses(): self
+    {
+        $this->displayNotPublishedNodes = false;
+        $this->displayAllNodesStatuses = false;
+
+        return $this;
+    }
+
+    /**
+     * @deprecated do not use repository stateful methods in services
+     */
     public function isDisplayingNotPublishedNodes(): bool
     {
         return $this->displayNotPublishedNodes;
@@ -44,6 +59,8 @@ abstract class StatusAwareRepository extends EntityRepository
 
     /**
      * @return $this
+     *
+     * @deprecated do not use repository stateful methods in services
      */
     public function setDisplayingNotPublishedNodes(bool $displayNotPublishedNodes): self
     {
@@ -52,6 +69,9 @@ abstract class StatusAwareRepository extends EntityRepository
         return $this;
     }
 
+    /**
+     * @deprecated do not use repository stateful methods in services
+     */
     public function isDisplayingAllNodesStatuses(): bool
     {
         return $this->displayAllNodesStatuses;
@@ -62,6 +82,8 @@ abstract class StatusAwareRepository extends EntityRepository
      * view deleted and archived nodes.
      *
      * @return $this
+     *
+     * @deprecated do not use repository stateful methods in services
      */
     public function setDisplayingAllNodesStatuses(bool $displayAllNodesStatuses): self
     {

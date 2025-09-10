@@ -15,13 +15,14 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * @see https://github.com/thrace-project/form-bundle/blob/master/Validator/Constraint/RecaptchaValidator.php
+ * @deprecated since v2.5.30
  */
-class RecaptchaValidator extends ConstraintValidator implements RecaptchaServiceInterface
+final class RecaptchaValidator extends ConstraintValidator
 {
     public function __construct(
         protected HttpClientInterface $client,
         protected RequestStack $requestStack,
-        protected ?string $recaptchaPrivateKey,
+        protected ?string $recaptchaPrivateKey = null,
     ) {
     }
 

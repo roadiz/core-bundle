@@ -47,10 +47,6 @@ class NodesSourcesDocuments extends AbstractPositioned
 
     /**
      * Create a new relation between NodeSource, a Document and a NodeTypeFieldInterface.
-     *
-     * @param NodesSources                $nodeSource NodesSources and inherited types
-     * @param Document                    $document   Document to link
-     * @param NodeTypeFieldInterface|null $field      NodeTypeField
      */
     public function __construct(NodesSources $nodeSource, Document $document, ?NodeTypeFieldInterface $field = null)
     {

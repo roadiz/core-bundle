@@ -38,6 +38,10 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('maxVersionsShowed')
                 ->defaultValue(10)
             ->end()
+            ->scalarNode('helpExternalUrl')
+                ->info('URL to display help button in back-office.')
+                ->defaultValue('https://docs.roadiz.io')
+            ->end()
             ->scalarNode('previewRequiredRoleName')
                 ->info('Role name required to access preview mode.')
                 ->defaultValue('ROLE_BACKEND_USER')
@@ -83,6 +87,7 @@ EOT)
             ->append($this->addInheritanceNode())
             ->append($this->addReverseProxyCacheNode())
             ->append($this->addMediasNode())
+            ->append($this->addCaptchaNode())
         ;
 
         return $builder;
@@ -131,9 +136,27 @@ EOD
             ->scalarNode('unsplash_client_id')->defaultNull()->end()
             ->scalarNode('google_server_id')->defaultNull()->end()
             ->scalarNode('soundcloud_client_id')->defaultNull()->end()
-            ->scalarNode('recaptcha_private_key')->defaultNull()->end()
-            ->scalarNode('recaptcha_public_key')->defaultNull()->end()
+            ->scalarNode('recaptcha_private_key')->setDeprecated('roadiz/core-bundle', '2.5.30', 'Use roadiz_core.captcha.private_key')->defaultNull()->end()
+            ->scalarNode('recaptcha_public_key')->setDeprecated('roadiz/core-bundle', '2.5.30', 'Use roadiz_core.captcha.public_key')->defaultNull()->end()
+            ->scalarNode('recaptcha_verify_url')->setDeprecated('roadiz/core-bundle', '2.5.30', 'Use roadiz_core.captcha.verify_url')->defaultValue('https://www.google.com/recaptcha/api/siteverify')->end()
             ->scalarNode('ffmpeg_path')->defaultNull()->end()
+            ->end();
+
+        return $node;
+    }
+
+    /**
+     * @return ArrayNodeDefinition|NodeDefinition
+     */
+    protected function addCaptchaNode()
+    {
+        $builder = new TreeBuilder('captcha');
+        $node = $builder->getRootNode();
+        $node->addDefaultsIfNotSet()
+            ->children()
+            ->scalarNode('private_key')->defaultNull()->end()
+            ->scalarNode('public_key')->defaultNull()->end()
+            ->scalarNode('verify_url')->defaultValue('https://www.google.com/recaptcha/api/siteverify')->end()
             ->end();
 
         return $node;

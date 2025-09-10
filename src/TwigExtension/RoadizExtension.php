@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\TwigExtension;
 
-use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
+use RZ\Roadiz\CoreBundle\Bag\DecoratedNodeTypes;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use RZ\Roadiz\CoreBundle\Security\Authorization\Chroot\NodeChrootResolver;
@@ -15,13 +15,14 @@ final class RoadizExtension extends AbstractExtension implements GlobalsInterfac
 {
     public function __construct(
         private readonly Settings $settingsBag,
-        private readonly NodeTypes $nodeTypesBag,
+        private readonly DecoratedNodeTypes $nodeTypesBag,
         private readonly PreviewResolverInterface $previewResolver,
         private readonly NodeChrootResolver $chrootResolver,
         private readonly string $cmsVersion,
         private readonly string $cmsVersionPrefix,
         private readonly bool $hideRoadizVersion,
         private readonly int $maxVersionsShowed,
+        private readonly ?string $helpExternalUrl,
     ) {
     }
 
@@ -31,7 +32,7 @@ final class RoadizExtension extends AbstractExtension implements GlobalsInterfac
             'cms_version' => !$this->hideRoadizVersion ? $this->cmsVersion : null,
             'cms_prefix' => !$this->hideRoadizVersion ? $this->cmsVersionPrefix : null,
             'max_versions_showed' => $this->maxVersionsShowed,
-            'help_external_url' => 'http://docs.roadiz.io',
+            'help_external_url' => $this->helpExternalUrl,
             'is_preview' => $this->previewResolver->isPreview(),
             'bags' => [
                 'settings' => $this->settingsBag,
