@@ -23,12 +23,12 @@ use RZ\Roadiz\Documents\Events\DocumentUpdatedEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Workflow\Event\Event;
 
-final readonly class AutomaticWebhookSubscriber implements EventSubscriberInterface
+final class AutomaticWebhookSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private WebhookDispatcher $webhookDispatcher,
-        private ManagerRegistry $managerRegistry,
-        private HandlerFactoryInterface $handlerFactory,
+        private readonly WebhookDispatcher $webhookDispatcher,
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly HandlerFactoryInterface $handlerFactory
     ) {
     }
 
@@ -48,15 +48,19 @@ final readonly class AutomaticWebhookSubscriber implements EventSubscriberInterf
         ];
     }
 
+    /**
+     * @param mixed $event
+     * @return bool
+     */
     protected function isEventRelatedToNode(mixed $event): bool
     {
-        return $event instanceof Event
-            || $event instanceof NodeVisibilityChangedEvent
-            || $event instanceof NodesSourcesPreUpdatedEvent
-            || $event instanceof NodesSourcesDeletedEvent
-            || $event instanceof NodeUpdatedEvent
-            || $event instanceof NodeDeletedEvent
-            || $event instanceof NodeTaggedEvent;
+        return $event instanceof Event ||
+            $event instanceof NodeVisibilityChangedEvent ||
+            $event instanceof NodesSourcesPreUpdatedEvent ||
+            $event instanceof NodesSourcesDeletedEvent ||
+            $event instanceof NodeUpdatedEvent ||
+            $event instanceof NodeDeletedEvent ||
+            $event instanceof NodeTaggedEvent;
     }
 
     /**
@@ -66,7 +70,7 @@ final readonly class AutomaticWebhookSubscriber implements EventSubscriberInterf
     {
         /** @var Webhook[] $webhooks */
         $webhooks = $this->managerRegistry->getRepository(Webhook::class)->findBy([
-            'automatic' => true,
+            'automatic' => true
         ]);
         foreach ($webhooks as $webhook) {
             if (!$this->isEventRelatedToNode($event) || $this->isEventSubjectInRootNode($event, $webhook->getRootNode())) {

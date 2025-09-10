@@ -4,79 +4,63 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
 
-use RZ\Roadiz\CoreBundle\Bag\DecoratedNodeTypes;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class NodeTypesType extends AbstractType
+/**
+ * Node types selector form field type.
+ */
+class NodeTypesType extends AbstractType
 {
-    public function __construct(private readonly DecoratedNodeTypes $nodeTypesBag)
+    protected ManagerRegistry $managerRegistry;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     */
+    public function __construct(ManagerRegistry $managerRegistry)
     {
+        $this->managerRegistry = $managerRegistry;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'showInvisible' => false,
-            'currentType' => null,
-            // Hard-code the most used node-type here
-            'preferred_choices' => ['Page'],
         ]);
         $resolver->setAllowedTypes('showInvisible', ['boolean']);
-        $resolver->setAllowedTypes('currentType', ['null', NodeType::class]);
         $resolver->setNormalizer('choices', function (Options $options, $choices) {
-            $nodeTypes = $this->getNodeTypes($options);
+            $criteria = [];
+            if ($options['showInvisible'] === false) {
+                $criteria['visible'] = true;
+            }
+            $nodeTypes = $this->managerRegistry->getRepository(NodeType::class)->findBy($criteria);
 
+            /** @var NodeType $nodeType */
             foreach ($nodeTypes as $nodeType) {
-                if (null !== $options['currentType'] && $options['currentType']->getName() === $nodeType->getName()) {
-                    continue;
-                }
-                $choices[$nodeType->getDisplayName()] = $nodeType->getName();
+                $choices[$nodeType->getDisplayName()] = $nodeType->getId();
             }
             ksort($choices);
 
             return $choices;
         });
-        $resolver->setNormalizer('group_by', function (Options $options) {
-            return function ($choice, $key, $value) use ($options) {
-                $nodeTypes = $this->getNodeTypes($options);
-
-                foreach ($nodeTypes as $nodeType) {
-                    if ($value !== $nodeType->getName()) {
-                        continue;
-                    }
-                    if ($nodeType->isReachable()) {
-                        return 'reachable';
-                    } else {
-                        return 'not_reachable';
-                    }
-                }
-
-                return null;
-            };
-        });
     }
-
     /**
-     * @return array<NodeType>
+     * {@inheritdoc}
      */
-    private function getNodeTypes(Options $options): array
-    {
-        if (true === $options['showInvisible']) {
-            return $this->nodeTypesBag->all();
-        }
-
-        return $this->nodeTypesBag->allVisible();
-    }
-
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
-
+    /**
+     * {@inheritdoc}
+     */
     public function getBlockPrefix(): string
     {
         return 'node_types';

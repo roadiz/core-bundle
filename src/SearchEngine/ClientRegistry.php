@@ -7,9 +7,9 @@ namespace RZ\Roadiz\CoreBundle\SearchEngine;
 use Solarium\Core\Client\Client;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-final readonly class ClientRegistry
+final class ClientRegistry
 {
-    public function __construct(private ContainerInterface $container)
+    public function __construct(private readonly ContainerInterface $container)
     {
     }
 
@@ -23,9 +23,8 @@ final readonly class ClientRegistry
             return null;
         }
         if (!($client instanceof Client)) {
-            throw new \RuntimeException('Solr client must be an instance of '.Client::class);
+            throw new \RuntimeException('Solr client must be an instance of ' . Client::class);
         }
-
         return $client;
     }
 
@@ -37,7 +36,6 @@ final readonly class ClientRegistry
         $ping = $client->createPing();
         try {
             $client->ping($ping);
-
             return true;
         } catch (\Exception $e) {
             return false;

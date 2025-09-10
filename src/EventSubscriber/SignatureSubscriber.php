@@ -8,15 +8,14 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
-final readonly class SignatureSubscriber implements EventSubscriberInterface
+final class SignatureSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private string $cmsVersion,
-        private bool $hideRoadizVersion,
-        private bool $debug = false,
+        private readonly string $cmsVersion,
+        private readonly bool $hideRoadizVersion,
+        private readonly bool $debug = false
     ) {
     }
-
     /**
      * Filters the Response.
      *

@@ -30,7 +30,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
         private readonly RequestStack $requestStack,
         private readonly DocumentUrlGeneratorInterface $documentUrlGenerator,
         $level = Logger::INFO,
-        $bubble = true,
+        $bubble = true
     ) {
         parent::__construct($level, $bubble);
     }
@@ -40,12 +40,11 @@ final class DoctrineHandler extends AbstractProcessingHandler
         if (null === $thumbnail || $thumbnail->isPrivate()) {
             return null;
         }
-
         return $this->documentUrlGenerator
             ->setDocument($thumbnail)
             ->setOptions([
-                'fit' => '150x150',
-                'quality' => 70,
+                "fit" => "150x150",
+                "quality" => 70,
             ])
             ->getUrl();
     }
@@ -110,6 +109,9 @@ final class DoctrineHandler extends AbstractProcessingHandler
         }
     }
 
+    /**
+     * @param array  $record
+     */
     public function write(array $record): void
     {
         try {
@@ -133,7 +135,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
                         $this->populateForNode($value, $log, $data);
                     } elseif ($value instanceof NodesSources) {
                         $this->populateForNodesSources($value, $log, $data);
-                    } elseif ('entity' === $key && $value instanceof PersistableInterface) {
+                    } elseif ($key === 'entity' && $value instanceof PersistableInterface) {
                         $log->setEntityClass(get_class($value));
                         $log->setEntityId($value->getId());
 
@@ -143,7 +145,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
                                 $data = array_merge(
                                     $data,
                                     [
-                                        'entity_title' => $value->{$method}(),
+                                        'entity_title' => $value->{$method}()
                                     ]
                                 );
                                 break;
@@ -155,7 +157,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
                             $data,
                             [
                                 'exception_class' => get_class($value),
-                                'message' => $value->getMessage(),
+                                'message' => $value->getMessage()
                             ]
                         );
                     }
@@ -168,7 +170,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
                             ]
                         );
                     }
-                    if ('request' === $key && \is_array($value)) {
+                    if ($key === 'request' && \is_array($value)) {
                         $data = array_merge(
                             $data,
                             $value
@@ -200,7 +202,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
                                 'user_email' => $user->getEmail(),
                                 'user_public_name' => $user->getPublicName(),
                                 'user_picture_url' => $user->getPictureUrl(),
-                                'user_id' => $user->getId(),
+                                'user_id' => $user->getId()
                             ]
                         );
                     } else {
