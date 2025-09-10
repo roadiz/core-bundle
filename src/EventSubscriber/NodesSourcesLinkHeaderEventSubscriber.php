@@ -8,7 +8,6 @@ use Doctrine\Persistence\ManagerRegistry;
 use Psr\Link\EvolvableLinkProviderInterface;
 use RZ\Roadiz\CoreBundle\Api\Model\WebResponseInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ViewEvent;
@@ -24,7 +23,6 @@ final readonly class NodesSourcesLinkHeaderEventSubscriber implements EventSubsc
     ) {
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [
@@ -50,13 +48,10 @@ final readonly class NodesSourcesLinkHeaderEventSubscriber implements EventSubsc
         /*
          * Preview and authentication is handled at repository level.
          */
-        $repository = $this->managerRegistry->getRepository($resources::class);
-        if (!$repository instanceof NodesSourcesRepository) {
-            return;
-        }
-        $repository->resetStatuses();
         /** @var NodesSources[] $allSources */
-        $allSources = $repository->findByNode($resources->getNode());
+        $allSources = $this->managerRegistry
+            ->getRepository(get_class($resources))
+            ->findByNode($resources->getNode());
 
         foreach ($allSources as $singleSource) {
             $linkProvider = $linkProvider->withLink(

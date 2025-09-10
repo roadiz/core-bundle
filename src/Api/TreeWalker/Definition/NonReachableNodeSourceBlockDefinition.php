@@ -11,24 +11,25 @@ use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\TreeWalker\Definition\ContextualDefinitionTrait;
 use RZ\TreeWalker\WalkerContextInterface;
 
-final readonly class NonReachableNodeSourceBlockDefinition
+final class NonReachableNodeSourceBlockDefinition
 {
     use ContextualDefinitionTrait;
     use NodeSourceDefinitionTrait;
 
     public function __construct(
-        private WalkerContextInterface $context,
-        private bool $onlyVisible = true,
+        private readonly WalkerContextInterface $context,
+        private readonly bool $onlyVisible = true,
     ) {
     }
 
     /**
      * @return array<NodeType> $nodeTypes
      */
-    #[\Override]
     protected function getNodeTypes(NodeTypes $nodeTypesBag): array
     {
-        return $nodeTypesBag->allReachable(false);
+        return array_values(array_unique(array_filter($nodeTypesBag->all(), function (NodeType $nodeType) {
+            return !$nodeType->isReachable();
+        })));
     }
 
     /**
@@ -41,7 +42,7 @@ final readonly class NonReachableNodeSourceBlockDefinition
         }
 
         $this->context->getStopwatch()->start(self::class);
-        $queryBuilder = $this->getQueryBuilder($source, $this->onlyVisible);
+        $queryBuilder = $this->getQueryBuilder($source);
         $this->context->getStopwatch()->stop(self::class);
 
         return $queryBuilder->getQuery()->getResult();

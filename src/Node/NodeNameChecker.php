@@ -5,24 +5,23 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Node;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
-use RZ\Roadiz\CoreBundle\Repository\NotPublishedNodeRepository;
+use RZ\Roadiz\CoreBundle\Repository\NodeRepository;
 use RZ\Roadiz\CoreBundle\Repository\UrlAliasRepository;
 use RZ\Roadiz\Utils\StringHandler;
 
 final readonly class NodeNameChecker implements NodeNamePolicyInterface
 {
-    public const int MAX_LENGTH = 250;
+    public const MAX_LENGTH = 250;
 
     public function __construct(
         private ManagerRegistry $managerRegistry,
-        private readonly NotPublishedNodeRepository $notPublishedNodeRepository,
         private bool $useTypedSuffix = false,
     ) {
     }
 
-    #[\Override]
     public function getCanonicalNodeName(NodesSources $nodeSource): string
     {
         $nodeTypeSuffix = StringHandler::slugify($nodeSource->getNodeTypeName());
@@ -55,7 +54,6 @@ final readonly class NodeNameChecker implements NodeNamePolicyInterface
         );
     }
 
-    #[\Override]
     public function getSafeNodeName(NodesSources $nodeSource): string
     {
         $canonicalNodeName = $this->getCanonicalNodeName($nodeSource);
@@ -77,7 +75,6 @@ final readonly class NodeNameChecker implements NodeNamePolicyInterface
         );
     }
 
-    #[\Override]
     public function getDatestampedNodeName(NodesSources $nodeSource): string
     {
         $canonicalNodeName = $this->getCanonicalNodeName($nodeSource);
@@ -105,7 +102,6 @@ final readonly class NodeNameChecker implements NodeNamePolicyInterface
      * @param string $canonicalNodeName node name without uniqid after
      * @param string $nodeName          Node name to test
      */
-    #[\Override]
     public function isNodeNameWithUniqId(string $canonicalNodeName, string $nodeName): bool
     {
         $pattern = '#^'.preg_quote($canonicalNodeName).'\-[0-9a-z]{13}$#';
@@ -118,7 +114,6 @@ final readonly class NodeNameChecker implements NodeNamePolicyInterface
         return false;
     }
 
-    #[\Override]
     public function isNodeNameValid(string $nodeName): bool
     {
         if (1 === preg_match('#^[a-zA-Z0-9\-]+$#', $nodeName)) {
@@ -134,16 +129,19 @@ final readonly class NodeNameChecker implements NodeNamePolicyInterface
      * @throws \Doctrine\ORM\NoResultException
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    #[\Override]
     public function isNodeNameAlreadyUsed(string $nodeName): bool
     {
         $nodeName = StringHandler::slugify($nodeName);
         /** @var UrlAliasRepository $urlAliasRepo */
         $urlAliasRepo = $this->managerRegistry->getRepository(UrlAlias::class);
+        /** @var NodeRepository $nodeRepo */
+        $nodeRepo = $this->managerRegistry
+            ->getRepository(Node::class)
+            ->setDisplayingNotPublishedNodes(true);
 
         if (
             false === $urlAliasRepo->exists($nodeName)
-            && false === $this->notPublishedNodeRepository->exists($nodeName)
+            && false === $nodeRepo->exists($nodeName)
         ) {
             return false;
         }

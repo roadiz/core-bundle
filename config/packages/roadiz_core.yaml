@@ -3,11 +3,10 @@ roadiz_core:
     appVersion: '%env(string:APP_VERSION)%'
     healthCheckToken: '%env(string:APP_HEALTH_CHECK_TOKEN)%'
     staticDomainName: ~
+    defaultNodeSourceController: App\Controller\NullController
     useNativeJsonColumnType: true
     hideRoadizVersion: false
-    forceLocale: false
-    forceLocaleWithUrlAliases: false
-    # When no information to find locale is found and "forceLocale" parameter is enabled,
+    # When no information to find locale is found and "force_locale" setting is ON,
     # Roadiz can find root path translation based on Accept-Language header.
     # Be careful if you are using a reverse-proxy cache, YOU MUST vary on Accept-Language header and normalize it.
     # @see https://varnish-cache.org/docs/6.3/users-guide/increasing-your-hitrate.html#http-vary
@@ -16,11 +15,9 @@ roadiz_core:
         unsplash_client_id: '%env(string:APP_UNSPLASH_CLIENT_ID)%'
         soundcloud_client_id: '%env(string:APP_SOUNDCLOUD_CLIENT_ID)%'
         google_server_id: '%env(string:APP_GOOGLE_SERVER_ID)%'
+        recaptcha_private_key: '%env(string:APP_RECAPTCHA_PRIVATE_KEY)%'
+        recaptcha_public_key: '%env(string:APP_RECAPTCHA_PUBLIC_KEY)%'
         ffmpeg_path: '%env(string:APP_FFMPEG_PATH)%'
-    captcha:
-        private_key: '%env(string:APP_CAPTCHA_PRIVATE_KEY)%'
-        public_key: '%env(string:APP_CAPTCHA_PUBLIC_KEY)%'
-        verify_url: '%env(string:APP_CAPTCHA_VERIFY_URL)%'
     inheritance:
         type: single_table
     reverseProxyCache:
@@ -28,6 +25,14 @@ roadiz_core:
             default:
                 host: '%env(string:VARNISH_HOST)%'
                 domainName: '%env(string:VARNISH_DOMAIN)%'
+    solr:
+        timeout: 3
+        endpoints:
+            docker:
+                host: '%env(string:SOLR_HOST)%'
+                core: '%env(string:SOLR_CORE_NAME)%'
+                port: '%env(string:SOLR_PORT)%'
+                path: /
 
 
 

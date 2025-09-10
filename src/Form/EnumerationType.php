@@ -13,9 +13,8 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 /**
  * Group selector form field type.
  */
-final class EnumerationType extends AbstractType
+class EnumerationType extends AbstractType
 {
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -28,7 +27,7 @@ final class EnumerationType extends AbstractType
         $resolver->setAllowedTypes('nodeTypeField', [NodeTypeField::class]);
 
         $resolver->setNormalizer('choices', function (Options $options, $choices) {
-            $values = $options['nodeTypeField']->getDefaultValuesAsArray();
+            $values = explode(',', $options['nodeTypeField']->getDefaultValues() ?? '');
 
             foreach ($values as $value) {
                 $value = trim($value);
@@ -46,16 +45,16 @@ final class EnumerationType extends AbstractType
             return $placeholder;
         });
 
-        $resolver->setNormalizer('expanded', fn (Options $options, $expanded) => $options['nodeTypeField']->isExpanded());
+        $resolver->setNormalizer('expanded', function (Options $options, $expanded) {
+            return $options['nodeTypeField']->isExpanded();
+        });
     }
 
-    #[\Override]
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'enumeration';

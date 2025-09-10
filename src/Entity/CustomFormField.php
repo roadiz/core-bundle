@@ -7,10 +7,11 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use RZ\Roadiz\CoreBundle\Enum\FieldType;
+use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\CoreBundle\Repository\CustomFormFieldRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Serializer\Attribute as SymfonySerializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\Validator\Constraints\Choice;
 
 /**
@@ -28,30 +29,28 @@ use Symfony\Component\Validator\Constraints\Choice;
     ORM\HasLifecycleCallbacks,
     UniqueEntity(fields: ['label', 'customForm'])
 ]
-class CustomFormField extends AbstractField implements \Stringable
+class CustomFormField extends AbstractField
 {
-    /**
-     * @var array<int, FieldType>
-     */
-    public static array $availableTypes = [
-        FieldType::BOOLEAN_T,
-        FieldType::COUNTRY_T,
-        FieldType::DATETIME_T,
-        FieldType::DATE_T,
-        FieldType::DECIMAL_T,
-        FieldType::DOCUMENTS_T,
-        FieldType::EMAIL_T,
-        FieldType::ENUM_T,
-        FieldType::INTEGER_T,
-        FieldType::MARKDOWN_T,
-        FieldType::MULTIPLE_T,
-        FieldType::STRING_T,
-        FieldType::TEXT_T,
+    public static array $typeToHuman = [
+        AbstractField::STRING_T => 'string.type',
+        AbstractField::DATETIME_T => 'date-time.type',
+        AbstractField::DATE_T => 'date.type',
+        AbstractField::TEXT_T => 'text.type',
+        AbstractField::MARKDOWN_T => 'markdown.type',
+        AbstractField::BOOLEAN_T => 'boolean.type',
+        AbstractField::INTEGER_T => 'integer.type',
+        AbstractField::DECIMAL_T => 'decimal.type',
+        AbstractField::EMAIL_T => 'email.type',
+        AbstractField::ENUM_T => 'single-choice.type',
+        AbstractField::MULTIPLE_T => 'multiple-choice.type',
+        AbstractField::COUNTRY_T => 'country.type',
+        AbstractField::DOCUMENTS_T => 'documents.type',
     ];
 
     #[
         ORM\ManyToOne(targetEntity: CustomForm::class, inversedBy: 'fields'),
         ORM\JoinColumn(name: 'custom_form_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),
+        Serializer\Exclude,
         SymfonySerializer\Ignore
     ]
     private CustomForm $customForm;
@@ -61,12 +60,14 @@ class CustomFormField extends AbstractField implements \Stringable
      */
     #[
         ORM\OneToMany(mappedBy: 'customFormField', targetEntity: CustomFormFieldAttribute::class),
+        Serializer\Exclude,
         SymfonySerializer\Ignore
     ]
     private Collection $customFormFieldAttributes;
 
     #[
         ORM\Column(name: 'field_required', type: 'boolean', nullable: false, options: ['default' => false]),
+        Serializer\Groups(['custom_form']),
         SymfonySerializer\Groups(['custom_form'])
     ]
     private bool $required = false;
@@ -76,6 +77,7 @@ class CustomFormField extends AbstractField implements \Stringable
      */
     #[
         ORM\Column(name: 'autocomplete', type: 'string', length: 18, nullable: true),
+        Serializer\Groups(['custom_form']),
         SymfonySerializer\Groups(['custom_form']),
         Choice([
             'off',
@@ -118,7 +120,6 @@ class CustomFormField extends AbstractField implements \Stringable
      *
      * @return $this
      */
-    #[\Override]
     public function setLabel($label): CustomFormField
     {
         parent::setLabel($label);
@@ -180,19 +181,9 @@ class CustomFormField extends AbstractField implements \Stringable
         return $this->getId().' — '.$this->getName().' — '.$this->getLabel().PHP_EOL;
     }
 
-    #[\Override]
     public function __toString(): string
     {
         return (string) $this->getId();
-    }
-
-    /**
-     * CustomFormField should use a comma separated string to store default values. For simplicity.
-     */
-    #[\Override]
-    public function getDefaultValuesAsArray(): array
-    {
-        return array_values(array_filter(array_map('trim', explode(',', $this->defaultValues ?? ''))));
     }
 
     public function __clone()

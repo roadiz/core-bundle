@@ -20,7 +20,9 @@ final readonly class NodeTypeResolver
      */
     protected function getNodeTypeList(NodeTypeFieldInterface $field): array
     {
-        return array_filter($field->getDefaultValuesAsArray());
+        $nodeTypesNames = array_map('trim', explode(',', $field->getDefaultValues() ?? ''));
+
+        return array_filter($nodeTypesNames);
     }
 
     /**
@@ -38,7 +40,9 @@ final readonly class NodeTypeResolver
         }
 
         $childrenTypes = [];
-        $childrenFields = $nodeType->getFields()->filter(fn (NodeTypeFieldInterface $field) => $field->isChildrenNodes() && null !== $field->getDefaultValues());
+        $childrenFields = $nodeType->getFields()->filter(function (NodeTypeFieldInterface $field) {
+            return $field->isChildrenNodes() && null !== $field->getDefaultValues();
+        });
         if ($childrenFields->count() > 0) {
             /** @var NodeTypeFieldInterface $field */
             foreach ($childrenFields as $field) {

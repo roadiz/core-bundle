@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Node;
-use RZ\Roadiz\CoreBundle\Repository\NotPublishedNodeRepository;
+use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -16,14 +16,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class NodesCommand extends Command
 {
     public function __construct(
-        private readonly NodeTypes $nodeTypesBag,
-        private readonly NotPublishedNodeRepository $notPublishedNodeRepository,
+        private readonly ManagerRegistry $managerRegistry,
         ?string $name = null,
     ) {
         parent::__construct($name);
     }
 
-    #[\Override]
     protected function configure(): void
     {
         $this->setName('nodes:list')
@@ -36,7 +34,6 @@ final class NodesCommand extends Command
             );
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -44,13 +41,19 @@ final class NodesCommand extends Command
         $tableContent = [];
 
         if ($input->getOption('type')) {
-            $nodeType = $this->nodeTypesBag->get($input->getOption('type'));
+            $nodeType = $this->managerRegistry
+                ->getRepository(NodeType::class)
+                ->findByName($input->getOption('type'));
             if (null !== $nodeType) {
-                $nodes = $this->notPublishedNodeRepository
-                    ->findBy(['nodeTypeName' => $nodeType->getName()], ['nodeName' => 'ASC']);
+                $nodes = $this->managerRegistry
+                    ->getRepository(Node::class)
+                    ->setDisplayingNotPublishedNodes(true)
+                    ->findBy(['nodeType' => $nodeType], ['nodeName' => 'ASC']);
             }
         } else {
-            $nodes = $this->notPublishedNodeRepository
+            $nodes = $this->managerRegistry
+                ->getRepository(Node::class)
+                ->setDisplayingNotPublishedNodes(true)
                 ->findBy([], ['nodeName' => 'ASC']);
         }
 
@@ -59,7 +62,7 @@ final class NodesCommand extends Command
             $tableContent[] = [
                 $node->getId(),
                 $node->getNodeName(),
-                $node->getNodeTypeName(),
+                $node->getNodeType()->getName(),
                 !$node->isVisible() ? 'X' : '',
                 $node->isPublished() ? 'X' : '',
             ];

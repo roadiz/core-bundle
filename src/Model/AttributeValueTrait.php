@@ -8,8 +8,8 @@ use ApiPlatform\Doctrine\Orm\Filter as BaseFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use Symfony\Component\Serializer\Attribute as Serializer;
 
 trait AttributeValueTrait
 {
@@ -17,6 +17,7 @@ trait AttributeValueTrait
         ORM\ManyToOne(targetEntity: AttributeInterface::class, fetch: 'EAGER', inversedBy: 'attributeValues'),
         ORM\JoinColumn(name: 'attribute_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),
         Serializer\Groups(['attribute', 'node', 'nodes_sources']),
+        Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Attribute"),
         ApiFilter(BaseFilter\SearchFilter::class, properties: [
             'attribute.id' => 'exact',
             'attribute.code' => 'exact',
@@ -51,6 +52,8 @@ trait AttributeValueTrait
             orphanRemoval: true
         ),
         Serializer\Groups(['attribute', 'node', 'nodes_sources']),
+        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Model\AttributeValueTranslationInterface>"),
+        Serializer\Accessor(getter: 'getAttributeValueTranslations', setter: 'setAttributeValueTranslations'),
         ApiFilter(BaseFilter\SearchFilter::class, properties: [
             'attributeValueTranslations.value' => 'partial',
         ]),
@@ -89,7 +92,7 @@ trait AttributeValueTrait
     }
 
     /**
-     * @return $this
+     * @return static
      */
     public function setAttributeValueTranslations(Collection $attributeValueTranslations): self
     {
@@ -118,7 +121,9 @@ trait AttributeValueTrait
     public function getAttributeValueDefaultTranslation(): ?AttributeValueTranslationInterface
     {
         return $this->getAttributeValueTranslations()
-            ->filter(fn (AttributeValueTranslationInterface $attributeValueTranslation) => $attributeValueTranslation->getTranslation()?->isDefaultTranslation() ?? false)
+            ->filter(function (AttributeValueTranslationInterface $attributeValueTranslation) {
+                return $attributeValueTranslation->getTranslation()?->isDefaultTranslation() ?? false;
+            })
             ->first() ?: null;
     }
 }

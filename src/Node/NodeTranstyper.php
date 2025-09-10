@@ -11,8 +11,8 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
+use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments;
@@ -21,10 +21,17 @@ use RZ\Roadiz\CoreBundle\Entity\Redirection;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
 
-final readonly class NodeTranstyper
+final class NodeTranstyper
 {
-    public function __construct(private ManagerRegistry $managerRegistry, private NodeTypes $nodeTypesBag, private LoggerInterface $logger = new NullLogger())
-    {
+    private ManagerRegistry $managerRegistry;
+    private LoggerInterface $logger;
+
+    public function __construct(
+        ManagerRegistry $managerRegistry,
+        ?LoggerInterface $logger = null,
+    ) {
+        $this->logger = $logger ?? new NullLogger();
+        $this->managerRegistry = $managerRegistry;
     }
 
     private function getManager(): ObjectManager
@@ -50,7 +57,7 @@ final readonly class NodeTranstyper
             ->setMaxResults(1);
         $field = $destinationNodeType->getFields()->matching($criteria)->first();
 
-        return $field ?: null;
+        return $field ? $field : null;
     }
 
     /**
@@ -67,7 +74,7 @@ final readonly class NodeTranstyper
          * to find data that can be transferred during trans-typing.
          */
         $fieldAssociations = [];
-        $oldFields = $this->nodeTypesBag->get($node->getNodeTypeName())?->getFields() ?? [];
+        $oldFields = $node->getNodeType()->getFields();
 
         foreach ($oldFields as $oldField) {
             $matchingField = $this->getMatchingNodeTypeField($oldField, $destinationNodeType);
@@ -122,7 +129,7 @@ final readonly class NodeTranstyper
             $this->logger->debug('Transtyped: '.$existingSource->getTranslation()->getLocale());
         }
 
-        $node->setNodeTypeName($destinationNodeType->getName());
+        $node->setNodeType($destinationNodeType);
 
         return $node;
     }
@@ -171,14 +178,13 @@ final readonly class NodeTranstyper
                 $setter = $oldField->getSetterName();
                 $getter = $oldField->getGetterName();
                 $source->$setter($existingSource->$getter());
-            } elseif ($oldField->isDocuments()) {
+            } elseif (AbstractField::DOCUMENTS_T === $oldField->getType()) {
                 /*
                  * Copy documents.
                  */
                 $documents = $existingSource->getDocumentsByFieldsWithName($oldField->getName());
                 foreach ($documents as $document) {
                     $nsDoc = new NodesSourcesDocuments($source, $document);
-                    // TODO: We are losing all contextual data here (hotspot, alignment, etc.)
                     $nsDoc->setFieldName($matchingField->getName());
                     $this->getManager()->persist($nsDoc);
                     $source->getDocumentsByFields()->add($nsDoc);
@@ -234,7 +240,7 @@ final readonly class NodeTranstyper
          * transtype, not to get an orphan node.
          */
         $node = new Node();
-        $node->setNodeTypeName($nodeType->getName());
+        $node->setNodeType($nodeType);
         $node->setNodeName('testing_before_transtype'.$uniqueId);
         $this->getManager()->persist($node);
 

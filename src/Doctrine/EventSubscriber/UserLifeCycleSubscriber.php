@@ -17,6 +17,7 @@ use RZ\Roadiz\CoreBundle\Event\User\UserEnabledEvent;
 use RZ\Roadiz\CoreBundle\Event\User\UserPasswordChangedEvent;
 use RZ\Roadiz\CoreBundle\Event\User\UserUpdatedEvent;
 use RZ\Roadiz\CoreBundle\Security\User\UserViewer;
+use RZ\Roadiz\Documents\MediaFinders\FacebookPictureFinder;
 use RZ\Roadiz\Random\TokenGenerator;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -32,6 +33,7 @@ final readonly class UserLifeCycleSubscriber
         private UserViewer $userViewer,
         private EventDispatcherInterface $dispatcher,
         private PasswordHasherFactoryInterface $passwordHasherFactory,
+        private FacebookPictureFinder $facebookPictureFinder,
         private LoggerInterface $logger,
         private bool $useGravatar,
     ) {
@@ -57,6 +59,21 @@ final readonly class UserLifeCycleSubscriber
                 $this->dispatcher->dispatch($userEvent);
             }
 
+            if ($event->hasChangedField('facebookName')) {
+                if ('' != $event->getNewValue('facebookName')) {
+                    try {
+                        $url = $this->facebookPictureFinder->getPictureUrl($user->getFacebookName());
+                        $user->setPictureUrl($url);
+                    } catch (\Exception $e) {
+                        $user->setFacebookName('');
+                        if ($this->useGravatar) {
+                            $user->setPictureUrl($user->getGravatarUrl());
+                        }
+                    }
+                } elseif ($this->useGravatar) {
+                    $user->setPictureUrl($user->getGravatarUrl());
+                }
+            }
             /*
              * Encode user password
              */
@@ -65,31 +82,20 @@ final readonly class UserLifeCycleSubscriber
                 && null !== $user->getPlainPassword()
                 && '' !== $user->getPlainPassword()
             ) {
-                if ($this->setPassword($user, $user->getPlainPassword())) {
-                    $userEvent = new UserPasswordChangedEvent($user);
-                    $this->dispatcher->dispatch($userEvent);
-                }
+                $this->setPassword($user, $user->getPlainPassword());
+                $userEvent = new UserPasswordChangedEvent($user);
+                $this->dispatcher->dispatch($userEvent);
             }
         }
     }
 
-    /**
-     * @return bool returns true if password has been updated, false otherwise
-     */
-    protected function setPassword(User $user, ?string $plainPassword): bool
+    protected function setPassword(User $user, ?string $plainPassword): void
     {
-        if (null === $plainPassword) {
-            return false;
+        if (null !== $plainPassword) {
+            $hasher = $this->passwordHasherFactory->getPasswordHasher($user);
+            $encodedPassword = $hasher->hash($plainPassword);
+            $user->setPassword($encodedPassword);
         }
-        $hasher = $this->passwordHasherFactory->getPasswordHasher($user);
-        if ($hasher->verify($user->getPassword(), $plainPassword)) {
-            // Password is the same, no need to update
-            return false;
-        }
-
-        $user->setPassword($hasher->hash($plainPassword));
-
-        return true;
     }
 
     public function postUpdate(LifecycleEventArgs $event): void

@@ -10,22 +10,28 @@ use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
 
-readonly class EntityCollectionTransformer implements DataTransformerInterface
+class EntityCollectionTransformer implements DataTransformerInterface
 {
+    protected bool $asCollection;
+    private ObjectManager $manager;
+    /**
+     * @var class-string<PersistableInterface>
+     */
+    private string $classname;
+
     /**
      * @param class-string<PersistableInterface> $classname
      */
-    public function __construct(
-        protected ObjectManager $manager,
-        protected string $classname,
-        protected bool $asCollection = false,
-    ) {
+    public function __construct(ObjectManager $manager, string $classname, bool $asCollection = false)
+    {
+        $this->manager = $manager;
+        $this->asCollection = $asCollection;
+        $this->classname = $classname;
     }
 
     /**
      * @param iterable<PersistableInterface>|mixed|null $value
      */
-    #[\Override]
     public function transform(mixed $value): string|array
     {
         if (empty($value)) {
@@ -48,7 +54,6 @@ readonly class EntityCollectionTransformer implements DataTransformerInterface
      *
      * @return array<PersistableInterface>|ArrayCollection<int, PersistableInterface>
      */
-    #[\Override]
     public function reverseTransform(mixed $value): array|ArrayCollection
     {
         if (!$value) {

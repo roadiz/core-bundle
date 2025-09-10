@@ -9,16 +9,18 @@ use League\Flysystem\FilesystemOperator;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
-final class UniqueFilenameValidator extends ConstraintValidator
+class UniqueFilenameValidator extends ConstraintValidator
 {
-    public function __construct(private readonly FilesystemOperator $documentsStorage)
+    protected FilesystemOperator $documentsStorage;
+
+    public function __construct(FilesystemOperator $documentsStorage)
     {
+        $this->documentsStorage = $documentsStorage;
     }
 
     /**
      * @throws FilesystemException
      */
-    #[\Override]
     public function validate(mixed $value, Constraint $constraint): void
     {
         if ($constraint instanceof UniqueFilename) {

@@ -5,99 +5,97 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Routing;
 
 use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Bag\Settings;
+use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
+use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
-use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
 use RZ\Roadiz\CoreBundle\Repository\TranslationRepository;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-final readonly class NodesSourcesPathResolver implements PathResolverInterface
+final class NodesSourcesPathResolver implements PathResolverInterface
 {
+    private static string $nodeNamePattern = '[a-zA-Z0-9\-\_\.]+';
+
     public function __construct(
-        private PreviewResolverInterface $previewResolver,
-        private Stopwatch $stopwatch,
-        private RequestStack $requestStack,
-        private TranslationRepository $translationRepository,
-        private NodesSourcesRepository $nodesSourcesRepository,
-        private bool $useAcceptLanguageHeader,
-        private bool $forceLocale,
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly PreviewResolverInterface $previewResolver,
+        private readonly Stopwatch $stopwatch,
+        private readonly Settings $settingsBag,
+        private readonly RequestStack $requestStack,
+        private readonly bool $useAcceptLanguageHeader,
     ) {
     }
 
-    private function resolveHome(): ResourceInfo
-    {
-        $this->stopwatch->start('parseRootPath', 'routing');
-        $translation = $this->parseTranslation();
-        $nodeSource = $this->getHome($translation);
-        $this->stopwatch->stop('parseRootPath');
-
-        $resourceInfo = new ResourceInfo();
-        $resourceInfo->setResource($nodeSource);
-        $resourceInfo->setTranslation($nodeSource->getTranslation());
-        $resourceInfo->setFormat('html');
-        $resourceInfo->setLocale($nodeSource->getTranslation()->getPreferredLocale());
-
-        return $resourceInfo;
-    }
-
-    #[\Override]
     public function resolvePath(
         string $path,
         array $supportedFormatExtensions = ['html'],
         bool $allowRootPaths = false,
         bool $allowNonReachableNodes = true,
     ): ResourceInfo {
-        if (0 === count($supportedFormatExtensions)) {
-            throw new \InvalidArgumentException('You must provide at least one supported format extension.');
-        }
         $resourceInfo = new ResourceInfo();
         $tokens = $this->tokenizePath($path);
+        $_format = 'html';
 
         if (0 === count($tokens) && !$allowRootPaths) {
             throw new ResourceNotFoundException();
         }
 
         if ('/' === $path) {
-            return $this->resolveHome();
-        }
-
-        $identifier = '';
-        if (count($tokens) > 0) {
-            $identifier = strip_tags((string) $tokens[(int) (count($tokens) - 1)]);
-        }
-
-        if ('' === $identifier) {
-            throw new ResourceNotFoundException();
-        }
-        /*
-         * Look for any supported format extension after last token.
-         */
-        if (0 !== preg_match(
-            '#^(?<slug>[a-zA-Z0-9\-\_\.]+)(?:\.(?<ext>'.implode('|', $supportedFormatExtensions).'))?$#',
-            $identifier,
-            $matches
-        )) {
-            $realIdentifier = $matches['slug'];
-            $_format = $matches['ext'] ?? 'html';
-            // replace last token with real node-name without extension.
-            $tokens[(int) (count($tokens) - 1)] = $realIdentifier;
+            $this->stopwatch->start('parseRootPath', 'routing');
+            $translation = $this->parseTranslation();
+            $nodeSource = $this->getHome($translation);
+            $this->stopwatch->stop('parseRootPath');
         } else {
-            throw new ResourceNotFoundException();
+            $identifier = '';
+            if (count($tokens) > 0) {
+                $identifier = strip_tags($tokens[(int) (count($tokens) - 1)]);
+            }
+
+            if ('' !== $identifier) {
+                /*
+                 * Prevent searching nodes with special characters.
+                 */
+                if (0 === preg_match('#'.static::$nodeNamePattern.'#', $identifier)) {
+                    throw new ResourceNotFoundException();
+                }
+
+                /*
+                 * Look for any supported format extension after last token.
+                 */
+                if (
+                    0 !== preg_match(
+                        '#^('.static::$nodeNamePattern.')\.('.implode('|', $supportedFormatExtensions).')$#',
+                        $identifier,
+                        $matches
+                    )
+                ) {
+                    $realIdentifier = $matches[1];
+                    $_format = $matches[2];
+                    // replace last token with real node-name without extension.
+                    $tokens[(int) (count($tokens) - 1)] = $realIdentifier;
+                }
+            }
+
+            $this->stopwatch->start('parseTranslation', 'routing');
+            $translation = $this->parseTranslation($tokens);
+            $this->stopwatch->stop('parseTranslation');
+            /*
+             * Try with URL Aliases OR nodeName
+             */
+            $this->stopwatch->start('parseFromIdentifier', 'routing');
+            $nodeSource = $this->parseFromIdentifier($tokens, $translation, $allowNonReachableNodes);
+            $this->stopwatch->stop('parseFromIdentifier');
         }
 
-        $this->stopwatch->start('parseTranslation', 'routing');
-        $translation = $this->parseTranslation($tokens);
-        $this->stopwatch->stop('parseTranslation');
-        /*
-         * Try with URL Aliases OR nodeName
-         */
-        $this->stopwatch->start('parseFromIdentifier', 'routing');
-        $nodeSource = $this->parseFromIdentifier($tokens, $translation, $allowNonReachableNodes);
-        $this->stopwatch->stop('parseFromIdentifier');
+        if (null === $nodeSource) {
+            throw new ResourceNotFoundException();
+        }
 
         $resourceInfo->setResource($nodeSource);
         $resourceInfo->setTranslation($nodeSource->getTranslation());
@@ -113,22 +111,23 @@ final readonly class NodesSourcesPathResolver implements PathResolverInterface
     private function tokenizePath(string $path): array
     {
         $tokens = explode('/', $path);
+        $tokens = array_values(array_filter($tokens));
 
-        return array_values(array_filter($tokens));
+        return $tokens;
     }
 
-    private function getHome(TranslationInterface $translation): NodesSources
+    private function getHome(TranslationInterface $translation): ?NodesSources
     {
-        $nodeSource = $this->nodesSourcesRepository->findOneBy([
-            'node.home' => true,
-            'translation' => $translation,
-        ]);
-
-        if (null === $nodeSource) {
-            throw new ResourceNotFoundException('Home node source not found for translation: '.$translation->getLocale());
-        }
-
-        return $nodeSource;
+        /*
+         * Resolve home page
+         * @phpstan-ignore-next-line
+         */
+        return $this->managerRegistry
+            ->getRepository(NodesSources::class)
+            ->findOneBy([
+                'node.home' => true,
+                'translation' => $translation,
+            ]);
     }
 
     /**
@@ -140,6 +139,8 @@ final readonly class NodesSourcesPathResolver implements PathResolverInterface
      */
     private function parseTranslation(array &$tokens = []): ?TranslationInterface
     {
+        /** @var TranslationRepository $repository */
+        $repository = $this->managerRegistry->getRepository(Translation::class);
         $findOneByMethod = $this->previewResolver->isPreview() ?
             'findOneByLocaleOrOverrideLocale' :
             'findOneAvailableByLocaleOrOverrideLocale';
@@ -149,7 +150,7 @@ final readonly class NodesSourcesPathResolver implements PathResolverInterface
             $locale = \mb_strtolower(strip_tags((string) $firstToken));
             // First token is for language and should not exceed 11 chars, i.e. tzm-Latn-DZ
             if (null !== $locale && '' != $locale && \mb_strlen($locale) <= 11) {
-                $translation = $this->translationRepository->$findOneByMethod($locale);
+                $translation = $repository->$findOneByMethod($locale);
                 if (null !== $translation) {
                     return $translation;
                 } elseif (in_array($tokens[0], Translation::getAvailableLocales())) {
@@ -160,10 +161,10 @@ final readonly class NodesSourcesPathResolver implements PathResolverInterface
 
         if (
             $this->useAcceptLanguageHeader
-            && true === $this->forceLocale
+            && true === $this->settingsBag->get('force_locale', false)
         ) {
             /*
-             * When no information to find locale is found and "forceLocale" is ON,
+             * When no information to find locale is found and "force_locale" is ON,
              * we must find translation based on Accept-Language header.
              * Be careful if you are using a reverse-proxy cache, YOU MUST VARY ON Accept-Language header.
              * @see https://varnish-cache.org/docs/6.3/users-guide/increasing-your-hitrate.html#http-vary
@@ -171,16 +172,16 @@ final readonly class NodesSourcesPathResolver implements PathResolverInterface
             $request = $this->requestStack->getMainRequest();
             if (
                 null !== $request
-                && null !== $preferredLocale = $request->getPreferredLanguage($this->translationRepository->getAvailableLocales())
+                && null !== $preferredLocale = $request->getPreferredLanguage($repository->getAvailableLocales())
             ) {
-                $translation = $this->translationRepository->$findOneByMethod($preferredLocale);
+                $translation = $repository->$findOneByMethod($preferredLocale);
                 if (null !== $translation) {
                     return $translation;
                 }
             }
         }
 
-        return $this->translationRepository->findDefault();
+        return $repository->findDefault();
     }
 
     /**
@@ -190,40 +191,55 @@ final readonly class NodesSourcesPathResolver implements PathResolverInterface
         array &$tokens,
         ?TranslationInterface $translation = null,
         bool $allowNonReachableNodes = true,
-    ): NodesSources {
-        if (empty($tokens[0])) {
-            return $this->getHome($translation);
+    ): ?NodesSources {
+        if (!empty($tokens[0])) {
+            /*
+             * If the only url token is not for language
+             */
+            if (count($tokens) > 1 || !in_array($tokens[0], Translation::getAvailableLocales())) {
+                $identifier = \mb_strtolower(strip_tags($tokens[(int) (count($tokens) - 1)]));
+                if (null !== $identifier && '' != $identifier) {
+                    $array = $this->managerRegistry
+                        ->getRepository(Node::class)
+                        ->findNodeTypeNameAndSourceIdByIdentifier(
+                            $identifier,
+                            $translation,
+                            !$this->previewResolver->isPreview(),
+                            $allowNonReachableNodes
+                        );
+                    if (null !== $array) {
+                        /** @var NodesSources|null $nodeSource */
+                        $nodeSource = $this->managerRegistry
+                            ->getRepository($this->getNodeTypeClassname($array['name']))
+                            ->findOneBy([
+                                'id' => $array['id'],
+                            ]);
+
+                        return $nodeSource;
+                    } else {
+                        $this->stopwatch->stop('parseFromIdentifier');
+                        throw new ResourceNotFoundException(sprintf('"%s" was not found.', $identifier));
+                    }
+                } else {
+                    $this->stopwatch->stop('parseFromIdentifier');
+                    throw new ResourceNotFoundException();
+                }
+            }
         }
 
-        if (1 === count($tokens) && in_array($tokens[0], Translation::getAvailableLocales())) {
-            return $this->getHome($translation);
+        return $this->getHome($translation);
+    }
+
+    /**
+     * @return class-string
+     */
+    private function getNodeTypeClassname(string $name): string
+    {
+        $fqcn = NodeType::getGeneratedEntitiesNamespace().'\\NS'.ucwords($name);
+        if (!class_exists($fqcn)) {
+            throw new ResourceNotFoundException($fqcn.' entity does not exist.');
         }
 
-        /*
-         * If the only url token is not for language
-         */
-        $identifier = \mb_strtolower(strip_tags($tokens[(int) (count($tokens) - 1)]));
-        if (empty($identifier)) {
-            $this->stopwatch->stop('parseFromIdentifier');
-            throw new ResourceNotFoundException();
-        }
-
-        $nodeSource = $this->nodesSourcesRepository->findOneByIdentifierAndTranslation(
-            $identifier,
-            $translation,
-            !$this->previewResolver->isPreview()
-        );
-
-        if (null === $nodeSource) {
-            $this->stopwatch->stop('parseFromIdentifier');
-            throw new ResourceNotFoundException();
-        }
-
-        if (false === $allowNonReachableNodes && !$nodeSource->isReachable()) {
-            $this->stopwatch->stop('parseFromIdentifier');
-            throw new ResourceNotFoundException();
-        }
-
-        return $nodeSource;
+        return $fqcn;
     }
 }

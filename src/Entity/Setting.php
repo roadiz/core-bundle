@@ -6,12 +6,12 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
-use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
-use RZ\Roadiz\CoreBundle\Enum\FieldType;
+use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\CoreBundle\Repository\SettingRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Serializer\Attribute as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\String\UnicodeString;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -24,50 +24,56 @@ use Symfony\Component\Validator\Constraints as Assert;
     ORM\Index(columns: ['type']),
     ORM\Index(columns: ['name']),
     ORM\Index(columns: ['visible']),
-    UniqueEntity(fields: ['name']),
+    UniqueEntity(fields: ['name'])
 ]
-class Setting implements PersistableInterface
+class Setting extends AbstractEntity
 {
-    use SequentialIdTrait;
-    use FieldTypeTrait;
-
     /**
-     * @var array<int, FieldType>
+     * Associates custom form field type to a readable string.
+     *
+     * These string will be used as translation key.
+     *
+     * @var array<int, string>
      */
-    #[Serializer\Ignore]
-    public static array $availableTypes = [
-        FieldType::STRING_T,
-        FieldType::DATETIME_T,
-        FieldType::TEXT_T,
-        FieldType::MARKDOWN_T,
-        FieldType::BOOLEAN_T,
-        FieldType::INTEGER_T,
-        FieldType::DECIMAL_T,
-        FieldType::EMAIL_T,
-        FieldType::DOCUMENTS_T,
-        FieldType::COLOUR_T,
-        FieldType::JSON_T,
-        FieldType::CSS_T,
-        FieldType::YAML_T,
-        FieldType::ENUM_T,
-        FieldType::MULTIPLE_T,
+    #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
+    public static array $typeToHuman = [
+        AbstractField::STRING_T => 'string.type',
+        AbstractField::DATETIME_T => 'date-time.type',
+        AbstractField::TEXT_T => 'text.type',
+        AbstractField::MARKDOWN_T => 'markdown.type',
+        AbstractField::BOOLEAN_T => 'boolean.type',
+        AbstractField::INTEGER_T => 'integer.type',
+        AbstractField::DECIMAL_T => 'decimal.type',
+        AbstractField::EMAIL_T => 'email.type',
+        AbstractField::DOCUMENTS_T => 'documents.type',
+        AbstractField::COLOUR_T => 'colour.type',
+        AbstractField::JSON_T => 'json.type',
+        AbstractField::CSS_T => 'css.type',
+        AbstractField::YAML_T => 'yaml.type',
+        AbstractField::ENUM_T => 'single-choice.type',
+        AbstractField::MULTIPLE_T => 'multiple-choice.type',
     ];
 
     #[ORM\Column(type: 'string', length: 250, unique: true)]
+    #[SymfonySerializer\Groups(['setting', 'nodes_sources'])]
     #[Serializer\Groups(['setting', 'nodes_sources'])]
     #[Assert\NotBlank]
     #[Assert\Length(max: 250)]
     private string $name = '';
 
     #[ORM\Column(type: 'text', unique: false, nullable: true)]
+    #[SymfonySerializer\Groups(['setting'])]
     #[Serializer\Groups(['setting'])]
     private ?string $description = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
+    #[SymfonySerializer\Groups(['setting', 'nodes_sources'])]
     #[Serializer\Groups(['setting', 'nodes_sources'])]
     private ?string $value = null;
 
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => true])]
+    #[SymfonySerializer\Groups(['setting'])]
     #[Serializer\Groups(['setting'])]
     private bool $visible = true;
 
@@ -77,24 +83,28 @@ class Setting implements PersistableInterface
         inversedBy: 'settings'
     )]
     #[ORM\JoinColumn(name: 'setting_group_id', referencedColumnName: 'id', onDelete: 'SET NULL')]
+    #[SymfonySerializer\Groups(['setting'])]
     #[Serializer\Groups(['setting'])]
-    private ?SettingGroup $settingGroup = null;
+    #[Serializer\AccessType(type: 'public_method')]
+    #[Serializer\Accessor(getter: 'getSettingGroup', setter: 'setSettingGroup')]
+    private ?SettingGroup $settingGroup;
 
-    #[ORM\Column(
-        type: Types::SMALLINT,
-        nullable: false,
-        enumType: FieldType::class,
-        options: ['default' => FieldType::STRING_T]
-    )]
+    /**
+     * Value types.
+     * Use NodeTypeField types constants.
+     */
+    #[ORM\Column(type: Types::SMALLINT)]
+    #[SymfonySerializer\Groups(['setting'])]
     #[Serializer\Groups(['setting'])]
-    private FieldType $type = FieldType::STRING_T;
+    private int $type = AbstractField::STRING_T;
 
     /**
      * Available values for ENUM and MULTIPLE setting types.
      */
     #[ORM\Column(name: 'defaultValues', type: 'text', nullable: true)]
+    #[SymfonySerializer\Groups(['setting'])]
     #[Serializer\Groups(['setting'])]
-    private ?string $defaultValues = null;
+    private ?string $defaultValues;
 
     public function getName(): string
     {
@@ -135,18 +145,18 @@ class Setting implements PersistableInterface
     /**
      * @throws \Exception
      */
-    #[Serializer\Ignore]
+    #[SymfonySerializer\Ignore]
     public function getValue(): string|bool|\DateTime|int|null
     {
-        if (FieldType::BOOLEAN_T === $this->getType()) {
+        if (AbstractField::BOOLEAN_T == $this->getType()) {
             return (bool) $this->value;
         }
 
         if (null !== $this->value) {
-            if (FieldType::DATETIME_T === $this->getType()) {
+            if (AbstractField::DATETIME_T == $this->getType()) {
                 return new \DateTime($this->value);
             }
-            if (FieldType::DOCUMENTS_T === $this->getType()) {
+            if (AbstractField::DOCUMENTS_T == $this->getType()) {
                 return (int) $this->value;
             }
         }
@@ -166,6 +176,21 @@ class Setting implements PersistableInterface
         } else {
             $this->value = (string) $value;
         }
+
+        return $this;
+    }
+
+    public function getType(): int
+    {
+        return $this->type;
+    }
+
+    /**
+     * @return $this
+     */
+    public function setType(int $type): self
+    {
+        $this->type = $type;
 
         return $this;
     }

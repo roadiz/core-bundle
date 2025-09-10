@@ -26,7 +26,6 @@ final readonly class DocumentMessageDispatchSubscriber implements EventSubscribe
     {
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [

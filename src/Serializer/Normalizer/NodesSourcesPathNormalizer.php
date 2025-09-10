@@ -9,28 +9,32 @@ use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 
 final class NodesSourcesPathNormalizer extends AbstractPathNormalizer
 {
-    #[\Override]
-    public function normalize(mixed $data, ?string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
+    /**
+     * @return array|\ArrayObject|bool|float|int|mixed|string|null
+     *
+     * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
+     */
+    public function normalize(mixed $object, ?string $format = null, array $context = []): mixed
     {
-        $normalized = $this->decorated->normalize($data, $format, $context);
+        $data = $this->decorated->normalize($object, $format, $context);
         if (
-            $data instanceof NodesSources
-            && $data->isReachable()
-            && \is_array($normalized)
-            && !isset($normalized['url'])
+            $object instanceof NodesSources
+            && $object->isReachable()
+            && \is_array($data)
+            && !isset($data['url'])
             && isset($context['groups'])
             && \in_array('urls', $context['groups'], true)
         ) {
             $this->stopwatch->start('normalizeNodesSourcesUrl', 'serializer');
-            $normalized['url'] = $this->urlGenerator->generate(
+            $data['url'] = $this->urlGenerator->generate(
                 RouteObjectInterface::OBJECT_BASED_ROUTE_NAME,
                 [
-                    RouteObjectInterface::ROUTE_OBJECT => $data,
+                    RouteObjectInterface::ROUTE_OBJECT => $object,
                 ]
             );
             $this->stopwatch->stop('normalizeNodesSourcesUrl');
         }
 
-        return $normalized;
+        return $data;
     }
 }

@@ -9,9 +9,8 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class AttributeValueType extends AbstractType
+class AttributeValueType extends AbstractType
 {
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('attribute', AttributeChoiceType::class, [
@@ -20,7 +19,6 @@ final class AttributeValueType extends AbstractType
         ]);
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
@@ -29,7 +27,6 @@ final class AttributeValueType extends AbstractType
         $resolver->setAllowedTypes('translation', [Translation::class]);
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'attribute_value';

@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Routing;
 
 use Doctrine\ORM\Query;
+use Doctrine\Persistence\ManagerRegistry;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\InvalidArgumentException;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\Repository\AllStatusesNodesSourcesRepository;
 
 final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSourcesPathAggregator
 {
     public function __construct(
-        private AllStatusesNodesSourcesRepository $allStatusesNodesSourcesRepository,
+        private ManagerRegistry $managerRegistry,
         private CacheItemPoolInterface $cacheAdapter,
     ) {
     }
@@ -27,7 +27,6 @@ final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSo
     /**
      * @throws InvalidArgumentException
      */
-    #[\Override]
     public function aggregatePath(NodesSources $nodesSources, array $parameters = []): string
     {
         if (
@@ -80,7 +79,9 @@ final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSo
                 /**
                  * Do a partial query to optimize SQL time.
                  */
-                $qb = $this->allStatusesNodesSourcesRepository->createQueryBuilder('ns');
+                $qb = $this->managerRegistry
+                    ->getRepository(NodesSources::class)
+                    ->createQueryBuilder('ns');
                 $parents = $qb->select('n.id as id, n.nodeName as nodeName, ua.alias as alias')
                     ->innerJoin('ns.node', 'n')
                     ->leftJoin('ns.urlAliases', 'ua')
@@ -97,7 +98,10 @@ final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSo
                     ->setCacheable(true)
                     ->getArrayResult()
                 ;
-                usort($parents, fn ($a, $b) => array_search($a['id'], $parentIds) - array_search($b['id'], $parentIds));
+                usort($parents, function ($a, $b) use ($parentIds) {
+                    return array_search($a['id'], $parentIds) -
+                        array_search($b['id'], $parentIds);
+                });
             }
         }
 

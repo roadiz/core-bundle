@@ -15,7 +15,6 @@ final readonly class NodesSourcesTreeDto implements PersistableInterface
     ) {
     }
 
-    #[\Override]
     public function getId(): ?int
     {
         return $this->id;

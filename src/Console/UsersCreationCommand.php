@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
+use RZ\Roadiz\CoreBundle\Entity\Role;
 use RZ\Roadiz\CoreBundle\Entity\User;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputArgument;
@@ -16,13 +17,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class UsersCreationCommand extends UsersCommand
 {
-    #[\Override]
     protected function configure(): void
     {
         $this->setName('users:create')
-            ->setDescription('Create a user. Without <info>--password</info> a random password will be generated and sent by email.')
+            ->setDescription('Create a user. Without <info>--password</info> a random password will be generated and sent by email. <info>Check if "email_sender" setting is valid.</info>')
             ->addOption('email', 'm', InputOption::VALUE_REQUIRED, 'Set user email.')
-            ->addOption('plain-password', 'p', InputOption::VALUE_REQUIRED, 'Set user password (typing plain password in command-line is insecure).')
+            ->addOption('password', 'p', InputOption::VALUE_REQUIRED, 'Set user password (typing plain password in command-line is insecure).')
             ->addOption('back-end', 'b', InputOption::VALUE_NONE, 'Add ROLE_BACKEND_USER to user.')
             ->addOption('super-admin', 's', InputOption::VALUE_NONE, 'Add ROLE_SUPERADMIN to user.')
             ->addUsage('--email=test@test.com --password=secret --back-end --super-admin test')
@@ -33,7 +33,6 @@ final class UsersCreationCommand extends UsersCommand
             );
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -41,10 +40,6 @@ final class UsersCreationCommand extends UsersCommand
 
         if (!\is_string($name) || empty($name)) {
             throw new \InvalidArgumentException('Username argument is required.');
-        }
-
-        if (is_string($input->getOption('plain-password')) && \mb_strlen($input->getOption('plain-password')) < 12) {
-            throw new \InvalidArgumentException('Password should be at least 12 chars long.');
         }
 
         /** @var User|null $user */
@@ -67,14 +62,6 @@ final class UsersCreationCommand extends UsersCommand
         ];
         $passwordInput = new ArrayInput($arguments);
 
-        if ($plainPassword = $input->getOption('plain-password')) {
-            $passwordInput = new ArrayInput([
-                'username' => $user->getUsername(),
-                '--plain-password' => $plainPassword,
-            ]);
-            $passwordInput->setInteractive(false);
-        }
-
         return $command->run($passwordInput, $output);
     }
 
@@ -85,7 +72,7 @@ final class UsersCreationCommand extends UsersCommand
     ): User {
         $user = new User();
         $io = new SymfonyStyle($input, $output);
-        if (!$input->hasOption('plain-password')) {
+        if (!$input->hasOption('password')) {
             $user->sendCreationConfirmationEmail(true);
         }
         $user->setUsername($username);
@@ -130,16 +117,10 @@ final class UsersCreationCommand extends UsersCommand
                     $questionBack
                 )
             ) {
-                $user->setUserRoles([
-                    ...$user->getUserRoles(),
-                    'ROLE_BACKEND_USER',
-                ]);
+                $user->addRoleEntity($this->getRole(Role::ROLE_BACKEND_USER));
             }
         } elseif (true === $input->getOption('back-end')) {
-            $user->setUserRoles([
-                ...$user->getUserRoles(),
-                'ROLE_BACKEND_USER',
-            ]);
+            $user->addRoleEntity($this->getRole(Role::ROLE_BACKEND_USER));
         }
 
         if ($input->isInteractive() && !$input->getOption('super-admin')) {
@@ -152,16 +133,18 @@ final class UsersCreationCommand extends UsersCommand
                     $questionAdmin
                 )
             ) {
-                $user->setUserRoles([
-                    ...$user->getUserRoles(),
-                    'ROLE_SUPERADMIN',
-                ]);
+                $user->addRoleEntity($this->getRole(Role::ROLE_SUPERADMIN));
             }
         } elseif (true === $input->getOption('super-admin')) {
-            $user->setUserRoles([
-                ...$user->getUserRoles(),
-                'ROLE_SUPERADMIN',
-            ]);
+            $user->addRoleEntity($this->getRole(Role::ROLE_SUPERADMIN));
+        }
+
+        if ($input->getOption('password')) {
+            if (\mb_strlen($input->getOption('password')) < 5) {
+                throw new \InvalidArgumentException('Password is too short.');
+            }
+
+            $user->setPlainPassword($input->getOption('password'));
         }
 
         $this->managerRegistry->getManagerForClass(User::class)->persist($user);

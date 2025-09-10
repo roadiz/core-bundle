@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Form;
 
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Node;
-use RZ\Roadiz\CoreBundle\Repository\AllStatusesNodeRepository;
+use RZ\Roadiz\CoreBundle\Repository\NodeRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
@@ -15,62 +16,60 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class NodesType extends AbstractType
+/**
+ * Node selector and uploader form field type.
+ */
+class NodesType extends AbstractType
 {
-    public function __construct(
-        private readonly AllStatusesNodeRepository $allStatusesNodeRepository,
-    ) {
+    protected ManagerRegistry $managerRegistry;
+
+    public function __construct(ManagerRegistry $managerRegistry)
+    {
+        $this->managerRegistry = $managerRegistry;
     }
 
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $builder->addModelTransformer(new CallbackTransformer(
-            function (mixed $mixedEntities): array {
-                if ($mixedEntities instanceof Collection) {
-                    $mixedEntities = $mixedEntities->toArray();
-                }
-                if (!\is_array($mixedEntities)) {
-                    $mixedEntities = [$mixedEntities];
-                }
-
-                $mixedIds = array_map(fn (mixed $node) => $node instanceof Node ? $node->getId() : $node, $mixedEntities);
-
-                return $mixedIds;
-            },
-            function (array|int|string|null $mixedIds) use ($options) {
-                if (null === $mixedIds || (\is_array($mixedIds) && 0 === count($mixedIds))) {
-                    return $options['asMultiple'] ? [] : null;
-                }
-
-                if (!\is_array($mixedIds)) {
-                    $mixedIds = [$mixedIds];
-                } else {
-                    $mixedIds = array_values($mixedIds);
-                }
-
-                return $options['asMultiple']
-                    ? $this->allStatusesNodeRepository->findBy(['id' => $mixedIds])
-                    : $this->allStatusesNodeRepository->find($mixedIds[0]);
+        $builder->addModelTransformer(new CallbackTransformer(function ($mixedEntities) {
+            if ($mixedEntities instanceof Collection) {
+                return $mixedEntities->toArray();
             }
-        ));
+            if (!is_array($mixedEntities)) {
+                return [$mixedEntities];
+            }
+
+            return $mixedEntities;
+        }, function ($mixedIds) use ($options) {
+            /** @var NodeRepository $repository */
+            $repository = $this->managerRegistry
+                ->getRepository(Node::class)
+                ->setDisplayingAllNodesStatuses(true);
+            if (\is_array($mixedIds) && 0 === count($mixedIds)) {
+                return [];
+            } elseif (\is_array($mixedIds)) {
+                if (false === $options['multiple']) {
+                    return $repository->findOneBy(['id' => $mixedIds]);
+                }
+
+                return $repository->findBy(['id' => $mixedIds]);
+            } elseif (true === $options['multiple']) {
+                return [];
+            } else {
+                return $repository->findOneById($mixedIds);
+            }
+        }));
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'multiple' => true,
-            // Need to use a different option name to avoid early transformation exceptions
-            'asMultiple' => true,
             'nodes' => [],
         ]);
 
         $resolver->setAllowedTypes('multiple', ['boolean']);
-        $resolver->setAllowedTypes('asMultiple', ['boolean']);
     }
 
-    #[\Override]
     public function finishView(FormView $view, FormInterface $form, array $options): void
     {
         parent::finishView($view, $form, $options);
@@ -83,13 +82,11 @@ final class NodesType extends AbstractType
         }
     }
 
-    #[\Override]
     public function getParent(): ?string
     {
         return HiddenType::class;
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'nodes';

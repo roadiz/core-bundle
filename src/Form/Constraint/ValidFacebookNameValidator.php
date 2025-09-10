@@ -8,10 +8,7 @@ use RZ\Roadiz\Documents\MediaFinders\FacebookPictureFinder;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
-/**
- * @deprecated
- */
-final class ValidFacebookNameValidator extends ConstraintValidator
+class ValidFacebookNameValidator extends ConstraintValidator
 {
     public function __construct(private readonly FacebookPictureFinder $facebookPictureFinder)
     {
@@ -20,11 +17,10 @@ final class ValidFacebookNameValidator extends ConstraintValidator
     /**
      * @param ValidFacebookName $constraint
      */
-    #[\Override]
     public function validate(mixed $value, Constraint $constraint): void
     {
         if ('' != $value) {
-            if (0 === preg_match('#^[0-9]*$#', (string) $value)) {
+            if (0 === preg_match('#^[0-9]*$#', $value)) {
                 $this->context->addViolation($constraint->message);
             } else {
                 /*
@@ -32,7 +28,7 @@ final class ValidFacebookNameValidator extends ConstraintValidator
                  */
                 try {
                     $this->facebookPictureFinder->getPictureUrl($value);
-                } catch (\Exception) {
+                } catch (\Exception $e) {
                     $this->context->addViolation($constraint->message);
                 }
             }

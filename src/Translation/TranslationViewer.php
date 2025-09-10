@@ -7,6 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Translation;
 use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
@@ -18,18 +19,15 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 
-/**
- * @deprecated translationViewer is no longer used and will be removed in future versions
- */
 final class TranslationViewer
 {
     private ?TranslationInterface $translation = null;
 
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
+        private readonly Settings $settingsBag,
         private readonly RouterInterface $router,
         private readonly PreviewResolverInterface $previewResolver,
-        private readonly bool $forceLocale,
     ) {
     }
 
@@ -42,7 +40,7 @@ final class TranslationViewer
      * Return available page translation information.
      *
      * Be careful, for static routes Roadiz will generate a localized
-     * route identifier suffixed with "Locale" text. In case of "forceLocale"
+     * route identifier suffixed with "Locale" text. In case of "force_locale"
      * setting to true, Roadiz will always use suffixed route.
      *
      * ## example return value
@@ -73,14 +71,13 @@ final class TranslationViewer
      * @param bool $absolute Generate absolute url or relative paths
      *
      * @throws ORMException
-     *
-     * @deprecated
      */
     public function getTranslationMenuAssignation(Request $request, bool $absolute = false): array
     {
         $attr = $request->attributes->all();
         $query = $request->query->all();
         $name = '';
+        $forceLocale = (bool) $this->settingsBag->get('force_locale');
         $useStaticRouting = !empty($attr['_route'])
             && is_string($attr['_route'])
             && RouteObjectInterface::OBJECT_BASED_ROUTE_NAME !== $attr['_route'];
@@ -148,7 +145,7 @@ final class TranslationViewer
                  * Use suffixed route if locales are forced or
                  * if it’s not default translation.
                  */
-                if (true === $this->forceLocale || !$translation->isDefaultTranslation()) {
+                if (true === $forceLocale || !$translation->isDefaultTranslation()) {
                     /*
                      * Search for a Locale suffixed route
                      */
@@ -157,8 +154,10 @@ final class TranslationViewer
                     }
 
                     $attr['_route_params']['_locale'] = $translation->getPreferredLocale();
-                } elseif (key_exists('_locale', $attr['_route_params'])) {
-                    unset($attr['_route_params']['_locale']);
+                } else {
+                    if (key_exists('_locale', $attr['_route_params'])) {
+                        unset($attr['_route_params']['_locale']);
+                    }
                 }
 
                 /*

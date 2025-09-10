@@ -11,7 +11,7 @@ use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\TreeWalker\Definition\ContextualDefinitionTrait;
 use RZ\TreeWalker\WalkerContextInterface;
 
-final readonly class MultiTypeChildrenDefinition
+final class MultiTypeChildrenDefinition
 {
     use ContextualDefinitionTrait;
     use NodeSourceDefinitionTrait;
@@ -20,19 +20,20 @@ final readonly class MultiTypeChildrenDefinition
      * @param array<string> $types
      */
     public function __construct(
-        private WalkerContextInterface $context,
-        private array $types,
-        private bool $onlyVisible = true,
+        private readonly WalkerContextInterface $context,
+        private readonly array $types,
+        private readonly bool $onlyVisible = true,
     ) {
     }
 
     /**
      * @return array<NodeType> $nodeTypes
      */
-    #[\Override]
     protected function getNodeTypes(NodeTypes $nodeTypesBag): array
     {
-        return array_values(array_filter(array_map(fn (string $singleType) => $nodeTypesBag->get($singleType), $this->types)));
+        return array_values(array_filter(array_map(function (string $singleType) use ($nodeTypesBag) {
+            return $nodeTypesBag->get($singleType);
+        }, $this->types)));
     }
 
     /**
@@ -45,7 +46,7 @@ final readonly class MultiTypeChildrenDefinition
         }
 
         $this->context->getStopwatch()->start(self::class);
-        $queryBuilder = $this->getQueryBuilder($source, $this->onlyVisible);
+        $queryBuilder = $this->getQueryBuilder($source);
         $this->context->getStopwatch()->stop(self::class);
 
         return $queryBuilder->getQuery()->getResult();

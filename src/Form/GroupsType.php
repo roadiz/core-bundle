@@ -18,15 +18,19 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 /**
  * Group selector form field type.
  */
-final class GroupsType extends AbstractType
+class GroupsType extends AbstractType
 {
+    protected AuthorizationCheckerInterface $authorizationChecker;
+    protected ManagerRegistry $managerRegistry;
+
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly AuthorizationCheckerInterface $authorizationChecker,
+        ManagerRegistry $managerRegistry,
+        AuthorizationCheckerInterface $authorizationChecker,
     ) {
+        $this->authorizationChecker = $authorizationChecker;
+        $this->managerRegistry = $managerRegistry;
     }
 
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer(new CallbackTransformer(function ($modelToForm) {
@@ -35,7 +39,9 @@ final class GroupsType extends AbstractType
                     $modelToForm = $modelToForm->toArray();
                 }
 
-                return array_map(fn (Group $group) => $group->getId(), $modelToForm);
+                return array_map(function (Group $group) {
+                    return $group->getId();
+                }, $modelToForm);
             }
 
             return null;
@@ -50,7 +56,6 @@ final class GroupsType extends AbstractType
         }));
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([]);
@@ -72,13 +77,11 @@ final class GroupsType extends AbstractType
         });
     }
 
-    #[\Override]
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'groups';

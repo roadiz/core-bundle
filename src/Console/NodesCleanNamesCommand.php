@@ -8,7 +8,6 @@ use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Node\NodeNamePolicyInterface;
-use RZ\Roadiz\CoreBundle\Repository\NotPublishedNodeRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -21,13 +20,11 @@ final class NodesCleanNamesCommand extends Command
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
         private readonly NodeNamePolicyInterface $nodeNamePolicy,
-        private readonly NotPublishedNodeRepository $notPublishedNodeRepository,
         ?string $name = null,
     ) {
         parent::__construct($name);
     }
 
-    #[\Override]
     protected function configure(): void
     {
         $this->setName('nodes:clean-names')
@@ -47,7 +44,6 @@ final class NodesCleanNamesCommand extends Command
         ;
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $entityManager = $this->managerRegistry->getManagerForClass(Node::class);
@@ -58,7 +54,10 @@ final class NodesCleanNamesCommand extends Command
             ->findDefault();
 
         if (null !== $translation) {
-            $nodes = $this->notPublishedNodeRepository
+            /** @phpstan-ignore-next-line  */
+            $nodes = $entityManager
+                ->getRepository(Node::class)
+                ->setDisplayingNotPublishedNodes(true)
                 ->findBy([
                     'dynamicNodeName' => true,
                     'locked' => false,
@@ -140,7 +139,7 @@ final class NodesCleanNamesCommand extends Command
             $io->table(['Old name', 'New name'], $names);
 
             if (!$input->getOption('dry-run')) {
-                $io->success('Renaming done! '.$renameCount.' nodes have been affected. Do not forget to reindex your Search engine if you are using it.');
+                $io->success('Renaming done! '.$renameCount.' nodes have been affected. Do not forget to reindex your Solr documents if you are using it.');
             } else {
                 $io->success($renameCount.' nodes would have been affected. Nothing was saved to database.');
             }

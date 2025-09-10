@@ -8,7 +8,7 @@ use ApiPlatform\Doctrine\Common\PropertyHelperTrait;
 use ApiPlatform\Doctrine\Orm\Filter\AbstractFilter;
 use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
-use ApiPlatform\Metadata\Exception\InvalidArgumentException;
+use ApiPlatform\Exception\FilterValidationException;
 use ApiPlatform\Metadata\Operation;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
@@ -17,7 +17,7 @@ final class ArchiveFilter extends AbstractFilter
 {
     use PropertyHelperTrait;
 
-    public const string PARAMETER_ARCHIVE = 'archive';
+    public const PARAMETER_ARCHIVE = 'archive';
 
     /**
      * Determines whether the given property refers to a date field.
@@ -35,7 +35,6 @@ final class ArchiveFilter extends AbstractFilter
         return 'datetime' === $type->getName() || 'date' === $type->getName();
     }
 
-    #[\Override]
     protected function filterProperty(
         string $property,
         mixed $value,
@@ -70,26 +69,14 @@ final class ArchiveFilter extends AbstractFilter
         }
 
         if (!is_string($value[self::PARAMETER_ARCHIVE])) {
-            throw new InvalidArgumentException(sprintf('“%s” filter must be only used with a string value.', self::PARAMETER_ARCHIVE));
+            throw new FilterValidationException([sprintf('“%s” filter must be only used with a string value.', self::PARAMETER_ARCHIVE)]);
         }
 
-        $this->singleArchiveFilter(
-            $queryBuilder,
-            $queryNameGenerator,
-            $alias,
-            $field,
-            $value[self::PARAMETER_ARCHIVE],
-        );
-    }
+        $range = $this->normalizeFilteringDates($value[self::PARAMETER_ARCHIVE]);
 
-    protected function singleArchiveFilter(
-        QueryBuilder $queryBuilder,
-        QueryNameGeneratorInterface $queryNameGenerator,
-        string $alias,
-        string $field,
-        string $value,
-    ): void {
-        [$startDate, $endDate] = $this->normalizeFilteringDates($value);
+        if (null === $range || 2 !== count($range)) {
+            return;
+        }
 
         $valueParameter = $queryNameGenerator->generateParameterName($field);
         $queryBuilder->andWhere($queryBuilder->expr()->isNotNull(sprintf('%s.%s', $alias, $field)))
@@ -98,35 +85,35 @@ final class ArchiveFilter extends AbstractFilter
                 ':'.$valueParameter.'Start',
                 ':'.$valueParameter.'End'
             ))
-            ->setParameter($valueParameter.'Start', $startDate)
-            ->setParameter($valueParameter.'End', $endDate);
+            ->setParameter($valueParameter.'Start', $range[0])
+            ->setParameter($valueParameter.'End', $range[1]);
     }
 
     /**
      * Support archive parameter with year or year-month.
      *
-     * @return array{\DateTime, \DateTime}
+     * @return \DateTime[]|null
      *
      * @throws \Exception
      */
-    protected function normalizeFilteringDates(string $value): array
+    protected function normalizeFilteringDates(string $value): ?array
     {
         /*
          * Support archive parameter with year or year-month
          */
-        if (preg_match('#^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$#', $value) > 0) {
+        if (preg_match('#[0-9]{4}\-[0-9]{2}\-[0-9]{2}#', $value) > 0) {
             $startDate = new \DateTime($value.' 00:00:00');
             $endDate = clone $startDate;
             $endDate->add(new \DateInterval('P1D'));
 
             return [$startDate, $this->limitEndDate($endDate)];
-        } elseif (preg_match('#^[0-9]{4}\-[0-9]{2}$#', $value) > 0) {
+        } elseif (preg_match('#[0-9]{4}\-[0-9]{2}#', $value) > 0) {
             $startDate = new \DateTime($value.'-01 00:00:00');
             $endDate = clone $startDate;
             $endDate->add(new \DateInterval('P1M'));
 
             return [$startDate, $this->limitEndDate($endDate)];
-        } elseif (preg_match('#^[0-9]{4}$#', $value) > 0) {
+        } elseif (preg_match('#[0-9]{4}#', $value) > 0) {
             $startDate = new \DateTime($value.'-01-01 00:00:00');
             $endDate = clone $startDate;
             $endDate->add(new \DateInterval('P1Y'));
@@ -134,7 +121,7 @@ final class ArchiveFilter extends AbstractFilter
             return [$startDate, $this->limitEndDate($endDate)];
         }
 
-        throw new InvalidArgumentException(sprintf('“%s” filter must be a valid archive specification.', self::PARAMETER_ARCHIVE));
+        return null;
     }
 
     protected function limitEndDate(\DateTime $endDate): \DateTime
@@ -147,7 +134,6 @@ final class ArchiveFilter extends AbstractFilter
         return $endDate->sub(new \DateInterval('PT1S'));
     }
 
-    #[\Override]
     public function getDescription(string $resourceClass): array
     {
         $description = [];

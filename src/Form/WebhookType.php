@@ -16,13 +16,15 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
-final class WebhookType extends AbstractType
+class WebhookType extends AbstractType
 {
-    public function __construct(private readonly array $webhookMessageTypes)
+    private array $webhookMessageTypes;
+
+    public function __construct(array $webhookMessageTypes)
     {
+        $this->webhookMessageTypes = $webhookMessageTypes;
     }
 
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('messageType', ChoiceType::class, [
@@ -49,10 +51,12 @@ final class WebhookType extends AbstractType
             'required' => false,
             'label' => 'webhooks.rootNode',
             'help' => 'webhooks.rootNode.help',
-            'asMultiple' => false,
+            'multiple' => false,
         ]);
 
-        $builder->get('payload')->addModelTransformer(new CallbackTransformer(fn (?array $model) => $model ? Yaml::dump($model) : null, function (?string $yaml) {
+        $builder->get('payload')->addModelTransformer(new CallbackTransformer(function (?array $model) {
+            return $model ? Yaml::dump($model) : null;
+        }, function (?string $yaml) {
             try {
                 return $yaml ? Yaml::parse($yaml) : null;
             } catch (ParseException $e) {

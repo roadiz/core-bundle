@@ -10,16 +10,22 @@ use RZ\Roadiz\CoreBundle\Explorer\ExplorerProviderInterface;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
 
-final readonly class ExplorerProviderItemTransformer implements DataTransformerInterface
+class ExplorerProviderItemTransformer implements DataTransformerInterface
 {
+    protected ExplorerProviderInterface $explorerProvider;
+    protected bool $multiple;
+    protected bool $useCollection;
+
     public function __construct(
-        protected ExplorerProviderInterface $explorerProvider,
-        protected bool $multiple = true,
-        protected bool $useCollection = false,
+        ExplorerProviderInterface $explorerProvider,
+        bool $multiple = true,
+        bool $useCollection = false,
     ) {
+        $this->explorerProvider = $explorerProvider;
+        $this->multiple = $multiple;
+        $this->useCollection = $useCollection;
     }
 
-    #[\Override]
     public function transform(mixed $value): array|string
     {
         if (!empty($value) && $this->explorerProvider->supports($value)) {
@@ -49,7 +55,6 @@ final readonly class ExplorerProviderItemTransformer implements DataTransformerI
         return '';
     }
 
-    #[\Override]
     public function reverseTransform(mixed $value): mixed
     {
         if (empty($value)) {

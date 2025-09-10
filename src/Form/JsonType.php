@@ -14,21 +14,18 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 /**
  * Json editor form field type.
  */
-final class JsonType extends AbstractType
+class JsonType extends AbstractType
 {
-    #[\Override]
     public function getParent(): ?string
     {
         return TextareaType::class;
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'json';
     }
 
-    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
@@ -36,7 +33,6 @@ final class JsonType extends AbstractType
         $view->vars['attr']['class'] = 'json_textarea';
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([

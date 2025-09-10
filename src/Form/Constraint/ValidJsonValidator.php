@@ -7,15 +7,14 @@ namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
-final class ValidJsonValidator extends ConstraintValidator
+class ValidJsonValidator extends ConstraintValidator
 {
     /**
      * @param ValidJson $constraint
      */
-    #[\Override]
     public function validate(mixed $value, Constraint $constraint): void
     {
-        if (!empty($value) && is_string($value)) {
+        if (!empty($value)) {
             try {
                 \json_decode($value, true, 512, JSON_THROW_ON_ERROR);
             } catch (\JsonException $e) {

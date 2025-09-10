@@ -74,11 +74,6 @@ abstract class EntityRepository extends ServiceEntityRepository
     public const NODETYPE_ALIAS = 'nt';
 
     /**
-     * Alias for DQL and Query builder representing NodeTypeDecorator relation.
-     */
-    public const NODETYPE_DECORATOR_ALIAS = 'ntd';
-
-    /**
      * @param class-string $entityClass
      */
     protected function dispatchQueryBuilderEvent(QueryBuilder $qb, string $entityClass): void
@@ -195,7 +190,7 @@ abstract class EntityRepository extends ServiceEntityRepository
 
             try {
                 return (int) $qb->getQuery()->getSingleScalarResult();
-            } catch (NoResultException|NonUniqueResultException) {
+            } catch (NoResultException|NonUniqueResultException $e) {
                 return 0;
             }
         }
@@ -350,7 +345,7 @@ abstract class EntityRepository extends ServiceEntityRepository
 
         try {
             return (int) $qb->getQuery()->getSingleScalarResult();
-        } catch (NoResultException|NonUniqueResultException) {
+        } catch (NoResultException|NonUniqueResultException $e) {
             return 0;
         }
     }

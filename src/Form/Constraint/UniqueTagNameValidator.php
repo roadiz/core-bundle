@@ -10,17 +10,19 @@ use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
-final class UniqueTagNameValidator extends ConstraintValidator
+class UniqueTagNameValidator extends ConstraintValidator
 {
-    public function __construct(private readonly ManagerRegistry $managerRegistry)
+    protected ManagerRegistry $managerRegistry;
+
+    public function __construct(ManagerRegistry $managerRegistry)
     {
+        $this->managerRegistry = $managerRegistry;
     }
 
     /**
      * @param string        $value
      * @param UniqueTagName $constraint
      */
-    #[\Override]
     public function validate(mixed $value, Constraint $constraint): void
     {
         if ($this->isMulti($value)) {

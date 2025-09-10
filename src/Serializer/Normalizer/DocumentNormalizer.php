@@ -20,8 +20,6 @@ use Symfony\Component\Stopwatch\Stopwatch;
  */
 final class DocumentNormalizer extends AbstractPathNormalizer
 {
-    use BaseDocumentNormalizerTrait;
-
     public function __construct(
         NormalizerInterface $decorated,
         UrlGeneratorInterface $urlGenerator,
@@ -33,75 +31,104 @@ final class DocumentNormalizer extends AbstractPathNormalizer
         parent::__construct($decorated, $urlGenerator, $stopwatch);
     }
 
-    #[\Override]
-    public function normalize(mixed $data, ?string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
+    /**
+     * @return array|\ArrayObject|bool|float|int|string|null
+     *
+     * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
+     */
+    public function normalize(mixed $object, ?string $format = null, array $context = []): mixed
     {
-        $normalized = $this->decorated->normalize($data, $format, $context);
-
+        $data = $this->decorated->normalize($object, $format, $context);
         if (
-            !$data instanceof Document
-            || !is_array($normalized)
+            $object instanceof Document
+            && is_array($data)
         ) {
-            return $normalized;
-        }
+            $this->stopwatch->start('normalizeDocument', 'serializer');
+            /** @var array<string> $serializationGroups */
+            $serializationGroups = isset($context['groups']) && is_array($context['groups']) ? $context['groups'] : [];
+            $data['type'] = $object->getShortType();
 
-        $this->stopwatch->start('normalizeDocument', 'serializer');
-        /** @var array<string> $serializationGroups */
-        $serializationGroups = isset($context['groups']) && is_array($context['groups']) ? $context['groups'] : [];
-
-        if (
-            $data->isProcessable()
-            && null !== $alignment = $data->getImageCropAlignment()
-        ) {
-            $normalized['imageCropAlignment'] = $alignment;
-        }
-
-        if (
-            \in_array('document_raw_relative_path', $serializationGroups, true)
-            && !$data->isPrivate()
-            && null !== $rawDocument = $data->getRawDocument()
-        ) {
-            $normalized['rawRelativePath'] = $rawDocument->getRelativePath();
-        }
-
-        if (
-            \in_array('document_folders_all', $serializationGroups, true)
-        ) {
-            $normalized['folders'] = $data->getFolders()
-                ->map(fn (FolderInterface $folder) => $this->decorated->normalize($folder, $format, $context))
-                ->getValues()
-            ;
-        } elseif (
-            \in_array('document_folders', $serializationGroups, true)
-        ) {
-            $normalized['folders'] = $data->getFolders()->filter(fn (FolderInterface $folder) => $folder->getVisible())->map(fn (FolderInterface $folder) => $this->decorated->normalize($folder, $format, $context))->getValues();
-        }
-
-        if (isset($context['translation']) && $context['translation'] instanceof TranslationInterface) {
-            /*
-             * Always falls back on default translation if no translation is found for Documents entities
-             */
-            $translatedData = $data->getDocumentTranslationsByTranslation($context['translation'])->first() ?:
-                $data->getDocumentTranslationsByDefaultTranslation();
-            if ($translatedData instanceof DocumentTranslation) {
-                $additionalData = [
-                    'name' => $translatedData->getName() ?? null,
-                    'description' => $translatedData->getDescription() ?? null,
-                    'copyright' => $translatedData->getCopyright() ?? null,
-                    'alt' => !empty($translatedData->getName()) ? $translatedData->getName() : null,
-                    'externalUrl' => $translatedData->getExternalUrl(),
-                ];
-                $normalized = [
-                    ...$normalized,
-                    ...array_filter($additionalData),
-                ];
+            if (
+                !$object->isPrivate()
+                && !$object->isProcessable()
+            ) {
+                $mountPath = $object->getMountPath();
+                if (null !== $mountPath) {
+                    $data['publicUrl'] = $this->documentsStorage->publicUrl($mountPath);
+                }
             }
+
+            if (
+                !$object->isPrivate()
+                && $object->isProcessable()
+                && null !== $alignment = $object->getImageCropAlignment()
+            ) {
+                $data['imageCropAlignment'] = $alignment;
+            }
+
+            if (
+                \in_array('document_folders_all', $serializationGroups, true)
+            ) {
+                $data['folders'] = $object->getFolders()
+                    ->map(function (FolderInterface $folder) use ($format, $context) {
+                        return $this->decorated->normalize($folder, $format, $context);
+                    })
+                    ->getValues()
+                ;
+            } elseif (
+                \in_array('document_folders', $serializationGroups, true)
+            ) {
+                $data['folders'] = $object->getFolders()->filter(function (FolderInterface $folder) {
+                    return $folder->getVisible();
+                })->map(function (FolderInterface $folder) use ($format, $context) {
+                    return $this->decorated->normalize($folder, $format, $context);
+                })->getValues();
+            }
+
+            if (
+                $object->getEmbedPlatform()
+                && $object->getEmbedId()
+            ) {
+                $embedFinder = $this->embedFinderFactory->createForPlatform(
+                    $object->getEmbedPlatform(),
+                    $object->getEmbedId()
+                );
+                if (null !== $embedFinder) {
+                    $data['embedUrl'] = $embedFinder->getSource();
+                }
+            }
+
+            if (isset($context['translation']) && $context['translation'] instanceof TranslationInterface) {
+                /*
+                 * Always falls back on default translation if no translation is found for Documents entities
+                 */
+                $translatedData = $object->getDocumentTranslationsByTranslation($context['translation'])->first() ?:
+                    $object->getDocumentTranslationsByDefaultTranslation();
+                if ($translatedData instanceof DocumentTranslation) {
+                    $data['name'] = $translatedData->getName();
+                    $data['description'] = $translatedData->getDescription();
+                    $data['copyright'] = $translatedData->getCopyright();
+                    $data['alt'] = !empty($translatedData->getName()) ? $translatedData->getName() : null;
+                    $data['externalUrl'] = $translatedData->getExternalUrl();
+                }
+            }
+
+            if (
+                !$object->isPrivate()
+                && \in_array('explorer_thumbnail', $serializationGroups, true)
+            ) {
+                $data['url'] = $this->documentUrlGenerator
+                    ->setDocument($object)
+                    ->setOptions([
+                        'fit' => '250x200',
+                        'quality' => 60,
+                    ])
+                    ->getUrl();
+            }
+
+            $this->stopwatch->stop('normalizeDocument');
         }
 
-        $this->appendToNormalizedData($data, $normalized, $serializationGroups);
-
-        $this->stopwatch->stop('normalizeDocument');
-
-        return $normalized;
+        return $data;
     }
 }

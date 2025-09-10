@@ -6,22 +6,18 @@ namespace RZ\Roadiz\CoreBundle\Node;
 
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
-use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
+use RZ\Roadiz\Core\AbstractEntities\AbstractField;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
-use RZ\Roadiz\CoreBundle\Enum\FieldType;
-use RZ\Roadiz\CoreBundle\Repository\AllStatusesNodesSourcesRepository;
+use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
 use RZ\Roadiz\CoreBundle\Repository\TranslationRepository;
 
 final readonly class UniversalDataDuplicator
 {
-    public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private AllStatusesNodesSourcesRepository $allStatusesNodesSourcesRepository,
-        private NodeTypes $nodeTypesBag,
-    ) {
+    public function __construct(private ManagerRegistry $managerRegistry)
+    {
     }
 
     /**
@@ -40,16 +36,20 @@ final readonly class UniversalDataDuplicator
          * Non-default translation source should not contain universal fields.
          */
         if ($source->getTranslation()->isDefaultTranslation() || !$this->hasDefaultTranslation($source)) {
-            $fields = $this->nodeTypesBag->get($source->getNodeTypeName())->getFields();
-            /** @var NodeTypeField[] $universalFields */
-            $universalFields = $fields->filter(fn (NodeTypeField $field) => $field->isUniversal());
+            $nodeTypeFieldRepository = $this->managerRegistry->getRepository(NodeTypeField::class);
+            $universalFields = $nodeTypeFieldRepository->findAllUniversal($source->getNode()->getNodeType());
 
             if (count($universalFields) > 0) {
-                $otherSources = $this->allStatusesNodesSourcesRepository->findBy([
+                $repository = $this->managerRegistry->getRepository(NodesSources::class);
+                $repository->setDisplayingAllNodesStatuses(true)
+                    ->setDisplayingNotPublishedNodes(true)
+                ;
+                $otherSources = $repository->findBy([
                     'node' => $source->getNode(),
                     'id' => ['!=', $source->getId()],
                 ]);
 
+                /** @var NodeTypeField $universalField */
                 foreach ($universalFields as $universalField) {
                     /** @var NodesSources $otherSource */
                     foreach ($otherSources as $otherSource) {
@@ -57,13 +57,13 @@ final readonly class UniversalDataDuplicator
                             $this->duplicateNonVirtualField($source, $otherSource, $universalField);
                         } else {
                             switch ($universalField->getType()) {
-                                case FieldType::DOCUMENTS_T:
+                                case AbstractField::DOCUMENTS_T:
                                     $this->duplicateDocumentsField($source, $otherSource, $universalField);
                                     break;
-                                case FieldType::MULTI_PROVIDER_T:
-                                case FieldType::SINGLE_PROVIDER_T:
-                                case FieldType::MANY_TO_ONE_T:
-                                case FieldType::MANY_TO_MANY_T:
+                                case AbstractField::MULTI_PROVIDER_T:
+                                case AbstractField::SINGLE_PROVIDER_T:
+                                case AbstractField::MANY_TO_ONE_T:
+                                case AbstractField::MANY_TO_MANY_T:
                                     $this->duplicateNonVirtualField($source, $otherSource, $universalField);
                                     break;
                             }
@@ -89,10 +89,14 @@ final readonly class UniversalDataDuplicator
         /** @var Translation $defaultTranslation */
         $defaultTranslation = $translationRepository->findDefault();
 
-        $sourceCount = $this->allStatusesNodesSourcesRepository->countBy([
-            'node' => $source->getNode(),
-            'translation' => $defaultTranslation,
-        ]);
+        /** @var NodesSourcesRepository $repository */
+        $repository = $this->managerRegistry->getRepository(NodesSources::class);
+        $sourceCount = $repository->setDisplayingAllNodesStatuses(true)
+            ->setDisplayingNotPublishedNodes(true)
+            ->countBy([
+                'node' => $source->getNode(),
+                'translation' => $defaultTranslation,
+            ]);
 
         return 1 === $sourceCount;
     }
@@ -138,9 +142,6 @@ final readonly class UniversalDataDuplicator
             /** @var NodesSourcesDocuments $newDocument */
             foreach ($newDocuments as $newDocument) {
                 $nsDoc = new NodesSourcesDocuments($destSource, $newDocument->getDocument(), $field);
-                // Copy all contextual information from source nodes-sources-document
-                // (hotspot, imageCropAlignment)
-                $nsDoc->copyFrom($newDocument);
                 $nsDoc->setPosition($position);
                 ++$position;
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Model;
 
+use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Core\AbstractEntities\NodeInterface;
 use RZ\Roadiz\CoreBundle\Enum\NodeStatus;
 
@@ -27,12 +28,27 @@ final class NodeTreeDto implements NodeInterface
         private readonly string $childrenOrderDirection,
         private readonly bool $locked,
         // NodeType
-        private readonly string $nodeTypeName,
+        string $nodeTypeName,
+        bool $nodeTypePublishable,
+        bool $nodeTypeReachable,
+        string $nodeTypeDisplayName,
+        string $nodeTypeColor,
+        bool $nodeTypeHidingNodes,
+        bool $nodeTypeHidingNonReachableNodes,
         // Node source
         ?int $sourceId,
         ?string $title,
         ?\DateTime $publishedAt,
     ) {
+        $this->nodeType = new NodeTypeTreeDto(
+            $nodeTypeName,
+            $nodeTypePublishable,
+            $nodeTypeReachable,
+            $nodeTypeDisplayName,
+            $nodeTypeColor,
+            $nodeTypeHidingNodes,
+            $nodeTypeHidingNonReachableNodes
+        );
         $this->nodeSource = new NodesSourcesTreeDto(
             $sourceId,
             $title,
@@ -40,19 +56,16 @@ final class NodeTreeDto implements NodeInterface
         );
     }
 
-    #[\Override]
     public function getId(): int
     {
         return $this->id;
     }
 
-    #[\Override]
     public function getChildrenOrder(): string
     {
         return $this->childrenOrder;
     }
 
-    #[\Override]
     public function getChildrenOrderDirection(): string
     {
         return $this->childrenOrderDirection;
@@ -98,19 +111,16 @@ final class NodeTreeDto implements NodeInterface
         return $this->locked;
     }
 
-    #[\Override]
     public function isPublished(): bool
     {
         return $this->status->isPublished();
     }
 
-    #[\Override]
     public function isPending(): bool
     {
         return $this->status->isPending();
     }
 
-    #[\Override]
     public function isDraft(): bool
     {
         return $this->status->isDraft();
@@ -121,14 +131,13 @@ final class NodeTreeDto implements NodeInterface
         return $this->status->isDeleted();
     }
 
+    public function getNodeType(): NodeTypeInterface
+    {
+        return $this->nodeType;
+    }
+
     public function getNodeSource(): NodesSourcesTreeDto
     {
         return $this->nodeSource;
-    }
-
-    #[\Override]
-    public function getNodeTypeName(): string
-    {
-        return $this->nodeTypeName;
     }
 }
