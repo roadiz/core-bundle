@@ -18,7 +18,6 @@ final readonly class RedirectionCacheSubscriber implements EventSubscriberInterf
     {
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [

@@ -14,7 +14,6 @@ final class ValidYamlValidator extends ConstraintValidator
     /**
      * @param ValidYaml $constraint
      */
-    #[\Override]
     public function validate(mixed $value, Constraint $constraint): void
     {
         if ('' != $value) {

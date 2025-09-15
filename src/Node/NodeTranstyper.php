@@ -21,10 +21,18 @@ use RZ\Roadiz\CoreBundle\Entity\Redirection;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
 
-final readonly class NodeTranstyper
+final class NodeTranstyper
 {
-    public function __construct(private ManagerRegistry $managerRegistry, private NodeTypes $nodeTypesBag, private LoggerInterface $logger = new NullLogger())
-    {
+    private ManagerRegistry $managerRegistry;
+    private LoggerInterface $logger;
+
+    public function __construct(
+        ManagerRegistry $managerRegistry,
+        private readonly NodeTypes $nodeTypesBag,
+        ?LoggerInterface $logger = null,
+    ) {
+        $this->logger = $logger ?? new NullLogger();
+        $this->managerRegistry = $managerRegistry;
     }
 
     private function getManager(): ObjectManager
@@ -50,7 +58,7 @@ final readonly class NodeTranstyper
             ->setMaxResults(1);
         $field = $destinationNodeType->getFields()->matching($criteria)->first();
 
-        return $field ?: null;
+        return $field ? $field : null;
     }
 
     /**
@@ -178,7 +186,6 @@ final readonly class NodeTranstyper
                 $documents = $existingSource->getDocumentsByFieldsWithName($oldField->getName());
                 foreach ($documents as $document) {
                     $nsDoc = new NodesSourcesDocuments($source, $document);
-                    // TODO: We are losing all contextual data here (hotspot, alignment, etc.)
                     $nsDoc->setFieldName($matchingField->getName());
                     $this->getManager()->persist($nsDoc);
                     $source->getDocumentsByFields()->add($nsDoc);

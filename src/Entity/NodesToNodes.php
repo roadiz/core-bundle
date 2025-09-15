@@ -6,10 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
-use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
-use RZ\Roadiz\Core\AbstractEntities\PositionedInterface;
-use RZ\Roadiz\Core\AbstractEntities\PositionedTrait;
-use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
+use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
 use RZ\Roadiz\CoreBundle\Repository\NodesToNodesRepository;
 
 /**
@@ -19,28 +16,28 @@ use RZ\Roadiz\CoreBundle\Repository\NodesToNodesRepository;
 #[
     ORM\Entity(repositoryClass: NodesToNodesRepository::class),
     ORM\Table(name: 'nodes_to_nodes'),
-    ORM\HasLifecycleCallbacks,
     ORM\Index(columns: ['position']),
     ORM\Index(columns: ['node_a_id', 'field_name'], name: 'node_a_field'),
     ORM\Index(columns: ['node_a_id', 'field_name', 'position'], name: 'node_a_field_position'),
     ORM\Index(columns: ['node_b_id', 'field_name'], name: 'node_b_field'),
     ORM\Index(columns: ['node_b_id', 'field_name', 'position'], name: 'node_b_field_position')
 ]
-class NodesToNodes implements PositionedInterface, PersistableInterface
+class NodesToNodes extends AbstractPositioned
 {
-    use SequentialIdTrait;
-    use PositionedTrait;
     use FieldAwareEntityTrait;
 
-    public function __construct(
-        #[ORM\ManyToOne(targetEntity: Node::class, cascade: ['persist'], fetch: 'EAGER', inversedBy: 'bNodes')]
-        #[ORM\JoinColumn(name: 'node_a_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-        protected Node $nodeA,
-        #[ORM\ManyToOne(targetEntity: Node::class, cascade: ['persist'], fetch: 'EAGER', inversedBy: 'aNodes')]
-        #[ORM\JoinColumn(name: 'node_b_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-        protected Node $nodeB,
-        ?NodeTypeFieldInterface $field = null,
-    ) {
+    #[ORM\ManyToOne(targetEntity: Node::class, cascade: ['persist'], fetch: 'EAGER', inversedBy: 'bNodes')]
+    #[ORM\JoinColumn(name: 'node_a_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    protected Node $nodeA;
+
+    #[ORM\ManyToOne(targetEntity: Node::class, cascade: ['persist'], fetch: 'EAGER', inversedBy: 'aNodes')]
+    #[ORM\JoinColumn(name: 'node_b_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+    protected Node $nodeB;
+
+    public function __construct(Node $nodeA, Node $nodeB, ?NodeTypeFieldInterface $field = null)
+    {
+        $this->nodeA = $nodeA;
+        $this->nodeB = $nodeB;
         $this->initializeFieldAwareEntityTrait($field);
     }
 

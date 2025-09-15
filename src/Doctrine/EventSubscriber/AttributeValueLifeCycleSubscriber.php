@@ -64,7 +64,9 @@ final class AttributeValueLifeCycleSubscriber
                         $iterator = $nodeAttributes->getIterator();
                         if ($iterator instanceof \ArrayIterator) {
                             // define ordering closure, using preferred comparison method/field
-                            $iterator->uasort(fn (AttributeValueInterface $first, AttributeValueInterface $second) => $first->getPosition() > $second->getPosition() ? 1 : -1);
+                            $iterator->uasort(function (AttributeValueInterface $first, AttributeValueInterface $second) {
+                                return $first->getPosition() > $second->getPosition() ? 1 : -1;
+                            });
                         }
 
                         $lastPosition = 1;
