@@ -57,9 +57,10 @@ final class FolderRepository extends EntityRepository
             $parentFolder = null;
 
             if (count($folders) > 1) {
-                $parentName = $folders[count($folders) - 2];
-                $parentFolder = $this->findOneByFolderName($parentName);
+                // Call recursively to create parent folder if not exists with $folders array without last element
+                $parentFolder = $this->findOrCreateByPath(implode('/', array_slice($folders, 0, -1)), $translation);
             }
+
             $folder = new Folder();
             $folder->setFolderName($folderName);
 
@@ -174,6 +175,7 @@ final class FolderRepository extends EntityRepository
      * @param array        $criteria Additional criteria
      * @param string       $alias    SQL query table alias
      */
+    #[\Override]
     protected function createSearchBy(
         string $pattern,
         QueryBuilder $qb,
@@ -204,6 +206,7 @@ final class FolderRepository extends EntityRepository
      * @throws \Doctrine\ORM\NoResultException
      * @throws NonUniqueResultException
      */
+    #[\Override]
     public function countSearchBy(string $pattern, array $criteria = [], string $alias = 'obj'): int
     {
         $qb = $this->createQueryBuilder($alias);
