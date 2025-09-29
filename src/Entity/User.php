@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
-use ApiPlatform\Metadata\ApiFilter;
-use ApiPlatform\Serializer\Filter\PropertyFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Rollerworks\Component\PasswordStrength\Validator\Constraints\PasswordStrength;
 use RZ\Roadiz\Core\AbstractEntities\AbstractHuman;
 use RZ\Roadiz\CoreBundle\Repository\UserRepository;
 use RZ\Roadiz\CoreBundle\Security\User\AdvancedUserInterface;
@@ -18,7 +15,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Serializer\Attribute as Serializer;
+use Symfony\Component\Serializer\Annotation as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[
@@ -37,16 +34,26 @@ use Symfony\Component\Validator\Constraints as Assert;
     ORM\Index(columns: ['updated_at'], name: 'idx_user_updated_at'),
     ORM\HasLifecycleCallbacks,
     UniqueEntity('email'),
-    UniqueEntity('username'),
-    ApiFilter(PropertyFilter::class),
+    UniqueEntity('username')
 ]
-class User extends AbstractHuman implements UserInterface, AdvancedUserInterface, EquatableInterface, PasswordAuthenticatedUserInterface, \Stringable
+class User extends AbstractHuman implements UserInterface, AdvancedUserInterface, EquatableInterface, PasswordAuthenticatedUserInterface
 {
     /**
      * Email confirmation link TTL (in seconds) to change
      * password.
+     *
+     * @var int
      */
-    public const int CONFIRMATION_TTL = 900;
+    public const CONFIRMATION_TTL = 900;
+
+    #[ORM\Column(type: 'string', length: 200, unique: true, nullable: false)]
+    #[Serializer\Groups(['user_personal', 'human'])]
+    #[Assert\NotNull]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 200)]
+    #[Assert\Email]
+    /** @phpstan-ignore-next-line */
+    protected ?string $email = null;
 
     #[Serializer\Ignore]
     protected bool $sendCreationConfirmationEmail = false;
@@ -58,7 +65,6 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
 
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => true])]
     #[Serializer\Groups(['user_security'])]
-    #[ApiFilter(SearchFilter::class)]
     protected bool $enabled = true;
 
     #[ORM\Column(name: 'confirmation_token', type: 'string', length: 128, unique: true, nullable: true)]
@@ -75,8 +81,6 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[Assert\NotNull]
     #[Assert\NotBlank]
     #[Assert\Length(max: 200)]
-    #[ApiFilter(OrderFilter::class)]
-    #[ApiFilter(SearchFilter::class)]
     private string $username = '';
 
     /**
@@ -91,27 +95,30 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * Plain password. Used for model validation.
      * **Must not be persisted.**.
      */
+    #[PasswordStrength(minStrength: 3, minLength: 12)]
     #[Serializer\Groups(['user:write'])]
-    #[Assert\Length(min: 12, max: 120)]
     #[Assert\NotBlank(groups: ['no_empty_password'])]
-    #[Assert\PasswordStrength(minScore: Assert\PasswordStrength::STRENGTH_MEDIUM)]
-    #[Assert\NotCompromisedPassword]
     private ?string $plainPassword = null;
 
     #[ORM\Column(name: 'last_login', type: 'datetime', nullable: true)]
     #[Serializer\Groups(['user_security'])]
-    #[ApiFilter(OrderFilter::class)]
     private ?\DateTime $lastLogin = null;
 
     /**
-     * @var array<string> direct roles assigned to this User
+     * @var Collection<int, Role>
      */
-    #[ORM\Column(name: 'user_roles', type: 'json', nullable: true)]
+    #[ORM\JoinTable(name: 'users_roles')]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'role_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\ManyToMany(targetEntity: Role::class)]
     #[Serializer\Ignore]
-    private ?array $userRoles = [];
+    private Collection $roleEntities;
 
     /**
-     * @var array<string>|null temporary roles computed from User and Groups
+     * Names of current User roles
+     * to be compatible with symfony security scheme.
+     *
+     * @var array<string>|null
      */
     #[Serializer\Ignore]
     private ?array $roles = null;
@@ -150,9 +157,10 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
 
     public function __construct()
     {
+        $this->roleEntities = new ArrayCollection();
         $this->groups = new ArrayCollection();
         $this->sendCreationConfirmationEmail(false);
-        $this->initDateTimedTrait();
+        $this->initAbstractDateTimed();
     }
 
     /**
@@ -193,12 +201,14 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
 
     #[Serializer\SerializedName('identifier')]
     #[Serializer\Groups(['user_identifier', 'user_personal'])]
-    #[\Override]
     public function getUserIdentifier(): string
     {
-        return !empty($this->username) ? $this->username : throw new \LogicException('Username cannot be empty.');
+        return $this->username;
     }
 
+    /**
+     * @return string $username
+     */
     public function getUsername(): string
     {
         return $this->username;
@@ -237,7 +247,6 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     /**
      * @return string $password
      */
-    #[\Override]
     public function getPassword(): string
     {
         return $this->password;
@@ -245,8 +254,6 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
 
     /**
      * @return $this
-     *
-     * @internal do not use directly, use UserLifeCycleSubscriber
      */
     public function setPassword(string $password): User
     {
@@ -342,15 +349,65 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
         return $this;
     }
 
-    public function getUserRoles(): array
+    /**
+     * @return $this
+     *
+     * @deprecated Use addRoleEntity
+     */
+    public function addRole(Role $role): User
     {
-        return $this->userRoles ?? [];
+        return $this->addRoleEntity($role);
     }
 
-    public function setUserRoles(array $userRoles): User
+    /**
+     * Add a role object to current user.
+     *
+     * @return $this
+     */
+    public function addRoleEntity(Role $role): User
     {
-        $this->userRoles = array_values(array_unique(array_filter($userRoles)));
-        $this->roles = null; // reset roles cache
+        if (!$this->getRolesEntities()->contains($role)) {
+            $this->getRolesEntities()->add($role);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Get roles entities.
+     */
+    public function getRolesEntities(): ?Collection
+    {
+        return $this->roleEntities;
+    }
+
+    public function setRolesEntities(ArrayCollection $roles): User
+    {
+        $this->roleEntities = $roles;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     *
+     * @deprecated Use removeRoleEntity
+     */
+    public function removeRole(Role $role): User
+    {
+        return $this->removeRoleEntity($role);
+    }
+
+    /**
+     * Remove role from current user.
+     *
+     * @return $this
+     */
+    public function removeRoleEntity(Role $role): User
+    {
+        if ($this->getRolesEntities()->contains($role)) {
+            $this->getRolesEntities()->removeElement($role);
+        }
 
         return $this;
     }
@@ -358,10 +415,9 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     /**
      * Removes sensitive data from the user.
      */
-    #[\Override]
-    public function eraseCredentials(): void
+    public function eraseCredentials(): User
     {
-        $this->setPlainPassword('');
+        return $this->setPlainPassword('');
     }
 
     /**
@@ -373,7 +429,6 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     {
         if (!$this->getGroups()->contains($group)) {
             $this->getGroups()->add($group);
-            $this->roles = null; // reset roles cache
         }
 
         return $this;
@@ -393,7 +448,6 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     {
         if ($this->getGroups()->contains($group)) {
             $this->getGroups()->removeElement($group);
-            $this->roles = null; // reset roles cache
         }
 
         return $this;
@@ -428,7 +482,6 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @see AccountExpiredException
      */
     #[Serializer\Groups(['user_security'])]
-    #[\Override]
     public function isAccountNonExpired(): bool
     {
         return null === $this->expiresAt || $this->expiresAt->getTimestamp() > time();
@@ -445,7 +498,6 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @see LockedException
      */
     #[Serializer\Groups(['user_security'])]
-    #[\Override]
     public function isAccountNonLocked(): bool
     {
         return !$this->locked;
@@ -517,10 +569,9 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     /**
      * @return string $text
      */
-    #[\Override]
     public function __toString(): string
     {
-        return (string) $this->getUserIdentifier();
+        return (string) $this->getId();
     }
 
     /**
@@ -533,7 +584,6 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      *
      * @see DisabledException
      */
-    #[\Override]
     public function isEnabled(): bool
     {
         return $this->enabled;
@@ -559,7 +609,6 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * @see CredentialsExpiredException
      */
     #[Serializer\Ignore]
-    #[\Override]
     public function isCredentialsNonExpired(): bool
     {
         return null === $this->credentialsExpiresAt || $this->credentialsExpiresAt->getTimestamp() > time();
@@ -584,27 +633,29 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      */
     #[Serializer\SerializedName('roles')]
     #[Serializer\Groups(['user_role'])]
-    #[\Override]
     public function getRoles(): array
     {
         if (null === $this->roles) {
-            $this->roles = $this->getUserRoles();
-
+            $this->roles = [];
+            if (null !== $this->getRolesEntities()) {
+                foreach ($this->getRolesEntities() as $role) {
+                    if (null !== $role) {
+                        $this->roles[] = $role->getName();
+                    }
+                }
+            }
             if (null !== $this->getGroups()) {
                 foreach ($this->getGroups() as $group) {
                     if ($group instanceof Group) {
                         // User roles > Groups roles
-                        $this->roles = [
-                            ...$this->roles,
-                            ...$group->getRoles(),
-                        ];
+                        $this->roles = array_merge($group->getRoles(), $this->roles);
                     }
                 }
             }
 
             // we need to make sure to have at least one role
-            $this->roles[] = 'ROLE_DEFAULT';
-            $this->roles = array_values(array_unique($this->roles));
+            $this->roles[] = Role::ROLE_DEFAULT;
+            $this->roles = array_unique($this->roles);
         }
 
         return $this->roles;
@@ -632,7 +683,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
             $this->id,
             $this->email,
             // needed for token roles
-            $this->userRoles,
+            $this->roleEntities,
             $this->groups,
             // needed for advancedUserinterface
             $this->expiresAt,
@@ -651,7 +702,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
             $this->enabled,
             $this->id,
             $this->email,
-            $this->userRoles,
+            $this->roleEntities,
             $this->groups,
             $this->expiresAt,
             $this->locked,
@@ -662,7 +713,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     #[Serializer\Groups(['user_security'])]
     public function isSuperAdmin(): bool
     {
-        return $this->hasRole('ROLE_SUPERADMIN');
+        return $this->hasRole(Role::ROLE_SUPERADMIN);
     }
 
     public function hasGroup(string $name): bool
@@ -679,7 +730,6 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      * Every field tested in this methods must be serialized in token.
      */
     #[Serializer\Ignore]
-    #[\Override]
     public function isEqualTo(UserInterface $user): bool
     {
         if (!$user instanceof User) {

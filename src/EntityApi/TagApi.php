@@ -13,7 +13,6 @@ use RZ\Roadiz\CoreBundle\Repository\TagRepository;
  */
 class TagApi extends AbstractApi
 {
-    #[\Override]
     public function getRepository(): TagRepository
     {
         return $this->managerRegistry->getRepository(Tag::class);
@@ -26,7 +25,6 @@ class TagApi extends AbstractApi
      *
      * @return array<Tag>|Paginator<Tag>
      */
-    #[\Override]
     public function getBy(
         array $criteria,
         ?array $order = null,
@@ -49,7 +47,6 @@ class TagApi extends AbstractApi
                     );
     }
 
-    #[\Override]
     public function countBy(array $criteria): int
     {
         return $this->getRepository()
@@ -59,7 +56,6 @@ class TagApi extends AbstractApi
                     );
     }
 
-    #[\Override]
     public function getOneBy(array $criteria, ?array $order = null): ?Tag
     {
         return $this->getRepository()

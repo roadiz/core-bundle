@@ -7,16 +7,15 @@ namespace RZ\Roadiz\CoreBundle\Routing;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\Core\AbstractEntities\NodeInterface;
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
+use RZ\Roadiz\CoreBundle\Entity\Theme;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
-#[Exclude]
 final class NodeRouteHelper
 {
     /**
-     * @var class-string|null
+     * @var class-string<AbstractController>|null
      */
     private ?string $controller = null;
 
@@ -25,6 +24,7 @@ final class NodeRouteHelper
      */
     public function __construct(
         private readonly NodeInterface $node,
+        private readonly ?Theme $theme,
         private readonly PreviewResolverInterface $previewResolver,
         private readonly LoggerInterface $logger,
         private readonly string $defaultControllerClass,
@@ -51,9 +51,8 @@ final class NodeRouteHelper
 
             if (\class_exists($controllerClassName)) {
                 $reflection = new \ReflectionClass($controllerClassName);
-
-                if (!$reflection->hasMethod('__invoke')) {
-                    throw new \InvalidArgumentException('Controller class '.$controllerClassName.' must implement __invoke method.');
+                if (!$reflection->isSubclassOf(AbstractController::class)) {
+                    throw new \InvalidArgumentException('Controller class '.$controllerClassName.' must extends '.AbstractController::class);
                 }
                 // @phpstan-ignore-next-line
                 $this->controller = $controllerClassName;
@@ -71,12 +70,18 @@ final class NodeRouteHelper
 
     protected function getControllerNamespace(): string
     {
-        return $this->defaultControllerNamespace;
+        $namespace = $this->defaultControllerNamespace;
+        if (null !== $this->theme) {
+            $reflection = new \ReflectionClass($this->theme->getClassName());
+            $namespace = $reflection->getNamespaceName().'\\Controllers';
+        }
+
+        return $namespace;
     }
 
     public function getMethod(): string
     {
-        return '__invoke';
+        return 'indexAction';
     }
 
     /**

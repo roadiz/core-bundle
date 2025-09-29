@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Webhook;
 
-use RZ\Roadiz\Core\AbstractEntities\DateTimedInterface;
-use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
-
-interface WebhookInterface extends PersistableInterface, DateTimedInterface
+interface WebhookInterface
 {
+    /**
+     * @return string|null
+     */
+    public function getId();
+
     /**
      * @return string
      */

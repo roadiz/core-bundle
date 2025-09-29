@@ -8,15 +8,13 @@ use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use RZ\Roadiz\Core\AbstractEntities\DateTimedInterface;
-use RZ\Roadiz\Core\AbstractEntities\DateTimedTrait;
-use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
-use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
+use JMS\Serializer\Annotation as Serializer;
+use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
 use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
 use RZ\Roadiz\CoreBundle\Repository\CustomFormRepository;
 use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Serializer\Attribute as SymfonySerializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -31,58 +29,67 @@ use Symfony\Component\Validator\Constraints as Assert;
     ORM\Index(columns: ['created_at'], name: 'custom_form_created_at'),
     ORM\Index(columns: ['updated_at'], name: 'custom_form_updated_at'),
 ]
-class CustomForm implements DateTimedInterface, PersistableInterface
+class CustomForm extends AbstractDateTimed
 {
-    use SequentialIdTrait;
-    use DateTimedTrait;
-
     #[
         ORM\Column(name: 'color', type: 'string', length: 7, unique: false, nullable: true),
+        Serializer\Groups(['custom_form', 'nodes_sources']),
         Assert\Length(max: 7),
-        SymfonySerializer\Groups(['custom_form', 'nodes_sources']),
+        SymfonySerializer\Ignore()
     ]
     protected ?string $color = '#000000';
 
     #[
         ORM\Column(type: 'string', length: 250, unique: true),
+        Serializer\Groups(['custom_form', 'nodes_sources']),
         SymfonySerializer\Groups(['custom_form', 'nodes_sources']),
         Assert\NotNull(),
         Assert\NotBlank(),
         Assert\Length(max: 250),
+        SymfonySerializer\Ignore()
     ]
     private string $name = 'Untitled';
 
     #[
         ORM\Column(name: 'display_name', type: 'string', length: 250),
+        Serializer\Groups(['custom_form', 'nodes_sources']),
         SymfonySerializer\Groups(['custom_form', 'nodes_sources']),
         Assert\NotNull(),
         Assert\NotBlank(),
         Assert\Length(max: 250),
+        SymfonySerializer\Ignore()
     ]
     private string $displayName = 'Untitled';
 
     #[
         ORM\Column(type: 'text', nullable: true),
+        Serializer\Groups(['custom_form', 'nodes_sources']),
         SymfonySerializer\Groups(['custom_form', 'nodes_sources']),
+        SymfonySerializer\Ignore()
     ]
     private ?string $description = null;
 
     #[
         ORM\Column(type: 'text', nullable: true),
-        SymfonySerializer\Groups(['custom_form:export']),
-        Assert\NotBlank(),
+        Serializer\Groups(['custom_form']),
+        SymfonySerializer\Groups(['custom_form']),
+        SymfonySerializer\Ignore()
     ]
     private ?string $email = null;
 
     #[
         ORM\Column(type: 'string', length: 15, nullable: true),
-        SymfonySerializer\Groups(['custom_form:export']),
+        Serializer\Groups(['custom_form']),
+        SymfonySerializer\Groups(['custom_form']),
         Assert\Length(max: 15),
+        SymfonySerializer\Ignore()
     ]
     private ?string $retentionTime = null;
 
     #[
         ORM\Column(type: 'boolean', nullable: false, options: ['default' => true]),
+        Serializer\Groups(['custom_form', 'nodes_sources']),
+        SymfonySerializer\Groups(['custom_form', 'nodes_sources']),
         SymfonySerializer\Ignore()
     ]
     private bool $open = true;
@@ -90,6 +97,8 @@ class CustomForm implements DateTimedInterface, PersistableInterface
     #[
         ApiFilter(RoadizFilter\ArchiveFilter::class),
         ORM\Column(name: 'close_date', type: 'datetime', nullable: true),
+        Serializer\Groups(['custom_form', 'nodes_sources']),
+        SymfonySerializer\Groups(['custom_form', 'nodes_sources']),
         SymfonySerializer\Ignore()
     ]
     private ?\DateTime $closeDate = null;
@@ -105,6 +114,8 @@ class CustomForm implements DateTimedInterface, PersistableInterface
             orphanRemoval: true
         ),
         ORM\OrderBy(['position' => 'ASC']),
+        Serializer\Groups(['custom_form']),
+        SymfonySerializer\Groups(['custom_form']),
         SymfonySerializer\Ignore()
     ]
     private Collection $fields;
@@ -119,6 +130,7 @@ class CustomForm implements DateTimedInterface, PersistableInterface
             cascade: ['ALL'],
             orphanRemoval: true
         ),
+        Serializer\Exclude,
         SymfonySerializer\Ignore
     ]
     private Collection $customFormAnswers;
@@ -128,6 +140,7 @@ class CustomForm implements DateTimedInterface, PersistableInterface
      */
     #[
         ORM\OneToMany(mappedBy: 'customForm', targetEntity: NodesCustomForms::class, fetch: 'EXTRA_LAZY'),
+        Serializer\Exclude,
         SymfonySerializer\Ignore
     ]
     private Collection $nodes;
@@ -137,7 +150,7 @@ class CustomForm implements DateTimedInterface, PersistableInterface
         $this->fields = new ArrayCollection();
         $this->customFormAnswers = new ArrayCollection();
         $this->nodes = new ArrayCollection();
-        $this->initDateTimedTrait();
+        $this->initAbstractDateTimed();
     }
 
     public function getDisplayName(): string
@@ -215,8 +228,11 @@ class CustomForm implements DateTimedInterface, PersistableInterface
      * Combine open flag and closeDate to determine
      * if current form is still available.
      */
-    #[SymfonySerializer\Groups(['custom_form', 'nodes_sources'])]
-    #[SymfonySerializer\SerializedName('open')]
+    #[
+        Serializer\Groups(['custom_form', 'nodes_sources']),
+        Serializer\VirtualProperty,
+        SymfonySerializer\Ignore
+    ]
     public function isFormStillOpen(): bool
     {
         return (null === $this->getCloseDate() || $this->getCloseDate() >= (new \DateTime('now')))
@@ -340,7 +356,7 @@ class CustomForm implements DateTimedInterface, PersistableInterface
     {
         try {
             return null !== $this->getRetentionTime() ? new \DateInterval($this->getRetentionTime()) : null;
-        } catch (\Exception) {
+        } catch (\Exception $exception) {
             return null;
         }
     }
