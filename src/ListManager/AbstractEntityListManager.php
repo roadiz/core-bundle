@@ -30,7 +30,6 @@ abstract class AbstractEntityListManager implements EntityListManagerInterface
         $this->itemPerPage = static::ITEM_PER_PAGE;
     }
 
-    #[\Override]
     public function setAllowRequestSorting(bool $allowRequestSorting): self
     {
         $this->allowRequestSorting = $allowRequestSorting;
@@ -38,7 +37,6 @@ abstract class AbstractEntityListManager implements EntityListManagerInterface
         return $this;
     }
 
-    #[\Override]
     public function setAllowRequestSearching(bool $allowRequestSearching): self
     {
         $this->allowRequestSearching = $allowRequestSearching;
@@ -46,13 +44,11 @@ abstract class AbstractEntityListManager implements EntityListManagerInterface
         return $this;
     }
 
-    #[\Override]
     public function isDisplayingNotPublishedNodes(): bool
     {
         return $this->displayNotPublishedNodes;
     }
 
-    #[\Override]
     public function setDisplayingNotPublishedNodes(bool $displayNotPublishedNodes): self
     {
         $this->displayNotPublishedNodes = $displayNotPublishedNodes;
@@ -60,7 +56,6 @@ abstract class AbstractEntityListManager implements EntityListManagerInterface
         return $this;
     }
 
-    #[\Override]
     public function isDisplayingAllNodesStatuses(): bool
     {
         return $this->displayAllNodesStatuses;
@@ -70,7 +65,6 @@ abstract class AbstractEntityListManager implements EntityListManagerInterface
      * Switch repository to disable any security on Node status. To use ONLY in order to
      * view deleted and archived nodes.
      */
-    #[\Override]
     public function setDisplayingAllNodesStatuses(bool $displayAllNodesStatuses): self
     {
         $this->displayAllNodesStatuses = $displayAllNodesStatuses;
@@ -78,7 +72,6 @@ abstract class AbstractEntityListManager implements EntityListManagerInterface
         return $this;
     }
 
-    #[\Override]
     public function setPage(int $page): self
     {
         $this->currentPage = $page > 0 ? $page : 1;
@@ -98,7 +91,6 @@ abstract class AbstractEntityListManager implements EntityListManagerInterface
         return $this;
     }
 
-    #[\Override]
     public function disablePagination(): self
     {
         $this->setPage(1);
@@ -107,7 +99,6 @@ abstract class AbstractEntityListManager implements EntityListManagerInterface
         return $this;
     }
 
-    #[\Override]
     public function getAssignation(): array
     {
         $assign = [
@@ -168,7 +159,6 @@ abstract class AbstractEntityListManager implements EntityListManagerInterface
     /**
      * Configure a custom item count per page.
      */
-    #[\Override]
     public function setItemPerPage(int $itemPerPage): self
     {
         $this->itemPerPage = $itemPerPage > 0 ? $itemPerPage : 1;
@@ -176,7 +166,6 @@ abstract class AbstractEntityListManager implements EntityListManagerInterface
         return $this;
     }
 
-    #[\Override]
     public function getPageCount(): int
     {
         return (int) ceil($this->getItemCount() / $this->getItemPerPage());

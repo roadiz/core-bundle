@@ -9,13 +9,13 @@ use Psr\Cache\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
+use RZ\Roadiz\CoreBundle\Entity\Theme;
 use RZ\Roadiz\CoreBundle\Event\NodesSources\NodesSourcesPathGeneratingEvent;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Cmf\Component\Routing\VersatileGeneratorInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\Routing\Exception\InvalidParameterException;
 use Symfony\Component\Routing\Exception\RouteNotFoundException;
-use Symfony\Component\Routing\Matcher\RequestMatcherInterface;
 use Symfony\Component\Routing\Matcher\UrlMatcherInterface;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\RouteCollection;
@@ -23,7 +23,11 @@ use Symfony\Component\Routing\Router;
 
 class NodeRouter extends Router implements VersatileGeneratorInterface
 {
-    public const string NO_CACHE_PARAMETER = '_no_cache';
+    /**
+     * @var string
+     */
+    public const NO_CACHE_PARAMETER = '_no_cache';
+    private ?Theme $theme = null;
 
     public function __construct(
         NodeUrlMatcherInterface $matcher,
@@ -32,8 +36,6 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
         protected readonly CacheItemPoolInterface $nodeSourceUrlCacheAdapter,
         RequestContext $context,
         LoggerInterface $logger,
-        protected readonly bool $forceLocale,
-        protected readonly bool $forceLocaleWithUrlAlias,
         array $options = [],
     ) {
         parent::__construct(
@@ -46,7 +48,6 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
         $this->matcher = $matcher;
     }
 
-    #[\Override]
     public function getRouteCollection(): RouteCollection
     {
         return new RouteCollection();
@@ -55,35 +56,45 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
     /**
      * Gets the UrlMatcher instance associated with this Router.
      */
-    #[\Override]
-    public function getMatcher(): UrlMatcherInterface|RequestMatcherInterface
+    public function getMatcher(): UrlMatcherInterface
     {
         return $this->matcher;
     }
 
-    #[\Override]
+    public function getTheme(): ?Theme
+    {
+        return $this->theme;
+    }
+
+    public function setTheme(?Theme $theme): NodeRouter
+    {
+        $this->theme = $theme;
+
+        return $this;
+    }
+
     public function getRouteDebugMessage(string $name, array $parameters = []): string
     {
-        if (
-            RouteObjectInterface::OBJECT_BASED_ROUTE_NAME === $name
-            && array_key_exists(RouteObjectInterface::ROUTE_OBJECT, $parameters)
-            && $parameters[RouteObjectInterface::ROUTE_OBJECT] instanceof NodesSources
-        ) {
-            $route = $parameters[RouteObjectInterface::ROUTE_OBJECT];
+        if (RouteObjectInterface::OBJECT_BASED_ROUTE_NAME === $name) {
+            if (
+                array_key_exists(RouteObjectInterface::ROUTE_OBJECT, $parameters)
+                && $parameters[RouteObjectInterface::ROUTE_OBJECT] instanceof NodesSources
+            ) {
+                $route = $parameters[RouteObjectInterface::ROUTE_OBJECT];
 
-            return '['.$route->getTranslation()->getLocale().']'.
-                $route->getTitle().' - '.
-                $route->getNode()->getNodeName().
-                '['.$route->getNode()->getId().']';
+                return '['.$route->getTranslation()->getLocale().']'.
+                    $route->getTitle().' - '.
+                    $route->getNode()->getNodeName().
+                    '['.$route->getNode()->getId().']';
+            }
         }
 
-        return $name;
+        return (string) $name;
     }
 
     /**
      * @throws InvalidArgumentException
      */
-    #[\Override]
     public function generate(string $name, array $parameters = [], int $referenceType = self::ABSOLUTE_PATH): string
     {
         if (RouteObjectInterface::OBJECT_BASED_ROUTE_NAME !== $name) {
@@ -105,7 +116,7 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
         }
 
         if (!empty($parameters['canonicalScheme'])) {
-            $schemeAuthority = trim((string) $parameters['canonicalScheme']);
+            $schemeAuthority = trim($parameters['canonicalScheme']);
             unset($parameters['canonicalScheme']);
         } else {
             $schemeAuthority = $this->getContext()->getScheme().'://'.$this->getHttpHost();
@@ -182,11 +193,12 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
     protected function getNodesSourcesPath(NodesSources $source, array $parameters = []): NodePathInfo
     {
         $event = new NodesSourcesPathGeneratingEvent(
+            $this->getTheme(),
             $source,
             $this->getContext(),
             $parameters,
-            $this->forceLocale,
-            $this->forceLocaleWithUrlAlias
+            (bool) $this->settingsBag->get('force_locale'),
+            (bool) $this->settingsBag->get('force_locale_with_urlaliases')
         );
         /*
          * Dispatch node-source URL generation to any listener

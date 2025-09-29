@@ -11,7 +11,6 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 final class NodeTypeConfiguration implements ConfigurationInterface
 {
-    #[\Override]
     public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('node_type');
@@ -38,7 +37,6 @@ final class NodeTypeConfiguration implements ConfigurationInterface
                 ->booleanNode('reachable')->defaultTrue()->end()
                 ->booleanNode('hidingNodes')->defaultFalse()->end()
                 ->booleanNode('hidingNonReachableNodes')->defaultTrue()->end()
-                ->booleanNode('highlighted')->defaultFalse()->end()
                 ->append($this->addFieldsNode())
             ->end()
         ;
@@ -91,7 +89,6 @@ final class NodeTypeConfiguration implements ConfigurationInterface
                     ->booleanNode('indexed')->defaultFalse()->end()
                     ->booleanNode('visible')->defaultTrue()->end()
                     ->booleanNode('expanded')->defaultFalse()->end()
-                    ->booleanNode('required')->defaultFalse()->end()
                     ->variableNode('defaultValues')->end()
                     ->arrayNode('normalizationContext')
                         ->children()

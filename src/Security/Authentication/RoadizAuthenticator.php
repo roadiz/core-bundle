@@ -38,7 +38,6 @@ abstract class RoadizAuthenticator extends AbstractLoginFormAuthenticator
     ) {
     }
 
-    #[\Override]
     public function authenticate(Request $request): Passport
     {
         $credentials = $this->getCredentials($request);
@@ -54,7 +53,6 @@ abstract class RoadizAuthenticator extends AbstractLoginFormAuthenticator
         );
     }
 
-    #[\Override]
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): Response
     {
         $user = $token->getUser();
@@ -72,7 +70,6 @@ abstract class RoadizAuthenticator extends AbstractLoginFormAuthenticator
         return new RedirectResponse($this->getDefaultSuccessPath($request));
     }
 
-    #[\Override]
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response
     {
         $credentials = $this->getCredentials($request);
@@ -85,7 +82,6 @@ abstract class RoadizAuthenticator extends AbstractLoginFormAuthenticator
         return parent::onAuthenticationFailure($request, $exception);
     }
 
-    #[\Override]
     abstract protected function getLoginUrl(Request $request): string;
 
     abstract protected function getDefaultSuccessPath(Request $request): string;

@@ -18,7 +18,6 @@ class DocumentCollectionType extends AbstractType
     {
     }
 
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer(new DocumentCollectionTransformer(
@@ -27,7 +26,6 @@ class DocumentCollectionType extends AbstractType
         ));
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -39,13 +37,11 @@ class DocumentCollectionType extends AbstractType
         ]);
     }
 
-    #[\Override]
     public function getParent(): ?string
     {
         return TextType::class;
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'documents';

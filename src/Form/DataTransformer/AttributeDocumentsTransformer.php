@@ -26,7 +26,6 @@ final readonly class AttributeDocumentsTransformer implements DataTransformerInt
      *
      * @return Document[]
      */
-    #[\Override]
     public function transform(mixed $value): array
     {
         if (empty($value)) {
@@ -43,7 +42,6 @@ final readonly class AttributeDocumentsTransformer implements DataTransformerInt
     /**
      * @param array $value
      */
-    #[\Override]
     public function reverseTransform(mixed $value): ArrayCollection
     {
         if (!$value) {

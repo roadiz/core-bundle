@@ -8,7 +8,6 @@ final class OPCacheClearer implements ClearerInterface
 {
     protected string $output;
 
-    #[\Override]
     public function clear(): bool
     {
         if (
@@ -30,13 +29,11 @@ final class OPCacheClearer implements ClearerInterface
         return false;
     }
 
-    #[\Override]
     public function getOutput(): string
     {
         return $this->output;
     }
 
-    #[\Override]
     public function getCacheDir(): string
     {
         return '';

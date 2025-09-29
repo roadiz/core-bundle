@@ -21,11 +21,10 @@ final class JwtExtension extends AbstractExtension
     ) {
     }
 
-    #[\Override]
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('createPreviewJwt', $this->createPreviewJwt(...)),
+            new TwigFunction('createPreviewJwt', [$this, 'createPreviewJwt']),
         ];
     }
 
@@ -33,7 +32,11 @@ final class JwtExtension extends AbstractExtension
     {
         try {
             return $this->tokenManager->create($this->previewUserProvider->createFromSecurity());
-        } catch (AccessDeniedException|JWTFailureException $exception) {
+        } catch (AccessDeniedException $exception) {
+            $this->logger->warning($exception->getMessage());
+
+            return null;
+        } catch (JWTFailureException $exception) {
             $this->logger->warning($exception->getMessage());
 
             return null;
