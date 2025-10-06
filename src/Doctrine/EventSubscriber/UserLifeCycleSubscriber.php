@@ -65,31 +65,20 @@ final readonly class UserLifeCycleSubscriber
                 && null !== $user->getPlainPassword()
                 && '' !== $user->getPlainPassword()
             ) {
-                if ($this->setPassword($user, $user->getPlainPassword())) {
-                    $userEvent = new UserPasswordChangedEvent($user);
-                    $this->dispatcher->dispatch($userEvent);
-                }
+                $this->setPassword($user, $user->getPlainPassword());
+                $userEvent = new UserPasswordChangedEvent($user);
+                $this->dispatcher->dispatch($userEvent);
             }
         }
     }
 
-    /**
-     * @return bool returns true if password has been updated, false otherwise
-     */
-    protected function setPassword(User $user, ?string $plainPassword): bool
+    protected function setPassword(User $user, ?string $plainPassword): void
     {
-        if (null === $plainPassword) {
-            return false;
+        if (null !== $plainPassword) {
+            $hasher = $this->passwordHasherFactory->getPasswordHasher($user);
+            $encodedPassword = $hasher->hash($plainPassword);
+            $user->setPassword($encodedPassword);
         }
-        $hasher = $this->passwordHasherFactory->getPasswordHasher($user);
-        if ($hasher->verify($user->getPassword(), $plainPassword)) {
-            // Password is the same, no need to update
-            return false;
-        }
-
-        $user->setPassword($hasher->hash($plainPassword));
-
-        return true;
     }
 
     public function postUpdate(LifecycleEventArgs $event): void

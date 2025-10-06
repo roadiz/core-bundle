@@ -21,7 +21,6 @@ final readonly class NodesSourcesAddHeadersSubscriber implements EventSubscriber
     ) {
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [

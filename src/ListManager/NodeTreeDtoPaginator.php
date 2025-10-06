@@ -35,7 +35,6 @@ class NodeTreeDtoPaginator extends Paginator
     /**
      * @return array<NodeTreeDto>
      */
-    #[\Override]
     public function findByAtPage(array $order = [], int $page = 1): array
     {
         $repository = $this->getRepository();
@@ -58,7 +57,6 @@ class NodeTreeDtoPaginator extends Paginator
         }
     }
 
-    #[\Override]
     public function getTotalCount(): int
     {
         if (null === $this->totalCount) {
@@ -77,7 +75,6 @@ class NodeTreeDtoPaginator extends Paginator
     }
 
     // @phpstan-ignore-next-line
-    #[\Override]
     protected function getRepository(): NodeRepository
     {
         $repository = $this->em->getRepository(Node::class);

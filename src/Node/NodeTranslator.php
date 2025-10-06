@@ -12,12 +12,12 @@ use RZ\Roadiz\CoreBundle\Event\NodesSources\NodesSourcesCreatedEvent;
 use RZ\Roadiz\CoreBundle\Repository\AllStatusesNodesSourcesRepository;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-final readonly class NodeTranslator
+final class NodeTranslator
 {
     public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private AllStatusesNodesSourcesRepository $allStatusesNodesSourcesRepository,
-        private EventDispatcherInterface $dispatcher,
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly AllStatusesNodesSourcesRepository $allStatusesNodesSourcesRepository,
+        private readonly EventDispatcherInterface $dispatcher,
     ) {
     }
 
@@ -51,7 +51,9 @@ final readonly class NodeTranslator
             /** @var NodesSources|false $baseSource */
             $baseSource =
                 $node->getNodeSourcesByTranslation($sourceTranslation)->first() ?:
-                    $node->getNodeSources()->filter(fn (NodesSources $nodesSources) => $nodesSources->getTranslation()->isDefaultTranslation())->first() ?:
+                    $node->getNodeSources()->filter(function (NodesSources $nodesSources) {
+                        return $nodesSources->getTranslation()->isDefaultTranslation();
+                    })->first() ?:
                         $node->getNodeSources()->first();
 
             if (!($baseSource instanceof NodesSources)) {

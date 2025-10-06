@@ -9,13 +9,13 @@ use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
+use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\CoreBundle\Model\AttributeInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeTrait;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
 use RZ\Roadiz\CoreBundle\Repository\AttributeRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Serializer\Attribute as SymfonySerializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\Validator\Constraints\NotNull;
 use Symfony\Component\Validator\Constraints\Range;
 
@@ -31,9 +31,8 @@ use Symfony\Component\Validator\Constraints\Range;
     ORM\HasLifecycleCallbacks,
     UniqueEntity(fields: ['code']),
 ]
-class Attribute implements AttributeInterface
+class Attribute extends AbstractEntity implements AttributeInterface
 {
-    use SequentialIdTrait;
     use AttributeTrait;
 
     /**
@@ -96,13 +95,11 @@ class Attribute implements AttributeInterface
         return $this;
     }
 
-    #[\Override]
     public function getDefaultRealm(): ?RealmInterface
     {
         return $this->defaultRealm;
     }
 
-    #[\Override]
     public function setDefaultRealm(?RealmInterface $defaultRealm): Attribute
     {
         $this->defaultRealm = $defaultRealm;
@@ -110,7 +107,6 @@ class Attribute implements AttributeInterface
         return $this;
     }
 
-    #[\Override]
     public function getWeight(): int
     {
         return $this->weight;
@@ -126,12 +122,17 @@ class Attribute implements AttributeInterface
     /**
      * @return Collection<int, Document>
      */
-    #[SymfonySerializer\Groups(['attribute', 'node', 'nodes_sources'])]
-    #[\Override]
+    #[
+        SymfonySerializer\Groups(['attribute', 'node', 'nodes_sources']),
+    ]
     public function getDocuments(): Collection
     {
         /** @var Collection<int, Document> $values */
-        $values = $this->attributeDocuments->map(fn (AttributeDocuments $attributeDocuments) => $attributeDocuments->getDocument())->filter(fn (?Document $document) => null !== $document);
+        $values = $this->attributeDocuments->map(function (AttributeDocuments $attributeDocuments) {
+            return $attributeDocuments->getDocument();
+        })->filter(function (?Document $document) {
+            return null !== $document;
+        });
 
         return $values; // phpstan does not understand filtering null values
     }

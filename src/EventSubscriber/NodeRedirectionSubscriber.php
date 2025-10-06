@@ -25,7 +25,6 @@ final readonly class NodeRedirectionSubscriber implements EventSubscriberInterfa
     ) {
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [
