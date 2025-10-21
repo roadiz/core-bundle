@@ -18,7 +18,6 @@ final readonly class AttributeGroupTransformer implements DataTransformerInterfa
     /**
      * @param AttributeGroup|null $value
      */
-    #[\Override]
     public function transform(mixed $value): int|string
     {
         if (!$value instanceof AttributeGroup) {
@@ -28,7 +27,6 @@ final readonly class AttributeGroupTransformer implements DataTransformerInterfa
         return $value->getId();
     }
 
-    #[\Override]
     public function reverseTransform(mixed $value): ?AttributeGroup
     {
         if (!$value) {

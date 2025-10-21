@@ -19,7 +19,6 @@ final class SettingGroupType extends AbstractType
     {
     }
 
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer(new CallbackTransformer(
@@ -43,7 +42,6 @@ final class SettingGroupType extends AbstractType
         ));
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -65,13 +63,11 @@ final class SettingGroupType extends AbstractType
         });
     }
 
-    #[\Override]
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'setting_groups';

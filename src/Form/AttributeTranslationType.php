@@ -21,7 +21,6 @@ final class AttributeTranslationType extends AbstractType
     ) {
     }
 
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('label', TextType::class, [
@@ -53,7 +52,6 @@ final class AttributeTranslationType extends AbstractType
         $builder->get('translation')->addModelTransformer($this->translationTransformer);
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
@@ -67,7 +65,6 @@ final class AttributeTranslationType extends AbstractType
         ]);
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'attribute_translation';

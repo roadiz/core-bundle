@@ -26,11 +26,10 @@ final class LogExtension extends AbstractExtension
     ) {
     }
 
-    #[\Override]
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('log_entity_edit_path', $this->getEditPath(...), ['is_safe_callback' => [$this, 'isUrlGenerationSafe']]),
+            new TwigFunction('log_entity_edit_path', [$this, 'getEditPath'], ['is_safe_callback' => [$this, 'isUrlGenerationSafe']]),
         ];
     }
 

@@ -20,9 +20,10 @@ final class CaptchaType extends AbstractType
     }
 
     /**
+     * (non-PHPdoc).
+     *
      * @see \Symfony\Component\Form\AbstractType::buildView()
      */
-    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         $view->vars['configs'] = $options['configs'];
@@ -31,7 +32,6 @@ final class CaptchaType extends AbstractType
     /**
      * @see \Symfony\Component\Form\AbstractType::configureOptions()
      */
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -45,13 +45,11 @@ final class CaptchaType extends AbstractType
         ]);
     }
 
-    #[\Override]
     public function getParent(): ?string
     {
         return TextType::class;
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return $this->captchaService->getFormWidgetName();
