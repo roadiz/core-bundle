@@ -9,28 +9,30 @@ use Psr\Cache\InvalidArgumentException;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 
-final readonly class NodeTypeResolver
+final class NodeTypeResolver
 {
-    public function __construct(private CacheItemPoolInterface $cacheAdapter)
+    public function __construct(private readonly CacheItemPoolInterface $cacheAdapter)
     {
     }
 
     /**
+     * @param NodeTypeFieldInterface $field
      * @return array<string>
      */
     protected function getNodeTypeList(NodeTypeFieldInterface $field): array
     {
-        return array_filter($field->getDefaultValuesAsArray());
+        $nodeTypesNames = array_map('trim', explode(',', $field->getDefaultValues() ?? ''));
+        return array_filter($nodeTypesNames);
     }
 
     /**
+     * @param NodeTypeInterface $nodeType
      * @return array<string>
-     *
      * @throws InvalidArgumentException
      */
     public function getChildrenNodeTypeList(NodeTypeInterface $nodeType): array
     {
-        $cacheKey = 'children_'.$nodeType->getName();
+        $cacheKey = 'children_' . $nodeType->getName();
 
         $cacheItem = $this->cacheAdapter->getItem($cacheKey);
         if ($cacheItem->isHit()) {

@@ -13,13 +13,19 @@ final class AttributeObjectConstructor extends AbstractTypedObjectConstructor
 {
     public const EXCEPTION_ON_EXISTING = 'exception_on_existing_attribute';
 
+    /**
+     * @inheritDoc
+     */
     public function supports(string $className, array $data): bool
     {
-        return
+        return (
             \is_subclass_of($className, AttributeInterface::class)
-         && \array_key_exists('code', $data);
+        ) && \array_key_exists('code', $data);
     }
 
+    /**
+     * @inheritDoc
+     */
     protected function findObject(mixed $data, DeserializationContext $context): ?object
     {
         if (empty($data['code'])) {
@@ -30,9 +36,9 @@ final class AttributeObjectConstructor extends AbstractTypedObjectConstructor
             ->findOneByCode($data['code']);
 
         if (
-            null !== $tag
-            && $context->hasAttribute(self::EXCEPTION_ON_EXISTING)
-            && true === $context->hasAttribute(self::EXCEPTION_ON_EXISTING)
+            null !== $tag &&
+            $context->hasAttribute(self::EXCEPTION_ON_EXISTING) &&
+            true === $context->hasAttribute(self::EXCEPTION_ON_EXISTING)
         ) {
             throw new EntityAlreadyExistsException('Attribute already exists in database.');
         }

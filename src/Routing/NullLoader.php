@@ -9,21 +9,33 @@ use Symfony\Component\Config\Loader\LoaderResolverInterface;
 
 final class NullLoader implements LoaderInterface
 {
-    public function load(mixed $resource, ?string $type = null): mixed
+    /**
+     * @inheritDoc
+     */
+    public function load(mixed $resource, string $type = null): mixed
     {
         return null;
     }
 
-    public function supports(mixed $resource, ?string $type = null): bool
+    /**
+     * @inheritDoc
+     */
+    public function supports(mixed $resource, string $type = null): bool
     {
         return true;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getResolver(): ?LoaderResolverInterface
     {
         return null;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function setResolver(LoaderResolverInterface $resolver): self
     {
         return $this;

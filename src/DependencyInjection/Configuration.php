@@ -38,10 +38,6 @@ class Configuration implements ConfigurationInterface
             ->scalarNode('maxVersionsShowed')
                 ->defaultValue(10)
             ->end()
-            ->scalarNode('helpExternalUrl')
-                ->info('URL to display help button in back-office.')
-                ->defaultValue('https://docs.roadiz.io')
-            ->end()
             ->scalarNode('previewRequiredRoleName')
                 ->info('Role name required to access preview mode.')
                 ->defaultValue('ROLE_BACKEND_USER')
@@ -59,9 +55,6 @@ class Configuration implements ConfigurationInterface
                 ->defaultValue(false)
             ->end()
             ->booleanNode('useGravatar')
-                ->defaultTrue()
-            ->end()
-            ->booleanNode('useEmailReplyTo')
                 ->defaultTrue()
             ->end()
             ->scalarNode('documentsLibDir')->defaultValue(
@@ -87,9 +80,7 @@ EOT)
             ->append($this->addInheritanceNode())
             ->append($this->addReverseProxyCacheNode())
             ->append($this->addMediasNode())
-            ->append($this->addCaptchaNode())
         ;
-
         return $builder;
     }
 
@@ -114,13 +105,12 @@ EOD
                     ->validate()
                     ->ifNotInArray([
                         static::INHERITANCE_TYPE_JOINED,
-                        static::INHERITANCE_TYPE_SINGLE_TABLE,
+                        static::INHERITANCE_TYPE_SINGLE_TABLE
                     ])
                     ->thenInvalid('The %s inheritance type is not supported ("joined", "single_table" are accepted).')
                 ->end()
             ->end()
         ;
-
         return $node;
     }
 
@@ -136,27 +126,9 @@ EOD
             ->scalarNode('unsplash_client_id')->defaultNull()->end()
             ->scalarNode('google_server_id')->defaultNull()->end()
             ->scalarNode('soundcloud_client_id')->defaultNull()->end()
-            ->scalarNode('recaptcha_private_key')->setDeprecated('roadiz/core-bundle', '2.5.30', 'Use roadiz_core.captcha.private_key')->defaultNull()->end()
-            ->scalarNode('recaptcha_public_key')->setDeprecated('roadiz/core-bundle', '2.5.30', 'Use roadiz_core.captcha.public_key')->defaultNull()->end()
-            ->scalarNode('recaptcha_verify_url')->setDeprecated('roadiz/core-bundle', '2.5.30', 'Use roadiz_core.captcha.verify_url')->defaultValue('https://www.google.com/recaptcha/api/siteverify')->end()
+            ->scalarNode('recaptcha_private_key')->defaultNull()->end()
+            ->scalarNode('recaptcha_public_key')->defaultNull()->end()
             ->scalarNode('ffmpeg_path')->defaultNull()->end()
-            ->end();
-
-        return $node;
-    }
-
-    /**
-     * @return ArrayNodeDefinition|NodeDefinition
-     */
-    protected function addCaptchaNode()
-    {
-        $builder = new TreeBuilder('captcha');
-        $node = $builder->getRootNode();
-        $node->addDefaultsIfNotSet()
-            ->children()
-            ->scalarNode('private_key')->defaultNull()->end()
-            ->scalarNode('public_key')->defaultNull()->end()
-            ->scalarNode('verify_url')->defaultValue('https://www.google.com/recaptcha/api/siteverify')->end()
             ->end();
 
         return $node;
@@ -170,14 +142,14 @@ EOD
         $builder = new TreeBuilder('solr');
         $node = $builder->getRootNode();
 
-        $node->children()
+        $node->addDefaultsIfNotSet()
+            ->children()
                 ->scalarNode('timeout')->defaultValue(3)->end()
                 ->arrayNode('endpoints')
-                    ->defaultValue([])
                     ->useAttributeAsKey('name')
                     ->prototype('array')
                         ->children()
-                            ->scalarNode('host')->isRequired()->end()
+                            ->scalarNode('host')->defaultValue('127.0.0.1')->end()
                             ->scalarNode('username')->end()
                             ->scalarNode('password')->end()
                             ->scalarNode('core')->isRequired()->end()
@@ -204,6 +176,7 @@ EOD
         $node = $builder->getRootNode();
         $node->children()
                 ->arrayNode('frontend')
+                    ->isRequired()
                     ->useAttributeAsKey('name')
                     ->prototype('array')
                     ->children()
@@ -220,6 +193,7 @@ EOD
                     ->end()
                 ->end()
                 ->arrayNode('cloudflare')
+                    ->addDefaultsIfNotSet()
                     ->children()
                         ->scalarNode('version')
                             ->defaultValue('v4')

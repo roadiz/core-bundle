@@ -1,7 +1,7 @@
 #resources:
 #    App\Api\Model\CommonContent:
 #        operations:
-#            get_common_content:
+#            getCommonContent:
 #                class: ApiPlatform\Metadata\Get
 #                method: 'GET'
 #                uriTemplate: '/common_content'
