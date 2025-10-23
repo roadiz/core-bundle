@@ -21,7 +21,6 @@ final readonly class TagTreeDto implements PersistableInterface
     ) {
     }
 
-    #[\Override]
     public function getId(): int
     {
         return $this->id;

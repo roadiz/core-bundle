@@ -13,7 +13,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class AttributeGroupType extends AbstractType
 {
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('canonicalName', TextType::class, [
@@ -40,7 +39,6 @@ final class AttributeGroupType extends AbstractType
         ;
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefault('data_class', AttributeGroup::class);

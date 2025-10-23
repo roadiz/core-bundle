@@ -22,13 +22,11 @@ final class DocumentRawMessageHandler extends AbstractLockingDocumentMessageHand
         parent::__construct($managerRegistry, $messengerLogger, $documentsStorage);
     }
 
-    #[\Override]
     protected function supports(DocumentInterface $document): bool
     {
         return $document->isLocal() && null !== $document->getRelativePath() && $document->isProcessable();
     }
 
-    #[\Override]
     protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
         $this->downscaleImageManager->processAndOverrideDocument($document);

@@ -37,7 +37,7 @@ final class GetWebResponseByPathController extends AbstractController
     ) {
     }
 
-    public function __invoke(?Request $request): WebResponseInterface
+    public function __invoke(?Request $request): ?WebResponseInterface
     {
         try {
             if (
@@ -57,7 +57,7 @@ final class GetWebResponseByPathController extends AbstractController
                 'path' => (string) $request->query->get('path'),
             ]);
 
-            $resourceClass = $resource::class;
+            $resourceClass = get_class($resource);
             $isNodeSource = $resource instanceof NodesSources;
 
             try {

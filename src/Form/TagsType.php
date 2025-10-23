@@ -13,7 +13,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class TagsType extends AbstractType
 {
-    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
@@ -24,7 +23,6 @@ final class TagsType extends AbstractType
     /**
      * Set every tags s default choices values.
      */
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -36,7 +34,6 @@ final class TagsType extends AbstractType
         ]);
     }
 
-    #[\Override]
     public function finishView(FormView $view, FormInterface $form, array $options): void
     {
         parent::finishView($view, $form, $options);
@@ -47,13 +44,11 @@ final class TagsType extends AbstractType
         $view->vars['data'] = $form->getData();
     }
 
-    #[\Override]
     public function getParent(): ?string
     {
         return CollectionType::class;
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'tags';

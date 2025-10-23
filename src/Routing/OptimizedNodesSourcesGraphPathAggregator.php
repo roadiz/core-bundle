@@ -27,7 +27,6 @@ final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSo
     /**
      * @throws InvalidArgumentException
      */
-    #[\Override]
     public function aggregatePath(NodesSources $nodesSources, array $parameters = []): string
     {
         if (
@@ -50,14 +49,17 @@ final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSo
     }
 
     /**
-     * @return \Generator<int|string>
+     * @return array<int, int|string>
      */
-    private function getParentsIds(?Node $parent): \Generator
+    private function getParentsIds(Node $parent): array
     {
-        while (null !== $parent) {
-            yield $parent->getId();
+        $parentIds = [];
+        while (null !== $parent && !$parent->isHome()) {
+            $parentIds[] = $parent->getId();
             $parent = $parent->getParent();
         }
+
+        return $parentIds;
     }
 
     /**
@@ -68,32 +70,37 @@ final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSo
     {
         $urlTokens = [];
         $parents = [];
-        $parentIds = iterator_to_array($this->getParentsIds($source->getNode()->getParent()), false);
+        /** @var Node|null $parentNode */
+        $parentNode = $source->getNode()->getParent();
 
-        if (count($parentIds) > 0) {
-            /**
-             * Do a partial query to optimize SQL time.
-             */
-            $qb = $this->allStatusesNodesSourcesRepository->createQueryBuilder('ns');
-            $parents = $qb->select('n.id as id, n.nodeName as nodeName, ua.alias as alias')
-                ->innerJoin('ns.node', 'n')
-                ->leftJoin('ns.urlAliases', 'ua')
-                ->andWhere($qb->expr()->in('n.id', ':parentIds'))
-                ->andWhere($qb->expr()->eq('n.visible', ':visible'))
-                ->andWhere($qb->expr()->eq('n.home', ':home'))
-                ->andWhere($qb->expr()->eq('ns.translation', ':translation'))
-                ->setParameters([
-                    'parentIds' => $parentIds,
-                    'visible' => true,
-                    'home' => false,
-                    'translation' => $source->getTranslation(),
-                ])
-                ->getQuery()
-                ->setHint(Query::HINT_FORCE_PARTIAL_LOAD, true)
-                ->setCacheable(true)
-                ->getArrayResult()
-            ;
-            usort($parents, fn ($a, $b) => array_search($a['id'], $parentIds) - array_search($b['id'], $parentIds));
+        if (null !== $parentNode) {
+            $parentIds = $this->getParentsIds($parentNode);
+            if (count($parentIds) > 0) {
+                /**
+                 * Do a partial query to optimize SQL time.
+                 */
+                $qb = $this->allStatusesNodesSourcesRepository->createQueryBuilder('ns');
+                $parents = $qb->select('n.id as id, n.nodeName as nodeName, ua.alias as alias')
+                    ->innerJoin('ns.node', 'n')
+                    ->leftJoin('ns.urlAliases', 'ua')
+                    ->andWhere($qb->expr()->in('n.id', ':parentIds'))
+                    ->andWhere($qb->expr()->eq('n.visible', ':visible'))
+                    ->andWhere($qb->expr()->eq('ns.translation', ':translation'))
+                    ->setParameters([
+                        'parentIds' => $parentIds,
+                        'visible' => true,
+                        'translation' => $source->getTranslation(),
+                    ])
+                    ->getQuery()
+                    ->setHint(Query::HINT_FORCE_PARTIAL_LOAD, true)
+                    ->setCacheable(true)
+                    ->getArrayResult()
+                ;
+                usort($parents, function ($a, $b) use ($parentIds) {
+                    return array_search($a['id'], $parentIds) -
+                        array_search($b['id'], $parentIds);
+                });
+            }
         }
 
         $urlTokens[] = $source->getIdentifier();

@@ -6,12 +6,11 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
-use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
+use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\CoreBundle\Enum\FieldType;
 use RZ\Roadiz\CoreBundle\Repository\SettingRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Serializer\Attribute as Serializer;
+use Symfony\Component\Serializer\Annotation as Serializer;
 use Symfony\Component\String\UnicodeString;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -26,9 +25,8 @@ use Symfony\Component\Validator\Constraints as Assert;
     ORM\Index(columns: ['visible']),
     UniqueEntity(fields: ['name']),
 ]
-class Setting implements PersistableInterface
+class Setting extends AbstractEntity
 {
-    use SequentialIdTrait;
     use FieldTypeTrait;
 
     /**
