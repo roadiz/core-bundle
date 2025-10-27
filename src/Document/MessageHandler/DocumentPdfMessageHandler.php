@@ -9,37 +9,40 @@ use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Document\DocumentFactory;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
+use RZ\Roadiz\CoreBundle\Document\Message\DocumentPdfMessage;
 use RZ\Roadiz\Documents\Events\DocumentCreatedEvent;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
 use RZ\Roadiz\Documents\Models\HasThumbnailInterface;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Lock\LockFactory;
+use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
+#[AsMessageHandler(handles: DocumentPdfMessage::class)]
 final class DocumentPdfMessageHandler extends AbstractLockingDocumentMessageHandler
 {
     public function __construct(
         private readonly DocumentFactory $documentFactory,
         private readonly EventDispatcherInterface $eventDispatcher,
+        LockFactory $lockFactory,
         ManagerRegistry $managerRegistry,
         LoggerInterface $messengerLogger,
-        FilesystemOperator $documentsStorage
+        FilesystemOperator $documentsStorage,
     ) {
-        parent::__construct($managerRegistry, $messengerLogger, $documentsStorage);
+        parent::__construct($lockFactory, $managerRegistry, $messengerLogger, $documentsStorage);
     }
 
-    /**
-     * @param  DocumentInterface $document
-     * @return bool
-     */
+    #[\Override]
     protected function supports(DocumentInterface $document): bool
     {
-        return $document->isLocal() &&
-            $document->isPdf() &&
-            \class_exists('\Imagick') &&
-            \class_exists('\ImagickException');
+        return $document->isLocal()
+            && $document->isPdf()
+            && \class_exists('\Imagick')
+            && \class_exists('\ImagickException');
     }
 
+    #[\Override]
     protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
         /*
@@ -79,13 +82,13 @@ final class DocumentPdfMessageHandler extends AbstractLockingDocumentMessageHand
         if (false === $thumbnailPath) {
             throw new UnrecoverableMessageHandlingException('Cannot create temporary file for PDF thumbnail.');
         }
-        \rename($thumbnailPath, $thumbnailPath .= $document->getFilename() . '.jpg');
+        \rename($thumbnailPath, $thumbnailPath .= $document->getFilename().'.jpg');
 
         try {
             $im = new \Imagick();
             $im->setResolution(144, 144);
             // Use [0] to get first page of PDF.
-            if ($im->readImage($localPdfPath . '[0]')) {
+            if ($im->readImage($localPdfPath.'[0]')) {
                 $im->writeImages($thumbnailPath, false);
 
                 $thumbnailDocument = $this->documentFactory

@@ -10,14 +10,9 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-/**
- * Group selector form field type.
- */
-class MultipleEnumerationType extends AbstractType
+final class MultipleEnumerationType extends AbstractType
 {
-    /**
-     * {@inheritdoc}
-     */
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -32,33 +27,33 @@ class MultipleEnumerationType extends AbstractType
             if ('' !== $options['nodeTypeField']->getPlaceholder()) {
                 $placeholder = $options['nodeTypeField']->getPlaceholder();
             }
+
             return $placeholder;
         });
 
         $resolver->setNormalizer('choices', function (Options $options, $choices) {
-            $values = explode(',', $options['nodeTypeField']->getDefaultValues() ?? '');
+            /** @var NodeTypeField $nodeTypeField */
+            $nodeTypeField = $options['nodeTypeField'];
+            $values = $nodeTypeField->getDefaultValuesAsArray();
 
             foreach ($values as $value) {
                 $value = trim($value);
                 $choices[$value] = $value;
             }
+
             return $choices;
         });
 
-        $resolver->setNormalizer('expanded', function (Options $options, $expanded) {
-            return $options['nodeTypeField']->isExpanded();
-        });
+        $resolver->setNormalizer('expanded', fn (Options $options, $expanded) => $options['nodeTypeField']->isExpanded());
     }
-    /**
-     * {@inheritdoc}
-     */
+
+    #[\Override]
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
-    /**
-     * {@inheritdoc}
-     */
+
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'enumeration';

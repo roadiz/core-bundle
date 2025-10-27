@@ -14,27 +14,21 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 /**
  * Yaml editor form field type.
  */
-class YamlType extends AbstractType
+final class YamlType extends AbstractType
 {
-    /**
-     * {@inheritdoc}
-     */
+    #[\Override]
     public function getParent(): ?string
     {
         return TextareaType::class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'yaml';
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
@@ -42,13 +36,14 @@ class YamlType extends AbstractType
         $view->vars['attr']['class'] = 'yaml_textarea';
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'required' => false,
             'constraints' => [
-                new ValidYaml()
-            ]
+                new ValidYaml(),
+            ],
         ]);
     }
 }

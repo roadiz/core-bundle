@@ -6,20 +6,21 @@ namespace RZ\Roadiz\CoreBundle\Document\MessageHandler;
 
 use League\Flysystem\FilesystemException;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
+use RZ\Roadiz\CoreBundle\Document\Message\DocumentFilesizeMessage;
 use RZ\Roadiz\Documents\Models\AdvancedDocumentInterface;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
+use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
+#[AsMessageHandler(handles: DocumentFilesizeMessage::class)]
 final class DocumentFilesizeMessageHandler extends AbstractLockingDocumentMessageHandler
 {
-    /**
-     * @param  DocumentInterface $document
-     * @return bool
-     */
+    #[\Override]
     protected function supports(DocumentInterface $document): bool
     {
         return $document->isLocal() && null !== $document->getRelativePath();
     }
 
+    #[\Override]
     protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
         if (!$document instanceof AdvancedDocumentInterface) {

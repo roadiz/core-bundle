@@ -13,11 +13,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 /**
  * Group selector form field type.
  */
-class EnumerationType extends AbstractType
+final class EnumerationType extends AbstractType
 {
-    /**
-     * {@inheritdoc}
-     */
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -30,12 +28,13 @@ class EnumerationType extends AbstractType
         $resolver->setAllowedTypes('nodeTypeField', [NodeTypeField::class]);
 
         $resolver->setNormalizer('choices', function (Options $options, $choices) {
-            $values = explode(',', $options['nodeTypeField']->getDefaultValues() ?? '');
+            $values = $options['nodeTypeField']->getDefaultValuesAsArray();
 
             foreach ($values as $value) {
                 $value = trim($value);
                 $choices[$value] = $value;
             }
+
             return $choices;
         });
 
@@ -43,23 +42,20 @@ class EnumerationType extends AbstractType
             if ('' !== $options['nodeTypeField']->getPlaceholder()) {
                 $placeholder = $options['nodeTypeField']->getPlaceholder();
             }
+
             return $placeholder;
         });
 
-        $resolver->setNormalizer('expanded', function (Options $options, $expanded) {
-            return $options['nodeTypeField']->isExpanded();
-        });
+        $resolver->setNormalizer('expanded', fn (Options $options, $expanded) => $options['nodeTypeField']->isExpanded());
     }
-    /**
-     * {@inheritdoc}
-     */
+
+    #[\Override]
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
-    /**
-     * {@inheritdoc}
-     */
+
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'enumeration';

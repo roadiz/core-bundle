@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Form;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\CoreBundle\Form\DataTransformer\TagTranslationDocumentsTransformer;
 use RZ\Roadiz\CoreBundle\Entity\TagTranslation;
 use RZ\Roadiz\CoreBundle\Entity\TagTranslationDocuments;
+use RZ\Roadiz\CoreBundle\Form\DataTransformer\TagTranslationDocumentsTransformer;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -15,30 +15,18 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-/**
- * @package RZ\Roadiz\CoreBundle\Form\NodeSource
- */
-class TagTranslationDocumentType extends AbstractType
+final class TagTranslationDocumentType extends AbstractType
 {
-    protected ManagerRegistry $managerRegistry;
-
-    /**
-     * @param ManagerRegistry $managerRegistry
-     */
-    public function __construct(ManagerRegistry $managerRegistry)
+    public function __construct(private readonly ManagerRegistry $managerRegistry)
     {
-        $this->managerRegistry = $managerRegistry;
     }
 
-    /**
-     * @param FormBuilderInterface $builder
-     * @param array $options
-     */
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addEventListener(
             FormEvents::POST_SUBMIT,
-            [$this, 'onPostSubmit']
+            $this->onPostSubmit(...)
         );
         $builder->addModelTransformer(new TagTranslationDocumentsTransformer(
             $this->managerRegistry->getManagerForClass(TagTranslationDocuments::class),
@@ -46,9 +34,7 @@ class TagTranslationDocumentType extends AbstractType
         ));
     }
 
-    /**
-     * @param OptionsResolver $resolver
-     */
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -62,17 +48,13 @@ class TagTranslationDocumentType extends AbstractType
         $resolver->setAllowedTypes('tagTranslation', [TagTranslation::class]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'documents';
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public function getParent(): ?string
     {
         return CollectionType::class;
@@ -80,8 +62,6 @@ class TagTranslationDocumentType extends AbstractType
 
     /**
      * Delete existing document association.
-     *
-     * @param FormEvent $event
      */
     public function onPostSubmit(FormEvent $event): void
     {
