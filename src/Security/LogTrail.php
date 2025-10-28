@@ -19,7 +19,7 @@ final readonly class LogTrail
      * Publish a confirmation message in Session flash bag and
      * logger interface.
      */
-    public function publishConfirmMessage(Request $request, string $msg, ?object $source = null): void
+    public function publishConfirmMessage(?Request $request, string $msg, ?object $source = null): void
     {
         $this->publishMessage($request, $msg, 'confirm', $source);
     }
@@ -28,7 +28,7 @@ final readonly class LogTrail
      * Publish an error message in Session flash bag and
      * logger interface.
      */
-    public function publishErrorMessage(Request $request, string $msg, ?object $source = null): void
+    public function publishErrorMessage(?Request $request, string $msg, ?object $source = null): void
     {
         $this->publishMessage($request, $msg, 'error', $source);
     }
@@ -38,7 +38,7 @@ final readonly class LogTrail
      * logger interface.
      */
     protected function publishMessage(
-        Request $request,
+        ?Request $request,
         string $msg,
         string $level = 'confirm',
         ?object $source = null,
@@ -48,16 +48,10 @@ final readonly class LogTrail
             $session->getFlashBag()->add($level, $msg);
         }
 
-        switch ($level) {
-            case 'error':
-            case 'danger':
-            case 'fail':
-                $this->logger->error($msg, ['entity' => $source]);
-                break;
-            default:
-                $this->logger->info($msg, ['entity' => $source]);
-                break;
-        }
+        match ($level) {
+            'error', 'danger', 'fail' => $this->logger->error($msg, ['entity' => $source]),
+            default => $this->logger->info($msg, ['entity' => $source]),
+        };
     }
 
     /**
