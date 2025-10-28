@@ -9,15 +9,12 @@ use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Document\DocumentFactory;
 use RZ\Roadiz\CoreBundle\Document\Message\AbstractDocumentMessage;
-use RZ\Roadiz\CoreBundle\Document\Message\DocumentAudioVideoMessage;
 use RZ\Roadiz\Documents\Events\DocumentCreatedEvent;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
 use RZ\Roadiz\Documents\Models\HasThumbnailInterface;
 use RZ\Roadiz\Documents\Models\SizeableInterface;
 use RZ\Roadiz\Documents\Models\TimeableInterface;
 use Symfony\Component\HttpFoundation\File\File;
-use Symfony\Component\Lock\LockFactory;
-use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
@@ -31,34 +28,19 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  *
  * @see https://github.com/JamesHeinrich/getID3
  */
-#[AsMessageHandler(handles: DocumentAudioVideoMessage::class)]
 final class DocumentAudioVideoMessageHandler extends AbstractLockingDocumentMessageHandler
 {
     public function __construct(
         private readonly DocumentFactory $documentFactory,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly ?string $ffmpegPath,
-        LockFactory $lockFactory,
         ManagerRegistry $managerRegistry,
         LoggerInterface $messengerLogger,
         FilesystemOperator $documentsStorage,
     ) {
-        parent::__construct($lockFactory, $managerRegistry, $messengerLogger, $documentsStorage);
+        parent::__construct($managerRegistry, $messengerLogger, $documentsStorage);
     }
 
-    #[\Override]
-    protected function getLockTtl(): int
-    {
-        return 60;
-    }
-
-    #[\Override]
-    protected function isLockExclusive(): bool
-    {
-        return true;
-    }
-
-    #[\Override]
     protected function supports(DocumentInterface $document): bool
     {
         /*
@@ -69,7 +51,6 @@ final class DocumentAudioVideoMessageHandler extends AbstractLockingDocumentMess
             && (\class_exists('getID3') || is_string($this->ffmpegPath));
     }
 
-    #[\Override]
     protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
         /*

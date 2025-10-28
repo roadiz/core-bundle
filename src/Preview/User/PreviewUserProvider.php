@@ -17,7 +17,6 @@ final readonly class PreviewUserProvider implements PreviewUserProviderInterface
     ) {
     }
 
-    #[\Override]
     public function createFromSecurity(): UserInterface
     {
         if (!$this->security->isGranted($this->previewResolver->getRequiredRole())) {

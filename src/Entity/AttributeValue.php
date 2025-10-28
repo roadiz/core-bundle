@@ -9,15 +9,14 @@ use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Serializer\Filter\PropertyFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
-use RZ\Roadiz\Core\AbstractEntities\PositionedTrait;
-use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
+use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
 use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueTrait;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueTranslationInterface;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
 use RZ\Roadiz\CoreBundle\Repository\AttributeValueRepository;
-use Symfony\Component\Serializer\Attribute as SymfonySerializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
 #[
     ORM\Entity(repositoryClass: AttributeValueRepository::class),
@@ -31,10 +30,8 @@ use Symfony\Component\Serializer\Attribute as SymfonySerializer;
         'position',
     ]),
 ]
-class AttributeValue implements AttributeValueInterface
+class AttributeValue extends AbstractPositioned implements AttributeValueInterface
 {
-    use SequentialIdTrait;
-    use PositionedTrait;
     use AttributeValueTrait;
 
     #[
@@ -76,13 +73,11 @@ class AttributeValue implements AttributeValueInterface
      * to perform a custom serialization
      */
     #[SymfonySerializer\Groups(['position', 'attribute', 'node_attributes'])]
-    #[\Override]
     public function getPosition(): float
     {
         return $this->position;
     }
 
-    #[\Override]
     public function getAttributable(): Node
     {
         return $this->node;
@@ -91,7 +86,6 @@ class AttributeValue implements AttributeValueInterface
     /**
      * @return $this
      */
-    #[\Override]
     public function setAttributable(?AttributableInterface $attributable): self
     {
         if ($attributable instanceof Node) {
@@ -114,13 +108,11 @@ class AttributeValue implements AttributeValueInterface
         return $this;
     }
 
-    #[\Override]
     public function getRealm(): ?RealmInterface
     {
         return $this->realm;
     }
 
-    #[\Override]
     public function setRealm(?RealmInterface $realm): AttributeValue
     {
         $this->realm = $realm;
