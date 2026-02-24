@@ -33,7 +33,6 @@ class NodePaginator extends Paginator
         return $this;
     }
 
-    #[\Override]
     public function findByAtPage(array $order = [], int $page = 1): array
     {
         if (null !== $this->searchPattern) {
@@ -59,7 +58,6 @@ class NodePaginator extends Paginator
         );
     }
 
-    #[\Override]
     public function getTotalCount(): int
     {
         if (null === $this->totalCount) {

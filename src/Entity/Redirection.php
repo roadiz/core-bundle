@@ -6,10 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use RZ\Roadiz\Core\AbstractEntities\DateTimedInterface;
-use RZ\Roadiz\Core\AbstractEntities\DateTimedTrait;
-use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
-use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
+use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
 use RZ\Roadiz\CoreBundle\Repository\RedirectionRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,11 +22,8 @@ use Symfony\Component\Validator\Constraints as Assert;
     ORM\Index(columns: ['use_count'], name: 'redirection_use_count'),
     ORM\Index(columns: ['created_at'], name: 'redirection_created_at'),
     ORM\Index(columns: ['updated_at'], name: 'redirection_updated_at'),]
-class Redirection implements DateTimedInterface, PersistableInterface
+class Redirection extends AbstractDateTimed
 {
-    use SequentialIdTrait;
-    use DateTimedTrait;
-
     #[ORM\Column(type: 'string', length: 255, unique: true)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
@@ -111,7 +105,7 @@ class Redirection implements DateTimedInterface, PersistableInterface
     public function __construct()
     {
         $this->type = Response::HTTP_MOVED_PERMANENTLY;
-        $this->initDateTimedTrait();
+        $this->initAbstractDateTimed();
     }
 
     public function getUseCount(): int

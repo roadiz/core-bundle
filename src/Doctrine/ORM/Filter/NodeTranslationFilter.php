@@ -15,7 +15,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class NodeTranslationFilter implements EventSubscriberInterface
 {
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [
@@ -36,79 +35,71 @@ class NodeTranslationFilter implements EventSubscriberInterface
 
     public function onTranslationPrefixFilter(QueryBuilderBuildEvent $event): void
     {
-        if (!$this->supports($event)) {
-            return;
-        }
-        $simpleQB = new SimpleQueryBuilder($event->getQueryBuilder());
-        $rootAlias = $simpleQB->getRootAlias();
+        if ($this->supports($event)) {
+            $simpleQB = new SimpleQueryBuilder($event->getQueryBuilder());
+            if (str_contains($event->getProperty(), 'translation.')) {
+                // Prevent other query builder filters to execute
+                $event->stopPropagation();
+                $qb = $event->getQueryBuilder();
+                $baseKey = $simpleQB->getParameterKey($event->getProperty());
 
-        if (null === $rootAlias || !str_contains($event->getProperty(), 'translation.')) {
-            return;
-        }
-        // Prevent other query builder filters to execute
-        $event->stopPropagation();
-        $qb = $event->getQueryBuilder();
-        $baseKey = $simpleQB->getParameterKey($event->getProperty());
+                if (
+                    !$simpleQB->joinExists(
+                        $simpleQB->getRootAlias(),
+                        EntityRepository::NODESSOURCES_ALIAS
+                    )
+                ) {
+                    $qb->innerJoin(
+                        $simpleQB->getRootAlias().'.nodeSources',
+                        EntityRepository::NODESSOURCES_ALIAS
+                    );
+                }
 
-        if (
-            !$simpleQB->joinExists(
-                $rootAlias,
-                EntityRepository::NODESSOURCES_ALIAS
-            )
-        ) {
-            $qb->innerJoin(
-                $rootAlias.'.nodeSources',
-                EntityRepository::NODESSOURCES_ALIAS
-            );
-        }
+                if (
+                    !$simpleQB->joinExists(
+                        $simpleQB->getRootAlias(),
+                        EntityRepository::TRANSLATION_ALIAS
+                    )
+                ) {
+                    $qb->innerJoin(
+                        EntityRepository::NODESSOURCES_ALIAS.'.translation',
+                        EntityRepository::TRANSLATION_ALIAS
+                    );
+                }
 
-        if (
-            !$simpleQB->joinExists(
-                $rootAlias,
-                EntityRepository::TRANSLATION_ALIAS
-            )
-        ) {
-            $qb->innerJoin(
-                EntityRepository::NODESSOURCES_ALIAS.'.translation',
-                EntityRepository::TRANSLATION_ALIAS
-            );
+                $prefix = EntityRepository::TRANSLATION_ALIAS.'.';
+                $key = str_replace('translation.', '', $event->getProperty());
+                $qb->andWhere($simpleQB->buildExpressionWithoutBinding($event->getValue(), $prefix, $key, $baseKey));
+            }
         }
-
-        $prefix = EntityRepository::TRANSLATION_ALIAS.'.';
-        $key = str_replace('translation.', '', $event->getProperty());
-        $qb->andWhere($simpleQB->buildExpressionWithoutBinding($event->getValue(), $prefix, $key, $baseKey));
     }
 
     public function onTranslationFilter(QueryBuilderBuildEvent $event): void
     {
-        if (!$this->supports($event)) {
-            return;
-        }
-        $simpleQB = new SimpleQueryBuilder($event->getQueryBuilder());
-        $rootAlias = $simpleQB->getRootAlias();
+        if ($this->supports($event)) {
+            $simpleQB = new SimpleQueryBuilder($event->getQueryBuilder());
+            if ('translation' === $event->getProperty()) {
+                // Prevent other query builder filters to execute
+                $event->stopPropagation();
+                $qb = $event->getQueryBuilder();
+                $baseKey = $simpleQB->getParameterKey($event->getProperty());
 
-        if (null === $rootAlias || 'translation' !== $event->getProperty()) {
-            return;
-        }
-        // Prevent other query builder filters to execute
-        $event->stopPropagation();
-        $qb = $event->getQueryBuilder();
-        $baseKey = $simpleQB->getParameterKey($event->getProperty());
+                if (
+                    !$simpleQB->joinExists(
+                        $simpleQB->getRootAlias(),
+                        EntityRepository::NODESSOURCES_ALIAS
+                    )
+                ) {
+                    $qb->innerJoin(
+                        $simpleQB->getRootAlias().'.nodeSources',
+                        EntityRepository::NODESSOURCES_ALIAS
+                    );
+                }
 
-        if (
-            !$simpleQB->joinExists(
-                $rootAlias,
-                EntityRepository::NODESSOURCES_ALIAS
-            )
-        ) {
-            $qb->innerJoin(
-                $rootAlias.'.nodeSources',
-                EntityRepository::NODESSOURCES_ALIAS
-            );
+                $prefix = EntityRepository::NODESSOURCES_ALIAS.'.';
+                $key = $event->getProperty();
+                $qb->andWhere($simpleQB->buildExpressionWithoutBinding($event->getValue(), $prefix, $key, $baseKey));
+            }
         }
-
-        $prefix = EntityRepository::NODESSOURCES_ALIAS.'.';
-        $key = $event->getProperty();
-        $qb->andWhere($simpleQB->buildExpressionWithoutBinding($event->getValue(), $prefix, $key, $baseKey));
     }
 }

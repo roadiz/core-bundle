@@ -55,7 +55,6 @@ class FlysystemStorageCompilerPass implements CompilerPassInterface
         );
     }
 
-    #[\Override]
     public function process(ContainerBuilder $container): void
     {
         $container->setDefinition(

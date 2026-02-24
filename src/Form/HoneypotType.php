@@ -16,13 +16,11 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class HoneypotType extends AbstractType
 {
-    #[\Override]
-    public function getParent(): string
+    public function getParent(): ?string
     {
         return TextType::class;
     }
 
-    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
@@ -34,7 +32,6 @@ final class HoneypotType extends AbstractType
         ];
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -45,7 +42,6 @@ final class HoneypotType extends AbstractType
         ]);
     }
 
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) {
@@ -54,7 +50,7 @@ final class HoneypotType extends AbstractType
             if (!$data) {
                 return;
             }
-            $form->getParent()?->addError(new FormError('form_has_errors.check_you_fields'));
+            $form->getParent()->addError(new FormError('form_has_errors.check_you_fields'));
         });
     }
 }

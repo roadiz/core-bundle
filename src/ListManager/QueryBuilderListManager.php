@@ -34,7 +34,6 @@ class QueryBuilderListManager extends AbstractEntityListManager
         return $this;
     }
 
-    #[\Override]
     protected function handleSearchParam(string $search): void
     {
         parent::handleSearchParam($search);
@@ -44,13 +43,11 @@ class QueryBuilderListManager extends AbstractEntityListManager
         }
     }
 
-    #[\Override]
     public function handle(bool $disabled = false): void
     {
         $this->handleRequestQuery($disabled);
     }
 
-    #[\Override]
     protected function handleOrderingParam(string $field, string $ordering): void
     {
         $this->validateOrderingFieldName($field);
@@ -69,11 +66,7 @@ class QueryBuilderListManager extends AbstractEntityListManager
         return $this->paginator;
     }
 
-    /**
-     * @return $this
-     */
-    #[\Override]
-    public function setPage(int $page): static
+    public function setPage(int $page): self
     {
         parent::setPage($page);
         $this->queryBuilder->setFirstResult($this->getItemPerPage() * ($page - 1));
@@ -81,11 +74,7 @@ class QueryBuilderListManager extends AbstractEntityListManager
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    #[\Override]
-    public function setItemPerPage(int $itemPerPage): static
+    public function setItemPerPage(int $itemPerPage): self
     {
         parent::setItemPerPage($itemPerPage);
         $this->queryBuilder->setMaxResults((int) $itemPerPage);
@@ -93,19 +82,16 @@ class QueryBuilderListManager extends AbstractEntityListManager
         return $this;
     }
 
-    #[\Override]
     public function getItemCount(): int
     {
         return $this->getPaginator()->count();
     }
 
-    #[\Override]
     public function getEntities(): array
     {
         return $this->getPaginator()->getIterator()->getArrayCopy();
     }
 
-    #[\Override]
     public function getAssignation(): array
     {
         if ($this->debug) {

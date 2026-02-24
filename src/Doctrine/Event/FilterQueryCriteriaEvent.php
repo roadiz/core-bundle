@@ -24,7 +24,7 @@ abstract class FilterQueryCriteriaEvent extends Event
     /**
      * @return $this
      */
-    public function setQuery(Query $query): static
+    public function setQuery(Query $query): self
     {
         $this->query = $query;
 

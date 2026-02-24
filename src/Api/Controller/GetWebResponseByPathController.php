@@ -37,7 +37,7 @@ final class GetWebResponseByPathController extends AbstractController
     ) {
     }
 
-    public function __invoke(?Request $request): WebResponseInterface
+    public function __invoke(?Request $request): ?WebResponseInterface
     {
         try {
             if (
@@ -57,7 +57,7 @@ final class GetWebResponseByPathController extends AbstractController
                 'path' => (string) $request->query->get('path'),
             ]);
 
-            $resourceClass = $resource::class;
+            $resourceClass = get_class($resource);
             $isNodeSource = $resource instanceof NodesSources;
 
             try {
@@ -76,7 +76,7 @@ final class GetWebResponseByPathController extends AbstractController
                  */
                 if ($operation instanceof HttpOperation && $isNodeSource) {
                     $operation = $operation->withCacheHeaders([
-                        ...($operation->getCacheHeaders() ?? []),
+                        ...$operation->getCacheHeaders(),
                         'shared_max_age' => $resource->getNode()->getTtl() * 60,
                     ]);
                 }
@@ -148,11 +148,11 @@ final class GetWebResponseByPathController extends AbstractController
 
         // Set translation and locale to be used in Request context
         if (null !== $resourceInfo->getTranslation()) {
-            $request?->attributes->set('_translation', $resourceInfo->getTranslation());
+            $request->attributes->set('_translation', $resourceInfo->getTranslation());
         }
 
         if (null !== $resourceInfo->getLocale()) {
-            $request?->attributes->set('_locale', $resourceInfo->getLocale());
+            $request->attributes->set('_locale', $resourceInfo->getLocale());
         }
 
         /*
@@ -165,9 +165,6 @@ final class GetWebResponseByPathController extends AbstractController
     {
         if (null !== $request) {
             $iri = $this->iriConverter->getIriFromResource($resource);
-            if (null === $iri) {
-                return;
-            }
             $request->attributes->set('_resources', $request->attributes->get('_resources', []) + [$iri => $iri]);
         }
     }

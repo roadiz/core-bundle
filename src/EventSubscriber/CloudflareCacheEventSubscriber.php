@@ -30,7 +30,6 @@ final readonly class CloudflareCacheEventSubscriber implements EventSubscriberIn
     ) {
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [
@@ -100,7 +99,7 @@ final readonly class CloudflareCacheEventSubscriber implements EventSubscriberIn
                 UrlGeneratorInterface::ABSOLUTE_URL
             )]);
             $this->sendRequest($purgeRequest);
-        } catch (ExceptionInterface) {
+        } catch (ExceptionInterface $e) {
             // do nothing
         }
     }

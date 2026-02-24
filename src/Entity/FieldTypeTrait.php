@@ -18,11 +18,9 @@ trait FieldTypeTrait
      *
      * @return $this
      */
-    public function setType(int|FieldType $type): static
+    public function setType(int|FieldType $type): self
     {
-        $this->type = (is_int($type))
-            ? (FieldType::tryFrom($type) ?? throw new \InvalidArgumentException("Invalid field type integer: $type"))
-            : ($type);
+        $this->type = is_int($type) ? FieldType::tryFrom($type) : $type;
 
         return $this;
     }
@@ -34,11 +32,7 @@ trait FieldTypeTrait
 
     public function getDoctrineType(): string
     {
-        if (null === $doctrineType = $this->getType()->toDoctrine()) {
-            throw new \LogicException('Field type '.$this->getType()->name.' has no Doctrine mapping.');
-        }
-
-        return $doctrineType;
+        return $this->getType()->toDoctrine();
     }
 
     /**
