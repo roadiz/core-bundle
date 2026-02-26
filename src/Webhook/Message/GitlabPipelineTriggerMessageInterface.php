@@ -18,6 +18,7 @@ final readonly class GitlabPipelineTriggerMessageInterface implements AsyncMessa
     ) {
     }
 
+    #[\Override]
     public function getOptions(): array
     {
         $postBody = [
@@ -38,26 +39,26 @@ final readonly class GitlabPipelineTriggerMessageInterface implements AsyncMessa
         ];
     }
 
-    /**
-     * @return static
-     */
+    #[\Override]
     public static function fromWebhook(WebhookInterface $webhook): self
     {
         $payload = $webhook->getPayload();
 
         return new self(
-            $webhook->getUri(),
+            $webhook->getUri() ?? throw new \InvalidArgumentException('Webhook URI cannot be null.'),
             $payload['token'] ?? '',
             $payload['ref'] ?? 'main',
             $payload['variables'] ?? []
         );
     }
 
+    #[\Override]
     public function getMethod(): string
     {
         return 'POST';
     }
 
+    #[\Override]
     public function getUri(): string
     {
         return $this->uri;

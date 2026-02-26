@@ -22,6 +22,7 @@ final class NodesOrphansCommand extends Command
         parent::__construct($name);
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this->setName('nodes:orphans')
@@ -38,10 +39,12 @@ final class NodesOrphansCommand extends Command
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $entityManager = $this->managerRegistry->getManagerForClass(Node::class);
+        $entityManager = $this->managerRegistry
+            ->getManagerForClass(Node::class) ?? throw new \RuntimeException('No entity manager found for Node class.');
         $qb = $entityManager->createQueryBuilder();
         $qb->select('n')
             ->from(Node::class, 'n')
@@ -52,7 +55,7 @@ final class NodesOrphansCommand extends Command
         $orphans = [];
         try {
             $orphans = $qb->getQuery()->getResult();
-        } catch (NoResultException $e) {
+        } catch (NoResultException) {
         }
 
         if (0 === count($orphans)) {
@@ -69,7 +72,7 @@ final class NodesOrphansCommand extends Command
             $tableContent[] = [
                 $node->getId(),
                 $node->getNodeName(),
-                null !== $node->getNodeTypeName() ? $node->getNodeTypeName() : '',
+                $node->getNodeTypeName() ?? '',
                 !$node->isVisible() ? 'X' : '',
                 $node->isPublished() ? 'X' : '',
             ];

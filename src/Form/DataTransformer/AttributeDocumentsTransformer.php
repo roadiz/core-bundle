@@ -26,6 +26,7 @@ final readonly class AttributeDocumentsTransformer implements DataTransformerInt
      *
      * @return Document[]
      */
+    #[\Override]
     public function transform(mixed $value): array
     {
         if (empty($value)) {
@@ -42,6 +43,7 @@ final readonly class AttributeDocumentsTransformer implements DataTransformerInt
     /**
      * @param array $value
      */
+    #[\Override]
     public function reverseTransform(mixed $value): ArrayCollection
     {
         if (!$value) {
@@ -61,7 +63,7 @@ final readonly class AttributeDocumentsTransformer implements DataTransformerInt
 
             $ttd = new AttributeDocuments($this->attribute, $document);
             $ttd->setPosition($position);
-            $this->managerRegistry->getManagerForClass(class: AttributeDocuments::class)->persist($ttd);
+            $this->managerRegistry->getManagerForClass(class: AttributeDocuments::class)?->persist($ttd);
             $documents->add($ttd);
 
             ++$position;

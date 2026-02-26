@@ -6,6 +6,7 @@ namespace RZ\Roadiz\CoreBundle\Bag;
 
 use Psr\Cache\CacheItemPoolInterface;
 use RZ\Roadiz\Bag\LazyParameterBag;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeClassLocatorInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeResolverInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Repository\NodeTypeRepositoryInterface;
@@ -19,12 +20,14 @@ final class NodeTypes extends LazyParameterBag implements NodeTypeResolverInterf
     public function __construct(
         private readonly NodeTypeRepositoryInterface $repository,
         private readonly CacheItemPoolInterface $cacheItemPool,
+        private readonly NodeTypeClassLocatorInterface $nodeTypeClassLocator,
         #[Autowire(param: 'kernel.debug')]
         private readonly bool $debug,
     ) {
         parent::__construct();
     }
 
+    #[\Override]
     protected function populateParameters(): void
     {
         $cacheItem = null;
@@ -42,7 +45,7 @@ final class NodeTypes extends LazyParameterBag implements NodeTypeResolverInterf
         $this->parameters = [];
         foreach ($nodeTypes as $nodeType) {
             $this->parameters[$nodeType->getName()] = $nodeType;
-            $this->parameters[$nodeType->getSourceEntityFullQualifiedClassName()] = $nodeType;
+            $this->parameters[$this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($nodeType)] = $nodeType;
         }
 
         if (!$this->debug && isset($cacheItem)) {
@@ -56,12 +59,14 @@ final class NodeTypes extends LazyParameterBag implements NodeTypeResolverInterf
     /**
      * @return array<int, NodeType>
      */
+    #[\Override]
     public function all(?string $key = null): array
     {
         return array_values(array_unique(parent::all($key)));
     }
 
     #[\ReturnTypeWillChange]
+    #[\Override]
     public function count(): int
     {
         return count($this->all());
@@ -72,9 +77,7 @@ final class NodeTypes extends LazyParameterBag implements NodeTypeResolverInterf
      */
     public function allVisible(bool $visible = true): array
     {
-        return array_values(array_filter($this->all(), function (NodeType $nodeType) use ($visible) {
-            return $nodeType->isVisible() === $visible;
-        }));
+        return array_values(array_filter($this->all(), fn (NodeType $nodeType) => $nodeType->isVisible() === $visible));
     }
 
     /**
@@ -82,9 +85,7 @@ final class NodeTypes extends LazyParameterBag implements NodeTypeResolverInterf
      */
     public function allReachable(bool $reachable = true): array
     {
-        return array_values(array_filter($this->all(), function (NodeType $nodeType) use ($reachable) {
-            return $nodeType->isReachable() === $reachable;
-        }));
+        return array_values(array_filter($this->all(), fn (NodeType $nodeType) => $nodeType->isReachable() === $reachable));
     }
 
     /**
@@ -92,8 +93,6 @@ final class NodeTypes extends LazyParameterBag implements NodeTypeResolverInterf
      */
     public function allPublishable(bool $publishable = true): array
     {
-        return array_values(array_filter($this->all(), function (NodeType $nodeType) use ($publishable) {
-            return $nodeType->isPublishable() === $publishable;
-        }));
+        return array_values(array_filter($this->all(), fn (NodeType $nodeType) => $nodeType->isPublishable() === $publishable));
     }
 }

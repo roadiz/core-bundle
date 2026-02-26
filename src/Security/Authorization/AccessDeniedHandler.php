@@ -29,12 +29,11 @@ final readonly class AccessDeniedHandler implements AccessDeniedHandlerInterface
 
     /**
      * Handles access denied failure redirecting to home page.
-     *
-     * @return Response|null may return null
      */
-    public function handle(Request $request, AccessDeniedException $accessDeniedException): ?Response
+    #[\Override]
+    public function handle(Request $request, AccessDeniedException $accessDeniedException): Response
     {
-        $this->logger->error('User tried to access: '.$request->getUri());
+        $this->logger?->error('User tried to access: '.$request->getUri());
 
         $returnJson = $request->isXmlHttpRequest()
             || 'json' === $request->getRequestFormat()
@@ -49,7 +48,7 @@ final readonly class AccessDeniedHandler implements AccessDeniedHandlerInterface
                 [
                     'message' => $accessDeniedException->getMessage(),
                     'trace' => $accessDeniedException->getTraceAsString(),
-                    'exception' => get_class($accessDeniedException),
+                    'exception' => $accessDeniedException::class,
                 ],
                 Response::HTTP_FORBIDDEN
             );

@@ -18,18 +18,20 @@ final class UniqueFilenameValidator extends ConstraintValidator
     /**
      * @throws FilesystemException
      */
+    #[\Override]
     public function validate(mixed $value, Constraint $constraint): void
     {
         if ($constraint instanceof UniqueFilename) {
             $document = $constraint->document;
+
+            if (null === $document) {
+                return;
+            }
             /*
              * If value is already the filename
              * do nothing.
              */
-            if (
-                null !== $document
-                && $value == $document->getFilename()
-            ) {
+            if ($value == $document->getFilename()) {
                 return;
             }
 

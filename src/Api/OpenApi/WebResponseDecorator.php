@@ -15,6 +15,7 @@ final readonly class WebResponseDecorator implements OpenApiFactoryInterface
     ) {
     }
 
+    #[\Override]
     public function __invoke(array $context = []): OpenApi
     {
         $openApi = ($this->decorated)($context);
@@ -24,6 +25,10 @@ final readonly class WebResponseDecorator implements OpenApiFactoryInterface
         }
 
         $operation = $pathItem->getGet();
+
+        if (null === $operation) {
+            return $openApi;
+        }
 
         $openApi->getPaths()->addPath('/api/web_response_by_path', $pathItem->withGet(
             $operation->withParameters([

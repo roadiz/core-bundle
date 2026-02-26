@@ -18,6 +18,7 @@ final readonly class AttributeGroupNormalizer implements DenormalizerInterface
     ) {
     }
 
+    #[\Override]
     public function getSupportedTypes(?string $format): array
     {
         return [
@@ -25,6 +26,7 @@ final readonly class AttributeGroupNormalizer implements DenormalizerInterface
         ];
     }
 
+    #[\Override]
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): AttributeGroup
     {
         $groupCanonicalName = $data['canonicalName'];
@@ -39,8 +41,8 @@ final readonly class AttributeGroupNormalizer implements DenormalizerInterface
             $attributeGroup = new AttributeGroup();
             $attributeGroup->setCanonicalName($groupCanonicalName);
             if ($context[AttributeNormalizer::PERSIST_NEW_ENTITIES] ?? false) {
-                $this->managerRegistry->getManagerForClass(AttributeGroup::class)->persist($attributeGroup);
-                $this->managerRegistry->getManagerForClass(AttributeGroup::class)->flush();
+                $this->managerRegistry->getManagerForClass(AttributeGroup::class)?->persist($attributeGroup);
+                $this->managerRegistry->getManagerForClass(AttributeGroup::class)?->flush();
             }
         }
 
@@ -87,15 +89,16 @@ final readonly class AttributeGroupNormalizer implements DenormalizerInterface
             $attributeGroup->addAttributeGroupTranslation($attributeGroupTranslation);
 
             if ($context[AttributeNormalizer::PERSIST_NEW_ENTITIES] ?? false) {
-                $this->managerRegistry->getManagerForClass(AttributeGroupTranslation::class)->persist($attributeGroupTranslation);
-                $this->managerRegistry->getManagerForClass(AttributeGroupTranslation::class)->flush();
+                $this->managerRegistry->getManagerForClass(AttributeGroupTranslation::class)?->persist($attributeGroupTranslation);
+                $this->managerRegistry->getManagerForClass(AttributeGroupTranslation::class)?->flush();
             }
         }
 
         $attributeGroupTranslation->setName($data['name']);
     }
 
-    public function supportsDenormalization(mixed $data, string $type, ?string $format = null): bool
+    #[\Override]
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
     {
         return is_array($data) && array_key_exists('canonicalName', $data);
     }

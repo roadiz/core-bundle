@@ -30,6 +30,7 @@ class TagListManager extends EntityListManager
     /**
      * @return array<TagTranslation>|array<Tag>
      */
+    #[\Override]
     public function getEntities(): array
     {
         try {
@@ -39,8 +40,8 @@ class TagListManager extends EntityListManager
                     ->searchBy($this->searchPattern, $this->filteringArray, $this->orderingArray);
             }
 
-            return $this->paginator->findByAtPage($this->filteringArray, $this->currentPage);
-        } catch (\Exception $e) {
+            return $this->paginator?->findByAtPage($this->filteringArray, $this->getPage()) ?? [];
+        } catch (\Exception) {
             return [];
         }
     }
