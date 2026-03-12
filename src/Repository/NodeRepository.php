@@ -41,8 +41,11 @@ class NodeRepository extends StatusAwareRepository
         parent::__construct($registry, Node::class, $previewResolver, $dispatcher, $security);
     }
 
+    /**
+     * @return Event
+     */
     #[\Override]
-    protected function dispatchQueryBuilderBuildEvent(QueryBuilder $qb, string $property, mixed $value): Event
+    protected function dispatchQueryBuilderBuildEvent(QueryBuilder $qb, string $property, mixed $value): object
     {
         // @phpstan-ignore-next-line
         return $this->dispatcher->dispatch(
@@ -50,8 +53,11 @@ class NodeRepository extends StatusAwareRepository
         );
     }
 
+    /**
+     * @return Event
+     */
     #[\Override]
-    protected function dispatchQueryBuilderApplyEvent(QueryBuilder $qb, string $property, mixed $value): Event
+    protected function dispatchQueryBuilderApplyEvent(QueryBuilder $qb, string $property, mixed $value): object
     {
         // @phpstan-ignore-next-line
         return $this->dispatcher->dispatch(
@@ -329,9 +335,8 @@ class NodeRepository extends StatusAwareRepository
     }
 
     /**
-     * @param non-empty-string                      $pattern  Search pattern
-     * @param array<non-empty-string, mixed>        $criteria Additional criteria
-     * @param array<non-empty-string, 'ASC'|'DESC'> $orders
+     * @param string $pattern  Search pattern
+     * @param array  $criteria Additional criteria
      *
      * @return array<NodeTreeDto>
      *
@@ -354,7 +359,7 @@ class NodeRepository extends StatusAwareRepository
                 (\str_starts_with($key, 'node.') || \str_starts_with($key, static::NODE_ALIAS.'.'))
                 && $this->hasJoinedNode($qb, $alias)
             ) {
-                $key = \preg_replace('#^node\.#', static::NODE_ALIAS.'.', $key) ?? $key;
+                $key = preg_replace('#^node\.#', static::NODE_ALIAS.'.', $key);
                 $qb->addOrderBy($key, $value);
             } elseif (
                 \str_starts_with($key, static::NODESSOURCES_ALIAS.'.')
@@ -458,7 +463,7 @@ EOT,
         // Add ordering
         if (null !== $orderBy) {
             foreach ($orderBy as $key => $value) {
-                if (str_starts_with((string) $key, self::NODESSOURCES_ALIAS.'.')) {
+                if (str_starts_with($key, self::NODESSOURCES_ALIAS.'.')) {
                     $qb->addOrderBy($key, $value);
                 } else {
                     $qb->addOrderBy(self::NODE_ALIAS.'.'.$key, $value);
@@ -833,46 +838,29 @@ EOT,
 
     /**
      * Find all node’ parents with criteria and ordering.
-     *
-     * @return array<Node>
      */
     public function findAllNodeParentsBy(
         Node $node,
-        array $criteria = [],
+        array $criteria,
         ?array $orderBy = null,
         ?int $limit = null,
         ?int $offset = null,
         ?TranslationInterface $translation = null,
-    ): array {
+    ): array|Paginator|null {
         $parentsId = $this->findAllParentsIdByNode($node);
         if (count($parentsId) > 0) {
             $criteria['id'] = $parentsId;
         } else {
-            return [];
+            return null;
         }
 
-        $results = $this->findBy(
+        return $this->findBy(
             $criteria,
             $orderBy,
             $limit,
             $offset,
             $translation
         );
-
-        // If orderBy is set, return results as is
-        if (null === $orderBy) {
-            return $results;
-        }
-
-        // Reorder results to match ancestor order
-        usort($results, function (Node $a, Node $b) use ($parentsId) {
-            $posA = array_search($a->getId(), $parentsId, true);
-            $posB = array_search($b->getId(), $parentsId, true);
-
-            return $posA <=> $posB;
-        });
-
-        return $results;
     }
 
     /**
@@ -927,11 +915,9 @@ SQL
         $result = $statement
             ->executeQuery()
             ->fetchAllAssociative();
-        if (null !== $cacheItem) {
-            $cacheItem->set($result);
-            $cacheItem->expiresAfter($cacheTtl);
-            $this->_em->getConfiguration()->getResultCache()?->save($cacheItem);
-        }
+        $cacheItem?->set($result);
+        $cacheItem?->expiresAfter($cacheTtl);
+        $this->_em->getConfiguration()->getResultCache()?->save($cacheItem);
 
         return $result;
     }

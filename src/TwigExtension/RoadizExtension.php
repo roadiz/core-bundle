@@ -30,20 +30,17 @@ final class RoadizExtension extends AbstractExtension implements GlobalsInterfac
         private readonly ?string $customPreviewScheme,
         private readonly ?string $leafletMapTileUrl,
         private readonly ?string $mapsDefaultLocation,
-        private readonly ?string $projectLogoUrl,
     ) {
     }
 
     #[\Override]
     public function getGlobals(): array
     {
-        $projectLogoUrl = $this->projectLogoUrl;
-        if (empty($projectLogoUrl)) {
-            $adminImage = $this->settingsBag->getDocument('admin_image');
-            if ($adminImage instanceof DocumentInterface) {
-                $this->documentUrlGenerator->setDocument($adminImage);
-                $projectLogoUrl = $this->documentUrlGenerator->getUrl(true);
-            }
+        $emailHeaderImage = null;
+        $adminImage = $this->settingsBag->getDocument('admin_image');
+        if ($adminImage instanceof DocumentInterface && null !== $this->documentUrlGenerator) {
+            $this->documentUrlGenerator->setDocument($adminImage);
+            $emailHeaderImage = $this->documentUrlGenerator->getUrl(true);
         }
 
         return [
@@ -64,7 +61,7 @@ final class RoadizExtension extends AbstractExtension implements GlobalsInterfac
             'custom_preview_scheme' => $this->customPreviewScheme,
             'leaflet_map_tile_url' => $this->leafletMapTileUrl,
             'maps_default_location' => $this->mapsDefaultLocation,
-            'project_logo_url' => $projectLogoUrl,
+            'email_header_image' => $emailHeaderImage,
             'meta' => [
                 'siteName' => $this->settingsBag->get('site_name'),
                 'backofficeName' => $this->settingsBag->get('site_name').' backstage',

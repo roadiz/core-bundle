@@ -72,12 +72,6 @@ final class DocumentAudioVideoMessageHandler extends AbstractLockingDocumentMess
     #[\Override]
     protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
-        $mountPath = $document->getMountPath();
-
-        if (null === $mountPath) {
-            return;
-        }
-
         /*
          * This process requires document files to be locally stored!
          */
@@ -94,7 +88,7 @@ final class DocumentAudioVideoMessageHandler extends AbstractLockingDocumentMess
         if (false === $videoPathResource) {
             throw new UnrecoverableMessageHandlingException('Unable to open temporary file for video processing.');
         }
-        \stream_copy_to_stream($this->documentsStorage->readStream($mountPath), $videoPathResource);
+        \stream_copy_to_stream($this->documentsStorage->readStream($document->getMountPath()), $videoPathResource);
         \fclose($videoPathResource);
 
         $this->extractMediaMetadata($document, $videoPath);

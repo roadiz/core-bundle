@@ -93,8 +93,7 @@ final class InstallCommand extends Command
                 $io->success('Theme files “'.$filePath.'” has been imported.');
             }
         }
-        $manager = $this->managerRegistry
-            ->getManagerForClass(Translation::class) ?? throw new \RuntimeException('No entity manager found for Translation class.');
+        $manager = $this->managerRegistry->getManagerForClass(Translation::class);
         /*
          * Create default translation
          */

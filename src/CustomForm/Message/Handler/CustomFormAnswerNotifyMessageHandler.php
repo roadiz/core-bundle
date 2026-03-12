@@ -48,7 +48,7 @@ final readonly class CustomFormAnswerNotifyMessageHandler
 
         $emailFields = [
             ['name' => 'ip.address', 'value' => $answer->getIp()],
-            ['name' => 'submittedAt', 'value' => $answer->getSubmittedAt()?->format('Y-m-d H:i:s')],
+            ['name' => 'submittedAt', 'value' => $answer->getSubmittedAt()->format('Y-m-d H:i:s')],
         ];
         $emailFields = array_merge(
             $emailFields,
@@ -78,7 +78,7 @@ final readonly class CustomFormAnswerNotifyMessageHandler
     private function getCustomFormReceivers(CustomFormAnswer $answer): array
     {
         $receiver = array_filter(
-            array_map(trim(...), explode(',', $answer->getCustomForm()->getEmail() ?? ''))
+            array_map('trim', explode(',', $answer->getCustomForm()->getEmail() ?? ''))
         );
 
         return array_map(fn (string $email) => new Recipient(email: $email), $receiver);
@@ -94,14 +94,10 @@ final readonly class CustomFormAnswerNotifyMessageHandler
             foreach ($answer->getAnswerFields() as $customFormAnswerAttr) {
                 /** @var DocumentInterface $document */
                 foreach ($customFormAnswerAttr->getDocuments() as $document) {
-                    $mountPath = $document->getMountPath();
-                    if (null === $mountPath) {
-                        continue;
-                    }
                     $resources[] = new DataPart(
-                        $this->documentsStorage->readStream($mountPath),
+                        $this->documentsStorage->readStream($document->getMountPath()),
                         $document->getFilename(),
-                        $this->documentsStorage->mimeType($mountPath)
+                        $this->documentsStorage->mimeType($document->getMountPath())
                     );
                     $this->messengerLogger->debug(sprintf(
                         'Joining document %s to email.',

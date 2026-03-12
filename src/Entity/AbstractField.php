@@ -107,7 +107,7 @@ abstract class AbstractField implements PositionedInterface, PersistableInterfac
     /**
      * @return $this
      */
-    public function setName(?string $name): static
+    public function setName(?string $name): AbstractField
     {
         $this->name = StringHandler::variablize($name ?? '');
 
@@ -138,7 +138,7 @@ abstract class AbstractField implements PositionedInterface, PersistableInterfac
     /**
      * @return $this
      */
-    public function setLabel(?string $label): static
+    public function setLabel(?string $label): AbstractField
     {
         $this->label = $label ?? '';
 
@@ -153,7 +153,7 @@ abstract class AbstractField implements PositionedInterface, PersistableInterfac
     /**
      * @return $this
      */
-    public function setPlaceholder(?string $placeholder): static
+    public function setPlaceholder(?string $placeholder): AbstractField
     {
         $this->placeholder = $placeholder;
 
@@ -168,7 +168,7 @@ abstract class AbstractField implements PositionedInterface, PersistableInterfac
     /**
      * @return $this
      */
-    public function setDescription(?string $description): static
+    public function setDescription(?string $description): AbstractField
     {
         $this->description = $description;
 
@@ -183,7 +183,7 @@ abstract class AbstractField implements PositionedInterface, PersistableInterfac
     /**
      * @return $this
      */
-    public function setDefaultValues(?string $defaultValues): static
+    public function setDefaultValues(?string $defaultValues): AbstractField
     {
         $this->defaultValues = $defaultValues;
 
@@ -212,7 +212,7 @@ abstract class AbstractField implements PositionedInterface, PersistableInterfac
      *
      * @return $this
      */
-    public function setGroupName(?string $groupName): static
+    public function setGroupName(?string $groupName): AbstractField
     {
         if (null === $groupName) {
             $this->groupName = null;
@@ -238,7 +238,7 @@ abstract class AbstractField implements PositionedInterface, PersistableInterfac
     /**
      * @return $this
      */
-    public function setExpanded(bool $expanded): static
+    public function setExpanded(bool $expanded): AbstractField
     {
         $this->expanded = $expanded;
 

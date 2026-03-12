@@ -8,7 +8,6 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use Doctrine\Inflector\InflectorFactory;
 use Psr\Log\LoggerInterface;
-use RZ\Roadiz\Contracts\NodeType\NodeTypeClassLocatorInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\CoreBundle\Api\Controller\GetWebResponseByPathController;
 use RZ\Roadiz\CoreBundle\Api\Dto\Archive;
@@ -24,7 +23,6 @@ final readonly class ApiResourceGenerator
      */
     public function __construct(
         private ApiResourceOperationNameGenerator $apiResourceOperationNameGenerator,
-        private NodeTypeClassLocatorInterface $nodeTypeClassLocator,
         private string $apiResourcesDir,
         private LoggerInterface $logger,
         private string $webResponseClass,
@@ -146,7 +144,7 @@ final readonly class ApiResourceGenerator
 
     private function getApiResourceDefinition(NodeTypeInterface $nodeType): array
     {
-        $fqcn = (new UnicodeString($this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($nodeType)))
+        $fqcn = (new UnicodeString($nodeType->getSourceEntityFullQualifiedClassName()))
             ->trimStart('\\')
             ->toString();
 
@@ -167,7 +165,7 @@ final readonly class ApiResourceGenerator
     private function addWebResponseResourceOperation(NodeTypeInterface $nodeType, string $webResponseResourcePath): array
     {
         $getByPathOperationName = $this->apiResourceOperationNameGenerator->generateGetByPath(
-            $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($nodeType)
+            $nodeType->getSourceEntityFullQualifiedClassName()
         );
         $webResponseResource = Yaml::parseFile($webResponseResourcePath);
 
@@ -243,7 +241,7 @@ final readonly class ApiResourceGenerator
     private function removeWebResponseResourceOperation(NodeTypeInterface $nodeType, string $webResponseResourcePath): array
     {
         $getByPathOperationName = $this->apiResourceOperationNameGenerator->generateGetByPath(
-            $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($nodeType)
+            $nodeType->getSourceEntityFullQualifiedClassName()
         );
         $webResponseResource = Yaml::parseFile($webResponseResourcePath);
 
@@ -285,7 +283,7 @@ final readonly class ApiResourceGenerator
         ];
 
         $collectionOperationName = $this->apiResourceOperationNameGenerator->generate(
-            $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($nodeType),
+            $nodeType->getSourceEntityFullQualifiedClassName(),
             'get_collection'
         );
         $operations = array_merge(
@@ -304,7 +302,7 @@ final readonly class ApiResourceGenerator
         );
         if ($nodeType->isPublishable()) {
             $archivesOperationName = $this->apiResourceOperationNameGenerator->generate(
-                $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($nodeType),
+                $nodeType->getSourceEntityFullQualifiedClassName(),
                 'archives_collection'
             );
             $operations = array_merge(
@@ -355,7 +353,7 @@ final readonly class ApiResourceGenerator
         }
         $groups = $this->getItemOperationSerializationGroups($nodeType);
         $itemOperationName = $this->apiResourceOperationNameGenerator->generate(
-            $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($nodeType),
+            $nodeType->getSourceEntityFullQualifiedClassName(),
             'get'
         );
 
