@@ -7,23 +7,22 @@ namespace RZ\Roadiz\CoreBundle\Api\Filter;
 use ApiPlatform\Doctrine\Orm\Filter\AbstractFilter;
 use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use ApiPlatform\Metadata\Operation;
-use ApiPlatform\OpenApi\Model\Parameter;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
+use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesTags;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
-use RZ\Roadiz\CoreBundle\Enum\NodeStatus;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 
 final class NodesTagsFilter extends AbstractFilter
 {
-    public const string PROPERTY_PARAMETER = 'nodesTags';
-    public const array TRUE_VALUES = [true, '1', 1, 'true', 'on'];
-    public const array FALSE_VALUES = [false, '0', 0, 'false', 'off'];
+    public const PROPERTY_PARAMETER = 'nodesTags';
+    public const TRUE_VALUES = [true, '1', 1, 'true', 'on'];
+    public const FALSE_VALUES = [false, '0', 0, 'false', 'off'];
 
-    private const array DEFAULTS = [
+    private const DEFAULTS = [
         'withNodes' => false,
         'withoutNodes' => false,
         'visible' => null,
@@ -43,16 +42,16 @@ final class NodesTagsFilter extends AbstractFilter
         parent::__construct($managerRegistry, $logger, $properties, $nameConverter);
     }
 
-    #[\Override]
     protected function filterProperty(
         string $property,
         mixed $value,
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
-        ?Operation $operation = null,
-        array $context = [],
-    ): void {
+        Operation $operation = null,
+        array $context = []
+    ): void
+    {
         if (Tag::class !== $resourceClass) {
             return;
         }
@@ -62,8 +61,8 @@ final class NodesTagsFilter extends AbstractFilter
         }
 
         if (
-            !is_array($value)
-            && (in_array($value, self::TRUE_VALUES, true) || in_array($value, self::FALSE_VALUES, true))
+            !is_array($value) &&
+            (in_array($value, self::TRUE_VALUES, true) || in_array($value, self::FALSE_VALUES, true))
         ) {
             $withNodes = in_array($value, self::TRUE_VALUES, true);
             $withoutNodes = in_array($value, self::FALSE_VALUES, true);
@@ -86,7 +85,7 @@ final class NodesTagsFilter extends AbstractFilter
     private function extractProperties(array $value): array
     {
         $parameters = [
-            ...self::DEFAULTS,
+            ...self::DEFAULTS
         ];
 
         if (array_key_exists('visible', $value)) {
@@ -99,7 +98,7 @@ final class NodesTagsFilter extends AbstractFilter
         }
 
         if (array_key_exists('parentNodeName', $value)) {
-            $parameters['parentNodeName'] = array_filter(is_array($value['parentNodeName']) ? $value['parentNodeName'] : [$value['parentNodeName']]);
+            $parameters['parentNodeName'] =  array_filter(is_array($value['parentNodeName']) ? $value['parentNodeName'] : [$value['parentNodeName']]);
         }
 
         if (array_key_exists('nodeTypeName', $value)) {
@@ -113,12 +112,9 @@ final class NodesTagsFilter extends AbstractFilter
         return array_filter($parameters, fn ($value) => !is_array($value) || count($value) > 0);
     }
 
+
     private function alterQueryBuilder(QueryBuilder $queryBuilder, array $parameters): void
     {
-        if (null === $this->managerRegistry) {
-            return;
-        }
-
         $ntgQb = $this->managerRegistry
             ->getRepository(NodesTags::class)
             ->createQueryBuilder('ntg');
@@ -129,7 +125,7 @@ final class NodesTagsFilter extends AbstractFilter
 
         if ($this->previewResolver->isPreview()) {
             $ntgQb->andWhere($ntgQb->expr()->lte('n.status', ':status'));
-            $queryBuilder->setParameter(':status', NodeStatus::PUBLISHED);
+            $queryBuilder->setParameter(':status', Node::PUBLISHED);
         } else {
             $ntgQb
                 ->innerJoin('n.nodeSources', 'ns')
@@ -137,7 +133,7 @@ final class NodesTagsFilter extends AbstractFilter
                 ->andWhere($ntgQb->expr()->eq('n.status', ':status'));
             $queryBuilder
                 ->setParameter(':lte_published_at', new \DateTime())
-                ->setParameter(':status', NodeStatus::PUBLISHED);
+                ->setParameter(':status', Node::PUBLISHED);
         }
 
         if (true === $parameters['withoutNodes']) {
@@ -145,7 +141,6 @@ final class NodesTagsFilter extends AbstractFilter
                 'o.id',
                 $ntgQb->getQuery()->getDQL()
             ));
-
             return;
         }
 
@@ -168,7 +163,8 @@ final class NodesTagsFilter extends AbstractFilter
 
         if (array_key_exists('nodeTypeName', $parameters) && is_array($parameters['nodeTypeName'])) {
             $ntgQb
-                ->andWhere($ntgQb->expr()->in('n.nodeTypeName', ':nodeTypeName'));
+                ->innerJoin('n.nodeType', 'nt')
+                ->andWhere($ntgQb->expr()->in('nt.name', ':nodeTypeName'));
             $queryBuilder->setParameter(':nodeTypeName', $parameters['nodeTypeName']);
         }
 
@@ -186,7 +182,6 @@ final class NodesTagsFilter extends AbstractFilter
         ));
     }
 
-    #[\Override]
     public function getDescription(string $resourceClass): array
     {
         return [
@@ -195,110 +190,90 @@ final class NodesTagsFilter extends AbstractFilter
                 'type' => 'bool',
                 'required' => false,
                 'description' => 'Filter tags if they are related to any node or not.',
-                'openapi' => new Parameter(
-                    name: self::PROPERTY_PARAMETER,
-                    in: 'query',
-                    description: 'Filter tags if they are related to any node or not.'
-                ),
+                'openapi' => [
+                    'description' => 'Filter tags if they are related to any node or not.',
+                ],
             ],
             self::PROPERTY_PARAMETER.'[visible]' => [
                 'property' => self::PROPERTY_PARAMETER.'[visible]',
                 'type' => 'bool',
                 'required' => false,
                 'description' => 'Filter tags if they are related to any visible node.',
-                'openapi' => new Parameter(
-                    name: self::PROPERTY_PARAMETER.'[visible]',
-                    in: 'query',
-                    description: 'Filter tags if they are related to any visible node.'
-                ),
+                'openapi' => [
+                    'description' => 'Filter tags if they are related to any visible node.',
+                ],
             ],
             self::PROPERTY_PARAMETER.'[nodeTypeName]' => [
                 'property' => self::PROPERTY_PARAMETER.'[nodeTypeName]',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Filter tags if they are related to any node of `nodeTypeName`.',
-                'openapi' => new Parameter(
-                    name: self::PROPERTY_PARAMETER.'[nodeTypeName]',
-                    in: 'query',
-                    description: 'Filter tags if they are related to any node of `nodeTypeName`.'
-                ),
+                'openapi' => [
+                    'description' => 'Filter tags if they are related to any node of `nodeTypeName`.',
+                ],
             ],
             self::PROPERTY_PARAMETER.'[nodeTypeName][]' => [
                 'property' => self::PROPERTY_PARAMETER.'[nodeTypeName][]',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Filter tags if they are related to any node of `nodeTypeName`.',
-                'openapi' => new Parameter(
-                    name: self::PROPERTY_PARAMETER.'[nodeTypeName][]',
-                    in: 'query',
-                    description: 'Filter tags if they are related to any node of `nodeTypeName`.'
-                ),
+                'openapi' => [
+                    'description' => 'Filter tags if they are related to any node of `nodeTypeName`.',
+                ],
             ],
             self::PROPERTY_PARAMETER.'[tagName]' => [
                 'property' => self::PROPERTY_PARAMETER.'[tagName]',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Filter tags if they are related to any node which is linked to another `tagName`.',
-                'openapi' => new Parameter(
-                    name: self::PROPERTY_PARAMETER.'[tagName]',
-                    in: 'query',
-                    description: 'Filter tags if they are related to any node which is linked to another `tagName`.'
-                ),
+                'openapi' => [
+                    'description' => 'Filter tags if they are related to any node which is linked to another `tagName`.',
+                ],
             ],
             self::PROPERTY_PARAMETER.'[tagName][]' => [
                 'property' => self::PROPERTY_PARAMETER.'[tagName][]',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Filter tags if they are related to any node which is linked to another `tagName`.',
-                'openapi' => new Parameter(
-                    name: self::PROPERTY_PARAMETER.'[tagName][]',
-                    in: 'query',
-                    description: 'Filter tags if they are related to any node which is linked to another `tagName`.'
-                ),
+                'openapi' => [
+                    'description' => 'Filter tags if they are related to any node which is linked to another `tagName`.',
+                ],
             ],
             self::PROPERTY_PARAMETER.'[nodeName]' => [
                 'property' => self::PROPERTY_PARAMETER.'[nodeName]',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Filter tags if they are related to a node with `nodeName`.',
-                'openapi' => new Parameter(
-                    name: self::PROPERTY_PARAMETER.'[nodeName]',
-                    in: 'query',
-                    description: 'Filter tags if they are related to a node with `nodeName`.'
-                ),
+                'openapi' => [
+                    'description' => 'Filter tags if they are related to a node with `nodeName`.',
+                ],
             ],
             self::PROPERTY_PARAMETER.'[nodeName][]' => [
                 'property' => self::PROPERTY_PARAMETER.'[nodeName][]',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Filter tags if they are related to a node with `nodeName`.',
-                'openapi' => new Parameter(
-                    name: self::PROPERTY_PARAMETER.'[nodeName][]',
-                    in: 'query',
-                    description: 'Filter tags if they are related to a node with `nodeName`.'
-                ),
+                'openapi' => [
+                    'description' => 'Filter tags if they are related to a node with `nodeName`.',
+                ],
             ],
             self::PROPERTY_PARAMETER.'[parentNodeName]' => [
                 'property' => self::PROPERTY_PARAMETER.'[parentNodeName]',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Filter tags if they are related to a node whom parent-node is `parentNodeName`.',
-                'openapi' => new Parameter(
-                    name: self::PROPERTY_PARAMETER.'[parentNodeName]',
-                    in: 'query',
-                    description: 'Filter tags if they are related to a node whom parent-node is `parentNodeName`.'
-                ),
+                'openapi' => [
+                    'description' => 'Filter tags if they are related to a node whom parent-node is `parentNodeName`.',
+                ],
             ],
             self::PROPERTY_PARAMETER.'[parentNodeName][]' => [
                 'property' => self::PROPERTY_PARAMETER.'[parentNodeName][]',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Filter tags if they are related to a node whom parent-node is `parentNodeName`.',
-                'openapi' => new Parameter(
-                    name: self::PROPERTY_PARAMETER.'[parentNodeName][]',
-                    in: 'query',
-                    description: 'Filter tags if they are related to a node whom parent-node is `parentNodeName`.'
-                ),
+                'openapi' => [
+                    'description' => 'Filter tags if they are related to a node whom parent-node is `parentNodeName`.',
+                ],
             ],
         ];
     }

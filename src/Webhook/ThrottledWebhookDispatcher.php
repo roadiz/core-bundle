@@ -8,31 +8,31 @@ use RZ\Roadiz\CoreBundle\Webhook\Exception\TooManyWebhookTriggeredException;
 use RZ\Roadiz\CoreBundle\Webhook\Message\WebhookMessageFactoryInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 
-final readonly class ThrottledWebhookDispatcher implements WebhookDispatcher
+final class ThrottledWebhookDispatcher implements WebhookDispatcher
 {
     public function __construct(
-        private WebhookMessageFactoryInterface $messageFactory,
-        private MessageBusInterface $messageBus,
-        private RateLimiterFactoryInterface $throttledWebhooksLimiter,
+        private readonly WebhookMessageFactoryInterface $messageFactory,
+        private readonly MessageBusInterface $messageBus,
+        private readonly RateLimiterFactory $throttledWebhooksLimiter
     ) {
     }
 
     /**
+     * @param WebhookInterface $webhook
      * @throws \Exception
      */
-    #[\Override]
     public function dispatch(WebhookInterface $webhook): void
     {
         $doNotTriggerBefore = $webhook->doNotTriggerBefore();
         if (
-            null !== $doNotTriggerBefore
-            && $doNotTriggerBefore > new \DateTime()
+            null !== $doNotTriggerBefore &&
+            $doNotTriggerBefore > new \DateTime()
         ) {
             throw new TooManyWebhookTriggeredException(\DateTimeImmutable::createFromMutable($doNotTriggerBefore));
         }
-        $limiter = $this->throttledWebhooksLimiter->create((string) $webhook->getId());
+        $limiter = $this->throttledWebhooksLimiter->create($webhook->getId());
         $limit = $limiter->consume();
         // the argument of consume() is the number of tokens to consume
         // and returns an object of type Limit

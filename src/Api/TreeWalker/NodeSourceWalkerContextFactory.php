@@ -6,7 +6,6 @@ namespace RZ\Roadiz\CoreBundle\Api\TreeWalker;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Cache\CacheItemPoolInterface;
-use RZ\Roadiz\Contracts\NodeType\NodeTypeClassLocatorInterface;
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\EntityApi\NodeSourceApi;
 use RZ\Roadiz\CoreBundle\NodeType\NodeTypeResolver;
@@ -15,22 +14,20 @@ use RZ\TreeWalker\WalkerContextInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-final readonly class NodeSourceWalkerContextFactory implements WalkerContextFactoryInterface
+final class NodeSourceWalkerContextFactory implements WalkerContextFactoryInterface
 {
     public function __construct(
-        private Stopwatch $stopwatch,
-        private NodeTypes $nodeTypesBag,
-        private NodeSourceApi $nodeSourceApi,
-        private RequestStack $requestStack,
-        private ManagerRegistry $managerRegistry,
-        private CacheItemPoolInterface $cacheAdapter,
-        private NodeTypeResolver $nodeTypeResolver,
-        private PreviewResolverInterface $previewResolver,
-        private NodeTypeClassLocatorInterface $nodeTypeClassLocator,
+        private readonly Stopwatch $stopwatch,
+        private readonly NodeTypes $nodeTypesBag,
+        private readonly NodeSourceApi $nodeSourceApi,
+        private readonly RequestStack $requestStack,
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly CacheItemPoolInterface $cacheAdapter,
+        private readonly NodeTypeResolver $nodeTypeResolver,
+        private readonly PreviewResolverInterface $previewResolver
     ) {
     }
 
-    #[\Override]
     public function createWalkerContext(): WalkerContextInterface
     {
         return new NodeSourceWalkerContext(
@@ -41,8 +38,7 @@ final readonly class NodeSourceWalkerContextFactory implements WalkerContextFact
             $this->managerRegistry,
             $this->cacheAdapter,
             $this->nodeTypeResolver,
-            $this->previewResolver,
-            $this->nodeTypeClassLocator,
+            $this->previewResolver
         );
     }
 }

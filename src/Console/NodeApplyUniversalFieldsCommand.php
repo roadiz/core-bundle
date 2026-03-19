@@ -20,12 +20,11 @@ final class NodeApplyUniversalFieldsCommand extends Command
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
         private readonly UniversalDataDuplicator $universalDataDuplicator,
-        ?string $name = null,
+        ?string $name = null
     ) {
         parent::__construct($name);
     }
 
-    #[\Override]
     protected function configure(): void
     {
         $this->setName('nodes:force-universal')
@@ -33,7 +32,6 @@ final class NodeApplyUniversalFieldsCommand extends Command
         ;
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $translation = $this->managerRegistry->getRepository(Translation::class)->findDefault();
@@ -41,7 +39,7 @@ final class NodeApplyUniversalFieldsCommand extends Command
 
         $manager = $this->managerRegistry->getManagerForClass(NodesSources::class);
         if (null === $manager) {
-            throw new \RuntimeException('No manager found for '.NodesSources::class);
+            throw new \RuntimeException('No manager found for ' . NodesSources::class);
         }
 
         $qb = $manager->createQueryBuilder();
@@ -56,7 +54,7 @@ final class NodeApplyUniversalFieldsCommand extends Command
             ->setParameter(':translation', $translation);
         try {
             $sources = $qb->getQuery()->getResult();
-            $io->note(count($sources).' node(s) with universal fields were found.');
+            $io->note(count($sources) . ' node(s) with universal fields were found.');
 
             $question = new ConfirmationQuestion(
                 '<question>Are you sure to force every universal fields?</question>',
@@ -77,10 +75,9 @@ final class NodeApplyUniversalFieldsCommand extends Command
                 $manager->flush();
                 $io->progressFinish();
             }
-        } catch (NoResultException) {
+        } catch (NoResultException $e) {
             $io->warning('No node with universal fields were found.');
         }
-
         return 0;
     }
 }

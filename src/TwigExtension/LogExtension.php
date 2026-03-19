@@ -13,8 +13,8 @@ use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Entity\User;
 use RZ\Roadiz\CoreBundle\Logger\Entity\Log;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Bundle\SecurityBundle\Security;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -22,15 +22,14 @@ final class LogExtension extends AbstractExtension
 {
     public function __construct(
         private readonly Security $security,
-        private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly UrlGeneratorInterface $urlGenerator
     ) {
     }
 
-    #[\Override]
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('log_entity_edit_path', $this->getEditPath(...), ['is_safe_callback' => [$this, 'isUrlGenerationSafe']]),
+            new TwigFunction('log_entity_edit_path', [$this, 'getEditPath'], ['is_safe_callback' => [$this, 'isUrlGenerationSafe']]),
         ];
     }
 
@@ -44,9 +43,9 @@ final class LogExtension extends AbstractExtension
             case Node::class:
             case NodesSources::class:
                 if (
-                    $this->security->isGranted('ROLE_ACCESS_NODES')
-                    && isset($log->getAdditionalData()['node_id'])
-                    && isset($log->getAdditionalData()['translation_id'])
+                    $this->security->isGranted('ROLE_ACCESS_NODES') &&
+                    isset($log->getAdditionalData()['node_id']) &&
+                    isset($log->getAdditionalData()['translation_id'])
                 ) {
                     return $this->urlGenerator->generate('nodesEditSourcePage', [
                         'nodeId' => $log->getAdditionalData()['node_id'],

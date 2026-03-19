@@ -8,31 +8,27 @@ use RZ\Roadiz\Documents\MediaFinders\FacebookPictureFinder;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
-/**
- * @deprecated
- */
-final class ValidFacebookNameValidator extends ConstraintValidator
+class ValidFacebookNameValidator extends ConstraintValidator
 {
-    public function __construct(private readonly FacebookPictureFinder $facebookPictureFinder)
-    {
-    }
-
     /**
+     * @param mixed $value
      * @param ValidFacebookName $constraint
+     * @return void
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    #[\Override]
     public function validate(mixed $value, Constraint $constraint): void
     {
-        if ('' != $value) {
-            if (0 === preg_match('#^[0-9]*$#', (string) $value)) {
+        if ($value != "") {
+            if (0 === preg_match("#^[0-9]*$#", $value)) {
                 $this->context->addViolation($constraint->message);
             } else {
                 /*
                  * Test if the username really exists.
                  */
+                $facebook = new FacebookPictureFinder($value);
                 try {
-                    $this->facebookPictureFinder->getPictureUrl($value);
-                } catch (\Exception) {
+                    $facebook->getPictureUrl();
+                } catch (\Exception $e) {
                     $this->context->addViolation($constraint->message);
                 }
             }

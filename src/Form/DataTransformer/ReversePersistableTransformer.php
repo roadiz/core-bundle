@@ -11,37 +11,47 @@ use Symfony\Component\Form\DataTransformerInterface;
 /**
  * Transform Doctrine integer ID to their Doctrine entities.
  */
-final readonly class ReversePersistableTransformer implements DataTransformerInterface
+class ReversePersistableTransformer implements DataTransformerInterface
 {
     /**
+     * @var class-string<PersistableInterface>
+     */
+    protected string $doctrineEntity;
+    /**
+     * @var EntityManagerInterface
+     */
+    private EntityManagerInterface $entityManager;
+
+    /**
+     * @param EntityManagerInterface $entityManager
      * @param class-string<PersistableInterface> $doctrineEntity
      */
-    public function __construct(private EntityManagerInterface $entityManager, private string $doctrineEntity)
+    public function __construct(EntityManagerInterface $entityManager, string $doctrineEntity)
     {
+        $this->entityManager = $entityManager;
+        $this->doctrineEntity = $doctrineEntity;
     }
 
-    #[\Override]
     public function transform(mixed $value): ?array
     {
         if (null === $value) {
             return null;
         }
-
         return $this->entityManager->getRepository($this->doctrineEntity)->findBy([
-            'id' => $value,
+            'id' => $value
         ]);
     }
 
-    #[\Override]
     public function reverseTransform(mixed $value): mixed
     {
         if (is_array($value)) {
-            return array_map(fn (PersistableInterface $item) => $item->getId(), $value);
+            return array_map(function (PersistableInterface $item) {
+                return $item->getId();
+            }, $value);
         }
         if ($value instanceof PersistableInterface) {
             return $value->getId();
         }
-
         return null;
     }
 }

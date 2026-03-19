@@ -9,14 +9,13 @@ use ApiPlatform\OpenApi\Model;
 use ApiPlatform\OpenApi\Model\PathItem;
 use ApiPlatform\OpenApi\OpenApi;
 
-final readonly class PreviewDecorator implements OpenApiFactoryInterface
+final class PreviewDecorator implements OpenApiFactoryInterface
 {
     public function __construct(
-        private OpenApiFactoryInterface $decorated,
+        private readonly OpenApiFactoryInterface $decorated
     ) {
     }
 
-    #[\Override]
     public function __invoke(array $context = []): OpenApi
     {
         $openApi = ($this->decorated)($context);
@@ -32,16 +31,16 @@ final readonly class PreviewDecorator implements OpenApiFactoryInterface
                 );
 
                 $newOperation = $operation->withParameters([
-                    ...($operation->getParameters() ?? []),
+                    ...$operation->getParameters(),
                     (new Model\Parameter(
                         '_preview',
                         'query',
                         'Enables preview mode (requires a valid bearer JWT token)',
                         false
-                    ))->withSchema(['type' => 'boolean'])->withExample('1'),
+                    ))->withSchema(['type' => 'boolean'])->withExample('1')
                 ])->withSecurity([
                     ...$operation->getSecurity() ?? [],
-                    ['JWT' => []],
+                    ['JWT' => []]
                 ])->withResponses($responses);
                 $openApi->getPaths()->addPath($path, $pathItem->withGet($newOperation));
             }

@@ -7,17 +7,15 @@ namespace RZ\Roadiz\CoreBundle\Api\Filter;
 use ApiPlatform\Doctrine\Orm\Filter\AbstractFilter;
 use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use ApiPlatform\Metadata\Operation;
-use ApiPlatform\OpenApi\Model\Parameter;
 use Doctrine\ORM\QueryBuilder;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 
 final class CopyrightValidFilter extends AbstractFilter
 {
-    public const string PARAMETER = 'copyrightValid';
-    public const array TRUE_VALUES = [1, '1', 'true', true, 'on', 'yes'];
-    public const array FALSE_VALUES = [0, '0', 'false', false, 'off', 'no'];
+    public const PARAMETER = 'copyrightValid';
+    public const TRUE_VALUES = [1, '1', 'true', true, 'on', 'yes'];
+    public const FALSE_VALUES = [0, '0', 'false', false, 'off', 'no'];
 
-    #[\Override]
     protected function filterProperty(
         string $property,
         mixed $value,
@@ -25,12 +23,12 @@ final class CopyrightValidFilter extends AbstractFilter
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
         ?Operation $operation = null,
-        array $context = [],
+        array $context = []
     ): void {
-        if (self::PARAMETER !== $property) {
+        if ($property !== self::PARAMETER) {
             return;
         }
-        if (Document::class !== $resourceClass) {
+        if ($resourceClass !== Document::class) {
             return;
         }
 
@@ -43,13 +41,12 @@ final class CopyrightValidFilter extends AbstractFilter
         if (in_array($value, self::TRUE_VALUES)) {
             // Copyright MUST be valid
             $queryBuilder->andWhere($queryBuilder->expr()->orX(
-                $queryBuilder->expr()->isNull($alias.'.copyrightValidSince'),
-                $queryBuilder->expr()->lte($alias.'.copyrightValidSince', ':now')
+                $queryBuilder->expr()->isNull($alias . '.copyrightValidSince'),
+                $queryBuilder->expr()->lte($alias . '.copyrightValidSince', ':now')
             ))->andWhere($queryBuilder->expr()->orX(
-                $queryBuilder->expr()->isNull($alias.'.copyrightValidUntil'),
-                $queryBuilder->expr()->gte($alias.'.copyrightValidUntil', ':now')
+                $queryBuilder->expr()->isNull($alias . '.copyrightValidUntil'),
+                $queryBuilder->expr()->gte($alias . '.copyrightValidUntil', ':now')
             ))->setParameter(':now', new \DateTime());
-
             return;
         }
 
@@ -57,16 +54,14 @@ final class CopyrightValidFilter extends AbstractFilter
             // Copyright MUST NOT be valid
             $queryBuilder->andWhere(
                 $queryBuilder->expr()->orX(
-                    $queryBuilder->expr()->gt($alias.'.copyrightValidSince', ':now'),
-                    $queryBuilder->expr()->lt($alias.'.copyrightValidUntil', ':now')
+                    $queryBuilder->expr()->gt($alias . '.copyrightValidSince', ':now'),
+                    $queryBuilder->expr()->lt($alias . '.copyrightValidUntil', ':now')
                 )
             )->setParameter(':now', new \DateTime());
-
             return;
         }
     }
 
-    #[\Override]
     public function getDescription(string $resourceClass): array
     {
         return [
@@ -75,12 +70,10 @@ final class CopyrightValidFilter extends AbstractFilter
                 'type' => 'bool',
                 'required' => false,
                 'description' => 'Filter items for which copyright dates are valid.',
-                'openapi' => new Parameter(
-                    name: self::PARAMETER,
-                    in: 'query',
-                    description: 'Filter items for which copyright dates are valid.'
-                ),
-            ],
+                'openapi' => [
+                    'description' => 'Filter items for which copyright dates are valid.'
+                ]
+            ]
         ];
     }
 }

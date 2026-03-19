@@ -10,9 +10,11 @@ use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class LoginResetForm extends AbstractType
+class LoginResetForm extends AbstractType
 {
-    #[\Override]
+    /**
+     * {@inheritdoc}
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('token', HiddenType::class, [
@@ -32,13 +34,17 @@ final class LoginResetForm extends AbstractType
         ]);
     }
 
-    #[\Override]
+    /**
+     * {@inheritdoc}
+     */
     public function getBlockPrefix(): string
     {
         return 'login_reset';
     }
 
-    #[\Override]
+    /**
+     * {@inheritdoc}
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired([

@@ -7,39 +7,41 @@ namespace RZ\Roadiz\CoreBundle\NodeType;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use Doctrine\Inflector\InflectorFactory;
+use LogicException;
 use Psr\Log\LoggerInterface;
-use RZ\Roadiz\Contracts\NodeType\NodeTypeClassLocatorInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\CoreBundle\Api\Controller\GetWebResponseByPathController;
-use RZ\Roadiz\CoreBundle\Api\Dto\Archive;
 use RZ\Roadiz\CoreBundle\Api\Model\WebResponseInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\String\UnicodeString;
 use Symfony\Component\Yaml\Yaml;
 
-final readonly class ApiResourceGenerator
+final class ApiResourceGenerator
 {
     /**
+     * @param ApiResourceOperationNameGenerator $apiResourceOperationNameGenerator
+     * @param string $apiResourcesDir
+     * @param LoggerInterface $logger
      * @param class-string<WebResponseInterface> $webResponseClass
      */
     public function __construct(
-        private ApiResourceOperationNameGenerator $apiResourceOperationNameGenerator,
-        private NodeTypeClassLocatorInterface $nodeTypeClassLocator,
-        private string $apiResourcesDir,
-        private LoggerInterface $logger,
-        private string $webResponseClass,
+        private readonly ApiResourceOperationNameGenerator $apiResourceOperationNameGenerator,
+        private readonly string $apiResourcesDir,
+        private readonly LoggerInterface $logger,
+        private readonly string $webResponseClass
     ) {
     }
 
     /**
-     * @return string|null generated resource file path or null if nothing done
+     * @param NodeTypeInterface $nodeType
+     * @return string|null Generated resource file path or null if nothing done.
      */
     public function generate(NodeTypeInterface $nodeType): ?string
     {
         $filesystem = new Filesystem();
 
         if (!$filesystem->exists($this->apiResourcesDir)) {
-            throw new \LogicException($this->apiResourcesDir.' folder does not exist.');
+            throw new LogicException($this->apiResourcesDir . ' folder does not exist.');
         }
 
         $resourcePath = $this->getResourcePath($nodeType);
@@ -52,8 +54,8 @@ final readonly class ApiResourceGenerator
                     'resources' => [
                         $this->webResponseClass => [
                             'operations' => [],
-                        ],
-                    ],
+                        ]
+                    ]
                 ], 7)
             );
         }
@@ -76,11 +78,10 @@ final readonly class ApiResourceGenerator
                 'file' => $resourcePath,
             ]);
             \clearstatcache(true, $resourcePath);
-
             return $resourcePath;
+        } else {
+            return null;
         }
-
-        return null;
     }
 
     public function remove(NodeTypeInterface $nodeType): void
@@ -88,7 +89,7 @@ final readonly class ApiResourceGenerator
         $filesystem = new Filesystem();
 
         if (!$filesystem->exists($this->apiResourcesDir)) {
-            throw new \LogicException($this->apiResourcesDir.' folder does not exist.');
+            throw new LogicException($this->apiResourcesDir . ' folder does not exist.');
         }
 
         $resourcePath = $this->getResourcePath($nodeType);
@@ -117,19 +118,19 @@ final readonly class ApiResourceGenerator
 
     public function getResourcePath(NodeTypeInterface $nodeType): string
     {
-        return $this->apiResourcesDir.'/'.(new UnicodeString($nodeType->getName()))
+        return $this->apiResourcesDir . '/' . (new UnicodeString($nodeType->getName()))
                 ->lower()
                 ->prepend('ns')
                 ->append('.yml')
                 ->toString();
     }
 
-    private function getWebResponseResourcePath(): string
+    protected function getWebResponseResourcePath(): string
     {
-        return $this->apiResourcesDir.'/web_response.yml';
+        return $this->apiResourcesDir . '/web_response.yml';
     }
 
-    private function getResourceName(string $nodeTypeName): string
+    protected function getResourceName(string $nodeTypeName): string
     {
         return (new UnicodeString($nodeTypeName))
                 ->snake()
@@ -137,16 +138,15 @@ final readonly class ApiResourceGenerator
                 ->toString();
     }
 
-    private function getResourceUriPrefix(NodeTypeInterface $nodeType): string
+    protected function getResourceUriPrefix(NodeTypeInterface $nodeType): string
     {
         $pluralNodeTypeName = InflectorFactory::create()->build()->pluralize($nodeType->getName());
-
-        return '/'.$this->getResourceName($pluralNodeTypeName);
+        return '/' . $this->getResourceName($pluralNodeTypeName);
     }
 
-    private function getApiResourceDefinition(NodeTypeInterface $nodeType): array
+    protected function getApiResourceDefinition(NodeTypeInterface $nodeType): array
     {
-        $fqcn = (new UnicodeString($this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($nodeType)))
+        $fqcn = (new UnicodeString($nodeType->getSourceEntityFullQualifiedClassName()))
             ->trimStart('\\')
             ->toString();
 
@@ -157,17 +157,17 @@ final readonly class ApiResourceGenerator
                     'types' => [$nodeType->getName()],
                     'operations' => [
                         ...$this->getCollectionOperations($nodeType),
-                        ...$this->getItemOperations($nodeType),
+                        ...$this->getItemOperations($nodeType)
                     ],
-                ],
-            ],
+                ]
+            ]
         ];
     }
 
-    private function addWebResponseResourceOperation(NodeTypeInterface $nodeType, string $webResponseResourcePath): array
+    protected function addWebResponseResourceOperation(NodeTypeInterface $nodeType, string $webResponseResourcePath): array
     {
         $getByPathOperationName = $this->apiResourceOperationNameGenerator->generateGetByPath(
-            $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($nodeType)
+            $nodeType->getSourceEntityFullQualifiedClassName()
         );
         $webResponseResource = Yaml::parseFile($webResponseResourcePath);
 
@@ -176,7 +176,7 @@ final readonly class ApiResourceGenerator
                 'resources' => [
                     $this->webResponseClass => [
                         'operations' => [],
-                    ],
+                    ]
                 ],
             ];
         }
@@ -213,13 +213,13 @@ final readonly class ApiResourceGenerator
                         'web_response',
                         'walker',
                         'children',
-                    ],
-                ],
+                    ]
+                ]
             ],
-            'openapi' => [
+            'openapiContext' => [
                 'tags' => ['WebResponse'],
-                'summary' => 'Get a '.$nodeType->getName().' by its path wrapped in a WebResponse object',
-                'description' => 'Get a '.$nodeType->getName().' by its path wrapped in a WebResponse',
+                'summary' => 'Get a ' . $nodeType->getName() . ' by its path wrapped in a WebResponse object',
+                'description' => 'Get a ' . $nodeType->getName() . ' by its path wrapped in a WebResponse',
                 'parameters' => [
                     [
                         'type' => 'string',
@@ -230,20 +230,19 @@ final readonly class ApiResourceGenerator
                         'schema' => [
                             'type' => 'string',
                         ],
-                    ],
-                ],
-            ],
+                    ]
+                ]
+            ]
         ];
 
         $webResponseResource['resources'][$this->webResponseClass]['operations'] = $operations;
-
         return $webResponseResource;
     }
 
-    private function removeWebResponseResourceOperation(NodeTypeInterface $nodeType, string $webResponseResourcePath): array
+    protected function removeWebResponseResourceOperation(NodeTypeInterface $nodeType, string $webResponseResourcePath): array
     {
         $getByPathOperationName = $this->apiResourceOperationNameGenerator->generateGetByPath(
-            $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($nodeType)
+            $nodeType->getSourceEntityFullQualifiedClassName()
         );
         $webResponseResource = Yaml::parseFile($webResponseResourcePath);
 
@@ -262,49 +261,47 @@ final readonly class ApiResourceGenerator
 
         unset($operations[$getByPathOperationName]);
         $webResponseResource['resources'][$this->webResponseClass]['operations'] = array_filter($operations);
-
         return $webResponseResource;
     }
 
-    private function getCollectionOperations(NodeTypeInterface $nodeType): array
+    protected function getCollectionOperations(NodeTypeInterface $nodeType): array
     {
-        if (!$nodeType->isReachable()) {
-            return [];
-        }
         $operations = [];
-        $groups = [
-            'nodes_sources_base',
-            'nodes_sources_default',
-            'urls',
-            'tag_base',
-            'translation_base',
-            'document_display',
-            'document_thumbnails',
-            'document_display_sources',
-            ...$this->getGroupedFieldsSerializationGroups($nodeType),
-        ];
+        if ($nodeType->isReachable()) {
+            $groups = [
+                "nodes_sources_base",
+                "nodes_sources_default",
+                "urls",
+                "tag_base",
+                "translation_base",
+                "document_display",
+                "document_thumbnails",
+                "document_display_sources",
+                ...$this->getGroupedFieldsSerializationGroups($nodeType)
+            ];
 
-        $collectionOperationName = $this->apiResourceOperationNameGenerator->generate(
-            $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($nodeType),
-            'get_collection'
-        );
-        $operations = array_merge(
-            $operations,
-            [
-                $collectionOperationName => [
-                    'method' => 'GET',
-                    'class' => GetCollection::class,
-                    'shortName' => $nodeType->getName(),
-                    'normalizationContext' => [
-                        'enable_max_depth' => true,
-                        'groups' => array_values(array_filter(array_unique($groups))),
-                    ],
-                ],
-            ]
-        );
+            $collectionOperationName = $this->apiResourceOperationNameGenerator->generate(
+                $nodeType->getSourceEntityFullQualifiedClassName(),
+                'get_collection'
+            );
+            $operations = array_merge(
+                $operations,
+                [
+                    $collectionOperationName => [
+                        'method' => 'GET',
+                        'class' => GetCollection::class,
+                        'shortName' => $nodeType->getName(),
+                        'normalizationContext' => [
+                            'enable_max_depth' => true,
+                            'groups' => array_values(array_filter(array_unique($groups)))
+                        ],
+                    ]
+                ]
+            );
+        }
         if ($nodeType->isPublishable()) {
             $archivesOperationName = $this->apiResourceOperationNameGenerator->generate(
-                $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($nodeType),
+                $nodeType->getSourceEntityFullQualifiedClassName(),
                 'archives_collection'
             );
             $operations = array_merge(
@@ -314,64 +311,58 @@ final readonly class ApiResourceGenerator
                         'method' => 'GET',
                         'class' => GetCollection::class,
                         'shortName' => $nodeType->getName(),
-                        'output' => Archive::class,
-                        'uriTemplate' => $this->getResourceUriPrefix($nodeType).'/archives',
+                        'uriTemplate' => $this->getResourceUriPrefix($nodeType) . '/archives',
                         'extraProperties' => [
                             'archive_enabled' => true,
                         ],
-                        'openapi' => [
+                        'openapiContext' => [
                             'summary' => sprintf(
                                 'Retrieve all %s ressources archives months and years',
                                 $nodeType->getName()
                             ),
                         ],
-                    ],
+                    ]
                 ]
             );
         }
-
         return $operations;
     }
 
-    private function getItemOperationSerializationGroups(NodeTypeInterface $nodeType): array
+    protected function getItemOperationSerializationGroups(NodeTypeInterface $nodeType): array
     {
         return [
-            'nodes_sources',
-            'node_listing',
-            'urls',
-            'tag_base',
-            'translation_base',
-            'document_display',
-            'document_thumbnails',
-            'document_display_sources',
-            ...$this->getGroupedFieldsSerializationGroups($nodeType),
+            "nodes_sources",
+            "node_listing",
+            "urls",
+            "tag_base",
+            "translation_base",
+            "document_display",
+            "document_thumbnails",
+            "document_display_sources",
+            ...$this->getGroupedFieldsSerializationGroups($nodeType)
         ];
     }
 
-    private function getItemOperations(NodeTypeInterface $nodeType): array
+    protected function getItemOperations(NodeTypeInterface $nodeType): array
     {
-        if (!$nodeType->isReachable()) {
-            return [];
-        }
         $groups = $this->getItemOperationSerializationGroups($nodeType);
         $itemOperationName = $this->apiResourceOperationNameGenerator->generate(
-            $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($nodeType),
+            $nodeType->getSourceEntityFullQualifiedClassName(),
             'get'
         );
-
         return [
             $itemOperationName => [
                 'method' => 'GET',
                 'class' => Get::class,
                 'shortName' => $nodeType->getName(),
                 'normalizationContext' => [
-                    'groups' => array_values(array_filter(array_unique($groups))),
+                    'groups' => array_values(array_filter(array_unique($groups)))
                 ],
-            ],
+            ]
         ];
     }
 
-    private function getGroupedFieldsSerializationGroups(NodeTypeInterface $nodeType): array
+    protected function getGroupedFieldsSerializationGroups(NodeTypeInterface $nodeType): array
     {
         $groups = [];
         foreach ($nodeType->getFields() as $field) {
@@ -384,7 +375,6 @@ final readonly class ApiResourceGenerator
                 ;
             }
         }
-
         return $groups;
     }
 }
