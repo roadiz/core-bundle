@@ -6,11 +6,13 @@ namespace RZ\Roadiz\CoreBundle\Api\TreeWalker;
 
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
+use Doctrine\Persistence\ObjectRepository;
 use Psr\Cache\CacheItemPoolInterface;
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\EntityApi\NodeSourceApi;
 use RZ\Roadiz\CoreBundle\NodeType\NodeTypeResolver;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
+use RZ\Roadiz\CoreBundle\Repository\StatusAwareRepository;
 use RZ\TreeWalker\WalkerContextInterface;
 use Symfony\Component\DependencyInjection\Attribute\Exclude;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,54 +20,44 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 #[Exclude]
-class NodeSourceWalkerContext implements WalkerContextInterface
+readonly class NodeSourceWalkerContext implements WalkerContextInterface
 {
     public function __construct(
-        private readonly Stopwatch $stopwatch,
-        private readonly NodeTypes $nodeTypesBag,
-        private readonly NodeSourceApi $nodeSourceApi,
-        private readonly RequestStack $requestStack,
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly CacheItemPoolInterface $cacheAdapter,
-        private readonly NodeTypeResolver $nodeTypeResolver,
-        private readonly PreviewResolverInterface $previewResolver
+        private Stopwatch $stopwatch,
+        private NodeTypes $nodeTypesBag,
+        private NodeSourceApi $nodeSourceApi,
+        private RequestStack $requestStack,
+        private ManagerRegistry $managerRegistry,
+        private CacheItemPoolInterface $cacheAdapter,
+        private NodeTypeResolver $nodeTypeResolver,
+        private PreviewResolverInterface $previewResolver,
     ) {
     }
 
-    /**
-     * @return Stopwatch
-     */
     public function getStopwatch(): Stopwatch
     {
         return $this->stopwatch;
     }
 
-    /**
-     * @return NodeTypes
-     */
     public function getNodeTypesBag(): NodeTypes
     {
         return $this->nodeTypesBag;
     }
 
     /**
-     * @return NodeSourceApi
+     * @deprecated Use getRepository
      */
     public function getNodeSourceApi(): NodeSourceApi
     {
         return $this->nodeSourceApi;
     }
 
-    /**
-     * @return RequestStack
-     */
     public function getRequestStack(): RequestStack
     {
         return $this->requestStack;
     }
 
     /**
-     * @return Request|null
      * @deprecated Use getMainRequest
      */
     public function getMasterRequest(): ?Request
@@ -73,16 +65,13 @@ class NodeSourceWalkerContext implements WalkerContextInterface
         return $this->requestStack->getMainRequest();
     }
 
-    /**
-     * @return Request|null
-     */
     public function getMainRequest(): ?Request
     {
         return $this->requestStack->getMainRequest();
     }
 
     /**
-     * @return ManagerRegistry
+     * @deprecated Use getRepository to ensure correct repository state
      */
     public function getManagerRegistry(): ManagerRegistry
     {
@@ -90,32 +79,38 @@ class NodeSourceWalkerContext implements WalkerContextInterface
     }
 
     /**
-     * @return ObjectManager
+     * @param class-string $className
      */
-    public function getEntityManager(): ObjectManager
+    public function getRepository(string $className): ObjectRepository
     {
-        return $this->getManagerRegistry()->getManager();
+        $repository = $this->managerRegistry->getRepository($className);
+
+        /*
+         * We need to reset repository status state, because StatusAwareRepository is not a stateless service.
+         * When using worker PHP runtimes (such as FrankenPHP or Swoole), this can lead to unpublish nodes being returned.
+         */
+        if ($repository instanceof StatusAwareRepository) {
+            $repository->resetStatuses();
+        }
+
+        return $repository;
     }
 
-    /**
-     * @return CacheItemPoolInterface
-     */
+    public function getEntityManager(): ObjectManager
+    {
+        return $this->managerRegistry->getManager();
+    }
+
     public function getCacheAdapter(): CacheItemPoolInterface
     {
         return $this->cacheAdapter;
     }
 
-    /**
-     * @return NodeTypeResolver
-     */
     public function getNodeTypeResolver(): NodeTypeResolver
     {
         return $this->nodeTypeResolver;
     }
 
-    /**
-     * @return PreviewResolverInterface
-     */
     public function getPreviewResolver(): PreviewResolverInterface
     {
         return $this->previewResolver;

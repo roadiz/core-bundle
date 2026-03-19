@@ -10,7 +10,7 @@ use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class CompareDateType extends AbstractType
+final class CompareDateType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -21,8 +21,8 @@ class CompareDateType extends AbstractType
                 '>' => '>',
                 '<=' => '<=',
                 '>=' => '>=',
-                '=' => '='
-            ]
+                '=' => '=',
+            ],
         ])
         ->add('compareDate', DateType::class, [
             'label' => false,
@@ -35,9 +35,6 @@ class CompareDateType extends AbstractType
         ]);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([

@@ -15,10 +15,7 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 abstract class AbstractSearchHandler implements SearchHandlerInterface
 {
-    protected ClientRegistry $clientRegistry;
-    protected ObjectManager $em;
     protected LoggerInterface $logger;
-    protected EventDispatcherInterface $eventDispatcher;
     protected int $highlightingFragmentSize = 150;
     /**
      * Specifies the breakiterator type for dividing the document into passages.
@@ -29,15 +26,14 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
     protected string $highlightingBsType = 'WORD';
 
     public function __construct(
-        ClientRegistry $clientRegistry,
-        ObjectManager $em,
+        protected readonly ClientRegistry $clientRegistry,
+        protected readonly ObjectManager $em,
         LoggerInterface $searchEngineLogger,
-        EventDispatcherInterface $eventDispatcher
+        protected readonly EventDispatcherInterface $eventDispatcher,
+        protected readonly int $fuzzyProximity,
+        protected readonly int $fuzzyMinTermLength,
     ) {
-        $this->clientRegistry = $clientRegistry;
-        $this->em = $em;
         $this->logger = $searchEngineLogger;
-        $this->eventDispatcher = $eventDispatcher;
     }
 
     public function getSolr(): Client
@@ -46,37 +42,35 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         if (null === $solr) {
             throw new SolrServerNotAvailableException();
         }
+
         return $solr;
     }
 
     /**
-     * Search on Solr with pre-filled argument for highlighting
+     * Search on Solr with pre-filled argument for highlighting.
      *
      * * $q is the search criteria.
      * * $args is an array with solr query argument.
      * The common argument can be found [here](https://cwiki.apache.org/confluence/display/solr/Common+Query+Parameters)
      *  and for highlighting argument is [here](https://cwiki.apache.org/confluence/display/solr/Standard+Highlighter).
      *
-     * @param string $q
-     * @param array $args
-     * @param int $rows
      * @param bool $searchTags Search in tags/folders too, even if a node don’t match
-     * @param int $page
      *
-     * @return SearchResultsInterface Return a SearchResultsInterface iterable object.
+     * @return SearchResultsInterface return a SearchResultsInterface iterable object
      */
     public function searchWithHighlight(
         string $q,
         array $args = [],
         int $rows = 20,
         bool $searchTags = false,
-        int $page = 1
+        int $page = 1,
     ): SearchResultsInterface {
         $args = $this->argFqProcess($args);
-        $args["fq"][] = "document_type_s:" . $this->getDocumentType();
-        $args["hl.q"] = $this->buildHighlightingQuery($q);
+        $args['fq'][] = 'document_type_s:'.$this->getDocumentType();
+        $args['hl.q'] = $this->buildHighlightingQuery($q);
         $args = array_merge($this->getHighlightingOptions($args), $args);
         $response = $this->nativeSearch($q, $args, $rows, $searchTags, $page);
+
         return $this->createSearchResultsFromResponse($response);
     }
 
@@ -85,39 +79,23 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         return new SolrSearchResults(null !== $response ? $response : [], $this->em);
     }
 
-    /**
-     * @param array $args
-     * @return array
-     */
     abstract protected function argFqProcess(array &$args): array;
 
-    /**
-     * @return string
-     */
     abstract protected function getDocumentType(): string;
 
-    /**
-     * @param array $args
-     * @return array
-     */
     protected function getHighlightingOptions(array &$args = []): array
     {
         $tmp = [];
-        $tmp["hl"] = true;
-        $tmp["hl.fl"] = $this->getTitleField($args) . ' ' . $this->getCollectionField($args);
-        $tmp["hl.fragsize"] = $this->getHighlightingFragmentSize();
-        $tmp["hl.simple.pre"] = '<span class="solr-highlight">';
-        $tmp["hl.simple.post"] = '</span>';
-        $tmp["hl.bs.type"] = $this->getHighlightingBsType();
+        $tmp['hl'] = true;
+        $tmp['hl.fl'] = $this->getTitleField($args).' '.$this->getCollectionField($args);
+        $tmp['hl.fragsize'] = $this->getHighlightingFragmentSize();
+        $tmp['hl.simple.pre'] = '<span class="solr-highlight">';
+        $tmp['hl.simple.post'] = '</span>';
+        $tmp['hl.bs.type'] = $this->getHighlightingBsType();
 
         return $tmp;
     }
 
-    /**
-     * @param array $args
-     *
-     * @return string
-     */
     protected function getCollectionField(array &$args): string
     {
         /*
@@ -125,27 +103,20 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
          * is filtered by translation.
          */
         if (isset($args['locale']) && is_string($args['locale'])) {
-            return 'collection_txt_' . \Locale::getPrimaryLanguage($args['locale']);
+            return 'collection_txt_'.\Locale::getPrimaryLanguage($args['locale']);
         }
         if (isset($args['translation']) && $args['translation'] instanceof Translation) {
-            return 'collection_txt_' . \Locale::getPrimaryLanguage($args['translation']->getLocale());
+            return 'collection_txt_'.\Locale::getPrimaryLanguage($args['translation']->getLocale());
         }
+
         return 'collection_txt';
     }
 
-    /**
-     * @return int
-     */
     public function getHighlightingFragmentSize(): int
     {
         return $this->highlightingFragmentSize;
     }
 
-    /**
-     * @param int $highlightingFragmentSize
-     *
-     * @return AbstractSearchHandler
-     */
     public function setHighlightingFragmentSize(int $highlightingFragmentSize): AbstractSearchHandler
     {
         $this->highlightingFragmentSize = $highlightingFragmentSize;
@@ -165,21 +136,12 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         return $this;
     }
 
-    /**
-     * @param string $q
-     * @param array $args
-     * @param int $rows
-     * @param bool $searchTags
-     * @param int $page
-     *
-     * @return array|null
-     */
     abstract protected function nativeSearch(
         string $q,
         array $args = [],
         int $rows = 20,
         bool $searchTags = false,
-        int $page = 1
+        int $page = 1,
     ): ?array;
 
     /**
@@ -206,12 +168,9 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      *
      * this explicitly filter by title.
      *
-     *
-     * @param string $q
-     * @param array $args
-     * @param int $rows Results per page
+     * @param int  $rows       Results per page
      * @param bool $searchTags Search in tags/folders too, even if a node don’t match
-     * @param int $page Retrieve a specific page
+     * @param int  $page       Retrieve a specific page
      *
      * @return SearchResultsInterface Return an array of doctrine Entities (Document, NodesSources)
      */
@@ -220,21 +179,18 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         array $args = [],
         int $rows = 20,
         bool $searchTags = false,
-        int $page = 1
+        int $page = 1,
     ): SearchResultsInterface {
         $args = $this->argFqProcess($args);
-        $args["fq"][] = "document_type_s:" . $this->getDocumentType();
+        $args['fq'][] = 'document_type_s:'.$this->getDocumentType();
         $tmp = [];
         $args = array_merge($tmp, $args);
 
         $response = $this->nativeSearch($q, $args, $rows, $searchTags, $page);
+
         return $this->createSearchResultsFromResponse($response);
     }
 
-    /**
-     * @param string $input
-     * @return string
-     */
     public function escapeQuery(string $input): string
     {
         $qHelper = new Helper();
@@ -242,20 +198,20 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         $input = $qHelper->escapeTerm($input);
         // Solarium does not escape Lucene reserved words
         // https://stackoverflow.com/questions/10337908/how-to-properly-escape-or-and-and-in-lucene-query
-        $input = preg_replace("#\\b(AND|OR|NOT)\\b#", "\\\\\\\\$1", $input);
+        $input = preg_replace('#\\b(AND|OR|NOT)\\b#', '\\\\\\\$1', $input);
 
         return $input;
     }
 
     /**
-     * @param string $q
      * @return array [$exactQuery, $fuzzyQuery, $wildcardQuery]
      */
     protected function getFormattedQuery(string $q): array
     {
         $q = trim($q);
         /**
-         * Generate a fuzzy query by appending proximity to each word
+         * Generate a fuzzy query by appending proximity to each word.
+         *
          * @see https://lucene.apache.org/solr/guide/6_6/the-standard-query-parser.html#TheStandardQueryParser-FuzzySearches
          */
         $words = preg_split('#[\s,]+#', $q, -1, PREG_SPLIT_NO_EMPTY);
@@ -265,11 +221,12 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         $fuzzyiedQuery = implode(' ', array_map(function (string $word) {
             /*
              * Do not fuzz short words: Solr crashes
-             * Proximity is set to 1 by default for single-words
+             * Proximity is configurable and can be disabled.
              */
-            if (\mb_strlen($word) > 3) {
-                return $this->escapeQuery($word) . '~2';
+            if ($this->shouldFuzzify($word)) {
+                return $this->escapeQuery($word).$this->getFuzzySuffix();
             }
+
             return $this->escapeQuery($word);
         }, $words));
         /*
@@ -279,7 +236,10 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         /*
          * Wildcard search for allowing autocomplete
          */
-        $wildcardQuery = $this->escapeQuery($q) . '*~2';
+        $wildcardQuery = $this->escapeQuery($q).'*';
+        if ($this->shouldFuzzify($q)) {
+            $wildcardQuery .= $this->getFuzzySuffix();
+        }
 
         return [$exactQuery, $fuzzyiedQuery, $wildcardQuery];
     }
@@ -288,11 +248,6 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
      * Default Solr query builder.
      *
      * Extends this method to customize your Solr queries. Eg. to boost custom fields.
-     *
-     * @param string $q
-     * @param array $args
-     * @param bool $searchTags
-     * @return string
      */
     protected function buildQuery(string $q, array &$args, bool $searchTags = false): string
     {
@@ -307,44 +262,54 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         if ($searchTags) {
             // Need to use Fuzzy search AND Exact search
             return sprintf(
-                '(' . $titleField . ':%s)^10 (' . $titleField . ':%s) (' . $titleField . ':%s) (' . $collectionField . ':%s)^2 (' . $collectionField . ':%s) (' . $tagsField . ':%s) (' . $tagsField . ':%s)',
+                '('.$titleField.':%s)^10 ('.$titleField.':%s) ('.$titleField.':%s) ('.$collectionField.':%s)^2 ('.$collectionField.':%s) ('.$tagsField.':%s) ('.$tagsField.':%s)',
                 $exactQuery,
                 $fuzzyiedQuery,
                 $wildcardQuery,
                 $exactQuery,
                 $fuzzyiedQuery,
-                $exactQuery,
-                $fuzzyiedQuery
-            );
-        } else {
-            return sprintf(
-                '(' . $titleField . ':%s)^10 (' . $titleField . ':%s) (' . $titleField . ':%s) (' . $collectionField . ':%s)^2 (' . $collectionField . ':%s)',
-                $exactQuery,
-                $fuzzyiedQuery,
-                $wildcardQuery,
                 $exactQuery,
                 $fuzzyiedQuery
             );
         }
+
+        return sprintf(
+            '('.$titleField.':%s)^10 ('.$titleField.':%s) ('.$titleField.':%s) ('.$collectionField.':%s)^2 ('.$collectionField.':%s)',
+            $exactQuery,
+            $fuzzyiedQuery,
+            $wildcardQuery,
+            $exactQuery,
+            $fuzzyiedQuery
+        );
     }
 
     protected function buildHighlightingQuery(string $q): string
     {
         $q = trim($q);
         $words = preg_split('#[\s,]+#', $q, -1, PREG_SPLIT_NO_EMPTY);
-        if (\is_array($words) && \count($words) > 1) {
+        if (!\is_array($words) || \count($words) > 1) {
             return $this->escapeQuery($q);
         }
 
-        $q = $this->escapeQuery($q);
-        return sprintf('%s~2', $q);
+        $escapedQuery = $this->escapeQuery($q);
+        if (!$this->shouldFuzzify($q)) {
+            return $escapedQuery;
+        }
+
+        return $escapedQuery.$this->getFuzzySuffix();
     }
 
-    /**
-     * @param array $args
-     * @param bool $searchTags
-     * @return string
-     */
+    private function shouldFuzzify(string $word): bool
+    {
+        return $this->fuzzyProximity > 0
+            && \mb_strlen($word) >= $this->fuzzyMinTermLength;
+    }
+
+    private function getFuzzySuffix(): string
+    {
+        return '~'.$this->fuzzyProximity;
+    }
+
     protected function buildQueryFields(array &$args, bool $searchTags = true): string
     {
         $titleField = $this->getTitleField($args);
@@ -352,19 +317,15 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         $tagsField = $this->getTagsField($args);
 
         if ($searchTags) {
-            return $titleField . '^10 ' . $collectionField . '^2 ' . $tagsField . ' slug_s';
+            return $titleField.'^10 '.$collectionField.'^2 '.$tagsField.' slug_s';
         }
-        return $titleField . ' ' . $collectionField . ' slug_s';
+
+        return $titleField.' '.$collectionField.' slug_s';
     }
 
-    /**
-     * @param string $q
-     *
-     * @return bool
-     */
     protected function isQuerySingleWord(string $q): bool
     {
-        return preg_match('#[\s\-\'\"\–\—\’\”\‘\“\/\+\.\,]#', $q) !== 1;
+        return 1 !== preg_match('#[\s\-\'\"\–\—\’\”\‘\“\/\+\.\,]#', $q);
     }
 
     protected function formatDateTimeToUTC(\DateTimeInterface $dateTime): string
@@ -372,11 +333,6 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
         return gmdate('Y-m-d\TH:i:s\Z', $dateTime->getTimestamp());
     }
 
-    /**
-     * @param array $args
-     *
-     * @return string
-     */
     protected function getTitleField(array &$args): string
     {
         /*
@@ -384,19 +340,15 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
          * is filtered by translation.
          */
         if (isset($args['locale']) && is_string($args['locale'])) {
-            return 'title_txt_' . \Locale::getPrimaryLanguage($args['locale']);
+            return 'title_txt_'.\Locale::getPrimaryLanguage($args['locale']);
         }
         if (isset($args['translation']) && $args['translation'] instanceof Translation) {
-            return 'title_txt_' . \Locale::getPrimaryLanguage($args['translation']->getLocale());
+            return 'title_txt_'.\Locale::getPrimaryLanguage($args['translation']->getLocale());
         }
+
         return 'title';
     }
 
-    /**
-     * @param array $args
-     *
-     * @return string
-     */
     protected function getTagsField(array &$args): string
     {
         /*
@@ -404,39 +356,37 @@ abstract class AbstractSearchHandler implements SearchHandlerInterface
          * is filtered by translation.
          */
         if (isset($args['locale']) && is_string($args['locale'])) {
-            return 'tags_txt_' . \Locale::getPrimaryLanguage($args['locale']);
+            return 'tags_txt_'.\Locale::getPrimaryLanguage($args['locale']);
         }
         if (isset($args['translation']) && $args['translation'] instanceof Translation) {
-            return 'tags_txt_' . \Locale::getPrimaryLanguage($args['translation']->getLocale());
+            return 'tags_txt_'.\Locale::getPrimaryLanguage($args['translation']->getLocale());
         }
+
         return 'tags_txt';
     }
 
     /**
      * Create Solr Select query. Override it to add DisMax fields and rules.
      *
-     * @param array $args
-     * @param int $rows
-     * @param int $page
-     * @return Query
+     * @param array<string, mixed> $args
      */
     protected function createSolrQuery(array &$args = [], int $rows = 20, int $page = 1): Query
     {
         $query = $this->getSolr()->createSelect();
-
         foreach ($args as $key => $value) {
             if (is_array($value)) {
+                $value = array_unique($value);
                 foreach ($value as $k => $v) {
                     $query->addFilterQuery([
-                        "key" => "fq" . $k,
-                        "query" => $v,
+                        'key' => 'fq_'.$key.'_'.$k,
+                        'query' => $v,
                     ]);
                 }
             } elseif (is_scalar($value)) {
                 $query->addParam($key, $value);
             }
         }
-        /**
+        /*
          * Add start if not first page.
          */
         if ($page > 1) {

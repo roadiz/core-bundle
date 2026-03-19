@@ -11,13 +11,10 @@ use Symfony\Component\Validator\Constraint;
  * @Target({"CLASS", "ANNOTATION"})
  */
 #[\Attribute(\Attribute::TARGET_CLASS | \Attribute::IS_REPEATABLE)]
-class NodeTypeField extends Constraint
+final class NodeTypeField extends Constraint
 {
     public string $message = 'default_values_do_not_match_field_type';
 
-    /**
-     * {@inheritdoc}
-     */
     public function getTargets(): string
     {
         return self::CLASS_CONSTRAINT;

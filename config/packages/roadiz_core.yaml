@@ -15,9 +15,11 @@ roadiz_core:
         unsplash_client_id: '%env(string:APP_UNSPLASH_CLIENT_ID)%'
         soundcloud_client_id: '%env(string:APP_SOUNDCLOUD_CLIENT_ID)%'
         google_server_id: '%env(string:APP_GOOGLE_SERVER_ID)%'
-        recaptcha_private_key: '%env(string:APP_RECAPTCHA_PRIVATE_KEY)%'
-        recaptcha_public_key: '%env(string:APP_RECAPTCHA_PUBLIC_KEY)%'
         ffmpeg_path: '%env(string:APP_FFMPEG_PATH)%'
+    captcha:
+        private_key: '%env(string:APP_CAPTCHA_PRIVATE_KEY)%'
+        public_key: '%env(string:APP_CAPTCHA_PUBLIC_KEY)%'
+        verify_url: '%env(string:APP_CAPTCHA_VERIFY_URL)%'
     inheritance:
         type: single_table
     reverseProxyCache:
@@ -27,6 +29,9 @@ roadiz_core:
                 domainName: '%env(string:VARNISH_DOMAIN)%'
     solr:
         timeout: 3
+        search:
+            fuzzy_proximity: 2
+            fuzzy_min_term_length: 3
         endpoints:
             docker:
                 host: '%env(string:SOLR_HOST)%'
