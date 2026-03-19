@@ -23,17 +23,11 @@ final class DocumentFilesizeMessageHandler extends AbstractLockingDocumentMessag
     #[\Override]
     protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
-        $mountPath = $document->getMountPath();
-
-        if (null === $mountPath) {
-            return;
-        }
-
         if (!$document instanceof AdvancedDocumentInterface) {
             return;
         }
         try {
-            $document->setFilesize($this->documentsStorage->fileSize($mountPath));
+            $document->setFilesize($this->documentsStorage->fileSize($document->getMountPath()));
         } catch (FilesystemException $exception) {
             $this->messengerLogger->warning($exception->getMessage());
         }

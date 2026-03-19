@@ -55,16 +55,13 @@ final class UsersCreationCommand extends UsersCommand
         if ($user instanceof User) {
             $io->warning('User “'.$name.'” already exists.');
 
-            return self::FAILURE;
+            return 1;
         }
 
         $user = $this->executeUserCreation($name, $input, $output);
 
         // Change password right away
-        $command = $this->getApplication()?->find('users:password');
-        if (null === $command) {
-            return self::SUCCESS;
-        }
+        $command = $this->getApplication()->find('users:password');
         $arguments = [
             'username' => $user->getUsername(),
         ];
@@ -167,8 +164,8 @@ final class UsersCreationCommand extends UsersCommand
             ]);
         }
 
-        $this->managerRegistry->getManagerForClass(User::class)?->persist($user);
-        $this->managerRegistry->getManagerForClass(User::class)?->flush();
+        $this->managerRegistry->getManagerForClass(User::class)->persist($user);
+        $this->managerRegistry->getManagerForClass(User::class)->flush();
 
         $io->success('User “'.$username.'”<'.$email.'> created no password.');
 
