@@ -25,7 +25,7 @@ final readonly class DefaultValuesResolver implements DefaultValuesResolverInter
          * SQL field won't be shared between all node types.
          */
         if (Configuration::INHERITANCE_TYPE_JOINED === $this->inheritanceType) {
-            return array_map('trim', $field->getDefaultValuesAsArray());
+            return array_map(trim(...), $field->getDefaultValuesAsArray());
         }
         /*
          * With single table inheritance, we need to get all default values
@@ -41,7 +41,7 @@ final readonly class DefaultValuesResolver implements DefaultValuesResolverInter
             ];
         }
         foreach ($nodeTypeFields as $nodeTypeField) {
-            $values = array_filter(array_map('trim', $nodeTypeField->getDefaultValuesAsArray()));
+            $values = array_filter(array_map(trim(...), $nodeTypeField->getDefaultValuesAsArray()));
             $defaultValues = array_merge($defaultValues, $values);
         }
 
