@@ -4,17 +4,14 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Message\Handler;
 
-use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
-use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
-use RZ\Roadiz\CoreBundle\Entity\RealmNode;
-use RZ\Roadiz\CoreBundle\EntityHandler\NodeHandler;
 use RZ\Roadiz\CoreBundle\Message\ApplyRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Message\CleanRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Message\SearchRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
 use RZ\Roadiz\CoreBundle\Repository\AllStatusesNodeRepository;
+use RZ\Roadiz\CoreBundle\Repository\RealmNodeRepository;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
@@ -24,9 +21,8 @@ use Symfony\Component\Messenger\MessageBusInterface;
 final readonly class SearchRealmNodeInheritanceMessageHandler
 {
     public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private HandlerFactoryInterface $handlerFactory,
         private AllStatusesNodeRepository $allStatusesNodeRepository,
+        private RealmNodeRepository $realmNodeRepository,
         private MessageBusInterface $bus,
         private LoggerInterface $logger,
     ) {
@@ -46,8 +42,7 @@ final readonly class SearchRealmNodeInheritanceMessageHandler
 
     private function clearAnyExistingRealmNodes(Node $node): void
     {
-        /** @var RealmNode[] $autoRealmNodes */
-        $autoRealmNodes = $this->managerRegistry->getRepository(RealmNode::class)->findBy([
+        $autoRealmNodes = $this->realmNodeRepository->findBy([
             'node' => $node,
             'inheritanceType' => RealmInterface::INHERITANCE_AUTO,
         ]);
@@ -66,17 +61,19 @@ final readonly class SearchRealmNodeInheritanceMessageHandler
 
     private function applyRootRealmNodes(Node $node): void
     {
-        /** @var NodeHandler $nodeHandler */
-        $nodeHandler = $this->handlerFactory->getHandler($node);
-        $parents = $nodeHandler->getParents();
+        // By pass greedy call findAllNodeParentsBy if no parent
+        if (null === $node->getParent()) {
+            return;
+        }
+
+        $parents = $this->allStatusesNodeRepository->findAllNodeParentsBy($node);
 
         if (0 === count($parents)) {
             return;
         }
 
         foreach ($parents as $parent) {
-            /** @var RealmNode[] $rootRealmNodes */
-            $rootRealmNodes = $this->managerRegistry->getRepository(RealmNode::class)->findBy([
+            $rootRealmNodes = $this->realmNodeRepository->findBy([
                 'node' => $parent,
                 'inheritanceType' => RealmInterface::INHERITANCE_ROOT,
             ]);

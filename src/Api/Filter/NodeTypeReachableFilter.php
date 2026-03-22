@@ -11,6 +11,7 @@ use ApiPlatform\Metadata\Operation;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeClassLocatorInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Entity\Node;
@@ -20,14 +21,15 @@ final class NodeTypeReachableFilter extends AbstractFilter
 {
     use PropertyHelperTrait;
 
-    public const FILTER_COMPAT = 'node.nodeType.reachable';
-    public const FILTER = 'reachable';
+    public const string FILTER_COMPAT = 'node.nodeType.reachable';
+    public const string FILTER = 'reachable';
 
-    public const TRUE_VALUES = [1, '1', 'true', true, 'on', 'yes'];
-    public const FALSE_VALUES = [0, '0', 'false', false, 'off', 'no'];
+    public const array TRUE_VALUES = [1, '1', 'true', true, 'on', 'yes'];
+    public const array FALSE_VALUES = [0, '0', 'false', false, 'off', 'no'];
 
     public function __construct(
         private readonly NodeTypes $nodeTypesBag,
+        private readonly NodeTypeClassLocatorInterface $nodeTypeClassLocator,
         ManagerRegistry $managerRegistry,
         ?LoggerInterface $logger = null,
         ?array $properties = null,
@@ -36,6 +38,7 @@ final class NodeTypeReachableFilter extends AbstractFilter
         parent::__construct($managerRegistry, $logger, $properties, $nameConverter);
     }
 
+    #[\Override]
     protected function filterProperty(
         string $property,
         mixed $value,
@@ -70,7 +73,7 @@ final class NodeTypeReachableFilter extends AbstractFilter
          * For all nodeSources, we need to join node to get nodeTypeName.
          */
         $nodeTypeClasses = array_map(
-            fn (NodeTypeInterface $type) => $type->getSourceEntityFullQualifiedClassName(),
+            $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName(...),
             $this->nodeTypesBag->allReachable($reachable)
         );
 
@@ -85,6 +88,7 @@ final class NodeTypeReachableFilter extends AbstractFilter
     /**
      * Gets filter description.
      */
+    #[\Override]
     public function getDescription(string $property): array
     {
         return [

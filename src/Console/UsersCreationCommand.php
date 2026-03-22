@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use RZ\Roadiz\CoreBundle\Entity\Role;
 use RZ\Roadiz\CoreBundle\Entity\User;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputArgument;
@@ -17,10 +16,11 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class UsersCreationCommand extends UsersCommand
 {
+    #[\Override]
     protected function configure(): void
     {
         $this->setName('users:create')
-            ->setDescription('Create a user. Without <info>--password</info> a random password will be generated and sent by email. <info>Check if "email_sender" setting is valid.</info>')
+            ->setDescription('Create a user. Without <info>--password</info> a random password will be generated and sent by email.')
             ->addOption('email', 'm', InputOption::VALUE_REQUIRED, 'Set user email.')
             ->addOption('plain-password', 'p', InputOption::VALUE_REQUIRED, 'Set user password (typing plain password in command-line is insecure).')
             ->addOption('back-end', 'b', InputOption::VALUE_NONE, 'Add ROLE_BACKEND_USER to user.')
@@ -33,6 +33,7 @@ final class UsersCreationCommand extends UsersCommand
             );
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -54,13 +55,16 @@ final class UsersCreationCommand extends UsersCommand
         if ($user instanceof User) {
             $io->warning('User “'.$name.'” already exists.');
 
-            return 1;
+            return self::FAILURE;
         }
 
         $user = $this->executeUserCreation($name, $input, $output);
 
         // Change password right away
-        $command = $this->getApplication()->find('users:password');
+        $command = $this->getApplication()?->find('users:password');
+        if (null === $command) {
+            return self::SUCCESS;
+        }
         $arguments = [
             'username' => $user->getUsername(),
         ];
@@ -129,10 +133,16 @@ final class UsersCreationCommand extends UsersCommand
                     $questionBack
                 )
             ) {
-                $user->addRoleEntity($this->getRole(Role::ROLE_BACKEND_USER));
+                $user->setUserRoles([
+                    ...$user->getUserRoles(),
+                    'ROLE_BACKEND_USER',
+                ]);
             }
         } elseif (true === $input->getOption('back-end')) {
-            $user->addRoleEntity($this->getRole(Role::ROLE_BACKEND_USER));
+            $user->setUserRoles([
+                ...$user->getUserRoles(),
+                'ROLE_BACKEND_USER',
+            ]);
         }
 
         if ($input->isInteractive() && !$input->getOption('super-admin')) {
@@ -145,14 +155,20 @@ final class UsersCreationCommand extends UsersCommand
                     $questionAdmin
                 )
             ) {
-                $user->addRoleEntity($this->getRole(Role::ROLE_SUPERADMIN));
+                $user->setUserRoles([
+                    ...$user->getUserRoles(),
+                    'ROLE_SUPERADMIN',
+                ]);
             }
         } elseif (true === $input->getOption('super-admin')) {
-            $user->addRoleEntity($this->getRole(Role::ROLE_SUPERADMIN));
+            $user->setUserRoles([
+                ...$user->getUserRoles(),
+                'ROLE_SUPERADMIN',
+            ]);
         }
 
-        $this->managerRegistry->getManagerForClass(User::class)->persist($user);
-        $this->managerRegistry->getManagerForClass(User::class)->flush();
+        $this->managerRegistry->getManagerForClass(User::class)?->persist($user);
+        $this->managerRegistry->getManagerForClass(User::class)?->flush();
 
         $io->success('User “'.$username.'”<'.$email.'> created no password.');
 

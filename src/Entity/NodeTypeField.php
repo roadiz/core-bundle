@@ -9,7 +9,7 @@ use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Contracts\NodeType\SerializableInterface;
 use RZ\Roadiz\CoreBundle\Enum\FieldType;
 use RZ\Roadiz\CoreBundle\Form\Constraint as RoadizAssert;
-use Symfony\Component\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Attribute as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -67,7 +67,11 @@ final class NodeTypeField extends AbstractField implements NodeTypeFieldInterfac
     #[Serializer\Groups(['node_type', 'node_type:import']),]
     private bool $visible = true;
 
+    #[Serializer\Groups(['node_type', 'node_type:import']),]
+    private bool $required = false;
+
     #[Serializer\Groups(['node_type'])]
+    #[\Override]
     public function getNodeTypeName(): string
     {
         return $this->getNodeType()->getName();
@@ -85,6 +89,7 @@ final class NodeTypeField extends AbstractField implements NodeTypeFieldInterfac
         return $this;
     }
 
+    #[\Override]
     public function getMinLength(): ?int
     {
         return $this->minLength;
@@ -97,6 +102,7 @@ final class NodeTypeField extends AbstractField implements NodeTypeFieldInterfac
         return $this;
     }
 
+    #[\Override]
     public function getMaxLength(): ?int
     {
         return $this->maxLength;
@@ -112,6 +118,7 @@ final class NodeTypeField extends AbstractField implements NodeTypeFieldInterfac
     /**
      * Tell if current field can be searched and indexed in a Search engine server.
      */
+    #[\Override]
     public function isSearchable(): bool
     {
         return !$this->excludeFromSearch && in_array($this->getType(), FieldType::searchableTypes());
@@ -129,6 +136,7 @@ final class NodeTypeField extends AbstractField implements NodeTypeFieldInterfac
     /**
      * @return bool $isIndexed
      */
+    #[\Override]
     public function isIndexed(): bool
     {
         // JSON types cannot be indexed
@@ -142,6 +150,7 @@ final class NodeTypeField extends AbstractField implements NodeTypeFieldInterfac
         return $this;
     }
 
+    #[\Override]
     public function isVisible(): bool
     {
         return $this->visible;
@@ -154,6 +163,7 @@ final class NodeTypeField extends AbstractField implements NodeTypeFieldInterfac
         return $this;
     }
 
+    #[\Override]
     public function isUniversal(): bool
     {
         return $this->universal;
@@ -196,6 +206,7 @@ final class NodeTypeField extends AbstractField implements NodeTypeFieldInterfac
         return $this;
     }
 
+    #[\Override]
     public function getSerializationExclusionExpression(): ?string
     {
         return $this->serializationExclusionExpression;
@@ -208,6 +219,7 @@ final class NodeTypeField extends AbstractField implements NodeTypeFieldInterfac
         return $this;
     }
 
+    #[\Override]
     public function getSerializationGroups(): array
     {
         return array_filter($this->serializationGroups ?? []);
@@ -226,6 +238,7 @@ final class NodeTypeField extends AbstractField implements NodeTypeFieldInterfac
         return $this;
     }
 
+    #[\Override]
     public function getSerializationMaxDepth(): ?int
     {
         return $this->serializationMaxDepth;
@@ -238,6 +251,7 @@ final class NodeTypeField extends AbstractField implements NodeTypeFieldInterfac
         return $this;
     }
 
+    #[\Override]
     public function isExcludedFromSerialization(): bool
     {
         return $this->excludedFromSerialization;
@@ -246,6 +260,19 @@ final class NodeTypeField extends AbstractField implements NodeTypeFieldInterfac
     public function setExcludedFromSerialization(bool $excludedFromSerialization): NodeTypeField
     {
         $this->excludedFromSerialization = $excludedFromSerialization;
+
+        return $this;
+    }
+
+    #[\Override]
+    public function isRequired(): bool
+    {
+        return $this->required;
+    }
+
+    public function setRequired(bool $required): NodeTypeField
+    {
+        $this->required = $required;
 
         return $this;
     }
@@ -263,7 +290,7 @@ final class NodeTypeField extends AbstractField implements NodeTypeFieldInterfac
     }
 
     #[Serializer\Ignore]
-    public function getNormalizationContextGroups(): ?array
+    public function getNormalizationContextGroups(): array
     {
         return $this->normalizationContext['groups'] ?? [];
     }

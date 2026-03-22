@@ -41,10 +41,8 @@ class NodeRepository extends StatusAwareRepository
         parent::__construct($registry, Node::class, $previewResolver, $dispatcher, $security);
     }
 
-    /**
-     * @return Event
-     */
-    protected function dispatchQueryBuilderBuildEvent(QueryBuilder $qb, string $property, mixed $value): object
+    #[\Override]
+    protected function dispatchQueryBuilderBuildEvent(QueryBuilder $qb, string $property, mixed $value): Event
     {
         // @phpstan-ignore-next-line
         return $this->dispatcher->dispatch(
@@ -52,10 +50,8 @@ class NodeRepository extends StatusAwareRepository
         );
     }
 
-    /**
-     * @return Event
-     */
-    protected function dispatchQueryBuilderApplyEvent(QueryBuilder $qb, string $property, mixed $value): object
+    #[\Override]
+    protected function dispatchQueryBuilderApplyEvent(QueryBuilder $qb, string $property, mixed $value): Event
     {
         // @phpstan-ignore-next-line
         return $this->dispatcher->dispatch(
@@ -71,6 +67,7 @@ class NodeRepository extends StatusAwareRepository
      * @throws NonUniqueResultException
      * @throws NoResultException
      */
+    #[\Override]
     public function countBy(
         mixed $criteria,
         ?TranslationInterface $translation = null,
@@ -198,6 +195,7 @@ class NodeRepository extends StatusAwareRepository
     /**
      * Bind parameters to generated query.
      */
+    #[\Override]
     protected function applyFilterByCriteria(array &$criteria, QueryBuilder $qb): void
     {
         /*
@@ -258,6 +256,7 @@ class NodeRepository extends StatusAwareRepository
      *
      * @return array<Node>
      */
+    #[\Override]
     public function findBy(
         array $criteria,
         ?array $orderBy = null,
@@ -330,8 +329,9 @@ class NodeRepository extends StatusAwareRepository
     }
 
     /**
-     * @param string $pattern  Search pattern
-     * @param array  $criteria Additional criteria
+     * @param non-empty-string                      $pattern  Search pattern
+     * @param array<non-empty-string, mixed>        $criteria Additional criteria
+     * @param array<non-empty-string, 'ASC'|'DESC'> $orders
      *
      * @return array<NodeTreeDto>
      *
@@ -354,7 +354,7 @@ class NodeRepository extends StatusAwareRepository
                 (\str_starts_with($key, 'node.') || \str_starts_with($key, static::NODE_ALIAS.'.'))
                 && $this->hasJoinedNode($qb, $alias)
             ) {
-                $key = preg_replace('#^node\.#', static::NODE_ALIAS.'.', $key);
+                $key = \preg_replace('#^node\.#', static::NODE_ALIAS.'.', $key) ?? $key;
                 $qb->addOrderBy($key, $value);
             } elseif (
                 \str_starts_with($key, static::NODESSOURCES_ALIAS.'.')
@@ -458,7 +458,7 @@ EOT,
         // Add ordering
         if (null !== $orderBy) {
             foreach ($orderBy as $key => $value) {
-                if (str_starts_with($key, self::NODESSOURCES_ALIAS.'.')) {
+                if (str_starts_with((string) $key, self::NODESSOURCES_ALIAS.'.')) {
                     $qb->addOrderBy($key, $value);
                 } else {
                     $qb->addOrderBy(self::NODE_ALIAS.'.'.$key, $value);
@@ -500,6 +500,7 @@ EOT,
      *
      * @throws NonUniqueResultException
      */
+    #[\Override]
     public function findOneBy(
         array $criteria,
         ?array $orderBy = null,
@@ -832,29 +833,46 @@ EOT,
 
     /**
      * Find all node’ parents with criteria and ordering.
+     *
+     * @return array<Node>
      */
     public function findAllNodeParentsBy(
         Node $node,
-        array $criteria,
+        array $criteria = [],
         ?array $orderBy = null,
         ?int $limit = null,
         ?int $offset = null,
         ?TranslationInterface $translation = null,
-    ): array|Paginator|null {
+    ): array {
         $parentsId = $this->findAllParentsIdByNode($node);
         if (count($parentsId) > 0) {
             $criteria['id'] = $parentsId;
         } else {
-            return null;
+            return [];
         }
 
-        return $this->findBy(
+        $results = $this->findBy(
             $criteria,
             $orderBy,
             $limit,
             $offset,
             $translation
         );
+
+        // If orderBy is set, return results as is
+        if (null === $orderBy) {
+            return $results;
+        }
+
+        // Reorder results to match ancestor order
+        usort($results, function (Node $a, Node $b) use ($parentsId) {
+            $posA = array_search($a->getId(), $parentsId, true);
+            $posB = array_search($b->getId(), $parentsId, true);
+
+            return $posA <=> $posB;
+        });
+
+        return $results;
     }
 
     /**
@@ -862,15 +880,60 @@ EOT,
      */
     public function findAllParentsIdByNode(Node $node): array
     {
-        $theParents = [];
-        $parent = $node->getParent();
+        return array_map(
+            fn ($ancestor) => $ancestor['ancestor'],
+            $this->findAllAncestors($node)
+        );
+    }
 
-        while (null !== $parent) {
-            $theParents[] = $parent->getId();
-            $parent = $parent->getParent();
+    /**
+     * @return array{"node": int|string, "ancestor": int|string, "level": int}[]
+     */
+    public function findAllAncestors(NodeInterface|int|string $node, int $maxDepth = 20, int $cacheTtl = 60): array
+    {
+        if ($node instanceof NodeInterface) {
+            $node = $node->getId();
+        }
+        $cacheItem = $this->_em->getConfiguration()->getResultCache()?->getItem('noderepository_findAllAncestors_'.$node);
+        if ($cacheItem?->isHit()) {
+            // @phpstan-ignore-next-line
+            return $cacheItem->get();
+        }
+        $statement = $this->_em->getConnection()->prepare(<<<SQL
+WITH RECURSIVE
+    ancestors ( node, ancestor, level )
+        AS
+        (
+            SELECT id, parent_node_id, 1
+                FROM nodes
+                WHERE parent_node_id IS NOT NULL
+            UNION ALL
+            SELECT nodes.id, ancestors.ancestor, level + 1
+                FROM ancestors
+                INNER JOIN nodes ON  nodes.parent_node_id = ancestors.node
+                WHERE nodes.parent_node_id IS NOT NULL
+                    AND ancestors.level < {$maxDepth}
+        )
+SELECT node, ancestor, level
+FROM ancestors
+WHERE node = ?
+ORDER BY level ASC
+LIMIT 0, {$maxDepth};
+SQL
+        );
+
+        $statement->bindValue(1, $node);
+        /** @var array{"node": int|string, "ancestor": int|string, "level": int}[] $result */
+        $result = $statement
+            ->executeQuery()
+            ->fetchAllAssociative();
+        if (null !== $cacheItem) {
+            $cacheItem->set($result);
+            $cacheItem->expiresAfter($cacheTtl);
+            $this->_em->getConfiguration()->getResultCache()?->save($cacheItem);
         }
 
-        return array_filter($theParents);
+        return $result;
     }
 
     /**
@@ -881,6 +944,7 @@ EOT,
      * @param array        $criteria Additional criteria
      * @param string       $alias    SQL query table alias
      */
+    #[\Override]
     protected function createSearchBy(
         string $pattern,
         QueryBuilder $qb,
@@ -911,7 +975,7 @@ EOT,
                     $alias.'.nodesTags',
                     'ntg',
                     Expr\Join::WITH,
-                    $qb->expr()->eq('ntg.tag', (int) $criteria['tags']->getId())
+                    $qb->expr()->eq('ntg.tag', $criteria['tags']->getId())
                 );
             } elseif (is_array($criteria['tags'])) {
                 $qb->innerJoin(
@@ -925,7 +989,7 @@ EOT,
                     $alias.'.nodesTags',
                     'ntg',
                     Expr\Join::WITH,
-                    $qb->expr()->eq('ntg.tag', (int) $criteria['tags'])
+                    $qb->expr()->eq('ntg.tag', $criteria['tags'])
                 );
             }
             unset($criteria['tags']);
@@ -940,6 +1004,7 @@ EOT,
         return $qb;
     }
 
+    #[\Override]
     protected function prepareComparisons(array &$criteria, QueryBuilder $qb, string $alias): QueryBuilder
     {
         $simpleQB = new SimpleQueryBuilder($qb);
@@ -1030,6 +1095,7 @@ EOT,
         return $this->findOneBy($criteria);
     }
 
+    #[\Override]
     protected function classicLikeComparison(
         string $pattern,
         QueryBuilder $qb,

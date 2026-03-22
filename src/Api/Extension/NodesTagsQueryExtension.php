@@ -21,6 +21,7 @@ final readonly class NodesTagsQueryExtension implements QueryItemExtensionInterf
     ) {
     }
 
+    #[\Override]
     public function applyToItem(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
@@ -32,6 +33,7 @@ final readonly class NodesTagsQueryExtension implements QueryItemExtensionInterf
         $this->apply($queryBuilder, $resourceClass);
     }
 
+    #[\Override]
     public function applyToCollection(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
@@ -70,6 +72,11 @@ final readonly class NodesTagsQueryExtension implements QueryItemExtensionInterf
         if (null === $existingNodeJoin || !$existingNodeJoin->getAlias()) {
             return;
         }
+
+        // Always exclude shadow nodes
+        $queryBuilder
+            ->andWhere($queryBuilder->expr()->eq($existingNodeJoin->getAlias().'.shadow', ':shadow'))
+            ->setParameter(':shadow', false);
 
         if ($this->previewResolver->isPreview()) {
             $queryBuilder

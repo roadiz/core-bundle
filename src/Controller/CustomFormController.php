@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Controller;
 
+use ApiPlatform\Metadata\Exception\OperationNotFoundException;
+use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
+use ApiPlatform\Validator\Exception\ValidationException;
 use Doctrine\Persistence\ManagerRegistry;
 use League\Flysystem\FilesystemException;
 use Limenius\Liform\LiformInterface;
@@ -21,11 +24,10 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\RateLimiter\RateLimiterFactory;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -40,11 +42,18 @@ final class CustomFormController extends AbstractController
         private readonly SerializerInterface $serializer,
         private readonly FormErrorSerializerInterface $formErrorSerializer,
         private readonly ManagerRegistry $registry,
-        private readonly RateLimiterFactory $customFormLimiter,
+        private readonly RateLimiterFactoryInterface $customFormLimiter,
         private readonly MessageBusInterface $messageBus,
+        private readonly ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory,
+        private readonly bool $useConstraintViolationList,
+        private readonly string $customFormPostOperationName,
     ) {
     }
 
+    /**
+     * @phpstan-assert CustomForm $customForm
+     * @phpstan-assert true $customForm->isFormStillOpen()
+     */
     private function validateCustomForm(?CustomForm $customForm): void
     {
         if (null === $customForm) {
@@ -98,9 +107,7 @@ final class CustomFormController extends AbstractController
             $request,
             $customForm,
             new JsonResponse(null, Response::HTTP_ACCEPTED, $headers),
-            false,
-            null,
-            false
+            prefix: false
         );
 
         if ($mixed instanceof Response) {
@@ -109,23 +116,45 @@ final class CustomFormController extends AbstractController
             return $mixed;
         }
 
-        if (is_array($mixed) && $mixed['formObject'] instanceof FormInterface) {
-            if ($mixed['formObject']->isSubmitted()) {
-                $errorPayload = [
-                    'status' => Response::HTTP_BAD_REQUEST,
-                    'errorsPerForm' => $this->formErrorSerializer->getErrorsAsArray($mixed['formObject']),
-                ];
+        if (
+            !is_array($mixed)
+            || !$mixed['formObject'] instanceof FormInterface
+        ) {
+            throw new \RuntimeException('Form handling did not return a valid array with a FormInterface instance.');
+        }
 
-                return new JsonResponse(
-                    $this->serializer->serialize($errorPayload, 'json'),
-                    Response::HTTP_BAD_REQUEST,
-                    $headers,
-                    true
-                );
+        if (!$mixed['formObject']->isSubmitted()) {
+            $mixed['formObject']->addError(new FormError('Form has not been submitted'));
+        }
+
+        if ($this->useConstraintViolationList) {
+            try {
+                $this->resourceMetadataCollectionFactory->create(
+                    CustomForm::class
+                )->getOperation($this->customFormPostOperationName);
+                $request->attributes->set('_api_operation_name', $this->customFormPostOperationName);
+                $request->attributes->set('_api_resource_class', CustomForm::class);
+                throw new ValidationException($this->formErrorSerializer->getErrorsAsConstraintViolationList($mixed['formObject']));
+            } catch (OperationNotFoundException) {
+                // Do not use 422 response if api_contact_form_post operation does not exist
+                $this->logger->warning(sprintf('Operation "%s" not found, falling back to legacy errors-as-array response.', $this->customFormPostOperationName));
             }
         }
 
-        throw new BadRequestHttpException('Form has not been submitted');
+        /*
+         * Legacy form-error array response.
+         */
+        $errorPayload = [
+            'status' => Response::HTTP_BAD_REQUEST,
+            'errorsPerForm' => $this->formErrorSerializer->getErrorsAsArray($mixed['formObject']),
+        ];
+
+        return new JsonResponse(
+            $this->serializer->serialize($errorPayload, 'json'),
+            Response::HTTP_BAD_REQUEST,
+            $headers,
+            true
+        );
     }
 
     /**
@@ -184,8 +213,6 @@ final class CustomFormController extends AbstractController
         Request $request,
         CustomForm $customFormsEntity,
         Response $response,
-        bool $forceExpanded = false,
-        ?string $emailSender = null,
         bool $prefix = true,
     ) {
         $assignation = [
@@ -198,8 +225,7 @@ final class CustomFormController extends AbstractController
         $helper = $this->customFormHelperFactory->createHelper($customFormsEntity);
         $form = $helper->getForm(
             $request,
-            $forceExpanded,
-            $prefix
+            prefix: $prefix
         );
         $form->handleRequest($request);
 
@@ -208,27 +234,19 @@ final class CustomFormController extends AbstractController
                 /*
                  * Parse form data and create answer.
                  */
-                $answer = $helper->parseAnswerFormData($form, null, $request->getClientIp());
-
+                $answer = $helper->parseAnswerFormData($form, null, $request->getClientIp() ?? '');
                 $answerId = $answer->getId();
                 if (!is_int($answerId)) {
                     throw new \RuntimeException('Answer ID is null');
-                }
-
-                if (null === $emailSender || false === filter_var($answer->getEmail(), FILTER_VALIDATE_EMAIL)) {
-                    $emailSender = $answer->getEmail();
-                }
-                if (null === $emailSender || false === filter_var($emailSender, FILTER_VALIDATE_EMAIL)) {
-                    $emailSender = $this->settingsBag->get('email_sender');
                 }
 
                 $this->messageBus->dispatch(new CustomFormAnswerNotifyMessage(
                     $answerId,
                     $this->translator->trans(
                         'new.answer.form.%site%',
-                        ['%site%' => $customFormsEntity->getDisplayName()]
+                        ['%site%' => $customFormsEntity->getDisplayName()],
+                        locale: $request->getLocale(),
                     ),
-                    $emailSender,
                     $request->getLocale()
                 ));
 

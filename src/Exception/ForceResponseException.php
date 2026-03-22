@@ -11,12 +11,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ForceResponseException extends \Exception
 {
-    protected Response $response;
-
-    public function __construct(Response $response)
+    public function __construct(protected Response $response)
     {
         parent::__construct('Forcing response…', 1);
-        $this->response = $response;
     }
 
     /**
@@ -32,9 +29,9 @@ class ForceResponseException extends \Exception
      *
      * @param Response $response the response
      *
-     * @return self
+     * @return $this
      */
-    public function setResponse(Response $response)
+    public function setResponse(Response $response): static
     {
         $this->response = $response;
 
