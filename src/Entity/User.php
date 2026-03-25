@@ -205,7 +205,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     /**
      * @return $this
      */
-    public function setUsername(string $username): static
+    public function setUsername(string $username): User
     {
         $this->username = $username;
 
@@ -220,7 +220,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
     /**
      * @return $this
      */
-    public function setPictureUrl(?string $pictureUrl): static
+    public function setPictureUrl(?string $pictureUrl): User
     {
         $this->pictureUrl = $pictureUrl;
 
@@ -246,7 +246,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      *
      * @internal do not use directly, use UserLifeCycleSubscriber
      */
-    public function setPassword(string $password): static
+    public function setPassword(string $password): User
     {
         $this->password = $password;
 
@@ -302,7 +302,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      *
      * @return $this
      */
-    public function setConfirmationToken(?string $confirmationToken): static
+    public function setConfirmationToken(?string $confirmationToken): User
     {
         $this->confirmationToken = $confirmationToken;
 
@@ -333,7 +333,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      *
      * @return $this
      */
-    public function setPasswordRequestedAt(?\DateTime $date = null): static
+    public function setPasswordRequestedAt(?\DateTime $date = null): User
     {
         $this->passwordRequestedAt = $date;
 
@@ -367,7 +367,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      *
      * @return $this
      */
-    public function addGroup(Group $group): static
+    public function addGroup(Group $group): User
     {
         if (!$this->getGroups()->contains($group)) {
             $this->getGroups()->add($group);
@@ -377,7 +377,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
         return $this;
     }
 
-    public function getGroups(): Collection
+    public function getGroups(): ?Collection
     {
         return $this->groups;
     }
@@ -387,7 +387,7 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
      *
      * @return $this
      */
-    public function removeGroup(Group $group): static
+    public function removeGroup(Group $group): User
     {
         if ($this->getGroups()->contains($group)) {
             $this->getGroups()->removeElement($group);
@@ -588,13 +588,15 @@ class User extends AbstractHuman implements UserInterface, AdvancedUserInterface
         if (null === $this->roles) {
             $this->roles = $this->getUserRoles();
 
-            foreach ($this->getGroups() as $group) {
-                if ($group instanceof Group) {
-                    // User roles > Groups roles
-                    $this->roles = [
-                        ...$this->roles,
-                        ...$group->getRoles(),
-                    ];
+            if (null !== $this->getGroups()) {
+                foreach ($this->getGroups() as $group) {
+                    if ($group instanceof Group) {
+                        // User roles > Groups roles
+                        $this->roles = [
+                            ...$this->roles,
+                            ...$group->getRoles(),
+                        ];
+                    }
                 }
             }
 

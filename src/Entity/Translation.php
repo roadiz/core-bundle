@@ -53,7 +53,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         'locale' => 'exact',
         'name' => 'exact',
     ])]
-class Translation implements \Stringable, TranslationInterface
+class Translation implements TranslationInterface
 {
     use SequentialIdTrait;
     use DateTimedTrait;
@@ -661,7 +661,7 @@ class Translation implements \Stringable, TranslationInterface
      * @return $this
      */
     #[\Override]
-    public function setName(?string $name): static
+    public function setName(?string $name): Translation
     {
         $this->name = $name ?? '';
 
@@ -678,7 +678,7 @@ class Translation implements \Stringable, TranslationInterface
      * @return $this
      */
     #[\Override]
-    public function setLocale(string $locale): static
+    public function setLocale(string $locale): Translation
     {
         $this->locale = $locale;
 
@@ -695,7 +695,7 @@ class Translation implements \Stringable, TranslationInterface
      * @return $this
      */
     #[\Override]
-    public function setAvailable(bool $available): static
+    public function setAvailable(bool $available): Translation
     {
         $this->available = $available;
 
@@ -712,7 +712,7 @@ class Translation implements \Stringable, TranslationInterface
      * @return $this
      */
     #[\Override]
-    public function setDefaultTranslation(bool $defaultTranslation): static
+    public function setDefaultTranslation(bool $defaultTranslation): Translation
     {
         $this->defaultTranslation = $defaultTranslation;
 

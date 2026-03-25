@@ -146,8 +146,10 @@ class Realm implements RealmInterface
 
     /**
      * @param Collection<int, RealmNode> $realmNodes
+     *
+     * @return Realm
      */
-    public function setRealmNodes(Collection $realmNodes): Realm
+    public function setRealmNodes(Collection $realmNodes)
     {
         $this->realmNodes = $realmNodes;
 
@@ -165,8 +167,10 @@ class Realm implements RealmInterface
 
     /**
      * @param Collection<int, User> $users
+     *
+     * @return Realm
      */
-    public function setUsers(Collection $users): Realm
+    public function setUsers(Collection $users)
     {
         $this->users = $users;
 
@@ -181,11 +185,7 @@ class Realm implements RealmInterface
 
     public function setPlainPassword(?string $plainPassword): Realm
     {
-        if (null !== $plainPassword && '' !== $plainPassword) {
-            $this->plainPassword = \password_hash($plainPassword, \PASSWORD_BCRYPT);
-        } elseif (null === $plainPassword) {
-            $this->plainPassword = null;
-        }
+        $this->plainPassword = $plainPassword;
 
         return $this;
     }

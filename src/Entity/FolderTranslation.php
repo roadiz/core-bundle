@@ -46,13 +46,13 @@ class FolderTranslation implements PersistableInterface
 
     public function getName(): string
     {
-        return $this->name;
+        return $this->name ?? '';
     }
 
     /**
      * @return $this
      */
-    public function setName(string $name): static
+    public function setName(string $name): FolderTranslation
     {
         $this->name = $name;
 

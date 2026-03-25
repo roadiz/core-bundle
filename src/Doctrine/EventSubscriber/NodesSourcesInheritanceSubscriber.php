@@ -10,7 +10,6 @@ use Doctrine\ORM\Event\PostLoadEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Psr\Log\LoggerInterface;
-use RZ\Roadiz\Contracts\NodeType\NodeTypeClassLocatorInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Configuration;
@@ -26,7 +25,6 @@ final readonly class NodesSourcesInheritanceSubscriber
         private string $inheritanceType,
         private LoggerInterface $logger,
         private Stopwatch $stopwatch,
-        private NodeTypeClassLocatorInterface $nodeTypeClassLocator,
     ) {
     }
 
@@ -52,14 +50,13 @@ final readonly class NodesSourcesInheritanceSubscriber
             $nodeTypes = $this->nodeTypes->all();
             $map = [];
             foreach ($nodeTypes as $type) {
-                $nodeTypeClassName = $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($type);
-                if (\class_exists($nodeTypeClassName)) {
-                    $map[\mb_strtolower($type->getName())] = $nodeTypeClassName;
+                if (\class_exists($type->getSourceEntityFullQualifiedClassName())) {
+                    $map[\mb_strtolower($type->getName())] = $type->getSourceEntityFullQualifiedClassName();
                 } else {
                     $this->logger->critical(sprintf(
                         '"%s" node-type is registered in database but source entity class "%s" does not exist.',
                         $type->getName(),
-                        $nodeTypeClassName
+                        $type->getSourceEntityFullQualifiedClassName()
                     ));
                 }
             }

@@ -53,9 +53,9 @@ class SettingGroup implements PersistableInterface, \Stringable
     }
 
     /**
-     * @return $this
+     * @return SettingGroup
      */
-    public function setName(string $name): SettingGroup
+    public function setName(string $name)
     {
         $this->name = $name;
 
@@ -68,9 +68,9 @@ class SettingGroup implements PersistableInterface, \Stringable
     }
 
     /**
-     * @return $this
+     * @return SettingGroup
      */
-    public function setInMenu(bool $newinMenu): SettingGroup
+    public function setInMenu(bool $newinMenu)
     {
         $this->inMenu = $newinMenu;
 
@@ -78,9 +78,9 @@ class SettingGroup implements PersistableInterface, \Stringable
     }
 
     /**
-     * @return $this
+     * @return SettingGroup
      */
-    public function addSetting(Setting $setting): SettingGroup
+    public function addSetting(Setting $setting)
     {
         if (!$this->getSettings()->contains($setting)) {
             $this->settings->add($setting);
@@ -100,9 +100,9 @@ class SettingGroup implements PersistableInterface, \Stringable
     /**
      * @param Collection<int, Setting> $settings
      *
-     * @return $this
+     * @return SettingGroup
      */
-    public function addSettings(Collection $settings): SettingGroup
+    public function addSettings(Collection $settings)
     {
         foreach ($settings as $setting) {
             if (!$this->getSettings()->contains($setting)) {

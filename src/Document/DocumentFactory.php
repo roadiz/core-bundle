@@ -23,7 +23,7 @@ final class DocumentFactory extends AbstractDocumentFactory
         private readonly ManagerRegistry $managerRegistry,
         FilesystemOperator $documentsStorage,
         DocumentFinderInterface $documentFinder,
-        LoggerInterface $logger,
+        ?LoggerInterface $logger = null,
     ) {
         parent::__construct($documentsStorage, $documentFinder, $logger);
     }
@@ -31,7 +31,7 @@ final class DocumentFactory extends AbstractDocumentFactory
     #[\Override]
     protected function persistDocument(DocumentInterface $document): void
     {
-        $this->managerRegistry->getManagerForClass(Document::class)?->persist($document);
+        $this->managerRegistry->getManagerForClass(Document::class)->persist($document);
     }
 
     #[\Override]

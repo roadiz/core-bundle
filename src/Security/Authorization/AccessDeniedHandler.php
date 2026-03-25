@@ -22,7 +22,6 @@ final readonly class AccessDeniedHandler implements AccessDeniedHandlerInterface
     public function __construct(
         private UrlGeneratorInterface $urlGenerator,
         private ?LoggerInterface $logger,
-        private bool $debug = false,
         private string $redirectRoute = '',
         private array $redirectParameters = [],
     ) {
@@ -30,11 +29,13 @@ final readonly class AccessDeniedHandler implements AccessDeniedHandlerInterface
 
     /**
      * Handles access denied failure redirecting to home page.
+     *
+     * @return Response|null may return null
      */
     #[\Override]
-    public function handle(Request $request, AccessDeniedException $accessDeniedException): Response
+    public function handle(Request $request, AccessDeniedException $accessDeniedException): ?Response
     {
-        $this->logger?->error('User tried to access: '.$request->getUri());
+        $this->logger->error('User tried to access: '.$request->getUri());
 
         $returnJson = $request->isXmlHttpRequest()
             || 'json' === $request->getRequestFormat()
@@ -45,13 +46,14 @@ final readonly class AccessDeniedHandler implements AccessDeniedHandlerInterface
             || ($request->attributes->has('_format') && 'json' === $request->attributes->get('_format'));
 
         if ($returnJson) {
-            $body = ['message' => $accessDeniedException->getMessage()];
-            if ($this->debug) {
-                $body['trace'] = $accessDeniedException->getTraceAsString();
-                $body['exception'] = $accessDeniedException::class;
-            }
-
-            return new JsonResponse($body, Response::HTTP_FORBIDDEN);
+            return new JsonResponse(
+                [
+                    'message' => $accessDeniedException->getMessage(),
+                    'trace' => $accessDeniedException->getTraceAsString(),
+                    'exception' => $accessDeniedException::class,
+                ],
+                Response::HTTP_FORBIDDEN
+            );
         }
         if ('' !== $this->redirectRoute) {
             $redirectUrl = $this->urlGenerator->generate($this->redirectRoute, $this->redirectParameters);

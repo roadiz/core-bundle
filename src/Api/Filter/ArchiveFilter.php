@@ -28,8 +28,11 @@ final class ArchiveFilter extends AbstractFilter
         if (null === $type) {
             return false;
         }
+        if (\is_string($type)) {
+            return \in_array($type, \array_keys(DateFilter::DOCTRINE_DATE_TYPES), true);
+        }
 
-        return \in_array($type, \array_keys(DateFilter::DOCTRINE_DATE_TYPES), true);
+        return 'datetime' === $type->getName() || 'date' === $type->getName();
     }
 
     #[\Override]
