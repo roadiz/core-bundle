@@ -9,7 +9,6 @@ use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use RZ\Roadiz\Contracts\NodeType\NodeTypeClassLocatorInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
@@ -24,12 +23,8 @@ use RZ\Roadiz\CoreBundle\Entity\UrlAlias;
 
 final readonly class NodeTranstyper
 {
-    public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private NodeTypes $nodeTypesBag,
-        private NodeTypeClassLocatorInterface $nodeTypeClassLocator,
-        private LoggerInterface $logger = new NullLogger(),
-    ) {
+    public function __construct(private ManagerRegistry $managerRegistry, private NodeTypes $nodeTypesBag, private LoggerInterface $logger = new NullLogger())
+    {
     }
 
     private function getManager(): ObjectManager
@@ -86,7 +81,7 @@ final readonly class NodeTranstyper
         $this->logger->debug('Get matching fields');
 
         /** @var class-string<NodesSources> $sourceClass */
-        $sourceClass = $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($destinationNodeType);
+        $sourceClass = $destinationNodeType->getSourceEntityFullQualifiedClassName();
 
         /*
          * Testing if new nodeSource class is available
@@ -228,7 +223,7 @@ final readonly class NodeTranstyper
      */
     private function mockTranstype(NodeTypeInterface $nodeType): void
     {
-        $sourceClass = $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($nodeType);
+        $sourceClass = $nodeType->getSourceEntityFullQualifiedClassName();
         if (!class_exists($sourceClass)) {
             throw new \InvalidArgumentException($sourceClass.' node-source class does not exist.');
         }

@@ -62,7 +62,7 @@ class DocumentTranslation implements Loggable, PersistableInterface
     /**
      * @return $this
      */
-    public function setName(?string $name): static
+    public function setName(?string $name): DocumentTranslation
     {
         $this->name = $name;
 
@@ -89,7 +89,7 @@ class DocumentTranslation implements Loggable, PersistableInterface
     /**
      * @return $this
      */
-    public function setCopyright(?string $copyright): static
+    public function setCopyright(?string $copyright): DocumentTranslation
     {
         $this->copyright = $copyright;
 
@@ -116,7 +116,7 @@ class DocumentTranslation implements Loggable, PersistableInterface
     /**
      * @return $this
      */
-    public function setTranslation(TranslationInterface $translation): static
+    public function setTranslation(TranslationInterface $translation): DocumentTranslation
     {
         $this->translation = $translation;
 
@@ -131,7 +131,7 @@ class DocumentTranslation implements Loggable, PersistableInterface
     /**
      * @return $this
      */
-    public function setDocument(DocumentInterface $document): static
+    public function setDocument(DocumentInterface $document): DocumentTranslation
     {
         $this->document = $document;
 

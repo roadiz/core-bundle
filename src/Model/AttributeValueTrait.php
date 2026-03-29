@@ -64,10 +64,7 @@ trait AttributeValueTrait
         return $this->attribute;
     }
 
-    /**
-     * @return $this
-     */
-    public function setAttribute(AttributeInterface $attribute): static
+    public function setAttribute(AttributeInterface $attribute): self
     {
         $this->attribute = $attribute;
 
@@ -76,7 +73,7 @@ trait AttributeValueTrait
 
     public function getType(): int
     {
-        return $this->getAttribute()?->getType() ?? throw new \RuntimeException('Attribute is not set on AttributeValue.');
+        return $this->getAttribute()->getType();
     }
 
     /**
@@ -90,7 +87,7 @@ trait AttributeValueTrait
     /**
      * @return $this
      */
-    public function setAttributeValueTranslations(Collection $attributeValueTranslations): static
+    public function setAttributeValueTranslations(Collection $attributeValueTranslations): self
     {
         $this->attributeValueTranslations = $attributeValueTranslations;
         /** @var AttributeValueTranslationInterface $attributeValueTranslation */

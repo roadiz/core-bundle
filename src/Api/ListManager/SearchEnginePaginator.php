@@ -29,7 +29,7 @@ final class SearchEnginePaginator implements PaginatorInterface, \IteratorAggreg
     {
         $this->handleOnce();
 
-        return max(0, $this->listManager->getItemCount());
+        return $this->listManager->getItemCount();
     }
 
     #[\Override]

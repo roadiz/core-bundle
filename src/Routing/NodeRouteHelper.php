@@ -9,18 +9,19 @@ use RZ\Roadiz\Core\AbstractEntities\NodeInterface;
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use RZ\Roadiz\Utils\StringHandler;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
 #[Exclude]
 final class NodeRouteHelper
 {
     /**
-     * @var class-string<object&callable>|null
+     * @var class-string|null
      */
     private ?string $controller = null;
 
     /**
-     * @param class-string<object&callable> $defaultControllerClass
+     * @param class-string<AbstractController> $defaultControllerClass
      */
     public function __construct(
         private readonly NodeInterface $node,
@@ -35,48 +36,37 @@ final class NodeRouteHelper
     /**
      * Get controller class path for a given node.
      *
-     * @return class-string<object&callable>|null
+     * @return class-string<AbstractController>|null
      */
     public function getController(): ?string
     {
-        if (null !== $this->controller) {
-            return $this->controller;
-        }
+        if (null === $this->controller) {
+            $nodeType = $this->nodeTypesBag->get($this->node->getNodeTypeName());
+            if (!$nodeType->isReachable()) {
+                return null;
+            }
+            $controllerClassName = $this->getControllerNamespace().'\\'.
+                StringHandler::classify($nodeType->getName()).
+                'Controller';
 
-        $nodeType = $this->nodeTypesBag->get($this->node->getNodeTypeName()) ?? throw new \InvalidArgumentException('NodeType '.$this->node->getNodeTypeName().' does not exist.');
-        if (!$nodeType->isReachable()) {
-            return null;
-        }
-        $controllerClassName = $this->getControllerNamespace().'\\'.
-            StringHandler::classify($nodeType->getName()).
-            'Controller';
+            if (\class_exists($controllerClassName)) {
+                $reflection = new \ReflectionClass($controllerClassName);
 
-        if ($this->isCallable($controllerClassName)) {
-            $this->controller = $controllerClassName;
-        } else {
-            /*
-             * Use a default controller if no controller was found in Theme.
-             */
-            $this->controller = $this->defaultControllerClass;
-        }
-
-        return $this->controller;
-    }
-
-    /**
-     * @phpstan-assert-if-true class-string<object&callable> $controllerClassName
-     */
-    private function isCallable(string $controllerClassName): bool
-    {
-        if (\class_exists($controllerClassName)) {
-            $reflection = new \ReflectionClass($controllerClassName);
-
-            if ($reflection->hasMethod('__invoke')) {
-                return true;
+                if (!$reflection->hasMethod('__invoke')) {
+                    throw new \InvalidArgumentException('Controller class '.$controllerClassName.' must implement __invoke method.');
+                }
+                // @phpstan-ignore-next-line
+                $this->controller = $controllerClassName;
+            } else {
+                /*
+                 * Use a default controller if no controller was found in Theme.
+                 */
+                $this->controller = $this->defaultControllerClass;
             }
         }
 
-        return false;
+        // @phpstan-ignore-next-line
+        return $this->controller;
     }
 
     private function getControllerNamespace(): string
@@ -94,18 +84,14 @@ final class NodeRouteHelper
      */
     public function isViewable(): bool
     {
-        $controller = $this->getController();
-        if (null === $controller) {
-            return false;
-        }
-        if (!class_exists($controller)) {
-            $this->logger->debug($controller.' controller does not exist.');
+        if (!class_exists($this->getController())) {
+            $this->logger->debug($this->getController().' controller does not exist.');
 
             return false;
         }
-        if (!method_exists($controller, $this->getMethod())) {
+        if (!method_exists($this->getController(), $this->getMethod())) {
             $this->logger->debug(
-                $controller.':'.
+                $this->getController().':'.
                 $this->getMethod().' controller method does not exist.'
             );
 

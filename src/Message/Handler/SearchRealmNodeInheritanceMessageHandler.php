@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Message\Handler;
 
 use Psr\Log\LoggerInterface;
+use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
+use RZ\Roadiz\CoreBundle\EntityHandler\NodeHandler;
 use RZ\Roadiz\CoreBundle\Message\ApplyRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Message\CleanRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Message\SearchRealmNodeInheritanceMessage;
@@ -21,6 +23,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 final readonly class SearchRealmNodeInheritanceMessageHandler
 {
     public function __construct(
+        private HandlerFactoryInterface $handlerFactory,
         private AllStatusesNodeRepository $allStatusesNodeRepository,
         private RealmNodeRepository $realmNodeRepository,
         private MessageBusInterface $bus,
@@ -61,12 +64,9 @@ final readonly class SearchRealmNodeInheritanceMessageHandler
 
     private function applyRootRealmNodes(Node $node): void
     {
-        // By pass greedy call findAllNodeParentsBy if no parent
-        if (null === $node->getParent()) {
-            return;
-        }
-
-        $parents = $this->allStatusesNodeRepository->findAllNodeParentsBy($node);
+        /** @var NodeHandler $nodeHandler */
+        $nodeHandler = $this->handlerFactory->getHandler($node);
+        $parents = $nodeHandler->getParents();
 
         if (0 === count($parents)) {
             return;

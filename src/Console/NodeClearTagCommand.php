@@ -47,8 +47,7 @@ final class NodeClearTagCommand extends Command
     #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $em = $this->managerRegistry
-            ->getManagerForClass(Node::class) ?? throw new \RuntimeException('No entity manager found for Node class.');
+        $em = $this->managerRegistry->getManagerForClass(Node::class);
         $io = new SymfonyStyle($input, $output);
 
         $tagId = (int) $input->getArgument('tagId');

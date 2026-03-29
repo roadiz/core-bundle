@@ -236,7 +236,7 @@ abstract class PrefixAwareRepository extends EntityRepository
         $qb = $this->createSearchBy($pattern, $qb, $criteria, $alias);
 
         // Add ordering
-        if ([] !== $orders) {
+        if (null !== $orders) {
             foreach ($orders as $key => $value) {
                 $realKey = $this->getRealKey($qb, $key);
                 $qb->addOrderBy($realKey['prefix'].$realKey['key'], $value);
