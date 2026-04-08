@@ -17,7 +17,7 @@ final readonly class FriendlyCaptchaService implements CaptchaServiceInterface
         private ?string $publicKey,
         #[\SensitiveParameter]
         private ?string $privateKey,
-        private ?string $verifyUrl = 'https://global.frcapi.com/api/v2/captcha/siteverify',
+        private string $verifyUrl = 'https://global.frcapi.com/api/v2/captcha/siteverify',
     ) {
     }
 

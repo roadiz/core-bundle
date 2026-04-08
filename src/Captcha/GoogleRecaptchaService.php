@@ -17,7 +17,7 @@ final readonly class GoogleRecaptchaService implements CaptchaServiceInterface
         private ?string $publicKey,
         #[\SensitiveParameter]
         private ?string $privateKey,
-        private ?string $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify',
+        private string $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify',
     ) {
     }
 

@@ -57,7 +57,7 @@ class Group implements PersistableInterface, \Stringable
     /**
      * @return $this
      */
-    public function setName(string $name)
+    public function setName(string $name): static
     {
         $this->name = $name;
 
