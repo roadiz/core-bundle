@@ -11,7 +11,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 final class NodeExplorerEntityListEventSubscriber implements EventSubscriberInterface
 {
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [

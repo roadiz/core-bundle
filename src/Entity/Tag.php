@@ -11,25 +11,20 @@ use ApiPlatform\Serializer\Filter\PropertyFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use RZ\Roadiz\Core\AbstractEntities\DateTimedInterface;
-use RZ\Roadiz\Core\AbstractEntities\DateTimedTrait;
+use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\LeafInterface;
 use RZ\Roadiz\Core\AbstractEntities\LeafTrait;
-use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
-use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Api\Filter\NodesTagsFilter;
 use RZ\Roadiz\CoreBundle\Api\Filter\NotFilter;
 use RZ\Roadiz\CoreBundle\Repository\TagRepository;
 use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Serializer\Attribute as SymfonySerializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Tags are hierarchical entities used to qualify Nodes.
- *
- * @implements LeafInterface<Tag>
  */
 #[ORM\Entity(repositoryClass: TagRepository::class),
     ORM\HasLifecycleCallbacks,
@@ -47,15 +42,12 @@ use Symfony\Component\Validator\Constraints as Assert;
     ApiFilter(PropertyFilter::class),
     ApiFilter(NodesTagsFilter::class),
     ApiFilter(BaseFilter\OrderFilter::class, properties: [
-        'tagName',
         'position',
         'createdAt',
         'updatedAt',
     ])]
-class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \Stringable
+class Tag extends AbstractDateTimedPositioned implements LeafInterface
 {
-    use SequentialIdTrait;
-    use DateTimedTrait;
     use LeafTrait;
 
     #[ORM\Column(
@@ -67,6 +59,7 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
         options: ['default' => '#000000']
     )]
     #[SymfonySerializer\Groups(['tag', 'tag_color', 'color'])]
+    #[Serializer\Groups(['tag', 'tag_color', 'color'])]
     #[Assert\Length(max: 7)]
     #[ApiProperty(
         description: 'Tag color in hexadecimal format.',
@@ -87,6 +80,7 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
     ])]
     #[ORM\ManyToOne(targetEntity: Tag::class, fetch: 'EXTRA_LAZY', inversedBy: 'children')]
     #[ORM\JoinColumn(name: 'parent_tag_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[Serializer\Exclude]
     #[SymfonySerializer\MaxDepth(2)]
     #[SymfonySerializer\Groups(['tag_parent'])]
     protected ?LeafInterface $parent = null;
@@ -102,6 +96,8 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
     )]
     #[ORM\OrderBy(['position' => 'ASC'])]
     #[SymfonySerializer\Groups(['tag_children'])]
+    #[Serializer\Groups(['tag_children'])]
+    #[Serializer\AccessType(type: 'public_method')]
     protected Collection $children;
 
     /**
@@ -114,11 +110,14 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
         orphanRemoval: true
     )]
     #[SymfonySerializer\Groups(['translated_tag'])]
+    #[Serializer\Groups(['translated_tag'])]
     protected Collection $translatedTags;
 
     #[ApiFilter(BaseFilter\SearchFilter::class, strategy: 'partial')]
     #[ORM\Column(name: 'tag_name', type: 'string', length: 250, unique: true)]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Groups(['tag'])]
+    #[Serializer\Accessor(getter: 'getTagName', setter: 'setTagName')]
     #[Assert\NotNull]
     #[Assert\NotBlank]
     #[Assert\Length(max: 250)]
@@ -129,11 +128,13 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
     private string $tagName = '';
 
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     private string $dirtyTagName = '';
 
     #[ApiFilter(BaseFilter\BooleanFilter::class)]
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => true])]
     #[SymfonySerializer\Groups(['tag', 'tag_base', 'node', 'nodes_sources'])]
+    #[Serializer\Groups(['tag', 'tag_base', 'node', 'nodes_sources'])]
     #[ApiProperty(
         description: 'Is this tag visible in website?',
         example: 'true',
@@ -142,6 +143,7 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
 
     #[ORM\Column(name: 'children_order', type: 'string', length: 60, options: ['default' => 'position'])]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Groups(['tag', 'tag_children_order'])]
     #[Assert\Length(max: 60)]
     #[ApiProperty(
         description: 'This tag children will be sorted by a given field',
@@ -156,6 +158,7 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
 
     #[ORM\Column(name: 'children_order_direction', type: 'string', length: 4, options: ['default' => 'ASC'])]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Groups(['tag', 'tag_children_order'])]
     #[Assert\Length(max: 4)]
     #[ApiProperty(
         description: 'This tag children will be sorted ascendant or descendant',
@@ -171,6 +174,7 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
     #[ApiFilter(BaseFilter\BooleanFilter::class)]
     #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => false])]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Groups(['tag'])]
     #[ApiProperty(
         description: 'Is this tag locked to prevent deletion and renaming?',
         example: 'false',
@@ -188,6 +192,7 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
     )]
     #[ORM\OrderBy(['position' => 'ASC'])]
     #[SymfonySerializer\Ignore]
+    #[Serializer\Exclude]
     #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
         'nodesTags.node' => 'exact',
         'nodesTags.node.nodeName' => 'exact',
@@ -202,12 +207,15 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
     ])]
     private Collection $nodesTags;
 
+    /**
+     * Create a new Tag.
+     */
     public function __construct()
     {
         $this->nodesTags = new ArrayCollection();
         $this->translatedTags = new ArrayCollection();
         $this->children = new ArrayCollection();
-        $this->initDateTimedTrait();
+        $this->initAbstractDateTimed();
     }
 
     /**
@@ -238,7 +246,9 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
      */
     public function getNodes(): Collection
     {
-        return $this->nodesTags->map(fn (NodesTags $nodesTags) => $nodesTags->getNode());
+        return $this->nodesTags->map(function (NodesTags $nodesTags) {
+            return $nodesTags->getNode();
+        });
     }
 
     /**
@@ -282,13 +292,17 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
     #[SymfonySerializer\Ignore]
     public function getTranslatedTagsByTranslation(TranslationInterface $translation): Collection
     {
-        return $this->translatedTags->filter(fn (TagTranslation $tagTranslation) => $tagTranslation->getTranslation()->getLocale() === $translation->getLocale());
+        return $this->translatedTags->filter(function (TagTranslation $tagTranslation) use ($translation) {
+            return $tagTranslation->getTranslation()->getLocale() === $translation->getLocale();
+        });
     }
 
     #[SymfonySerializer\Ignore]
     public function getTranslatedTagsByDefaultTranslation(): ?TagTranslation
     {
-        return $this->translatedTags->findFirst(fn (int $key, TagTranslation $tagTranslation) => $tagTranslation->getTranslation()->isDefaultTranslation());
+        return $this->translatedTags->findFirst(function (int $key, TagTranslation $tagTranslation) {
+            return $tagTranslation->getTranslation()->isDefaultTranslation();
+        });
     }
 
     public function getOneLineSummary(): string
@@ -372,13 +386,15 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
         return $this;
     }
 
-    #[\Override]
     public function __toString(): string
     {
         return (string) $this->getId();
     }
 
     #[SymfonySerializer\Ignore]
+    #[Serializer\Groups(['tag', 'tag_base', 'node', 'nodes_sources'])]
+    #[Serializer\VirtualProperty]
+    #[Serializer\Type('string|null')]
     public function getName(): ?string
     {
         return $this->getTranslatedTags()->first() ?
@@ -411,6 +427,9 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
     }
 
     #[SymfonySerializer\Ignore]
+    #[Serializer\VirtualProperty]
+    #[Serializer\Groups(['tag', 'node', 'nodes_sources'])]
+    #[Serializer\Type('string|null')]
     public function getDescription(): ?string
     {
         return $this->getTranslatedTags()->first() ?
@@ -419,6 +438,9 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
     }
 
     #[SymfonySerializer\Ignore]
+    #[Serializer\VirtualProperty]
+    #[Serializer\Groups(['tag', 'node', 'nodes_sources'])]
+    #[Serializer\Type('array<RZ\Roadiz\CoreBundle\Entity\Document>')]
     public function getDocuments(): array
     {
         return $this->getTranslatedTags()->first() ?
@@ -426,7 +448,6 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
             [];
     }
 
-    #[\Override]
     public function setParent(?LeafInterface $parent = null): static
     {
         if ($parent === $this) {
@@ -447,6 +468,7 @@ class Tag implements DateTimedInterface, LeafInterface, PersistableInterface, \S
     )]
     #[SymfonySerializer\SerializedName('slug')]
     #[SymfonySerializer\Groups(['tag', 'tag_base', 'node', 'nodes_sources'])]
+    #[Serializer\Groups(['tag', 'tag_base', 'node', 'nodes_sources'])]
     public function getSlug(): string
     {
         return $this->getTagName();

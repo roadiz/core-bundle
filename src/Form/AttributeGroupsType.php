@@ -21,7 +21,6 @@ final class AttributeGroupsType extends AbstractType
     ) {
     }
 
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildForm($builder, $options);
@@ -29,7 +28,6 @@ final class AttributeGroupsType extends AbstractType
         $builder->addModelTransformer($this->attributeGroupTransformer);
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setNormalizer('choices', function (Options $options, $choices) {
@@ -50,13 +48,11 @@ final class AttributeGroupsType extends AbstractType
         });
     }
 
-    #[\Override]
-    public function getParent(): string
+    public function getParent(): ?string
     {
         return ChoiceType::class;
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'attribute_groups';

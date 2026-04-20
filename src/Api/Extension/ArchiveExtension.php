@@ -49,7 +49,6 @@ final readonly class ArchiveExtension implements QueryResultCollectionExtensionI
     ) {
     }
 
-    #[\Override]
     public function applyToCollection(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
@@ -60,7 +59,7 @@ final readonly class ArchiveExtension implements QueryResultCollectionExtensionI
         if (!$this->supportsResult($resourceClass, $operation)) {
             return;
         }
-        if (null === $this->requestStack->getCurrentRequest()) {
+        if (null === $request = $this->requestStack->getCurrentRequest()) {
             return;
         }
         $aliases = $queryBuilder->getRootAliases();
@@ -73,20 +72,15 @@ final readonly class ArchiveExtension implements QueryResultCollectionExtensionI
             ->orderBy($publicationField, 'DESC');
     }
 
-    #[\Override]
     public function supportsResult(string $resourceClass, ?Operation $operation = null, array $context = []): bool
     {
-        if (null === $this->requestStack->getCurrentRequest()) {
+        if (null === $request = $this->requestStack->getCurrentRequest()) {
             return false;
         }
 
         return $this->isArchiveEnabled($operation);
     }
 
-    /**
-     * @return iterable<Archive>
-     */
-    #[\Override]
     public function getResult(
         QueryBuilder $queryBuilder,
         ?string $resourceClass = null,
@@ -119,7 +113,10 @@ final readonly class ArchiveExtension implements QueryResultCollectionExtensionI
         }
 
         foreach ($dates as $year => $months) {
-            $entities[] = new Archive($year, $months);
+            $entity = new Archive();
+            $entity->year = (int) $year;
+            $entity->months = $months;
+            $entities[] = $entity;
         }
 
         return $entities;
@@ -128,12 +125,12 @@ final readonly class ArchiveExtension implements QueryResultCollectionExtensionI
     private function isArchiveEnabled(
         ?Operation $operation = null,
     ): bool {
-        return $operation?->getExtraProperties()['archive_enabled'] ?? false;
+        return $operation->getExtraProperties()['archive_enabled'] ?? false;
     }
 
     private function getPublicationFieldName(
         ?Operation $operation = null,
     ): string {
-        return $operation?->getExtraProperties()['archive_publication_field_name'] ?? $this->defaultPublicationFieldName;
+        return $operation->getExtraProperties()['archive_publication_field_name'] ?? $this->defaultPublicationFieldName;
     }
 }

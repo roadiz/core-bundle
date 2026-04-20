@@ -13,23 +13,27 @@ use RZ\Roadiz\CoreBundle\Entity\FolderTranslation;
  */
 final class FolderNormalizer extends AbstractPathNormalizer
 {
-    #[\Override]
-    public function normalize(mixed $data, ?string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
+    /**
+     * @return array|\ArrayObject|bool|float|int|mixed|string|null
+     *
+     * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
+     */
+    public function normalize(mixed $object, ?string $format = null, array $context = []): mixed
     {
-        $normalized = $this->decorated->normalize($data, $format, $context);
-        if ($data instanceof Folder && is_array($normalized)) {
+        $data = $this->decorated->normalize($object, $format, $context);
+        if ($object instanceof Folder && is_array($data)) {
             if (isset($context['translation']) && $context['translation'] instanceof TranslationInterface) {
                 /*
                  * Always falls back on default translation if no translation is found for Folders entities
                  */
-                $translatedData = $data->getTranslatedFoldersByTranslation($context['translation'])->first() ?:
-                    $data->getTranslatedFoldersByDefaultTranslation();
+                $translatedData = $object->getTranslatedFoldersByTranslation($context['translation'])->first() ?:
+                    $object->getTranslatedFoldersByDefaultTranslation();
                 if ($translatedData instanceof FolderTranslation) {
-                    $normalized['name'] = $translatedData->getName();
+                    $data['name'] = $translatedData->getName();
                 }
             }
         }
 
-        return $normalized;
+        return $data;
     }
 }

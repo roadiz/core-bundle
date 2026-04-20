@@ -7,7 +7,6 @@ namespace RZ\Roadiz\CoreBundle\Api\Filter;
 use ApiPlatform\Doctrine\Orm\Filter\AbstractFilter;
 use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use ApiPlatform\Metadata\Operation;
-use ApiPlatform\OpenApi\Model\Parameter;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -18,7 +17,7 @@ use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 
 final class TagGroupFilter extends AbstractFilter
 {
-    public const string PROPERTY = 'tagGroup';
+    public const PROPERTY = 'tagGroup';
 
     public function __construct(
         ManagerRegistry $managerRegistry,
@@ -29,7 +28,6 @@ final class TagGroupFilter extends AbstractFilter
         parent::__construct($managerRegistry, $logger, $properties, $nameConverter);
     }
 
-    #[\Override]
     protected function filterProperty(
         string $property,
         mixed $value,
@@ -45,9 +43,6 @@ final class TagGroupFilter extends AbstractFilter
         if (!\is_array($value)) {
             return;
         }
-        if (null === $this->managerRegistry) {
-            return;
-        }
 
         /*
          * Convert comma separated tag identifiers to sub-arrays
@@ -56,9 +51,9 @@ final class TagGroupFilter extends AbstractFilter
 
         foreach ($value as $group) {
             if (!\is_array($group)) {
-                $group = explode(',', (string) $group);
+                $group = explode(',', $group);
             }
-            $normalizedValue[] = array_filter(array_map(trim(...), $group));
+            $normalizedValue[] = array_filter(array_map('trim', $group));
         }
 
         if (Node::class !== $resourceClass) {
@@ -85,7 +80,6 @@ final class TagGroupFilter extends AbstractFilter
         $this->setTagNamesParameters($queryBuilder, $normalizedValue);
     }
 
-    #[\Override]
     public function getDescription(string $resourceClass): array
     {
         $carry = [];
@@ -94,14 +88,12 @@ final class TagGroupFilter extends AbstractFilter
             'type' => Type::BUILTIN_TYPE_ARRAY,
             'required' => false,
             'description' => 'Filter entities by tag name groups (comma separated). Inside groups filter use OR, between each groups filter use AND.',
-            'openapi' => new Parameter(
-                name: self::PROPERTY.'[]',
-                in: 'query',
-                description: 'Filter entities by tag name groups (comma separated). Inside groups filter use OR, between each groups filter use AND.',
-                allowEmptyValue: false,
-                explode: true,
-                example: 'tag-1,tag-2&'.self::PROPERTY.'[]=tag-3,tag-4',
-            ),
+            'openapi' => [
+                'description' => 'Filter entities by tag name groups (comma separated). Inside groups filter use OR, between each groups filter use AND.',
+                'example' => 'tag-1,tag-2&'.self::PROPERTY.'[]=tag-3,tag-4',
+                'allowEmptyValue' => false,
+                'explode' => true,
+            ],
         ];
 
         return $carry;

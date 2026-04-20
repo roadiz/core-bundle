@@ -17,7 +17,6 @@ final readonly class RequestPreviewRevolver implements PreviewResolverInterface
     ) {
     }
 
-    #[\Override]
     public function isPreview(): bool
     {
         $request = $this->requestStack->getMainRequest();
@@ -28,7 +27,6 @@ final readonly class RequestPreviewRevolver implements PreviewResolverInterface
         return $request->attributes->getBoolean('preview');
     }
 
-    #[\Override]
     public function getRequiredRole(): string
     {
         return $this->requiredRole;

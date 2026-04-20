@@ -4,18 +4,13 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Mailer;
 
-use ApiPlatform\Metadata\Exception\OperationNotFoundException;
-use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
-use ApiPlatform\Validator\Exception\ValidationException;
-use Psr\Log\LoggerInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Captcha\CaptchaServiceInterface;
-use RZ\Roadiz\CoreBundle\Entity\CustomForm;
 use RZ\Roadiz\CoreBundle\Exception\BadFormRequestException;
 use RZ\Roadiz\CoreBundle\Form\CaptchaType;
 use RZ\Roadiz\CoreBundle\Form\Error\FormErrorSerializerInterface;
 use RZ\Roadiz\CoreBundle\Form\HoneypotType;
-use RZ\Roadiz\CoreBundle\Notifier\ContactFormNotification;
+use RZ\Roadiz\Documents\UrlGenerators\DocumentUrlGeneratorInterface;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
@@ -33,66 +28,75 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
-use Symfony\Component\Notifier\Notifier;
-use Symfony\Component\Notifier\NotifierInterface;
-use Symfony\Component\Notifier\Recipient\RecipientInterface;
 use Symfony\Component\String\UnicodeString;
 use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\NotNull;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Environment;
 
 /**
  * @internal use ContactFormManagerFactory to create a new instance
  */
-final class ContactFormManager
+final class ContactFormManager extends EmailManager
 {
-    private string $formName = 'contact_form';
-    private ?string $emailTitle = null;
-    private ?string $subject = null;
-    private string $emailType = 'contact.form';
-    /**
-     * @var array<RecipientInterface>|null
-     */
-    private ?array $recipients = null;
-    private ?string $redirectUrl = null;
-    private ?FormBuilderInterface $formBuilder = null;
-    private ?FormInterface $form = null;
-    private array $options = [];
-    private string $method = Request::METHOD_POST;
-    private bool $emailStrictMode = false;
-    private bool $useRealResponseCode = false;
-    private array $allowedMimeTypes = [
+    protected string $formName = 'contact_form';
+    protected ?array $uploadedFiles = null;
+    protected ?string $redirectUrl = null;
+    protected ?FormBuilderInterface $formBuilder = null;
+    protected ?FormInterface $form = null;
+    protected array $options = [];
+    protected string $method = Request::METHOD_POST;
+    protected bool $emailStrictMode = false;
+    protected bool $useRealResponseCode = false;
+    protected array $allowedMimeTypes = [
         'application/pdf',
         'application/x-pdf',
         'image/jpeg',
         'image/png',
         'image/gif',
     ];
-    private int $maxFileSize = 5242880; // 5MB
+    protected int $maxFileSize = 5242880; // 5MB
 
     /*
      * DO NOT DIRECTLY USE THIS CONSTRUCTOR
      * USE 'ContactFormManagerFactory' Factory Service
      */
     public function __construct(
-        private readonly RequestStack $requestStack,
-        private readonly TranslatorInterface $translator,
-        private readonly Settings $settingsBag,
-        private readonly NotifierInterface $notifier,
+        RequestStack $requestStack,
+        TranslatorInterface $translator,
+        Environment $templating,
+        MailerInterface $mailer,
+        Settings $settingsBag,
+        DocumentUrlGeneratorInterface $documentUrlGenerator,
         private readonly FormFactoryInterface $formFactory,
         private readonly FormErrorSerializerInterface $formErrorSerializer,
         private readonly CaptchaServiceInterface $captchaService,
-        private readonly ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory,
-        private readonly LoggerInterface $logger,
-        private readonly bool $useConstraintViolationList,
     ) {
+        parent::__construct($requestStack, $translator, $templating, $mailer, $settingsBag, $documentUrlGenerator);
+
         $this->options = [
             'attr' => [
                 'id' => 'contactForm',
             ],
         ];
+
+        $this->successMessage = 'form.successfully.sent';
+        $this->failMessage = 'form.has.errors';
+        $this->emailTemplate = '@RoadizCore/email/forms/contactForm.html.twig';
+        $this->emailPlainTextTemplate = '@RoadizCore/email/forms/contactForm.txt.twig';
+
+        $this->setSubject($this->translator->trans(
+            'new.contact.form.%site%',
+            ['%site%' => $this->settingsBag->get('site_name')]
+        ));
+
+        $this->setEmailTitle($this->translator->trans(
+            'new.contact.form.%site%',
+            ['%site%' => $this->settingsBag->get('site_name')]
+        ));
     }
 
     public function getFormName(): string
@@ -115,7 +119,7 @@ final class ContactFormManager
      *
      * @return $this
      */
-    public function disableCsrfProtection(): static
+    public function disableCsrfProtection(): self
     {
         $this->options['csrf_protection'] = false;
 
@@ -124,19 +128,19 @@ final class ContactFormManager
 
     public function getForm(): FormInterface
     {
-        return $this->form ?? $this->getFormBuilder()->getForm();
+        return $this->form;
     }
 
     /**
      * Using the strict mode requires the "egulias/email-validator" library.
      *
-     * Use this method BEFORE withDefaultFields().
+     * Use this method BEFORE withDefaultFields()
      *
      * @see https://symfony.com/doc/4.4/reference/constraints/Email.html#strict
      *
      * @return $this
      */
-    public function setEmailStrictMode(bool $emailStrictMode = true): static
+    public function setEmailStrictMode(bool $emailStrictMode = true): self
     {
         $this->emailStrictMode = $emailStrictMode;
 
@@ -153,7 +157,7 @@ final class ContactFormManager
      *
      * @return $this
      */
-    public function withDefaultFields(bool $useHoneypot = true): static
+    public function withDefaultFields(bool $useHoneypot = true): self
     {
         $this->getFormBuilder()->add('email', EmailType::class, [
             'label' => 'your.email',
@@ -196,7 +200,7 @@ final class ContactFormManager
      *
      * @return $this
      */
-    public function withHoneypot(string $honeypotName = 'eml'): static
+    public function withHoneypot(string $honeypotName = 'eml'): self
     {
         $this->getFormBuilder()->add($honeypotName, HoneypotType::class);
 
@@ -208,7 +212,7 @@ final class ContactFormManager
      *
      * @return $this
      */
-    public function withUserConsent(string $consentDescription = 'contact_form.user_consent'): static
+    public function withUserConsent(string $consentDescription = 'contact_form.user_consent'): self
     {
         $this->getFormBuilder()->add('consent', CheckboxType::class, [
             'label' => $consentDescription,
@@ -234,6 +238,18 @@ final class ContactFormManager
         return $this->formBuilder;
     }
 
+    /**
+     * @deprecated Since 2.5.30, use withCaptcha method
+     */
+    public function withGoogleRecaptcha(
+        string $name = 'recaptcha',
+        string $validatorFieldName = 'g-recaptcha-response',
+    ): self {
+        trigger_deprecation('roadiz/core-bundle', '2.5.30', 'withGoogleRecaptcha method is replaced with withCaptcha.');
+
+        return $this->withCaptcha();
+    }
+
     public function withCaptcha(): self
     {
         if ($this->captchaService->isEnabled()) {
@@ -257,7 +273,7 @@ final class ContactFormManager
         $this->form = $this->getFormBuilder()->getForm();
         $this->form->handleRequest($request);
         $returnJson = $request->isXmlHttpRequest()
-            || in_array($request->getRequestFormat(), ['json', 'jsonld'], true)
+            || 'json' === $request->getRequestFormat()
             || (1 === count($request->getAcceptableContentTypes()) && 'application/json' === $request->getAcceptableContentTypes()[0])
             || ($request->attributes->has('_format') && 'json' === $request->attributes->get('_format'));
 
@@ -268,22 +284,20 @@ final class ContactFormManager
                         $onValid($this->form);
                     }
 
-                    $uploadedFiles = $this->handleFiles();
-                    $this->notifier->send(
-                        $this->createNotificationFromForm($this->form, $uploadedFiles),
-                        ...$this->getRecipients(),
-                    );
+                    $this->handleFiles();
+                    $this->handleFormData($this->form);
+                    $this->send();
                     if ($returnJson) {
-                        return new JsonResponse(null, Response::HTTP_ACCEPTED);
+                        return new JsonResponse([], Response::HTTP_ACCEPTED);
                     }
                     if ($request->hasPreviousSession()) {
                         /** @var Session $session */
                         $session = $request->getSession();
                         $session->getFlashBag()
-                            ->add('confirm', $this->translator->trans('form.successfully.sent'));
+                            ->add('confirm', $this->translator->trans($this->successMessage));
                     }
 
-                    $this->redirectUrl ??= $request->getUri();
+                    $this->redirectUrl = null !== $this->redirectUrl ? $this->redirectUrl : $request->getUri();
 
                     return new RedirectResponse($this->redirectUrl);
                 } catch (BadFormRequestException $e) {
@@ -292,25 +306,11 @@ final class ContactFormManager
                     } else {
                         $this->form->addError(new FormError($e->getMessage()));
                     }
-                } catch (TransportExceptionInterface) {
+                } catch (TransportExceptionInterface $exception) {
                     $this->form->addError(new FormError('Contact form could not be sent.'));
                 }
             }
             if ($returnJson) {
-                if ($this->useConstraintViolationList) {
-                    try {
-                        $this->resourceMetadataCollectionFactory->create(
-                            CustomForm::class
-                        )->getOperation('api_contact_form_post');
-                        $request->attributes->set('_api_operation_name', 'api_contact_form_post');
-                        $request->attributes->set('_api_resource_class', CustomForm::class);
-                        throw new ValidationException($this->formErrorSerializer->getErrorsAsConstraintViolationList($this->form));
-                    } catch (OperationNotFoundException) {
-                        // Do not use 422 response if api_contact_form_post operation does not exist
-                        $this->logger->warning('Operation "api_contact_form_post" not found, falling back to legacy errors-as-array response.');
-                    }
-                }
-
                 /*
                  * If form has errors during AJAX
                  * request we sent them.
@@ -318,7 +318,7 @@ final class ContactFormManager
                 $errorPerForm = $this->formErrorSerializer->getErrorsAsArray($this->form);
                 $responseArray = [
                     'status' => Response::HTTP_BAD_REQUEST,
-                    'message' => $this->translator->trans('form.has.errors'),
+                    'message' => $this->translator->trans($this->failMessage),
                     'errors' => (string) $this->form->getErrors(),
                     'errorsPerForm' => $errorPerForm,
                 ];
@@ -336,49 +336,12 @@ final class ContactFormManager
         return null;
     }
 
-    /**
-     * @return array<RecipientInterface>
-     */
-    private function getRecipients(): array
+    protected function handleFiles(): void
     {
-        if (!empty($this->recipients)) {
-            return $this->recipients;
-        } elseif ($this->notifier instanceof Notifier) {
-            return $this->notifier->getAdminRecipients();
-        }
-
-        // Fallback to the parent method if Notifier is not used
-        return [];
-    }
-
-    /**
-     * @param array<RecipientInterface>|null $recipients
-     */
-    public function setRecipients(?array $recipients): ContactFormManager
-    {
-        if (null !== $recipients) {
-            foreach ($recipients as $recipient) {
-                if (!$recipient instanceof RecipientInterface) {
-                    throw new \InvalidArgumentException('All recipients must implement RecipientInterface.');
-                }
-            }
-        }
-        $this->recipients = $recipients;
-
-        return $this;
-    }
-
-    /**
-     * @return array<string, UploadedFile>
-     *
-     * @throws BadFormRequestException
-     */
-    private function handleFiles(): array
-    {
-        $uploadedFiles = [];
+        $this->uploadedFiles = [];
         $request = $this->requestStack->getMainRequest();
         if (null === $request) {
-            return [];
+            return;
         }
         /*
          * Files values
@@ -402,20 +365,18 @@ final class ContactFormManager
                                  * @var UploadedFile $singleUploadedFile2
                                  */
                                 foreach ($singleUploadedFile as $singleName2 => $singleUploadedFile2) {
-                                    $this->addUploadedFile($uploadedFiles, $singleName2, $singleUploadedFile2);
+                                    $this->addUploadedFile($singleName2, $singleUploadedFile2);
                                 }
                             } else {
-                                $this->addUploadedFile($uploadedFiles, $singleName, $singleUploadedFile);
+                                $this->addUploadedFile($singleName, $singleUploadedFile);
                             }
                         }
                     } else {
-                        $this->addUploadedFile($uploadedFiles, $name, $uploadedFile);
+                        $this->addUploadedFile($name, $uploadedFile);
                     }
                 }
             }
         }
-
-        return $uploadedFiles;
     }
 
     /**
@@ -423,7 +384,7 @@ final class ContactFormManager
      *
      * @throws BadFormRequestException
      */
-    private function addUploadedFile(array &$uploadedFiles, string $name, UploadedFile $uploadedFile): static
+    protected function addUploadedFile(string $name, UploadedFile $uploadedFile): ContactFormManager
     {
         if (
             !$uploadedFile->isValid()
@@ -432,12 +393,12 @@ final class ContactFormManager
         ) {
             throw new BadFormRequestException($this->translator->trans('file.not.accepted'), Response::HTTP_FORBIDDEN, 'danger', $name);
         }
-        $uploadedFiles[$name] = $uploadedFile;
+        $this->uploadedFiles[$name] = $uploadedFile;
 
         return $this;
     }
 
-    private function findEmailData(array $formData): ?string
+    protected function findEmailData(array $formData): ?string
     {
         foreach ($formData as $key => $value) {
             if (
@@ -455,26 +416,26 @@ final class ContactFormManager
     }
 
     /**
-     * @param array<string, UploadedFile> $uploadedFiles
-     *
      * @throws \Exception
      */
-    private function createNotificationFromForm(FormInterface $form, array $uploadedFiles): ContactFormNotification
+    protected function handleFormData(FormInterface $form): void
     {
         $formData = $form->getData();
         $fields = $this->flattenFormData($form, []);
-        $request = $this->requestStack->getMainRequest();
 
         /*
          * Sender email
          */
         $emailData = $this->findEmailData($formData);
+        if (!empty($emailData)) {
+            $this->setSender($emailData);
+        }
 
         /**
          * @var string       $key
          * @var UploadedFile $uploadedFile
          */
-        foreach ($uploadedFiles as $key => $uploadedFile) {
+        foreach ($this->uploadedFiles as $key => $uploadedFile) {
             $fields[] = [
                 'name' => strip_tags((string) $key),
                 'value' => (strip_tags($uploadedFile->getClientOriginalName()).
@@ -491,67 +452,21 @@ final class ContactFormManager
         /*
          * IP
          */
-        if (null !== $request) {
-            $fields[] = [
-                'name' => $this->translator->trans('ip.address'),
-                'value' => $request->getClientIp(),
-            ];
-        }
+        $fields[] = [
+            'name' => $this->translator->trans('ip.address'),
+            'value' => $this->requestStack->getMainRequest()->getClientIp(),
+        ];
 
-        return new ContactFormNotification(
-            [
-                'emailType' => $this->getEmailType(),
-                'title' => $this->getEmailTitle(),
-                'fields' => $fields,
-            ],
-            $request?->getLocale() ?? 'en',
-            $uploadedFiles,
-            $emailData ? new Address($emailData) : null,
-            $this->getSubject(),
-            ['email']
-        );
+        $this->assignation = [
+            'mailContact' => $this->getSupportEmailAddress(),
+            'emailType' => $this->getEmailType(),
+            'title' => $this->getEmailTitle(),
+            'email' => $this->getSender(),
+            'fields' => $fields,
+        ];
     }
 
-    public function getSubject(): string
-    {
-        return $this->subject ?? $this->translator->trans(
-            'new.contact.form.%site%',
-            ['%site%' => $this->settingsBag->get('site_name')]
-        );
-    }
-
-    public function getEmailTitle(): string
-    {
-        return $this->emailTitle ?? $this->getSubject();
-    }
-
-    public function getEmailType(): string
-    {
-        return $this->emailType;
-    }
-
-    public function setEmailTitle(?string $emailTitle): ContactFormManager
-    {
-        $this->emailTitle = $emailTitle;
-
-        return $this;
-    }
-
-    public function setSubject(?string $subject): ContactFormManager
-    {
-        $this->subject = $subject;
-
-        return $this;
-    }
-
-    public function setEmailType(string $emailType): ContactFormManager
-    {
-        $this->emailType = $emailType;
-
-        return $this;
-    }
-
-    private function isFieldPrivate(FormInterface $form): bool
+    protected function isFieldPrivate(FormInterface $form): bool
     {
         $key = $form->getName();
         $privateFieldNames = [
@@ -559,11 +474,12 @@ final class ContactFormManager
         ];
 
         return
-            '_' === \mb_substr($key, 0, 1) || \in_array($key, $privateFieldNames)
+            is_string($key)
+            && ('_' === \mb_substr($key, 0, 1) || \in_array($key, $privateFieldNames))
         ;
     }
 
-    private function flattenFormData(FormInterface $form, array $fields): array
+    protected function flattenFormData(FormInterface $form, array $fields): array
     {
         /** @var FormInterface $formItem */
         foreach ($form as $formItem) {
@@ -597,6 +513,51 @@ final class ContactFormManager
         }
 
         return $fields;
+    }
+
+    /**
+     * Send contact form data by email.
+     *
+     * @throws \RuntimeException
+     */
+    public function send(): void
+    {
+        if (empty($this->assignation)) {
+            throw new \RuntimeException('Can’t send a contact form without data.');
+        }
+
+        $this->message = $this->createMessage();
+
+        /*
+         * As this is a contact form
+         * email receiver is website owner or custom.
+         *
+         * So you must return error email to receiver instead
+         * of sender (who is your visitor).
+         */
+        $this->message->to(...$this->getReceiver());
+        $this->message->returnPath($this->getReceiverEmail());
+
+        /** @var UploadedFile $uploadedFile */
+        foreach ($this->uploadedFiles as $uploadedFile) {
+            $this->message->attachFromPath($uploadedFile->getRealPath(), $uploadedFile->getClientOriginalName());
+        }
+
+        // Send the message
+        $this->mailer->send($this->message);
+    }
+
+    /**
+     * @return array<Address>|null
+     */
+    public function getReceiver(): ?array
+    {
+        if (empty($this->settingsBag->get('email_sender'))) {
+            throw new \InvalidArgumentException('Main "email_sender" is not configured for this website.');
+        }
+        $defaultReceivers = [new Address($this->settingsBag->get('email_sender'))];
+
+        return parent::getReceiver() ?? $defaultReceivers;
     }
 
     /**
@@ -667,7 +628,7 @@ final class ContactFormManager
     /**
      * @return $this
      */
-    public function setOptions(array $options): static
+    public function setOptions(array $options): self
     {
         $this->options = $options;
 

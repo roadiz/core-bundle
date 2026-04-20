@@ -8,19 +8,17 @@ use RZ\Roadiz\CoreBundle\Entity\Attribute;
 use RZ\Roadiz\CoreBundle\Serializer\Normalizer\AttributeNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 
-final readonly class AttributeImporter implements EntityImporterInterface
+final class AttributeImporter implements EntityImporterInterface
 {
-    public function __construct(private SerializerInterface $serializer)
+    public function __construct(private readonly SerializerInterface $serializer)
     {
     }
 
-    #[\Override]
     public function supports(string $entityClass): bool
     {
         return Attribute::class === $entityClass;
     }
 
-    #[\Override]
     public function import(string $serializedData): bool
     {
         $this->serializer->deserialize(

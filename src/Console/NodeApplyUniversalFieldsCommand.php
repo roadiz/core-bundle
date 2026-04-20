@@ -25,7 +25,6 @@ final class NodeApplyUniversalFieldsCommand extends Command
         parent::__construct($name);
     }
 
-    #[\Override]
     protected function configure(): void
     {
         $this->setName('nodes:force-universal')
@@ -33,7 +32,6 @@ final class NodeApplyUniversalFieldsCommand extends Command
         ;
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $translation = $this->managerRegistry->getRepository(Translation::class)->findDefault();
@@ -77,7 +75,7 @@ final class NodeApplyUniversalFieldsCommand extends Command
                 $manager->flush();
                 $io->progressFinish();
             }
-        } catch (NoResultException) {
+        } catch (NoResultException $e) {
             $io->warning('No node with universal fields were found.');
         }
 

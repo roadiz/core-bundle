@@ -22,7 +22,6 @@ final class NodeTypesCommand extends Command
         parent::__construct($name);
     }
 
-    #[\Override]
     protected function configure(): void
     {
         $this->setName('nodetypes:list')
@@ -34,14 +33,13 @@ final class NodeTypesCommand extends Command
             );
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $name = $input->getArgument('name');
 
         if ($name) {
-            $nodeType = $this->nodeTypesBag->get(ucfirst((string) $name));
+            $nodeType = $this->nodeTypesBag->get(ucfirst($name));
 
             if (!$nodeType instanceof NodeType) {
                 $io->note($name.' node type does not exist.');

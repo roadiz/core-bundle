@@ -27,7 +27,6 @@ final class NodesCleanNamesCommand extends Command
         parent::__construct($name);
     }
 
-    #[\Override]
     protected function configure(): void
     {
         $this->setName('nodes:clean-names')
@@ -47,11 +46,9 @@ final class NodesCleanNamesCommand extends Command
         ;
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $entityManager = $this->managerRegistry
-            ->getManagerForClass(Node::class) ?? throw new \RuntimeException('No entity manager found for Node class.');
+        $entityManager = $this->managerRegistry->getManagerForClass(Node::class);
         $io = new SymfonyStyle($input, $output);
 
         $translation = $entityManager
@@ -141,7 +138,7 @@ final class NodesCleanNamesCommand extends Command
             $io->table(['Old name', 'New name'], $names);
 
             if (!$input->getOption('dry-run')) {
-                $io->success('Renaming done! '.$renameCount.' nodes have been affected. Do not forget to reindex your Search engine if you are using it.');
+                $io->success('Renaming done! '.$renameCount.' nodes have been affected. Do not forget to reindex your Solr documents if you are using it.');
             } else {
                 $io->success($renameCount.' nodes would have been affected. Nothing was saved to database.');
             }

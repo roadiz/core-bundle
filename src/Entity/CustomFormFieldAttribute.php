@@ -7,8 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
-use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
+use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\CoreBundle\Repository\CustomFormFieldAttributeRepository;
 
 /**
@@ -19,10 +18,8 @@ use RZ\Roadiz\CoreBundle\Repository\CustomFormFieldAttributeRepository;
     ORM\Table(name: 'custom_form_field_attributes'),
     ORM\Index(columns: ['custom_form_answer_id', 'custom_form_field_id'], name: 'cffattribute_answer_field'),
     ORM\HasLifecycleCallbacks]
-class CustomFormFieldAttribute implements \Stringable, PersistableInterface
+class CustomFormFieldAttribute extends AbstractEntity
 {
-    use SequentialIdTrait;
-
     #[ORM\ManyToOne(targetEntity: CustomFormAnswer::class, inversedBy: 'answerFields'),
         ORM\JoinColumn(name: 'custom_form_answer_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     protected CustomFormAnswer $customFormAnswer;
@@ -55,12 +52,10 @@ class CustomFormFieldAttribute implements \Stringable, PersistableInterface
      */
     public function getValue(): ?string
     {
-        if (null === $this->value) {
-            return null;
-        }
-
         if ($this->getCustomFormField()->isDocuments()) {
-            return implode(', ', $this->getDocuments()->map(fn (Document $document) => $document->getRelativePath())->toArray());
+            return implode(', ', $this->getDocuments()->map(function (Document $document) {
+                return $document->getRelativePath();
+            })->toArray());
         }
         if ($this->getCustomFormField()->isDate()) {
             return (new \DateTime($this->value))->format('Y-m-d');
@@ -75,7 +70,7 @@ class CustomFormFieldAttribute implements \Stringable, PersistableInterface
     /**
      * @return $this
      */
-    public function setValue(?string $value): static
+    public function setValue(?string $value): CustomFormFieldAttribute
     {
         $this->value = $value;
 
@@ -97,7 +92,6 @@ class CustomFormFieldAttribute implements \Stringable, PersistableInterface
     /**
      * @throws \Exception
      */
-    #[\Override]
     public function __toString(): string
     {
         return $this->getValue() ?? '';

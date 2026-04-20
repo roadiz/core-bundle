@@ -21,7 +21,6 @@ final readonly class UserLocaleSubscriber implements EventSubscriberInterface
     ) {
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         // must be registered after the default Locale listener

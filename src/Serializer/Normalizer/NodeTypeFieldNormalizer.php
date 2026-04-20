@@ -7,6 +7,7 @@ namespace RZ\Roadiz\CoreBundle\Serializer\Normalizer;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Enum\FieldType;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Yaml\Yaml;
@@ -21,35 +22,37 @@ final readonly class NodeTypeFieldNormalizer implements NormalizerInterface, Den
     ) {
     }
 
-    #[\Override]
-    public function normalize(mixed $data, ?string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
+    /**
+     * @return array|\ArrayObject|bool|float|int|string|null
+     *
+     * @throws ExceptionInterface
+     */
+    public function normalize(mixed $object, ?string $format = null, array $context = []): mixed
     {
-        $normalized = $this->normalizer->normalize($data, $format, $context);
+        $data = $this->normalizer->normalize($object, $format, $context);
 
-        /** @var NodeTypeField $data */
-        if (is_array($normalized) && null !== $data->getDefaultValues()) {
-            $defaultValueParsed = Yaml::parse($data->getDefaultValues());
+        /** @var NodeTypeField $object */
+        if (is_array($data) && null !== $object->getDefaultValues()) {
+            $defaultValueParsed = Yaml::parse($object->getDefaultValues());
             if (is_string($defaultValueParsed)) {
-                $defaultValueParsed = array_map(trim(...), explode(',', $defaultValueParsed));
+                $defaultValueParsed = array_map('trim', explode(',', $defaultValueParsed));
             }
-            $normalized['defaultValues'] = $defaultValueParsed;
+            $data['defaultValues'] = $defaultValueParsed;
         }
 
-        /** @var NodeTypeField $data */
-        if (is_array($normalized) && null !== $data->getType()) {
-            $normalized['type'] = preg_replace('#\.type$#', '', $data->getTypeName());
+        /** @var NodeTypeField $object */
+        if (is_array($data) && null !== $object->getType()) {
+            $data['type'] = preg_replace('#\.type$#', '', $object->getTypeName());
         }
 
-        return $normalized;
+        return $data;
     }
 
-    #[\Override]
-    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null): bool
     {
-        return $this->normalizer->supportsNormalization($data, $format, $context);
+        return $this->normalizer->supportsNormalization($data, $format);
     }
 
-    #[\Override]
     public function getSupportedTypes(?string $format): array
     {
         return [
@@ -57,7 +60,6 @@ final readonly class NodeTypeFieldNormalizer implements NormalizerInterface, Den
         ];
     }
 
-    #[\Override]
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): NodeTypeField
     {
         $object = $this->denormalizer->denormalize($data, $type, $format, $context);
@@ -72,9 +74,8 @@ final readonly class NodeTypeFieldNormalizer implements NormalizerInterface, Den
         return $object;
     }
 
-    #[\Override]
-    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null): bool
     {
-        return $this->denormalizer->supportsDenormalization($data, $type, $format, $context);
+        return $this->denormalizer->supportsDenormalization($data, $type, $format);
     }
 }

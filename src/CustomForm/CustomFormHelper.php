@@ -26,16 +26,16 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[Exclude]
-final readonly class CustomFormHelper
+final class CustomFormHelper
 {
-    public const string ARRAY_SEPARATOR = ', ';
+    public const ARRAY_SEPARATOR = ', ';
 
     public function __construct(
-        private ObjectManager $em,
-        private CustomForm $customForm,
-        private AbstractDocumentFactory $documentFactory,
-        private FormFactoryInterface $formFactory,
-        private EventDispatcherInterface $eventDispatcher,
+        private readonly ObjectManager $em,
+        private readonly CustomForm $customForm,
+        private readonly AbstractDocumentFactory $documentFactory,
+        private readonly FormFactoryInterface $formFactory,
+        private readonly EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -102,9 +102,11 @@ final readonly class CustomFormHelper
                     $formField = $formGroup->get($customFormField->getName());
                     $fieldAttr = $this->getAttribute($answer, $customFormField);
                 }
-            } elseif ($form->has($customFormField->getName())) {
-                $formField = $form->get($customFormField->getName());
-                $fieldAttr = $this->getAttribute($answer, $customFormField);
+            } else {
+                if ($form->has($customFormField->getName())) {
+                    $formField = $form->get($customFormField->getName());
+                    $fieldAttr = $this->getAttribute($answer, $customFormField);
+                }
             }
 
             if (null !== $formField) {
@@ -172,7 +174,7 @@ final readonly class CustomFormHelper
         return $this->em->getRepository(Folder::class)
             ->findOrCreateByPath(
                 'custom_forms/'.
-                $this->customForm->getCreatedAt()?->format('Ymd').'_'.
+                $this->customForm->getCreatedAt()->format('Ymd').'_'.
                 \mb_substr($this->customForm->getDisplayName(), 0, 30)
             );
     }
@@ -183,8 +185,8 @@ final readonly class CustomFormHelper
             return $rawValue->format('Y-m-d H:i:s');
         } elseif (is_array($rawValue)) {
             $values = $rawValue;
-            $values = array_map(trim(...), $values);
-            $values = array_map(strip_tags(...), $values);
+            $values = array_map('trim', $values);
+            $values = array_map('strip_tags', $values);
 
             return implode(static::ARRAY_SEPARATOR, $values);
         }

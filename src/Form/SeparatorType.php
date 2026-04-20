@@ -9,7 +9,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class SeparatorType extends AbstractType
 {
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -17,7 +16,6 @@ final class SeparatorType extends AbstractType
         ]);
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'separator';

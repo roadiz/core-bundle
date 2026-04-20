@@ -12,7 +12,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class LoginResetForm extends AbstractType
 {
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('token', HiddenType::class, [
@@ -32,13 +31,11 @@ final class LoginResetForm extends AbstractType
         ]);
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'login_reset';
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setRequired([

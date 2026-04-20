@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Enum;
 
+use RZ\Roadiz\CoreBundle\Form\ColorType;
 use RZ\Roadiz\CoreBundle\Form\CssType;
 use RZ\Roadiz\CoreBundle\Form\JsonType;
 use RZ\Roadiz\CoreBundle\Form\MarkdownType;
@@ -11,7 +12,6 @@ use RZ\Roadiz\CoreBundle\Form\YamlType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\ColorType;
 use Symfony\Component\Form\Extension\Core\Type\CountryType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
@@ -185,6 +185,6 @@ enum FieldType: int
             throw new \InvalidArgumentException(sprintf('The type %s is not a valid field type.', $type));
         }
 
-        return self::tryFrom($results) ?? throw new \InvalidArgumentException(sprintf('The type %s is not a valid field type.', $type));
+        return self::tryFrom($results);
     }
 }

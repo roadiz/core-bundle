@@ -13,7 +13,6 @@ class PathResolverCompilerPass implements CompilerPassInterface
 {
     use PriorityTaggedServiceTrait;
 
-    #[\Override]
     public function process(ContainerBuilder $container): void
     {
         if ($container->has(ChainResourcePathResolver::class)) {

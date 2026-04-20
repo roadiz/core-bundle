@@ -18,17 +18,15 @@ final readonly class AttributeGroupTransformer implements DataTransformerInterfa
     /**
      * @param AttributeGroup|null $value
      */
-    #[\Override]
     public function transform(mixed $value): int|string
     {
         if (!$value instanceof AttributeGroup) {
             return '';
         }
 
-        return $value->getId() ?? throw new TransformationFailedException('AttributeGroup has no ID.');
+        return $value->getId();
     }
 
-    #[\Override]
     public function reverseTransform(mixed $value): ?AttributeGroup
     {
         if (!$value) {

@@ -12,7 +12,6 @@ use Symfony\Component\Validator\Constraints\Email;
 
 final class LoginRequestForm extends AbstractType
 {
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('email', EmailType::class, [
@@ -27,7 +26,6 @@ final class LoginRequestForm extends AbstractType
         ]);
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'login_request';
