@@ -15,7 +15,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class ExplorerProviderItemType extends AbstractType
 {
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer(new ExplorerProviderItemTransformer(
@@ -28,7 +27,6 @@ final class ExplorerProviderItemType extends AbstractType
     /**
      * Pass data to form twig template.
      */
-    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
@@ -43,16 +41,14 @@ final class ExplorerProviderItemType extends AbstractType
             $view->vars['attr']['data-max-length'] = 1;
         }
 
-        $view->vars['provider_class'] = $options['explorerProvider']::class;
+        $view->vars['provider_class'] = get_class($options['explorerProvider']);
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'explorer_provider';
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
@@ -72,7 +68,6 @@ final class ExplorerProviderItemType extends AbstractType
         $resolver->setAllowedTypes('useCollection', ['bool']);
     }
 
-    #[\Override]
     public function getParent(): ?string
     {
         return HiddenType::class;

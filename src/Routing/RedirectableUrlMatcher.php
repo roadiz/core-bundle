@@ -18,7 +18,6 @@ final class RedirectableUrlMatcher extends BaseMatcher
      *
      * @return array An array of parameters
      */
-    #[\Override]
     public function redirect(string $path, string $route, ?string $scheme = null): array
     {
         return [

@@ -22,7 +22,6 @@ abstract class FilterNodesSourcesQueryBuilderCriteriaEvent extends QueryBuilderB
         parent::__construct($queryBuilder, NodesSources::class, $property, $value, $actualEntityName);
     }
 
-    #[\Override]
     public function supports(): bool
     {
         if (NodesSources::class === $this->actualEntityName) {

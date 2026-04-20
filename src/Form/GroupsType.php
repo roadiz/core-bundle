@@ -26,7 +26,6 @@ final class GroupsType extends AbstractType
     ) {
     }
 
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer(new CallbackTransformer(function ($modelToForm) {
@@ -35,7 +34,9 @@ final class GroupsType extends AbstractType
                     $modelToForm = $modelToForm->toArray();
                 }
 
-                return array_map(fn (Group $group) => $group->getId(), $modelToForm);
+                return array_map(function (Group $group) {
+                    return $group->getId();
+                }, $modelToForm);
             }
 
             return null;
@@ -50,7 +51,6 @@ final class GroupsType extends AbstractType
         }));
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([]);
@@ -72,13 +72,11 @@ final class GroupsType extends AbstractType
         });
     }
 
-    #[\Override]
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'groups';

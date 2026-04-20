@@ -22,7 +22,6 @@ final readonly class NodeQueryExtension implements QueryItemExtensionInterface, 
     ) {
     }
 
-    #[\Override]
     public function applyToItem(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
@@ -65,7 +64,6 @@ final readonly class NodeQueryExtension implements QueryItemExtensionInterface, 
             ->setParameter(':status', NodeStatus::PUBLISHED);
     }
 
-    #[\Override]
     public function applyToCollection(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,

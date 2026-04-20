@@ -11,7 +11,6 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class NodeStatesType extends AbstractType
 {
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -20,13 +19,11 @@ final class NodeStatesType extends AbstractType
         ]);
     }
 
-    #[\Override]
     public function getParent(): ?string
     {
         return EnumType::class;
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'node_statuses';

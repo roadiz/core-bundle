@@ -392,7 +392,6 @@ final class NodeHandler extends AbstractHandler
      *
      * @return float Return the next position after the **last** node
      */
-    #[\Override]
     public function cleanPositions(bool $setPositions = true): float
     {
         if (null !== $this->getNode()->getParent()) {

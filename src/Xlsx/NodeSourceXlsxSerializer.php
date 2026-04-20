@@ -35,7 +35,6 @@ final class NodeSourceXlsxSerializer extends AbstractXlsxSerializer
      *
      * @param NodesSources|iterable<NodesSources>|null $nodeSource
      */
-    #[\Override]
     public function toArray(mixed $nodeSource): array
     {
         $data = [];
@@ -121,10 +120,11 @@ final class NodeSourceXlsxSerializer extends AbstractXlsxSerializer
             ];
         }
 
-        return $nodeType->getFields()->filter(fn (NodeTypeField $field) => in_array($field->getType(), $types))->toArray();
+        return $nodeType->getFields()->filter(function (NodeTypeField $field) use ($types) {
+            return in_array($field->getType(), $types);
+        })->toArray();
     }
 
-    #[\Override]
     public function deserialize(string $string): null
     {
         return null;

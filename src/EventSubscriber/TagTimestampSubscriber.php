@@ -9,7 +9,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 final readonly class TagTimestampSubscriber implements EventSubscriberInterface
 {
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [

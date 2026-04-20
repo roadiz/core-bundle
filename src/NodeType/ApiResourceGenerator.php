@@ -10,7 +10,6 @@ use Doctrine\Inflector\InflectorFactory;
 use Psr\Log\LoggerInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\CoreBundle\Api\Controller\GetWebResponseByPathController;
-use RZ\Roadiz\CoreBundle\Api\Dto\Archive;
 use RZ\Roadiz\CoreBundle\Api\Model\WebResponseInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\String\UnicodeString;
@@ -214,7 +213,7 @@ final readonly class ApiResourceGenerator
                     ],
                 ],
             ],
-            'openapi' => [
+            'openapiContext' => [
                 'tags' => ['WebResponse'],
                 'summary' => 'Get a '.$nodeType->getName().' by its path wrapped in a WebResponse object',
                 'description' => 'Get a '.$nodeType->getName().' by its path wrapped in a WebResponse',
@@ -312,12 +311,11 @@ final readonly class ApiResourceGenerator
                         'method' => 'GET',
                         'class' => GetCollection::class,
                         'shortName' => $nodeType->getName(),
-                        'output' => Archive::class,
                         'uriTemplate' => $this->getResourceUriPrefix($nodeType).'/archives',
                         'extraProperties' => [
                             'archive_enabled' => true,
                         ],
-                        'openapi' => [
+                        'openapiContext' => [
                             'summary' => sprintf(
                                 'Retrieve all %s ressources archives months and years',
                                 $nodeType->getName()

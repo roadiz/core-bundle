@@ -84,7 +84,6 @@ final class TagRepository extends EntityRepository
     /**
      * Bind parameters to generated query.
      */
-    #[\Override]
     protected function applyFilterByCriteria(array &$criteria, QueryBuilder $qb): void
     {
         /*
@@ -209,7 +208,6 @@ final class TagRepository extends EntityRepository
      *
      * @return array<Tag>
      */
-    #[\Override]
     public function findBy(
         array $criteria,
         ?array $orderBy = null,
@@ -311,7 +309,6 @@ EOT,
      *
      * @throws NonUniqueResultException
      */
-    #[\Override]
     public function findOneBy(
         array $criteria,
         ?array $orderBy = null,
@@ -344,7 +341,6 @@ EOT,
      * @throws NonUniqueResultException
      * @throws NoResultException
      */
-    #[\Override]
     public function countBy(
         mixed $criteria,
         ?TranslationInterface $translation = null,
@@ -572,7 +568,6 @@ EOT,
      * @param array        $criteria Additional criteria
      * @param string       $alias    SQL query table alias
      */
-    #[\Override]
     protected function createSearchBy(
         string $pattern,
         QueryBuilder $qb,
@@ -598,7 +593,6 @@ EOT,
         return $this->prepareComparisons($criteria, $qb, $alias);
     }
 
-    #[\Override]
     protected function prepareComparisons(array &$criteria, QueryBuilder $qb, string $alias): QueryBuilder
     {
         $simpleQB = new SimpleQueryBuilder($qb);

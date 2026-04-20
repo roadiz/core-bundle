@@ -18,7 +18,6 @@ final class UrlAliasType extends AbstractType
     ) {
     }
 
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('alias', TextType::class, [
@@ -36,7 +35,6 @@ final class UrlAliasType extends AbstractType
         }
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefault('data_class', UrlAlias::class);

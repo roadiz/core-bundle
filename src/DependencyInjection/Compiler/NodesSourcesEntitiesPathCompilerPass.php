@@ -9,7 +9,6 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 class NodesSourcesEntitiesPathCompilerPass implements CompilerPassInterface
 {
-    #[\Override]
     public function process(ContainerBuilder $container): void
     {
         $projectDir = $container->getParameter('kernel.project_dir');

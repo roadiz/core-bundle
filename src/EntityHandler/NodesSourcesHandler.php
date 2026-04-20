@@ -88,12 +88,8 @@ final class NodesSourcesHandler extends AbstractHandler
         NodeTypeFieldInterface $field,
         bool $flush = true,
         ?float $position = null,
-        ?array $hotspot = null,
-        ?string $imageCropAlignment = null,
     ): self {
         $nsDoc = new NodesSourcesDocuments($this->nodeSource, $document, $field);
-        $nsDoc->setHotspot($hotspot);
-        $nsDoc->setImageCropAlignment($imageCropAlignment);
 
         if (!$this->nodeSource->hasNodesSourcesDocuments($nsDoc)) {
             if (null === $position) {
