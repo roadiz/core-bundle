@@ -17,15 +17,18 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 /**
  * Updates node name against default node-source title is applicable.
  */
-final readonly class NodeNameSubscriber implements EventSubscriberInterface
+final class NodeNameSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private LoggerInterface $logger,
-        private NodeNamePolicyInterface $nodeNamePolicy,
-        private NodeMover $nodeMover,
+        private readonly LoggerInterface $logger,
+        private readonly NodeNamePolicyInterface $nodeNamePolicy,
+        private readonly NodeMover $nodeMover
     ) {
     }
 
+    /**
+     * @inheritDoc
+     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -36,7 +39,7 @@ final readonly class NodeNameSubscriber implements EventSubscriberInterface
     public function onBeforeUpdate(
         NodesSourcesPreUpdatedEvent $event,
         string $eventName,
-        EventDispatcherInterface $dispatcher,
+        EventDispatcherInterface $dispatcher
     ): void {
         $nodeSource = $event->getNodeSource();
         $title = $nodeSource->getTitle();
@@ -46,9 +49,9 @@ final readonly class NodeNameSubscriber implements EventSubscriberInterface
          * default translation
          */
         if (
-            '' != $title
-            && true === $nodeSource->getNode()->isDynamicNodeName()
-            && $nodeSource->getTranslation()->isDefaultTranslation()
+            "" != $title &&
+            true === $nodeSource->getNode()->isDynamicNodeName() &&
+            $nodeSource->getTranslation()->isDefaultTranslation()
         ) {
             $testingNodeName = $this->nodeNamePolicy->getCanonicalNodeName($nodeSource);
 
@@ -57,9 +60,9 @@ final readonly class NodeNameSubscriber implements EventSubscriberInterface
              * if it is ALREADY suffixed with a unique ID.
              */
             if (
-                $testingNodeName != $nodeSource->getNode()->getNodeName()
-                && $this->nodeNamePolicy->isNodeNameValid($testingNodeName)
-                && !$this->nodeNamePolicy->isNodeNameWithUniqId(
+                $testingNodeName != $nodeSource->getNode()->getNodeName() &&
+                $this->nodeNamePolicy->isNodeNameValid($testingNodeName) &&
+                !$this->nodeNamePolicy->isNodeNameWithUniqId(
                     $testingNodeName,
                     $nodeSource->getNode()->getNodeName()
                 )

@@ -27,6 +27,8 @@ final class HandlerExtension extends AbstractExtension
     }
 
     /**
+     * @param mixed $mixed
+     * @return AbstractHandler|null
      * @throws RuntimeError
      * @throws ContainerExceptionInterface
      * @throws NotFoundExceptionInterface

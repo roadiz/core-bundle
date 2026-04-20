@@ -11,19 +11,19 @@ use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- * This class creates recaptcha element.
+ * This class creates recaptcha element
  *
  * @author Nikolay Georgiev <symfonist@gmail.com>
- *
  * @since 1.0
- * @deprecated since v2.5.30, use `RZ\Roadiz\CoreBundle\Form\CaptchaType` instead.
  */
-final class RecaptchaType extends AbstractType
+class RecaptchaType extends AbstractType
 {
     /**
-     * (non-PHPdoc).
-     *
-     * @see AbstractType::buildView()
+     * (non-PHPdoc)
+     * @see \Symfony\Component\Form\AbstractType::buildView()
+     * @param FormView $view
+     * @param FormInterface $form
+     * @param array $options
      */
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
@@ -31,19 +31,20 @@ final class RecaptchaType extends AbstractType
     }
 
     /**
-     * @see AbstractType::configureOptions()
+     * @see \Symfony\Component\Form\AbstractType::configureOptions()
+     * @param OptionsResolver $resolver
      */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'configs' => [
-                'publicKey' => '',
+                'publicKey' => ''
             ],
         ]);
     }
 
     /**
-     * @see AbstractType::getParent()
+     * @see \Symfony\Component\Form\AbstractType::getParent()
      */
     public function getParent(): ?string
     {

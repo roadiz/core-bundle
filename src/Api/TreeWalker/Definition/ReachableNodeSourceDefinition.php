@@ -27,7 +27,9 @@ final class ReachableNodeSourceDefinition
      */
     protected function getNodeTypes(NodeTypes $nodeTypesBag): array
     {
-        return $nodeTypesBag->allReachable(true);
+        return array_values(array_unique(array_filter($nodeTypesBag->all(), function (NodeType $nodeType) {
+            return $nodeType->isReachable();
+        })));
     }
 
     /**
@@ -35,12 +37,12 @@ final class ReachableNodeSourceDefinition
      */
     public function __invoke(NodesSources $source): array
     {
-        if (!$this->context instanceof NodeSourceWalkerContext) {
+        if (!($this->context instanceof NodeSourceWalkerContext)) {
             throw new \InvalidArgumentException('Context should be instance of '.NodeSourceWalkerContext::class);
         }
 
         $this->context->getStopwatch()->start(self::class);
-        $queryBuilder = $this->getQueryBuilder($source, $this->onlyVisible);
+        $queryBuilder = $this->getQueryBuilder($source);
         $this->context->getStopwatch()->stop(self::class);
 
         return $queryBuilder->getQuery()->getResult();

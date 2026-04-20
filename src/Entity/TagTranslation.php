@@ -21,11 +21,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *
  * It stores their name and description.
  */
-#[ORM\Entity(repositoryClass: TagTranslationRepository::class),
-    ORM\Table(name: 'tags_translations'),
-    ORM\UniqueConstraint(columns: ['tag_id', 'translation_id']),
+#[
+    ORM\Entity(repositoryClass: TagTranslationRepository::class),
+    ORM\Table(name: "tags_translations"),
+    ORM\UniqueConstraint(columns: ["tag_id", "translation_id"]),
     Gedmo\Loggable(logEntryClass: UserLogEntry::class),
-    UniqueEntity(fields: ['tag', 'translation'])]
+    UniqueEntity(fields: ["tag", "translation"])
+]
 class TagTranslation extends AbstractEntity
 {
     #[ORM\Column(type: 'string', length: 250)]
@@ -56,6 +58,7 @@ class TagTranslation extends AbstractEntity
 
     /**
      * @var Collection<int, TagTranslationDocuments>
+     * @Serializer\Exclude
      */
     #[ORM\OneToMany(
         mappedBy: 'tagTranslation',
@@ -65,18 +68,20 @@ class TagTranslation extends AbstractEntity
     )]
     #[ORM\OrderBy(['position' => 'ASC'])]
     #[SymfonySerializer\Ignore]
-    #[Serializer\Exclude]
     protected Collection $tagTranslationDocuments;
 
     /**
      * Create a new TagTranslation with its origin Tag and Translation.
+     *
+     * @param Tag $original
+     * @param TranslationInterface $translation
      */
     public function __construct(Tag $original, TranslationInterface $translation)
     {
         $this->setTag($original);
         $this->setTranslation($translation);
         $this->tagTranslationDocuments = new ArrayCollection();
-        $this->name = '' != $original->getDirtyTagName() ? $original->getDirtyTagName() : $original->getTagName();
+        $this->name = $original->getDirtyTagName() != '' ? $original->getDirtyTagName() : $original->getTagName();
     }
 
     public function getName(): string
@@ -111,7 +116,6 @@ class TagTranslation extends AbstractEntity
     public function setTag(Tag $tag): TagTranslation
     {
         $this->tag = $tag;
-
         return $this;
     }
 
@@ -148,10 +152,14 @@ class TagTranslation extends AbstractEntity
         }
     }
 
+    /**
+     * @return array
+     *
+     * @Serializer\Groups({"tag"})
+     * @Serializer\VirtualProperty
+     * @Serializer\Type("array<RZ\Roadiz\CoreBundle\Entity\Document>")
+     */
     #[SymfonySerializer\Groups(['tag'])]
-    #[Serializer\Groups(['tag'])]
-    #[Serializer\VirtualProperty]
-    #[Serializer\Type('array<RZ\Roadiz\CoreBundle\Entity\Document>')]
     public function getDocuments(): array
     {
         return array_map(function (TagTranslationDocuments $tagTranslationDocument) {
@@ -159,15 +167,21 @@ class TagTranslation extends AbstractEntity
         }, $this->getTagTranslationDocuments()->toArray());
     }
 
+    /**
+     * @return Collection
+     */
     public function getTagTranslationDocuments(): Collection
     {
         return $this->tagTranslationDocuments;
     }
 
+    /**
+     * @param Collection $tagTranslationDocuments
+     * @return TagTranslation
+     */
     public function setTagTranslationDocuments(Collection $tagTranslationDocuments): TagTranslation
     {
         $this->tagTranslationDocuments = $tagTranslationDocuments;
-
         return $this;
     }
 }

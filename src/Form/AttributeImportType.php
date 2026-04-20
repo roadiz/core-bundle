@@ -9,8 +9,11 @@ use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Validator\Constraints\File;
 
-final class AttributeImportType extends AbstractType
+class AttributeImportType extends AbstractType
 {
+    /**
+     * @inheritDoc
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('file', FileType::class, [
@@ -18,9 +21,9 @@ final class AttributeImportType extends AbstractType
             'help' => 'attributes.import_form.file.help',
             'constraints' => [
                 new File([
-                    'mimeTypes' => ['application/json', 'text/json', 'text/plain'],
-                ]),
-            ],
+                    'mimeTypes' => ['application/json', 'text/json', 'text/plain']
+                ])
+            ]
         ]);
     }
 }

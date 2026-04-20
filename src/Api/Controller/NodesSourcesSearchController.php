@@ -19,12 +19,21 @@ class NodesSourcesSearchController extends AbstractController
 {
     use TranslationAwareControllerTrait;
 
+    private ManagerRegistry $managerRegistry;
+    private PreviewResolverInterface $previewResolver;
+    private ?NodeSourceSearchHandlerInterface $nodeSourceSearchHandler;
+    private int $highlightingFragmentSize;
+
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly PreviewResolverInterface $previewResolver,
-        private readonly ?NodeSourceSearchHandlerInterface $nodeSourceSearchHandler,
-        private readonly int $highlightingFragmentSize = 200,
+        ManagerRegistry $managerRegistry,
+        PreviewResolverInterface $previewResolver,
+        ?NodeSourceSearchHandlerInterface $nodeSourceSearchHandler,
+        int $highlightingFragmentSize = 200
     ) {
+        $this->nodeSourceSearchHandler = $nodeSourceSearchHandler;
+        $this->highlightingFragmentSize = $highlightingFragmentSize;
+        $this->managerRegistry = $managerRegistry;
+        $this->previewResolver = $previewResolver;
     }
 
     protected function getManagerRegistry(): ManagerRegistry
@@ -37,6 +46,9 @@ class NodesSourcesSearchController extends AbstractController
         return $this->previewResolver;
     }
 
+    /**
+     * @return SearchHandlerInterface
+     */
     protected function getSearchHandler(): SearchHandlerInterface
     {
         if (null === $this->nodeSourceSearchHandler) {
@@ -46,7 +58,6 @@ class NodesSourcesSearchController extends AbstractController
         if ($this->highlightingFragmentSize > 0) {
             $this->nodeSourceSearchHandler->setHighlightingFragmentSize($this->highlightingFragmentSize);
         }
-
         return $this->nodeSourceSearchHandler;
     }
 
@@ -54,7 +65,7 @@ class NodesSourcesSearchController extends AbstractController
     {
         return [
             'publishedAt' => ['<=', new \DateTime()],
-            'translation' => $this->getTranslation($request),
+            'translation' => $this->getTranslation($request)
         ];
     }
 
@@ -66,7 +77,6 @@ class NodesSourcesSearchController extends AbstractController
             $this->getCriteria($request),
             true
         );
-
         return new SolrPaginator($entityListManager);
     }
 }

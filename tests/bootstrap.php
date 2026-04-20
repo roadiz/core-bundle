@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 use Symfony\Component\Dotenv\Dotenv;
 
 // Allow testing in Monorepo environment

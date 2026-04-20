@@ -11,8 +11,14 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class TagsType extends AbstractType
+/**
+ * Tag form field type.
+ */
+class TagsType extends AbstractType
 {
+    /**
+     * @inheritDoc
+     */
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
@@ -22,6 +28,8 @@ final class TagsType extends AbstractType
 
     /**
      * Set every tags s default choices values.
+     *
+     * @param OptionsResolver $resolver
      */
     public function configureOptions(OptionsResolver $resolver): void
     {
@@ -31,9 +39,16 @@ final class TagsType extends AbstractType
             'entry_type' => HiddenType::class,
             'label' => 'list.tags.to_link',
             'help' => 'use.new_or_existing.tags_with_hierarchy',
-        ]);
+         ]);
     }
 
+    /**
+     * {@inheritdoc}
+     *
+     * @param FormView      $view
+     * @param FormInterface $form
+     * @param array         $options
+     */
     public function finishView(FormView $view, FormInterface $form, array $options): void
     {
         parent::finishView($view, $form, $options);
@@ -44,11 +59,17 @@ final class TagsType extends AbstractType
         $view->vars['data'] = $form->getData();
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getParent(): ?string
     {
         return CollectionType::class;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getBlockPrefix(): string
     {
         return 'tags';

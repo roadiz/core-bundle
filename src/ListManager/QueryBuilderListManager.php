@@ -6,34 +6,50 @@ namespace RZ\Roadiz\CoreBundle\ListManager;
 
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
-use Symfony\Component\DependencyInjection\Attribute\Exclude;
 use Symfony\Component\HttpFoundation\Request;
 
-#[Exclude]
 class QueryBuilderListManager extends AbstractEntityListManager
 {
+    protected QueryBuilder $queryBuilder;
     protected ?Paginator $paginator = null;
+    protected string $identifier;
+    protected bool $debug = false;
     /**
-     * @var callable|null
+     * @var null|callable
      */
-    protected $searchingCallable;
+    protected $searchingCallable = null;
 
+    /**
+     * @param Request|null $request
+     * @param QueryBuilder $queryBuilder
+     * @param string $identifier
+     * @param bool $debug
+     */
     public function __construct(
         ?Request $request,
-        protected readonly QueryBuilder $queryBuilder,
-        protected readonly string $identifier = 'obj',
-        protected readonly bool $debug = false,
+        QueryBuilder $queryBuilder,
+        string $identifier = 'obj',
+        bool $debug = false
     ) {
         parent::__construct($request);
+        $this->queryBuilder = $queryBuilder;
+        $this->identifier = $identifier;
+        $this->debug = $debug;
     }
 
+    /**
+     * @param callable|null $searchingCallable
+     * @return QueryBuilderListManager
+     */
     public function setSearchingCallable(?callable $searchingCallable): QueryBuilderListManager
     {
         $this->searchingCallable = $searchingCallable;
-
         return $this;
     }
 
+    /**
+     * @param string $search
+     */
     protected function handleSearchParam(string $search): void
     {
         parent::handleSearchParam($search);
@@ -43,7 +59,7 @@ class QueryBuilderListManager extends AbstractEntityListManager
         }
     }
 
-    public function handle(bool $disabled = false): void
+    public function handle(bool $disabled = false)
     {
         $this->handleRequestQuery($disabled);
     }
@@ -57,49 +73,64 @@ class QueryBuilderListManager extends AbstractEntityListManager
         );
     }
 
+    /**
+     * @return Paginator
+     */
     protected function getPaginator(): Paginator
     {
         if (null === $this->paginator) {
             $this->paginator = new Paginator($this->queryBuilder);
         }
-
         return $this->paginator;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function setPage(int $page): self
     {
         parent::setPage($page);
         $this->queryBuilder->setFirstResult($this->getItemPerPage() * ($page - 1));
-
         return $this;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function setItemPerPage(int $itemPerPage): self
     {
         parent::setItemPerPage($itemPerPage);
         $this->queryBuilder->setMaxResults((int) $itemPerPage);
-
         return $this;
     }
 
+
+    /**
+     * @inheritDoc
+     */
     public function getItemCount(): int
     {
         return $this->getPaginator()->count();
     }
 
-    public function getEntities(): array
+    /**
+     * @inheritDoc
+     */
+    public function getEntities(): Paginator
     {
-        return $this->getPaginator()->getIterator()->getArrayCopy();
+        return $this->getPaginator();
     }
 
+    /**
+     * @return array
+     */
     public function getAssignation(): array
     {
         if ($this->debug) {
             return array_merge(parent::getAssignation(), [
-                'dql_query' => $this->queryBuilder->getDQL(),
+                'dql_query' => $this->queryBuilder->getDQL()
             ]);
         }
-
         return parent::getAssignation();
     }
 }
