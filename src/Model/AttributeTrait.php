@@ -77,7 +77,7 @@ trait AttributeTrait
     /**
      * @return $this
      */
-    public function setCode(?string $code): self
+    public function setCode(?string $code): static
     {
         $this->code = StringHandler::slugify($code ?? '');
 
@@ -92,7 +92,7 @@ trait AttributeTrait
     /**
      * @return $this
      */
-    public function setType(int $type): self
+    public function setType(int $type): static
     {
         $this->type = $type;
 
@@ -107,7 +107,7 @@ trait AttributeTrait
     /**
      * @return $this
      */
-    public function setColor(?string $color): self
+    public function setColor(?string $color): static
     {
         $this->color = $color;
 
@@ -122,7 +122,7 @@ trait AttributeTrait
     /**
      * @return $this
      */
-    public function setGroup(?AttributeGroupInterface $group): self
+    public function setGroup(?AttributeGroupInterface $group): static
     {
         $this->group = $group;
 
@@ -137,7 +137,7 @@ trait AttributeTrait
     /**
      * @return $this
      */
-    public function setSearchable(bool $searchable): self
+    public function setSearchable(bool $searchable): static
     {
         $this->searchable = $searchable;
 
@@ -153,7 +153,7 @@ trait AttributeTrait
 
             if (
                 $attributeTranslation->first()
-                && '' !== $attributeTranslation->first()->getLabel()
+                && !empty($attributeTranslation->first()->getLabel())
             ) {
                 return $attributeTranslation->first()->getLabel();
             }
@@ -162,10 +162,10 @@ trait AttributeTrait
         return $this->getCode();
     }
 
-    public function getOptions(TranslationInterface $translation): ?array
+    public function getOptions(?TranslationInterface $translation): ?array
     {
         $attributeTranslation = $this->getAttributeTranslations()->filter(
-            fn (AttributeTranslationInterface $attributeTranslation) => $attributeTranslation->getTranslation() === $translation
+            fn (AttributeTranslationInterface $attributeTranslation) => null !== $translation && $attributeTranslation->getTranslation() === $translation
         )->first();
         if (false !== $attributeTranslation) {
             return $attributeTranslation->getOptions();
@@ -185,7 +185,7 @@ trait AttributeTrait
     /**
      * @return $this
      */
-    public function setAttributeTranslations(Collection $attributeTranslations): self
+    public function setAttributeTranslations(Collection $attributeTranslations): static
     {
         $this->attributeTranslations = $attributeTranslations;
         /** @var AttributeTranslationInterface $attributeTranslation */
@@ -199,7 +199,7 @@ trait AttributeTrait
     /**
      * @return $this
      */
-    public function addAttributeTranslation(AttributeTranslationInterface $attributeTranslation): self
+    public function addAttributeTranslation(AttributeTranslationInterface $attributeTranslation): static
     {
         if (!$this->getAttributeTranslations()->contains($attributeTranslation)) {
             $this->getAttributeTranslations()->add($attributeTranslation);
@@ -212,7 +212,7 @@ trait AttributeTrait
     /**
      * @return $this
      */
-    public function removeAttributeTranslation(AttributeTranslationInterface $attributeTranslation): self
+    public function removeAttributeTranslation(AttributeTranslationInterface $attributeTranslation): static
     {
         if ($this->getAttributeTranslations()->contains($attributeTranslation)) {
             $this->getAttributeTranslations()->removeElement($attributeTranslation);
