@@ -9,14 +9,15 @@ use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Serializer\Filter\PropertyFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
-use RZ\Roadiz\Core\AbstractEntities\AbstractPositioned;
+use RZ\Roadiz\Core\AbstractEntities\PositionedTrait;
+use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
 use RZ\Roadiz\CoreBundle\Model\AttributableInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueTrait;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueTranslationInterface;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
 use RZ\Roadiz\CoreBundle\Repository\AttributeValueRepository;
-use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Serializer\Attribute as SymfonySerializer;
 
 #[ORM\Entity(repositoryClass: AttributeValueRepository::class),
     ORM\Table(name: 'attribute_values'),
@@ -28,8 +29,10 @@ use Symfony\Component\Serializer\Annotation as SymfonySerializer;
     ApiFilter(BaseFilter\OrderFilter::class, properties: [
         'position',
     ]),]
-class AttributeValue extends AbstractPositioned implements AttributeValueInterface
+class AttributeValue implements AttributeValueInterface
 {
+    use SequentialIdTrait;
+    use PositionedTrait;
     use AttributeValueTrait;
 
     #[ORM\ManyToOne(targetEntity: Node::class, inversedBy: 'attributeValues'),
@@ -69,11 +72,13 @@ class AttributeValue extends AbstractPositioned implements AttributeValueInterfa
      * to perform a custom serialization
      */
     #[SymfonySerializer\Groups(['position', 'attribute', 'node_attributes'])]
+    #[\Override]
     public function getPosition(): float
     {
         return $this->position;
     }
 
+    #[\Override]
     public function getAttributable(): Node
     {
         return $this->node;
@@ -82,6 +87,7 @@ class AttributeValue extends AbstractPositioned implements AttributeValueInterfa
     /**
      * @return $this
      */
+    #[\Override]
     public function setAttributable(?AttributableInterface $attributable): self
     {
         if ($attributable instanceof Node) {
@@ -104,11 +110,13 @@ class AttributeValue extends AbstractPositioned implements AttributeValueInterfa
         return $this;
     }
 
+    #[\Override]
     public function getRealm(): ?RealmInterface
     {
         return $this->realm;
     }
 
+    #[\Override]
     public function setRealm(?RealmInterface $realm): AttributeValue
     {
         $this->realm = $realm;

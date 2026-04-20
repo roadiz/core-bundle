@@ -45,6 +45,7 @@ final readonly class UserProvider implements UserProviderInterface
         throw new UserNotFoundException();
     }
 
+    #[\Override]
     public function loadUserByIdentifier(string $identifier): UserInterface
     {
         return $this->loadUserByUsernameOrEmail($identifier);
@@ -62,6 +63,7 @@ final readonly class UserProvider implements UserProviderInterface
      *
      * @throws UnsupportedUserException
      */
+    #[\Override]
     public function refreshUser(UserInterface $user): UserInterface
     {
         if ($user instanceof User) {
@@ -87,6 +89,7 @@ final readonly class UserProvider implements UserProviderInterface
      *
      * @param class-string $class
      */
+    #[\Override]
     public function supportsClass($class): bool
     {
         return User::class === $class;
