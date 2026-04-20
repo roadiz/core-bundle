@@ -28,9 +28,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     ORM\HasLifecycleCallbacks,
     UniqueEntity(fields: ['name']),
     ORM\Index(columns: ['created_at'], name: 'custom_form_created_at'),
-    ORM\Index(columns: ['updated_at'], name: 'custom_form_updated_at'),
-    ORM\Index(columns: ['webhook_enabled'], name: 'custom_form_webhook_enabled'),
-    ORM\Index(columns: ['webhook_provider'], name: 'custom_form_webhook_provider'),]
+    ORM\Index(columns: ['updated_at'], name: 'custom_form_updated_at'),]
 class CustomForm implements DateTimedInterface, PersistableInterface
 {
     use SequentialIdTrait;
@@ -77,23 +75,6 @@ class CustomForm implements DateTimedInterface, PersistableInterface
         ORM\Column(name: 'close_date', type: 'datetime', nullable: true),
         SymfonySerializer\Ignore()]
     private ?\DateTime $closeDate = null;
-
-    #[ORM\Column(name: 'webhook_enabled', type: 'boolean', nullable: false, options: ['default' => false]),
-        SymfonySerializer\Groups(['custom_form:export'])]
-    private bool $webhookEnabled = false;
-
-    #[ORM\Column(name: 'webhook_provider', type: 'string', length: 50, nullable: true),
-        SymfonySerializer\Groups(['custom_form:export']),
-        Assert\Length(max: 50)]
-    private ?string $webhookProvider = null;
-
-    #[ORM\Column(name: 'webhook_field_mapping', type: 'json', nullable: true),
-        SymfonySerializer\Groups(['custom_form:export'])]
-    private ?array $webhookFieldMapping = null;
-
-    #[ORM\Column(name: 'webhook_extra_config', type: 'json', nullable: true),
-        SymfonySerializer\Groups(['custom_form:export'])]
-    private ?array $webhookExtraConfig = null;
 
     /**
      * @var Collection<int, CustomFormField>
@@ -143,7 +124,7 @@ class CustomForm implements DateTimedInterface, PersistableInterface
     /**
      * @return $this
      */
-    public function setDisplayName(?string $displayName): static
+    public function setDisplayName(?string $displayName): CustomForm
     {
         $this->displayName = $displayName ?? '';
         $this->setName($displayName ?? '');
@@ -159,7 +140,7 @@ class CustomForm implements DateTimedInterface, PersistableInterface
     /**
      * @return $this
      */
-    public function setDescription(?string $description): static
+    public function setDescription(?string $description): CustomForm
     {
         $this->description = $description;
 
@@ -174,7 +155,7 @@ class CustomForm implements DateTimedInterface, PersistableInterface
     /**
      * @return $this
      */
-    public function setEmail(?string $email): static
+    public function setEmail(?string $email): CustomForm
     {
         $this->email = $email;
 
@@ -184,7 +165,7 @@ class CustomForm implements DateTimedInterface, PersistableInterface
     /**
      * @return $this
      */
-    public function setOpen(bool $open): static
+    public function setOpen(bool $open): CustomForm
     {
         $this->open = $open;
 
@@ -199,7 +180,7 @@ class CustomForm implements DateTimedInterface, PersistableInterface
     /**
      * @return $this
      */
-    public function setCloseDate(?\DateTime $closeDate): static
+    public function setCloseDate(?\DateTime $closeDate): CustomForm
     {
         $this->closeDate = $closeDate;
 
@@ -221,7 +202,7 @@ class CustomForm implements DateTimedInterface, PersistableInterface
     /**
      * Gets the value of color.
      */
-    public function getColor(): ?string
+    public function getColor(): string
     {
         return $this->color;
     }
@@ -231,7 +212,7 @@ class CustomForm implements DateTimedInterface, PersistableInterface
      *
      * @return $this
      */
-    public function setColor(?string $color): static
+    public function setColor(?string $color): CustomForm
     {
         $this->color = $color;
 
@@ -314,7 +295,7 @@ class CustomForm implements DateTimedInterface, PersistableInterface
     /**
      * @return $this
      */
-    public function setName(string $name): static
+    public function setName(string $name): CustomForm
     {
         $this->name = StringHandler::slugify($name);
 
@@ -343,54 +324,6 @@ class CustomForm implements DateTimedInterface, PersistableInterface
     public function setRetentionTime(?string $retentionTime): CustomForm
     {
         $this->retentionTime = $retentionTime;
-
-        return $this;
-    }
-
-    public function isWebhookEnabled(): bool
-    {
-        return $this->webhookEnabled;
-    }
-
-    public function setWebhookEnabled(bool $webhookEnabled): CustomForm
-    {
-        $this->webhookEnabled = $webhookEnabled;
-
-        return $this;
-    }
-
-    public function getWebhookProvider(): ?string
-    {
-        return $this->webhookProvider;
-    }
-
-    public function setWebhookProvider(?string $webhookProvider): CustomForm
-    {
-        $this->webhookProvider = $webhookProvider;
-
-        return $this;
-    }
-
-    public function getWebhookFieldMapping(): ?array
-    {
-        return $this->webhookFieldMapping;
-    }
-
-    public function setWebhookFieldMapping(?array $webhookFieldMapping): CustomForm
-    {
-        $this->webhookFieldMapping = $webhookFieldMapping;
-
-        return $this;
-    }
-
-    public function getWebhookExtraConfig(): ?array
-    {
-        return $this->webhookExtraConfig;
-    }
-
-    public function setWebhookExtraConfig(?array $webhookExtraConfig): CustomForm
-    {
-        $this->webhookExtraConfig = $webhookExtraConfig;
 
         return $this;
     }

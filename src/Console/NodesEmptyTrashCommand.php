@@ -40,8 +40,7 @@ final class NodesEmptyTrashCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        $em = $this->managerRegistry
-            ->getManagerForClass(Node::class) ?? throw new \RuntimeException('No entity manager found for Node class.');
+        $em = $this->managerRegistry->getManagerForClass(Node::class);
         $countQb = $this->createNodeQueryBuilder();
         $countQuery = $countQb->select($countQb->expr()->count('n'))
             ->andWhere($countQb->expr()->eq('n.status', ':status'))

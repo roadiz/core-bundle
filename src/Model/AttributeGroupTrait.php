@@ -74,7 +74,7 @@ trait AttributeGroupTrait
     {
         if (0 === $this->getAttributeGroupTranslations()->count()) {
             $this->getAttributeGroupTranslations()->add(
-                $this->createAttributeGroupTranslation()->setName($name ?? '')
+                $this->createAttributeGroupTranslation()->setName($name)
             );
         }
 
@@ -91,7 +91,7 @@ trait AttributeGroupTrait
     /**
      * @return $this
      */
-    public function setCanonicalName(?string $canonicalName): static
+    public function setCanonicalName(?string $canonicalName): self
     {
         $this->canonicalName = StringHandler::slugify($canonicalName ?? '');
 
@@ -106,7 +106,7 @@ trait AttributeGroupTrait
     /**
      * @return $this
      */
-    public function setAttributes(Collection $attributes): static
+    public function setAttributes(Collection $attributes): self
     {
         $this->attributes = $attributes;
 
@@ -121,7 +121,7 @@ trait AttributeGroupTrait
     /**
      * @return $this
      */
-    public function setAttributeGroupTranslations(Collection $attributeGroupTranslations): static
+    public function setAttributeGroupTranslations(Collection $attributeGroupTranslations): self
     {
         $this->attributeGroupTranslations = $attributeGroupTranslations;
         /** @var AttributeGroupTranslationInterface $attributeGroupTranslation */
@@ -135,7 +135,7 @@ trait AttributeGroupTrait
     /**
      * @return $this
      */
-    public function addAttributeGroupTranslation(AttributeGroupTranslationInterface $attributeGroupTranslation): static
+    public function addAttributeGroupTranslation(AttributeGroupTranslationInterface $attributeGroupTranslation): self
     {
         if (!$this->getAttributeGroupTranslations()->contains($attributeGroupTranslation)) {
             $this->getAttributeGroupTranslations()->add($attributeGroupTranslation);
@@ -148,7 +148,7 @@ trait AttributeGroupTrait
     /**
      * @return $this
      */
-    public function removeAttributeGroupTranslation(AttributeGroupTranslationInterface $attributeGroupTranslation): static
+    public function removeAttributeGroupTranslation(AttributeGroupTranslationInterface $attributeGroupTranslation): self
     {
         if ($this->getAttributeGroupTranslations()->contains($attributeGroupTranslation)) {
             $this->getAttributeGroupTranslations()->removeElement($attributeGroupTranslation);

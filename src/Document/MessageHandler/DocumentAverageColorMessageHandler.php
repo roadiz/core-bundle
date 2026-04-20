@@ -40,17 +40,11 @@ final class DocumentAverageColorMessageHandler extends AbstractLockingDocumentMe
     #[\Override]
     protected function processMessage(AbstractDocumentMessage $message, DocumentInterface $document): void
     {
-        $mountPath = $document->getMountPath();
-
-        if (null === $mountPath) {
-            return;
-        }
-
         if (!$document instanceof AdvancedDocumentInterface) {
             return;
         }
         try {
-            $documentStream = $this->documentsStorage->readStream($mountPath);
+            $documentStream = $this->documentsStorage->readStream($document->getMountPath());
             $mediumColor = (new AverageColorResolver())->getAverageColor($this->imageManager->read($documentStream));
             $document->setImageAverageColor($mediumColor);
         } catch (DriverException|FilesystemException $exception) {
