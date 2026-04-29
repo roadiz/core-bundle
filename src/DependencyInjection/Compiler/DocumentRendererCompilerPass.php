@@ -13,9 +13,7 @@ class DocumentRendererCompilerPass implements CompilerPassInterface
 {
     use PriorityTaggedServiceTrait;
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public function process(ContainerBuilder $container): void
     {
         if ($container->has(ChainRenderer::class)) {

@@ -4,27 +4,23 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 
-use JsonException;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
-use Symfony\Component\Yaml\Exception\ParseException;
-use Symfony\Component\Yaml\Yaml;
 
-class ValidJsonValidator extends ConstraintValidator
+final class ValidJsonValidator extends ConstraintValidator
 {
     /**
-     * @param mixed $value
      * @param ValidJson $constraint
-     * @return void
      */
+    #[\Override]
     public function validate(mixed $value, Constraint $constraint): void
     {
-        if (!empty($value)) {
+        if (!empty($value) && is_string($value)) {
             try {
                 \json_decode($value, true, 512, JSON_THROW_ON_ERROR);
-            } catch (JsonException $e) {
+            } catch (\JsonException $e) {
                 $this->context->addViolation($constraint->message, [
-                    '{{ error }}' => $e->getMessage()
+                    '{{ error }}' => $e->getMessage(),
                 ]);
             }
         }

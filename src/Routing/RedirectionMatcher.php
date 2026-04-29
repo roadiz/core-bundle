@@ -21,40 +21,34 @@ final class RedirectionMatcher extends UrlMatcher
     public function __construct(
         RequestContext $context,
         private readonly RedirectionPathResolver $pathResolver,
-        private readonly LoggerInterface $logger
+        private readonly LoggerInterface $logger,
     ) {
         parent::__construct(new RouteCollection(), $context);
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    #[\Override]
     public function match(string $pathinfo): array
     {
         $decodedUrl = rawurldecode($pathinfo);
 
-        /*
-         * Try nodes routes
-         */
-        if (null !== $redirection = $this->matchRedirection($decodedUrl)) {
-            $this->logger->debug('Matched redirection.', ['query' => $redirection->getQuery()]);
-            return [
-                '_controller' => RedirectionController::class . '::redirectAction',
-                'redirection' => $redirection,
-                '_route' => null,
-            ];
-        }
+        $redirection = $this->matchRedirection($decodedUrl);
+        $this->logger->debug(sprintf('Matched redirection for path %s', $redirection->getQuery()));
 
-        throw new ResourceNotFoundException(sprintf('%s did not match any Doctrine Redirection', $pathinfo));
+        return [
+            '_controller' => RedirectionController::class.'::redirectAction',
+            'redirection' => $redirection,
+            '_route' => null,
+        ];
     }
 
-    /**
-     * @param string $decodedUrl
-     * @return Redirection|null
-     */
-    protected function matchRedirection(string $decodedUrl): ?Redirection
+    protected function matchRedirection(string $decodedUrl): Redirection
     {
         $resource = $this->pathResolver->resolvePath($decodedUrl)->getResource();
-        return $resource instanceof Redirection ? $resource : null;
+
+        if ($resource instanceof Redirection) {
+            return $resource;
+        }
+
+        throw new ResourceNotFoundException(sprintf('%s did not match any Doctrine Redirection', $decodedUrl));
     }
 }

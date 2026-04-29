@@ -25,7 +25,7 @@ final class FolderRepository extends EntityRepository
 {
     public function __construct(
         ManagerRegistry $registry,
-        EventDispatcherInterface $dispatcher
+        EventDispatcherInterface $dispatcher,
     ) {
         parent::__construct($registry, Folder::class, $dispatcher);
     }
@@ -33,10 +33,6 @@ final class FolderRepository extends EntityRepository
     /**
      * Find a folder according to the given path or create it.
      *
-     * @param string $folderPath
-     * @param TranslationInterface|null $translation
-     *
-     * @return Folder|null
      * @throws ORMException
      * @throws OptimisticLockException
      */
@@ -46,45 +42,48 @@ final class FolderRepository extends EntityRepository
         $folders = explode('/', $folderPath);
         $folders = array_filter($folders);
 
-        if (count($folders) === 0) {
+        if (0 === count($folders)) {
             return null;
         }
 
         $folderName = $folders[count($folders) - 1];
         $folder = $this->findOneByFolderName($folderName);
 
-        if (null === $folder) {
-            /*
-             * Creation of a new folder
-             * before linking it to the node
-             */
-            $parentFolder = null;
-
-            if (count($folders) > 1) {
-                $parentName = $folders[count($folders) - 2];
-                $parentFolder = $this->findOneByFolderName($parentName);
-            }
-            $folder = new Folder();
-            $folder->setFolderName($folderName);
-
-            if (null !== $parentFolder) {
-                $folder->setParent($parentFolder);
-            }
-
-            /*
-             * Add folder translation
-             * with given name
-             */
-            if (null === $translation) {
-                $translation = $this->_em->getRepository(Translation::class)->findDefault();
-            }
-            $folderTranslation = new FolderTranslation($folder, $translation);
-            $folderTranslation->setName($folderName);
-
-            $this->_em->persist($folder);
-            $this->_em->persist($folderTranslation);
-            $this->_em->flush();
+        if (null !== $folder) {
+            return $folder;
         }
+
+        /*
+         * Creation of a new folder
+         * before linking it to the node
+         */
+        $parentFolder = null;
+
+        if (count($folders) > 1) {
+            // Call recursively to create parent folder if not exists with $folders array without last element
+            $parentFolder = $this->findOrCreateByPath(implode('/', array_slice($folders, 0, -1)), $translation);
+        }
+
+        $folder = new Folder();
+        $folder->setFolderName($folderName);
+
+        if (null !== $parentFolder) {
+            $folder->setParent($parentFolder);
+        }
+
+        /*
+         * Add folder translation
+         * with given name
+         */
+        if (null === $translation) {
+            $translation = $this->_em->getRepository(Translation::class)->findDefault() ?? throw new \InvalidArgumentException('No default translation found.');
+        }
+        $folderTranslation = new FolderTranslation($folder, $translation);
+        $folderTranslation->setName($folderName);
+
+        $this->_em->persist($folder);
+        $this->_em->persist($folderTranslation);
+        $this->_em->flush();
 
         return $folder;
     }
@@ -92,9 +91,6 @@ final class FolderRepository extends EntityRepository
     /**
      * Find a folder according to the given path.
      *
-     * @param string $folderPath
-     *
-     * @return Folder|null
      * @throws NonUniqueResultException
      */
     public function findByPath(string $folderPath): ?Folder
@@ -108,12 +104,7 @@ final class FolderRepository extends EntityRepository
         return $this->findOneByFolderName($folderName);
     }
 
-    /**
-     * @param Folder $folder
-     * @param TranslationInterface|null $translation
-     * @return array
-     */
-    public function findAllChildrenFromFolder(Folder $folder, TranslationInterface $translation = null): array
+    public function findAllChildrenFromFolder(Folder $folder, ?TranslationInterface $translation = null): array
     {
         $ids = $this->findAllChildrenIdFromFolder($folder);
         if (count($ids) > 0) {
@@ -128,19 +119,17 @@ final class FolderRepository extends EntityRepository
                     ->andWhere($qb->expr()->eq('tf.translation', ':translation'))
                     ->setParameter(':translation', $translation);
             }
+
             return $qb->getQuery()->getResult();
         }
+
         return [];
     }
 
     /**
-     * @param string $folderName
-     * @param TranslationInterface|null $translation
-     *
-     * @return Folder|null
      * @throws NonUniqueResultException
      */
-    public function findOneByFolderName(string $folderName, TranslationInterface $translation = null): ?Folder
+    public function findOneByFolderName(string $folderName, ?TranslationInterface $translation = null): ?Folder
     {
         $qb = $this->createQueryBuilder('f');
         $qb->addSelect('f')
@@ -158,10 +147,6 @@ final class FolderRepository extends EntityRepository
         return $qb->getQuery()->getOneOrNullResult();
     }
 
-    /**
-     * @param Folder $folder
-     * @return array
-     */
     public function findAllChildrenIdFromFolder(Folder $folder): array
     {
         $idsArray = $this->findChildrenIdFromFolder($folder);
@@ -174,10 +159,6 @@ final class FolderRepository extends EntityRepository
         return $idsArray;
     }
 
-    /**
-     * @param Folder $folder
-     * @return array
-     */
     public function findChildrenIdFromFolder(Folder $folder): array
     {
         $qb = $this->createQueryBuilder('f');
@@ -185,23 +166,23 @@ final class FolderRepository extends EntityRepository
             ->where($qb->expr()->eq('f.parent', ':parent'))
             ->setParameter(':parent', $folder);
 
-        return array_map('current', $qb->getQuery()->getScalarResult());
+        return array_map(current(...), $qb->getQuery()->getScalarResult());
     }
 
     /**
      * Create a Criteria object from a search pattern and additionnal fields.
      *
-     * @param string $pattern Search pattern
-     * @param QueryBuilder $qb QueryBuilder to pass
-     * @param array $criteria Additional criteria
-     * @param string $alias SQL query table alias
-     * @return QueryBuilder
+     * @param string       $pattern  Search pattern
+     * @param QueryBuilder $qb       QueryBuilder to pass
+     * @param array        $criteria Additional criteria
+     * @param string       $alias    SQL query table alias
      */
+    #[\Override]
     protected function createSearchBy(
         string $pattern,
         QueryBuilder $qb,
         array &$criteria = [],
-        string $alias = "obj"
+        string $alias = 'obj',
     ): QueryBuilder {
         $this->classicLikeComparison($pattern, $qb, $alias);
 
@@ -212,11 +193,11 @@ final class FolderRepository extends EntityRepository
 
         $criteriaFields = [];
         foreach (self::getSearchableColumnsNames($this->_em->getClassMetadata(FolderTranslation::class)) as $field) {
-            $criteriaFields[$field] = '%' . strip_tags(\mb_strtolower($pattern)) . '%';
+            $criteriaFields[$field] = '%'.strip_tags(\mb_strtolower($pattern)).'%';
         }
 
         foreach ($criteriaFields as $key => $value) {
-            $fullKey = sprintf('LOWER(%s)', 'tf.' . $key);
+            $fullKey = sprintf('LOWER(%s)', 'tf.'.$key);
             $qb->orWhere($qb->expr()->like($fullKey, $qb->expr()->literal($value)));
         }
 
@@ -224,14 +205,11 @@ final class FolderRepository extends EntityRepository
     }
 
     /**
-     * @param string $pattern
-     * @param array $criteria
-     * @param string $alias
-     * @return int
      * @throws \Doctrine\ORM\NoResultException
      * @throws NonUniqueResultException
      */
-    public function countSearchBy(string $pattern, array $criteria = [], string $alias = "obj"): int
+    #[\Override]
+    public function countSearchBy(string $pattern, array $criteria = [], string $alias = 'obj'): int
     {
         $qb = $this->createQueryBuilder($alias);
         $qb->select($qb->expr()->countDistinct($alias));
@@ -240,12 +218,7 @@ final class FolderRepository extends EntityRepository
         return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
-    /**
-     * @param Document $document
-     * @param TranslationInterface|null $translation
-     * @return array
-     */
-    public function findByDocumentAndTranslation(Document $document, TranslationInterface $translation = null): array
+    public function findByDocumentAndTranslation(Document $document, ?TranslationInterface $translation = null): array
     {
         $qb = $this->createQueryBuilder('f');
         $qb->innerJoin('f.documents', 'd')
@@ -266,12 +239,7 @@ final class FolderRepository extends EntityRepository
         return $qb->getQuery()->getResult();
     }
 
-    /**
-     * @param Folder|null $parent
-     * @param TranslationInterface|null $translation
-     * @return array
-     */
-    public function findByParentAndTranslation(Folder $parent = null, TranslationInterface $translation = null): array
+    public function findByParentAndTranslation(?Folder $parent = null, ?TranslationInterface $translation = null): array
     {
         $qb = $this->createQueryBuilder('f');
         $qb->addOrderBy('f.position', 'ASC');

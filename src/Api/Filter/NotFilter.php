@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Filter;
 
-use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use ApiPlatform\Doctrine\Orm\Filter\AbstractFilter;
+use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use ApiPlatform\Metadata\Operation;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
@@ -13,8 +13,9 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
 
 final class NotFilter extends AbstractFilter
 {
-    public const PARAMETER = 'not';
+    public const string PARAMETER = 'not';
 
+    #[\Override]
     protected function filterProperty(
         string $property,
         mixed $value,
@@ -22,9 +23,9 @@ final class NotFilter extends AbstractFilter
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
         ?Operation $operation = null,
-        array $context = []
+        array $context = [],
     ): void {
-        if ($property !== self::PARAMETER || !\is_array($value)) {
+        if (self::PARAMETER !== $property || !\is_array($value)) {
             return;
         }
 
@@ -33,7 +34,7 @@ final class NotFilter extends AbstractFilter
             $field = $property;
 
             if ($this->isPropertyNested($property, $resourceClass)) {
-                list($alias, $field) = $this->addJoinsForNestedProperty(
+                [$alias, $field] = $this->addJoinsForNestedProperty(
                     $property,
                     $alias,
                     $queryBuilder,
@@ -43,7 +44,7 @@ final class NotFilter extends AbstractFilter
                 );
             }
 
-            $placeholder = ':' . (new AsciiSlugger())->slug($alias . '_' . $field, '_')->toString();
+            $placeholder = ':'.(new AsciiSlugger())->slug($alias.'_'.$field, '_')->toString();
             if (\is_array($notValue)) {
                 $queryBuilder->andWhere(
                     $queryBuilder->expr()->notIn(sprintf('%s.%s', $alias, $field), $placeholder)
@@ -67,11 +68,8 @@ final class NotFilter extends AbstractFilter
      *   - strategy: the used strategy
      *   - swagger (optional): additional parameters for the path operation, e.g. 'swagger' => ['description' => 'My Description']
      * The description can contain additional data specific to a filter.
-     *
-     * @param string $resourceClass
-     *
-     * @return array
      */
+    #[\Override]
     public function getDescription(string $resourceClass): array
     {
         $properties = $this->properties;
@@ -89,8 +87,8 @@ final class NotFilter extends AbstractFilter
                     'required' => false,
                     'description' => 'Filter items that are not equal.',
                     'openapi' => [
-                        'description' => 'Filter items that are not equal.'
-                    ]
+                        'description' => 'Filter items that are not equal.',
+                    ],
                 ];
                 $carry[sprintf('%s[%s][]', self::PARAMETER, $property)] = [
                     'property' => $property,
@@ -98,9 +96,10 @@ final class NotFilter extends AbstractFilter
                     'required' => false,
                     'description' => 'Filter items that are not equal.',
                     'openapi' => [
-                        'description' => 'Filter items that are not equal.'
-                    ]
+                        'description' => 'Filter items that are not equal.',
+                    ],
                 ];
+
                 return $carry;
             },
             []

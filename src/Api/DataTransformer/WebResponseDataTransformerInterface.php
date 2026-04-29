@@ -11,12 +11,18 @@ interface WebResponseDataTransformerInterface
 {
     /**
      * @template T of PersistableInterface
-     * @param T $object
-     * @param string $to
-     * @param array $context
-     * @return WebResponseInterface<T>|null
+     *
+     * @param T                         $object
+     * @param WebResponseInterface|null $output pass an existing WebResponseInterface instance to avoid creating a new one
+     *
+     * @return WebResponseInterface<T>
      */
-    public function transform(PersistableInterface $object, string $to, array $context = []): ?WebResponseInterface;
+    public function transform(
+        PersistableInterface $object,
+        string $to,
+        array $context = [],
+        ?WebResponseInterface $output = null,
+    ): WebResponseInterface;
 
     public function createWebResponse(): WebResponseInterface;
 }

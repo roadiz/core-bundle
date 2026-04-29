@@ -12,23 +12,10 @@ use RZ\Roadiz\CoreBundle\Entity\TagTranslationDocuments;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
 
-/**
- * Class TagTranslationDocumentsTransformer
- * @package RZ\Roadiz\CoreBundle\Form\DataTransformer
- */
-class TagTranslationDocumentsTransformer implements DataTransformerInterface
+final readonly class TagTranslationDocumentsTransformer implements DataTransformerInterface
 {
-    private ObjectManager $manager;
-    private TagTranslation $tagTranslation;
-
-    /**
-     * @param ObjectManager $manager
-     * @param TagTranslation $tagTranslation
-     */
-    public function __construct(ObjectManager $manager, TagTranslation $tagTranslation)
+    public function __construct(private ObjectManager $manager, private TagTranslation $tagTranslation)
     {
-        $this->manager = $manager;
-        $this->tagTranslation = $tagTranslation;
     }
 
     /**
@@ -36,8 +23,10 @@ class TagTranslationDocumentsTransformer implements DataTransformerInterface
      * to Document entities for displaying in document VueJS component.
      *
      * @param TagTranslationDocuments[]|null $value
+     *
      * @return Document[]
      */
+    #[\Override]
     public function transform(mixed $value): array
     {
         if (empty($value)) {
@@ -53,8 +42,8 @@ class TagTranslationDocumentsTransformer implements DataTransformerInterface
 
     /**
      * @param array<int> $value
-     * @return ArrayCollection
      */
+    #[\Override]
     public function reverseTransform(mixed $value): ArrayCollection
     {
         if (!$value) {
@@ -69,10 +58,7 @@ class TagTranslationDocumentsTransformer implements DataTransformerInterface
                 ->find($documentId)
             ;
             if (null === $document) {
-                throw new TransformationFailedException(sprintf(
-                    'A document with id "%s" does not exist!',
-                    $documentId
-                ));
+                throw new TransformationFailedException(sprintf('A document with id "%s" does not exist!', $documentId));
             }
 
             $ttd = new TagTranslationDocuments($this->tagTranslation, $document);
@@ -80,7 +66,7 @@ class TagTranslationDocumentsTransformer implements DataTransformerInterface
             $this->manager->persist($ttd);
             $documents->add($ttd);
 
-            $position++;
+            ++$position;
         }
 
         return $documents;

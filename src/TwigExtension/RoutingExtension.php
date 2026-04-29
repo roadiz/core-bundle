@@ -19,26 +19,20 @@ final class RoutingExtension extends AbstractExtension
 {
     public function __construct(
         private readonly BaseRoutingExtension $decorated,
-        private readonly UrlGeneratorInterface $generator
+        private readonly UrlGeneratorInterface $generator,
     ) {
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    #[\Override]
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('url', [$this, 'getUrl'], ['is_safe_callback' => [$this, 'isUrlGenerationSafe']]),
-            new TwigFunction('path', [$this, 'getPath'], ['is_safe_callback' => [$this, 'isUrlGenerationSafe']]),
+            new TwigFunction('url', $this->getUrl(...), ['is_safe_callback' => $this->isUrlGenerationSafe(...)]),
+            new TwigFunction('path', $this->getPath(...), ['is_safe_callback' => $this->isUrlGenerationSafe(...)]),
         ];
     }
 
     /**
-     * @param string|object|null $name
-     * @param array $parameters
-     * @param bool $relative
-     * @return string
      * @throws RuntimeError
      */
     public function getPath(string|object|null $name, array $parameters = [], bool $relative = false): string
@@ -61,10 +55,6 @@ final class RoutingExtension extends AbstractExtension
     }
 
     /**
-     * @param string|object|null $name
-     * @param array $parameters
-     * @param bool $schemeRelative
-     * @return string
      * @throws RuntimeError
      */
     public function getUrl(string|object|null $name, array $parameters = [], bool $schemeRelative = false): string
