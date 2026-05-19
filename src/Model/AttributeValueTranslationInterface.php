@@ -14,12 +14,12 @@ interface AttributeValueTranslationInterface extends PersistableInterface
     /**
      * @return $this
      */
-    public function setValue(mixed $value): static;
+    public function setValue(mixed $value): self;
 
     /**
      * @return $this
      */
-    public function setTranslation(TranslationInterface $translation): static;
+    public function setTranslation(TranslationInterface $translation): self;
 
     public function getTranslation(): ?TranslationInterface;
 
@@ -30,5 +30,5 @@ interface AttributeValueTranslationInterface extends PersistableInterface
     /**
      * @return $this
      */
-    public function setAttributeValue(AttributeValueInterface $attributeValue): static;
+    public function setAttributeValue(AttributeValueInterface $attributeValue): self;
 }

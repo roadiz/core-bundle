@@ -45,10 +45,6 @@ final class LocaleFilter extends GeneratedEntityFilter
             return;
         }
 
-        if (null === $this->managerRegistry) {
-            return;
-        }
-
         if ($this->previewResolver->isPreview()) {
             $supportedLocales = $this->managerRegistry
                 ->getRepository(Translation::class)
@@ -108,9 +104,7 @@ final class LocaleFilter extends GeneratedEntityFilter
     #[\Override]
     public function getDescription(string $resourceClass): array
     {
-        $supportedLocales = $this->managerRegistry
-            ?->getRepository(Translation::class)
-            ->getAvailableLocales() ?? [];
+        $supportedLocales = $this->managerRegistry->getRepository(Translation::class)->getAvailableLocales();
 
         return [
             self::PROPERTY => [

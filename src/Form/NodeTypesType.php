@@ -72,7 +72,7 @@ final class NodeTypesType extends AbstractType
     }
 
     #[\Override]
-    public function getParent(): string
+    public function getParent(): ?string
     {
         return ChoiceType::class;
     }

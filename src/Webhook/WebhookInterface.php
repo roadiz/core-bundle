@@ -9,7 +9,10 @@ use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 
 interface WebhookInterface extends PersistableInterface, DateTimedInterface
 {
-    public function __toString(): string;
+    /**
+     * @return string
+     */
+    public function __toString();
 
     public function getUri(): ?string;
 

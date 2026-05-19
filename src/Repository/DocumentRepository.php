@@ -84,55 +84,54 @@ final class DocumentRepository extends EntityRepository implements DocumentRepos
      */
     protected function filterByFolder(array &$criteria, QueryBuilder $qb, string $prefix = 'd'): void
     {
-        if (!key_exists('folders', $criteria)) {
-            return;
-        }
-        /*
-         * Do not filter if folder is null
-         */
-        if (is_null($criteria['folders'])) {
-            return;
-        }
-
-        if (is_array($criteria['folders']) || $criteria['folders'] instanceof Collection) {
+        if (key_exists('folders', $criteria)) {
             /*
-             * Do not filter if folder array is empty.
+             * Do not filter if folder is null
              */
-            if (0 === count($criteria['folders'])) {
+            if (is_null($criteria['folders'])) {
                 return;
             }
-            if (
-                key_exists('folderExclusive', $criteria)
-                && true === $criteria['folderExclusive']
-            ) {
-                // To get an exclusive folder filter
-                // we need to filter against each folder id
-                // and to inner join with a different alias for each folder
-                // with AND operator
-                foreach ($criteria['folders'] as $index => $folder) {
-                    if ($folder instanceof Folder) {
-                        $alias = 'fd'.$index;
-                        $qb->innerJoin($prefix.'.folders', $alias);
-                        $qb->andWhere($qb->expr()->eq($alias.'.id', $folder->getId()));
-                    }
+
+            if (is_array($criteria['folders']) || $criteria['folders'] instanceof Collection) {
+                /*
+                 * Do not filter if folder array is empty.
+                 */
+                if (0 === count($criteria['folders'])) {
+                    return;
                 }
-                unset($criteria['folderExclusive']);
-                unset($criteria['folders']);
+                if (
+                    in_array('folderExclusive', array_keys($criteria))
+                    && true === $criteria['folderExclusive']
+                ) {
+                    // To get an exclusive folder filter
+                    // we need to filter against each folder id
+                    // and to inner join with a different alias for each folder
+                    // with AND operator
+                    foreach ($criteria['folders'] as $index => $folder) {
+                        if (null !== $folder && $folder instanceof Folder) {
+                            $alias = 'fd'.$index;
+                            $qb->innerJoin($prefix.'.folders', $alias);
+                            $qb->andWhere($qb->expr()->eq($alias.'.id', $folder->getId()));
+                        }
+                    }
+                    unset($criteria['folderExclusive']);
+                    unset($criteria['folders']);
+                } else {
+                    $qb->innerJoin(
+                        $prefix.'.folders',
+                        'fd',
+                        'WITH',
+                        'fd.id IN (:folders)'
+                    );
+                }
             } else {
                 $qb->innerJoin(
                     $prefix.'.folders',
                     'fd',
                     'WITH',
-                    'fd.id IN (:folders)'
+                    'fd.id = :folders'
                 );
             }
-        } else {
-            $qb->innerJoin(
-                $prefix.'.folders',
-                'fd',
-                'WITH',
-                'fd.id = :folders'
-            );
         }
     }
 
@@ -175,10 +174,10 @@ final class DocumentRepository extends EntityRepository implements DocumentRepos
             /*
              * Search in translation fields
              */
-            if (str_contains((string) $key, 'translation.')) {
+            if (str_contains($key, 'translation.')) {
                 $prefix = 't.';
                 $key = str_replace('translation.', '', $key);
-            } elseif (str_contains((string) $key, 'documentTranslations.')) {
+            } elseif (str_contains($key, 'documentTranslations.')) {
                 /*
                  * Search in translation fields
                  */
@@ -428,10 +427,10 @@ final class DocumentRepository extends EntityRepository implements DocumentRepos
              * We need to use Doctrine paginator
              * if a limit is set because of the default inner join
              */
-            return array_values((new Paginator($query))->getIterator()->getArrayCopy());
+            return (new Paginator($query))->getIterator()->getArrayCopy();
         }
 
-        return array_values($query->getResult());
+        return $query->getResult();
     }
 
     /**

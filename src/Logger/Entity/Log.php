@@ -111,7 +111,10 @@ class Log implements PersistableInterface
         return $this->username;
     }
 
-    public function setUsername(?string $username): Log
+    /**
+     * @return Log
+     */
+    public function setUsername(?string $username)
     {
         $this->username = $username;
 

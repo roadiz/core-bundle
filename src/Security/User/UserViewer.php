@@ -51,9 +51,7 @@ final readonly class UserViewer
                 $htmlTemplate,
                 $txtTemplate
             );
-            $this->notifier->send($notification, new Recipient(
-                $user->getEmail() ?? throw new \InvalidArgumentException('User has no email address.'),
-            ));
+            $this->notifier->send($notification, new Recipient($user->getEmail()));
 
             return true;
         } catch (\Exception $e) {
