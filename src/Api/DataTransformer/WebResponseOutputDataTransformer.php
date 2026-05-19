@@ -41,25 +41,21 @@ class WebResponseOutputDataTransformer implements WebResponseDataTransformerInte
     ) {
     }
 
-    #[\Override]
     protected function getWalkerContext(): WalkerContextInterface
     {
         return $this->walkerContext;
     }
 
-    #[\Override]
     protected function getCacheItemPool(): CacheItemPoolInterface
     {
         return $this->cacheItemPool;
     }
 
-    #[\Override]
     protected function getChildrenNodeSourceWalkerMaxLevel(): int
     {
         return 5;
     }
 
-    #[\Override]
     public function getTreeWalkerGenerator(): TreeWalkerGenerator
     {
         return $this->treeWalkerGenerator;
@@ -68,28 +64,24 @@ class WebResponseOutputDataTransformer implements WebResponseDataTransformerInte
     /**
      * @return class-string<AbstractWalker>
      */
-    #[\Override]
     protected function getChildrenNodeSourceWalkerClassname(): string
     {
         return AutoChildrenNodeSourceWalker::class;
     }
 
-    #[\Override]
     protected function getRealmResolver(): RealmResolverInterface
     {
         return $this->realmResolver;
     }
 
-    #[\Override]
     public function createWebResponse(): WebResponseInterface
     {
         return new ($this->webResponseClass)();
     }
 
-    #[\Override]
-    public function transform(PersistableInterface $object, string $to, array $context = [], ?WebResponseInterface $output = null): WebResponseInterface
+    public function transform(PersistableInterface $object, string $to, array $context = [], ?WebResponseInterface $output = null): ?WebResponseInterface
     {
-        $output ??= $this->createWebResponse();
+        $output = $output ?? $this->createWebResponse();
         $output->setItem($object);
         if ($object instanceof NodesSources) {
             if ($output instanceof RealmsAwareWebResponseInterface) {

@@ -12,6 +12,7 @@ use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\NodeType\ApiResourceGenerator;
 use RZ\Roadiz\CoreBundle\Repository\NotPublishedNodeRepository;
 use RZ\Roadiz\EntityGenerator\EntityGeneratorFactory;
+use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
@@ -115,9 +116,12 @@ final class NodeTypeHandler extends AbstractHandler
             $content = $classGenerator->getClassContent();
             $repositoryContent = $repositoryGenerator->getClassContent();
 
-            $fileSystem->dumpFile($file, $content);
-            $fileSystem->dumpFile($repositoryFile, $repositoryContent);
-
+            if (false === @file_put_contents($file, $content)) {
+                throw new IOException('Impossible to write entity class file ('.$file.').', 1);
+            }
+            if (false === @file_put_contents($repositoryFile, $repositoryContent)) {
+                throw new IOException('Impossible to write entity class file ('.$repositoryFile.').', 1);
+            }
             /*
              * Force Zend OPcache to reset file
              */
@@ -239,7 +243,6 @@ final class NodeTypeHandler extends AbstractHandler
         return $this;
     }
 
-    #[\Override]
     public function cleanPositions(bool $setPositions = false): float
     {
         throw new \LogicException('Node-types are static, you can not clean their positions.');

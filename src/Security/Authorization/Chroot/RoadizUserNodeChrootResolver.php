@@ -12,7 +12,6 @@ use RZ\Roadiz\CoreBundle\Entity\User;
  */
 final class RoadizUserNodeChrootResolver implements NodeChrootResolver
 {
-    #[\Override]
     public function supports(mixed $user): bool
     {
         return $user instanceof User;
@@ -21,7 +20,6 @@ final class RoadizUserNodeChrootResolver implements NodeChrootResolver
     /**
      * @param User $user
      */
-    #[\Override]
     public function getChroot(mixed $user): ?Node
     {
         return $user->getChroot();

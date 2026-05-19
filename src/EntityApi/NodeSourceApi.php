@@ -43,7 +43,6 @@ class NodeSourceApi extends AbstractApi
         return $this->nodeSourceClassName;
     }
 
-    #[\Override]
     public function getRepository(): NodesSourcesRepository
     {
         // @phpstan-ignore-next-line
@@ -53,7 +52,6 @@ class NodeSourceApi extends AbstractApi
     /**
      * @return array<NodesSources>|Paginator<NodesSources>
      */
-    #[\Override]
     public function getBy(
         array $criteria,
         ?array $order = null,
@@ -75,7 +73,6 @@ class NodeSourceApi extends AbstractApi
      * @throws \Doctrine\ORM\NoResultException
      * @throws NonUniqueResultException
      */
-    #[\Override]
     public function countBy(array $criteria): int
     {
         $this->getNodeSourceClassName($criteria);
@@ -89,7 +86,6 @@ class NodeSourceApi extends AbstractApi
     /**
      * @throws NonUniqueResultException
      */
-    #[\Override]
     public function getOneBy(array $criteria, ?array $order = null): ?NodesSources
     {
         $this->getNodeSourceClassName($criteria);
