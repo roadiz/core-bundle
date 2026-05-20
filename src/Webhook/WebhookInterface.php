@@ -4,17 +4,12 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Webhook;
 
-interface WebhookInterface
-{
-    /**
-     * @return string|null
-     */
-    public function getId();
+use RZ\Roadiz\Core\AbstractEntities\DateTimedInterface;
+use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 
-    /**
-     * @return string
-     */
-    public function __toString();
+interface WebhookInterface extends PersistableInterface, DateTimedInterface
+{
+    public function __toString(): string;
 
     public function getUri(): ?string;
 

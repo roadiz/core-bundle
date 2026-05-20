@@ -16,6 +16,7 @@ use RZ\Roadiz\CoreBundle\Event\User\UserDisabledEvent;
 use RZ\Roadiz\CoreBundle\Event\User\UserEnabledEvent;
 use RZ\Roadiz\CoreBundle\Event\User\UserPasswordChangedEvent;
 use RZ\Roadiz\CoreBundle\Event\User\UserUpdatedEvent;
+use RZ\Roadiz\CoreBundle\Event\User\UserUsernameChangedEvent;
 use RZ\Roadiz\CoreBundle\Security\User\UserViewer;
 use RZ\Roadiz\Random\TokenGenerator;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
@@ -40,45 +41,66 @@ final readonly class UserLifeCycleSubscriber
     public function preUpdate(PreUpdateEventArgs $event): void
     {
         $user = $event->getObject();
-        if ($user instanceof User) {
-            if (
-                $event->hasChangedField('enabled')
-                && true === $event->getNewValue('enabled')
-            ) {
-                $userEvent = new UserEnabledEvent($user);
-                $this->dispatcher->dispatch($userEvent);
-            }
+        if (!$user instanceof User) {
+            return;
+        }
 
-            if (
-                $event->hasChangedField('enabled')
-                && false === $event->getNewValue('enabled')
-            ) {
-                $userEvent = new UserDisabledEvent($user);
-                $this->dispatcher->dispatch($userEvent);
-            }
+        if (
+            $event->hasChangedField('enabled')
+            && true === $event->getNewValue('enabled')
+        ) {
+            $userEvent = new UserEnabledEvent($user);
+            $this->dispatcher->dispatch($userEvent);
+        }
 
-            /*
-             * Encode user password
-             */
-            if (
-                $event->hasChangedField('password')
-                && null !== $user->getPlainPassword()
-                && '' !== $user->getPlainPassword()
-            ) {
-                $this->setPassword($user, $user->getPlainPassword());
+        if (
+            $event->hasChangedField('enabled')
+            && false === $event->getNewValue('enabled')
+        ) {
+            $userEvent = new UserDisabledEvent($user);
+            $this->dispatcher->dispatch($userEvent);
+        }
+
+        if ($event->hasChangedField('username')) {
+            $this->dispatcher->dispatch(new UserUsernameChangedEvent(
+                $user,
+                (string) $event->getOldValue('username'),
+                (string) $event->getNewValue('username')
+            ));
+        }
+
+        /*
+         * Encode user password
+         */
+        if (
+            $event->hasChangedField('password')
+            && null !== $user->getPlainPassword()
+            && '' !== $user->getPlainPassword()
+        ) {
+            if ($this->setPassword($user, $user->getPlainPassword())) {
                 $userEvent = new UserPasswordChangedEvent($user);
                 $this->dispatcher->dispatch($userEvent);
             }
         }
     }
 
-    private function setPassword(User $user, ?string $plainPassword): void
+    /**
+     * @return bool returns true if password has been updated, false otherwise
+     */
+    private function setPassword(User $user, ?string $plainPassword): bool
     {
-        if (null !== $plainPassword) {
-            $hasher = $this->passwordHasherFactory->getPasswordHasher($user);
-            $encodedPassword = $hasher->hash($plainPassword);
-            $user->setPassword($encodedPassword);
+        if (null === $plainPassword) {
+            return false;
         }
+        $hasher = $this->passwordHasherFactory->getPasswordHasher($user);
+        if ($hasher->verify($user->getPassword(), $plainPassword)) {
+            // Password is the same, no need to update
+            return false;
+        }
+
+        $user->setPassword($hasher->hash($plainPassword));
+
+        return true;
     }
 
     public function postUpdate(LifecycleEventArgs $event): void

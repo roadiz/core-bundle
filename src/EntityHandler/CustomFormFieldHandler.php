@@ -25,7 +25,7 @@ final class CustomFormFieldHandler extends AbstractHandler
     /**
      * @return $this
      */
-    public function setCustomFormField(CustomFormField $customFormField): self
+    public function setCustomFormField(CustomFormField $customFormField): static
     {
         $this->customFormField = $customFormField;
 
@@ -37,6 +37,7 @@ final class CustomFormFieldHandler extends AbstractHandler
      *
      * @return float Return the next position after the **last** customFormField
      */
+    #[\Override]
     public function cleanPositions(bool $setPositions = true): float
     {
         if (null === $this->customFormField) {

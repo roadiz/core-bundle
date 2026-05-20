@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Entity;
 
-use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
-
 /**
  * Themes describe a database entity to store
  * front-end and back-end controllers.
+ *
+ * @deprecated since 2.6, Themes will be definitly dropped
  */
-class Theme extends AbstractEntity
+class Theme
 {
     protected string $hostname = '*';
     protected bool $staticTheme = false;
@@ -30,7 +30,7 @@ class Theme extends AbstractEntity
     /**
      * @return $this
      */
-    public function setAvailable(bool $available): Theme
+    public function setAvailable(bool $available): static
     {
         $this->available = $available;
 
@@ -49,7 +49,7 @@ class Theme extends AbstractEntity
     /**
      * @return $this
      */
-    public function setStaticTheme(bool $staticTheme): Theme
+    public function setStaticTheme(bool $staticTheme): static
     {
         $this->staticTheme = (bool) $staticTheme;
 
@@ -106,7 +106,7 @@ class Theme extends AbstractEntity
      *
      * @return $this
      */
-    public function setClassName(string $className): Theme
+    public function setClassName(string $className): static
     {
         $this->className = $className;
 
@@ -121,7 +121,7 @@ class Theme extends AbstractEntity
     /**
      * @return $this
      */
-    public function setHostname(string $hostname): Theme
+    public function setHostname(string $hostname): static
     {
         $this->hostname = $hostname;
 
@@ -136,7 +136,7 @@ class Theme extends AbstractEntity
     /**
      * @return $this
      */
-    public function setRoutePrefix(string $routePrefix): Theme
+    public function setRoutePrefix(string $routePrefix): static
     {
         $this->routePrefix = $routePrefix;
 
@@ -151,7 +151,7 @@ class Theme extends AbstractEntity
     /**
      * @return $this
      */
-    public function setBackendTheme(bool $backendTheme): Theme
+    public function setBackendTheme(bool $backendTheme): static
     {
         $this->backendTheme = $backendTheme;
 
