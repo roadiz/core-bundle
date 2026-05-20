@@ -26,8 +26,10 @@ final class NodesSourcesBreadcrumbsFactory implements BreadcrumbsFactoryInterfac
         $parents = [];
 
         while (null !== $entity = $entity->getParent()) {
-            $node = $entity->getNode();
-            if (!$onlyVisible || $node->isVisible()) {
+            if (
+                null !== $entity->getNode()
+                && (!$onlyVisible || $entity->getNode()->isVisible())
+            ) {
                 $parents[] = $entity;
             }
         }

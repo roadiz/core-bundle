@@ -126,7 +126,7 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
                 return $schemeAuthority.$nodePathInfo->getPath();
             }
 
-            return $nodePathInfo->getPath() ?? throw new InvalidParameterException('NodeSource generated path is null.');
+            return $nodePathInfo->getPath();
         }
 
         $queryString = '';
@@ -196,7 +196,7 @@ class NodeRouter extends Router implements VersatileGeneratorInterface
          * Get path, parameters and isComplete back from event propagation.
          */
         $nodePathInfo = new NodePathInfo();
-        $nodePathInfo->setPath($event->getPath() ?? throw new InvalidParameterException('NodeSource generated path is null.'));
+        $nodePathInfo->setPath($event->getPath());
         $nodePathInfo->setParameters($event->getParameters());
         $nodePathInfo->setComplete($event->isComplete());
         $nodePathInfo->setContainsScheme($event->containsScheme());

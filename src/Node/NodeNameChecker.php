@@ -81,7 +81,7 @@ final readonly class NodeNameChecker implements NodeNamePolicyInterface
     public function getDatestampedNodeName(NodesSources $nodeSource): string
     {
         $canonicalNodeName = $this->getCanonicalNodeName($nodeSource);
-        $timestamp = $nodeSource->getPublishedAt()?->format('Y-m-d') ?? 'upublished';
+        $timestamp = $nodeSource->getPublishedAt()->format('Y-m-d');
 
         // truncate canonicalNodeName if canonicalNodeName + uniqueId + 1 exceed 250 chars
         if ((\mb_strlen($canonicalNodeName) + \mb_strlen($timestamp) + 1) > self::MAX_LENGTH) {
