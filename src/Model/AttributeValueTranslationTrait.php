@@ -49,7 +49,7 @@ trait AttributeValueTranslationTrait
      *
      * @return $this
      */
-    public function setValue(mixed $value): self
+    public function setValue(mixed $value): static
     {
         if (null === $value) {
             $this->value = null;
@@ -81,7 +81,7 @@ trait AttributeValueTranslationTrait
     /**
      * @return $this
      */
-    public function setTranslation(TranslationInterface $translation): self
+    public function setTranslation(TranslationInterface $translation): static
     {
         $this->translation = $translation;
 
@@ -101,7 +101,7 @@ trait AttributeValueTranslationTrait
     /**
      * @return $this
      */
-    public function setAttributeValue(AttributeValueInterface $attributeValue): self
+    public function setAttributeValue(AttributeValueInterface $attributeValue): static
     {
         $this->attributeValue = $attributeValue;
 
@@ -110,6 +110,6 @@ trait AttributeValueTranslationTrait
 
     public function getAttribute(): AttributeInterface
     {
-        return $this->getAttributeValue()->getAttribute();
+        return $this->getAttributeValue()->getAttribute() ?? throw new \RuntimeException('AttributeValue has no Attribute assigned.');
     }
 }

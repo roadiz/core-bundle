@@ -109,7 +109,7 @@ class CustomFormField extends AbstractField implements \Stringable
      * @return $this
      */
     #[\Override]
-    public function setLabel($label): CustomFormField
+    public function setLabel($label): static
     {
         parent::setLabel($label);
         $this->setName($label);
@@ -146,7 +146,7 @@ class CustomFormField extends AbstractField implements \Stringable
     /**
      * @return $this
      */
-    public function setRequired(bool $required): CustomFormField
+    public function setRequired(bool $required): static
     {
         $this->required = $required;
 
@@ -182,7 +182,7 @@ class CustomFormField extends AbstractField implements \Stringable
     #[\Override]
     public function getDefaultValuesAsArray(): array
     {
-        return array_values(array_filter(array_map('trim', explode(',', $this->defaultValues ?? ''))));
+        return array_values(array_filter(array_map(trim(...), explode(',', $this->defaultValues ?? ''))));
     }
 
     public function __clone()

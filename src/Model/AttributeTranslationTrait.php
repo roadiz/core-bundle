@@ -41,9 +41,9 @@ trait AttributeTranslationTrait
     /**
      * @return $this
      */
-    public function setLabel(?string $label): self
+    public function setLabel(?string $label): static
     {
-        $this->label = null !== $label ? trim($label) : null;
+        $this->label = null !== $label ? trim($label) : '';
 
         return $this;
     }
@@ -51,7 +51,7 @@ trait AttributeTranslationTrait
     /**
      * @return $this
      */
-    public function setTranslation(TranslationInterface $translation): self
+    public function setTranslation(TranslationInterface $translation): static
     {
         $this->translation = $translation;
 
@@ -71,7 +71,7 @@ trait AttributeTranslationTrait
     /**
      * @return $this
      */
-    public function setAttribute(AttributeInterface $attribute): self
+    public function setAttribute(AttributeInterface $attribute): static
     {
         $this->attribute = $attribute;
 
@@ -91,7 +91,7 @@ trait AttributeTranslationTrait
      *
      * @return $this
      */
-    public function setOptions(?array $options): self
+    public function setOptions(?array $options): static
     {
         $this->options = $options;
 

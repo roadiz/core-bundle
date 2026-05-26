@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\TreeWalker;
 
+use ApiPlatform\Metadata\ApiResource;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Psr\Cache\InvalidArgumentException;
@@ -19,6 +20,7 @@ use RZ\TreeWalker\Definition\ZeroChildrenDefinition;
  *
  * Override this class to customize definitions
  */
+#[ApiResource(operations: [])]
 class AutoChildrenNodeSourceWalker extends AbstractCycleAwareWalker
 {
     #[\Override]
@@ -30,7 +32,7 @@ class AutoChildrenNodeSourceWalker extends AbstractCycleAwareWalker
                 /** @var NodeTypeInterface $nodeType */
                 foreach ($context->getNodeTypesBag()->all() as $nodeType) {
                     $this->addDefinition(
-                        $nodeType->getSourceEntityFullQualifiedClassName(),
+                        $context->getNodeTypeClassLocator()->getSourceEntityFullQualifiedClassName($nodeType),
                         $this->createDefinitionForNodeType($nodeType)
                     );
                 }

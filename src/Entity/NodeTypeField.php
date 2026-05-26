@@ -290,7 +290,7 @@ final class NodeTypeField extends AbstractField implements NodeTypeFieldInterfac
     }
 
     #[Serializer\Ignore]
-    public function getNormalizationContextGroups(): ?array
+    public function getNormalizationContextGroups(): array
     {
         return $this->normalizationContext['groups'] ?? [];
     }

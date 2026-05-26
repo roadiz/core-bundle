@@ -82,7 +82,7 @@ final class InstallCommand extends Command
                 $filePath = $fixturesRoot.'/'.$filename;
                 $fileContents = $filesystem->readFile($filePath);
                 $this->groupsImporter->import($fileContents);
-                $io->success('Theme file “'.$filePath.'” has been imported.');
+                $io->success('Fixture file “'.$filePath.'” has been imported.');
             }
         }
         if (isset($data['importFiles']['settings'])) {
@@ -90,10 +90,11 @@ final class InstallCommand extends Command
                 $filePath = $fixturesRoot.'/'.$filename;
                 $fileContents = $filesystem->readFile($filePath);
                 $this->settingsImporter->import($fileContents);
-                $io->success('Theme files “'.$filePath.'” has been imported.');
+                $io->success('Fixture file “'.$filePath.'” has been imported.');
             }
         }
-        $manager = $this->managerRegistry->getManagerForClass(Translation::class);
+        $manager = $this->managerRegistry
+            ->getManagerForClass(Translation::class) ?? throw new \RuntimeException('No entity manager found for Translation class.');
         /*
          * Create default translation
          */

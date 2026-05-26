@@ -123,7 +123,7 @@ class Realm implements RealmInterface
     #[\Override]
     public function getName(): string
     {
-        return $this->name ?? '';
+        return $this->name;
     }
 
     public function setName(string $name): Realm
@@ -146,10 +146,8 @@ class Realm implements RealmInterface
 
     /**
      * @param Collection<int, RealmNode> $realmNodes
-     *
-     * @return Realm
      */
-    public function setRealmNodes(Collection $realmNodes)
+    public function setRealmNodes(Collection $realmNodes): Realm
     {
         $this->realmNodes = $realmNodes;
 
@@ -167,10 +165,8 @@ class Realm implements RealmInterface
 
     /**
      * @param Collection<int, User> $users
-     *
-     * @return Realm
      */
-    public function setUsers(Collection $users)
+    public function setUsers(Collection $users): Realm
     {
         $this->users = $users;
 
@@ -185,7 +181,11 @@ class Realm implements RealmInterface
 
     public function setPlainPassword(?string $plainPassword): Realm
     {
-        $this->plainPassword = $plainPassword;
+        if (null !== $plainPassword && '' !== $plainPassword) {
+            $this->plainPassword = \password_hash($plainPassword, \PASSWORD_BCRYPT);
+        } elseif (null === $plainPassword) {
+            $this->plainPassword = null;
+        }
 
         return $this;
     }
