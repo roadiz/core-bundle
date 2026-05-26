@@ -102,7 +102,7 @@ final class NodeType implements NodeTypeInterface, \Stringable
     /**
      * @return $this
      */
-    public function setDisplayName(?string $displayName): static
+    public function setDisplayName(?string $displayName): NodeType
     {
         $this->displayName = $displayName ?? '';
 
@@ -118,7 +118,7 @@ final class NodeType implements NodeTypeInterface, \Stringable
     /**
      * @return $this
      */
-    public function setDescription(?string $description = null): static
+    public function setDescription(?string $description = null): NodeType
     {
         $this->description = $description;
 
@@ -134,7 +134,7 @@ final class NodeType implements NodeTypeInterface, \Stringable
     /**
      * @return $this
      */
-    public function setVisible(bool $visible): static
+    public function setVisible(bool $visible): NodeType
     {
         $this->visible = $visible;
 
@@ -180,7 +180,7 @@ final class NodeType implements NodeTypeInterface, \Stringable
     /**
      * @return $this
      */
-    public function setHidingNodes(bool $hidingNodes): static
+    public function setHidingNodes(bool $hidingNodes): NodeType
     {
         $this->hidingNodes = $hidingNodes;
 
@@ -213,7 +213,7 @@ final class NodeType implements NodeTypeInterface, \Stringable
      *
      * @return $this
      */
-    public function setColor(?string $color): static
+    public function setColor(?string $color): NodeType
     {
         $this->color = $color;
 
@@ -285,7 +285,7 @@ final class NodeType implements NodeTypeInterface, \Stringable
     /**
      * @return $this
      */
-    public function setName(?string $name): static
+    public function setName(?string $name): NodeType
     {
         $this->name = StringHandler::classify($name ?? '');
 
@@ -313,8 +313,6 @@ final class NodeType implements NodeTypeInterface, \Stringable
 
     /**
      * @return class-string<NodesSources>
-     *
-     * @deprecated use NodeTypeClassLocator service instead
      */
     #[SymfonySerializer\Ignore]
     #[\Override]
@@ -324,9 +322,6 @@ final class NodeType implements NodeTypeInterface, \Stringable
         return static::getGeneratedEntitiesNamespace().'\\'.$this->getSourceEntityClassName();
     }
 
-    /**
-     * @deprecated use NodeTypeClassLocator service instead
-     */
     #[SymfonySerializer\Ignore]
     public static function getGeneratedEntitiesNamespace(): string
     {
@@ -335,8 +330,6 @@ final class NodeType implements NodeTypeInterface, \Stringable
 
     /**
      * Get node-source entity class name without its namespace.
-     *
-     * @deprecated use NodeTypeClassLocator service instead
      */
     #[SymfonySerializer\Ignore]
     #[\Override]

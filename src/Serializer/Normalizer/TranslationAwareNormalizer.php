@@ -36,11 +36,7 @@ final class TranslationAwareNormalizer implements NormalizerInterface, Normalize
             $item = $object->getItem();
             if ($item instanceof NodesSources) {
                 $context['translation'] = $item->getTranslation();
-            } elseif (
-                null !== $item
-                && method_exists($item, 'getLocale')
-                && is_string($item->getLocale())
-            ) {
+            } elseif (method_exists($item, 'getLocale') && is_string($item->getLocale())) {
                 $context['translation'] = $this->getTranslationFromLocale($item->getLocale());
             }
         } elseif ($object instanceof NodesSources) {

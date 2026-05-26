@@ -30,11 +30,10 @@ final class SettingDocumentType extends AbstractType
         $builder->addModelTransformer(new CallbackTransformer(
             function ($value) {
                 if (null !== $value) {
-                    $manager = $this->managerRegistry
-                        ->getManagerForClass(Document::class) ?? throw new \RuntimeException('No manager found for Document class.');
+                    $manager = $this->managerRegistry->getManagerForClass(Document::class);
                     /** @var Document|null $document */
                     $document = $manager->find(Document::class, $value);
-                    if (null !== $document && null !== $document->getMountPath()) {
+                    if (null !== $document) {
                         // transform the array to a string
                         return new File($this->documentsStorage->publicUrl($document->getMountPath()), false);
                     }
@@ -48,8 +47,7 @@ final class SettingDocumentType extends AbstractType
                     $document = $this->documentFactory->getDocument();
 
                     if ($document instanceof Document) {
-                        $manager = $this->managerRegistry
-                            ->getManagerForClass(Document::class) ?? throw new \RuntimeException('No manager found for Document class.');
+                        $manager = $this->managerRegistry->getManagerForClass(Document::class);
                         $manager->persist($document);
                         $manager->flush();
 
@@ -63,7 +61,7 @@ final class SettingDocumentType extends AbstractType
     }
 
     #[\Override]
-    public function getParent(): string
+    public function getParent(): ?string
     {
         return FileType::class;
     }
