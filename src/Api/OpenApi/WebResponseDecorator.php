@@ -15,7 +15,6 @@ final readonly class WebResponseDecorator implements OpenApiFactoryInterface
     ) {
     }
 
-    #[\Override]
     public function __invoke(array $context = []): OpenApi
     {
         $openApi = ($this->decorated)($context);

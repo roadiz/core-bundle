@@ -84,9 +84,6 @@
         "groups": [
             {
                 "name": "Admin"
-            },
-            {
-                "name": "Editors"
             }
         ]
     },
@@ -101,6 +98,10 @@
                 "name": "Editors"
             }
         ]
+    },
+    {
+        "name": "ROLE_ACCESS_NODEFIELDS_DELETE",
+        "groups": []
     },
     {
         "name": "ROLE_ACCESS_NODES",
@@ -139,12 +140,20 @@
         "groups": []
     },
     {
+        "name": "ROLE_ACCESS_NODETYPES_DELETE",
+        "groups": []
+    },
+    {
         "name": "ROLE_ACCESS_REDIRECTIONS",
         "groups": [
             {
                 "name": "Editors"
             }
         ]
+    },
+    {
+        "name": "ROLE_ACCESS_ROLES",
+        "groups": []
     },
     {
         "name": "ROLE_ACCESS_SETTINGS",
@@ -165,6 +174,10 @@
                 "name": "Editors"
             }
         ]
+    },
+    {
+        "name": "ROLE_ACCESS_THEMES",
+        "groups": []
     },
     {
         "name": "ROLE_ACCESS_TRANSLATIONS",

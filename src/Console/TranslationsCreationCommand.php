@@ -16,7 +16,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 final class TranslationsCreationCommand extends TranslationsCommand
 {
-    #[\Override]
     protected function configure(): void
     {
         $this->setName('translations:create')
@@ -33,7 +32,6 @@ final class TranslationsCreationCommand extends TranslationsCommand
             );
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);

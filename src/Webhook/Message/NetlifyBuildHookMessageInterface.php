@@ -16,7 +16,6 @@ final readonly class NetlifyBuildHookMessageInterface implements AsyncMessage, H
     ) {
     }
 
-    #[\Override]
     public function getOptions(): array
     {
         if (null === $this->payload) {
@@ -41,19 +40,16 @@ final readonly class NetlifyBuildHookMessageInterface implements AsyncMessage, H
     /**
      * @return static
      */
-    #[\Override]
     public static function fromWebhook(WebhookInterface $webhook): self
     {
         return new self($webhook->getUri(), $webhook->getPayload());
     }
 
-    #[\Override]
     public function getMethod(): string
     {
         return 'POST';
     }
 
-    #[\Override]
     public function getUri(): string
     {
         return $this->uri;

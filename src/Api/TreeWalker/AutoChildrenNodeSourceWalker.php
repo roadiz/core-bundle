@@ -21,7 +21,6 @@ use RZ\TreeWalker\Definition\ZeroChildrenDefinition;
  */
 class AutoChildrenNodeSourceWalker extends AbstractCycleAwareWalker
 {
-    #[\Override]
     protected function initializeDefinitions(): void
     {
         if ($this->isRoot()) {

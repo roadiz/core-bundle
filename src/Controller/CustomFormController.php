@@ -25,7 +25,7 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
+use Symfony\Component\RateLimiter\RateLimiterFactory;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -40,7 +40,7 @@ final class CustomFormController extends AbstractController
         private readonly SerializerInterface $serializer,
         private readonly FormErrorSerializerInterface $formErrorSerializer,
         private readonly ManagerRegistry $registry,
-        private readonly RateLimiterFactoryInterface $customFormLimiter,
+        private readonly RateLimiterFactory $customFormLimiter,
         private readonly MessageBusInterface $messageBus,
     ) {
     }
@@ -98,7 +98,9 @@ final class CustomFormController extends AbstractController
             $request,
             $customForm,
             new JsonResponse(null, Response::HTTP_ACCEPTED, $headers),
-            prefix: false
+            false,
+            null,
+            false
         );
 
         if ($mixed instanceof Response) {
@@ -182,6 +184,8 @@ final class CustomFormController extends AbstractController
         Request $request,
         CustomForm $customFormsEntity,
         Response $response,
+        bool $forceExpanded = false,
+        ?string $emailSender = null,
         bool $prefix = true,
     ) {
         $assignation = [
@@ -194,7 +198,8 @@ final class CustomFormController extends AbstractController
         $helper = $this->customFormHelperFactory->createHelper($customFormsEntity);
         $form = $helper->getForm(
             $request,
-            prefix: $prefix
+            $forceExpanded,
+            $prefix
         );
         $form->handleRequest($request);
 
@@ -204,18 +209,26 @@ final class CustomFormController extends AbstractController
                  * Parse form data and create answer.
                  */
                 $answer = $helper->parseAnswerFormData($form, null, $request->getClientIp());
+
                 $answerId = $answer->getId();
                 if (!is_int($answerId)) {
                     throw new \RuntimeException('Answer ID is null');
+                }
+
+                if (null === $emailSender || false === filter_var($answer->getEmail(), FILTER_VALIDATE_EMAIL)) {
+                    $emailSender = $answer->getEmail();
+                }
+                if (null === $emailSender || false === filter_var($emailSender, FILTER_VALIDATE_EMAIL)) {
+                    $emailSender = $this->settingsBag->get('email_sender');
                 }
 
                 $this->messageBus->dispatch(new CustomFormAnswerNotifyMessage(
                     $answerId,
                     $this->translator->trans(
                         'new.answer.form.%site%',
-                        ['%site%' => $customFormsEntity->getDisplayName()],
-                        locale: $request->getLocale(),
+                        ['%site%' => $customFormsEntity->getDisplayName()]
                     ),
+                    $emailSender,
                     $request->getLocale()
                 ));
 

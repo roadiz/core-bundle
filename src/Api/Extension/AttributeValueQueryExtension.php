@@ -21,7 +21,6 @@ final readonly class AttributeValueQueryExtension implements QueryItemExtensionI
     ) {
     }
 
-    #[\Override]
     public function applyToItem(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
@@ -33,7 +32,6 @@ final readonly class AttributeValueQueryExtension implements QueryItemExtensionI
         $this->apply($queryBuilder, $resourceClass);
     }
 
-    #[\Override]
     public function applyToCollection(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,

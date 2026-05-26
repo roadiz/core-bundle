@@ -10,8 +10,8 @@ use Symfony\Contracts\EventDispatcher\Event;
 
 abstract class FilterCacheEvent extends Event
 {
-    private readonly Collection $messageCollection;
-    private readonly Collection $errorCollection;
+    private Collection $messageCollection;
+    private Collection $errorCollection;
 
     public function __construct()
     {
