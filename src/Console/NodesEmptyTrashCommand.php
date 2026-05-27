@@ -11,12 +11,19 @@ use RZ\Roadiz\CoreBundle\EntityHandler\HandlerFactory;
 use RZ\Roadiz\CoreBundle\EntityHandler\NodeHandler;
 use RZ\Roadiz\CoreBundle\Enum\NodeStatus;
 use RZ\Roadiz\CoreBundle\Repository\AllStatusesNodeRepository;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Scheduler\Attribute\AsCronTask;
 
+#[AsCronTask(expression: '0 3 1 * *', jitter: 120, arguments: '-n -q')]
+#[AsCommand(
+    name: 'nodes:empty-trash',
+    description: 'Remove definitely deleted nodes.',
+)]
 final class NodesEmptyTrashCommand extends Command
 {
     public function __construct(
@@ -28,19 +35,13 @@ final class NodesEmptyTrashCommand extends Command
         parent::__construct($name);
     }
 
-    protected function configure(): void
-    {
-        $this
-            ->setName('nodes:empty-trash')
-            ->setDescription('Remove definitely deleted nodes.')
-        ;
-    }
-
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
-        $em = $this->managerRegistry->getManagerForClass(Node::class);
+        $em = $this->managerRegistry
+            ->getManagerForClass(Node::class) ?? throw new \RuntimeException('No entity manager found for Node class.');
         $countQb = $this->createNodeQueryBuilder();
         $countQuery = $countQb->select($countQb->expr()->count('n'))
             ->andWhere($countQb->expr()->eq('n.status', ':status'))

@@ -17,7 +17,7 @@ final class ArchiveFilter extends AbstractFilter
 {
     use PropertyHelperTrait;
 
-    public const PARAMETER_ARCHIVE = 'archive';
+    public const string PARAMETER_ARCHIVE = 'archive';
 
     /**
      * Determines whether the given property refers to a date field.
@@ -28,13 +28,11 @@ final class ArchiveFilter extends AbstractFilter
         if (null === $type) {
             return false;
         }
-        if (\is_string($type)) {
-            return \in_array($type, \array_keys(DateFilter::DOCTRINE_DATE_TYPES), true);
-        }
 
-        return 'datetime' === $type->getName() || 'date' === $type->getName();
+        return \in_array($type, \array_keys(DateFilter::DOCTRINE_DATE_TYPES), true);
     }
 
+    #[\Override]
     protected function filterProperty(
         string $property,
         mixed $value,
@@ -146,6 +144,7 @@ final class ArchiveFilter extends AbstractFilter
         return $endDate->sub(new \DateInterval('PT1S'));
     }
 
+    #[\Override]
     public function getDescription(string $resourceClass): array
     {
         $description = [];

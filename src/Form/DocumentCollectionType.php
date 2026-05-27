@@ -18,14 +18,16 @@ class DocumentCollectionType extends AbstractType
     {
     }
 
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer(new DocumentCollectionTransformer(
-            $this->managerRegistry->getManagerForClass(Document::class),
+            $this->managerRegistry->getManagerForClass(Document::class) ?? throw new \RuntimeException('No manager found for Document class.'),
             true
         ));
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -37,11 +39,13 @@ class DocumentCollectionType extends AbstractType
         ]);
     }
 
+    #[\Override]
     public function getParent(): ?string
     {
         return TextType::class;
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'documents';
