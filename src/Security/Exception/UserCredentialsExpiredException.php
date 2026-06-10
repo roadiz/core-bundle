@@ -8,7 +8,6 @@ use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 final class UserCredentialsExpiredException extends AuthenticationException
 {
-    #[\Override]
     public function getMessageKey(): string
     {
         return 'Your credentials have expired. Please request a new password.';

@@ -11,9 +11,12 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ForceResponseException extends \Exception
 {
-    public function __construct(protected Response $response)
+    protected Response $response;
+
+    public function __construct(Response $response)
     {
         parent::__construct('Forcing response…', 1);
+        $this->response = $response;
     }
 
     /**

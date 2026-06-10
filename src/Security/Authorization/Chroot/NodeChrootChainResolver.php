@@ -26,7 +26,6 @@ final readonly class NodeChrootChainResolver implements NodeChrootResolver
     /**
      * @param User|UserInterface|string|null $user
      */
-    #[\Override]
     public function getChroot(mixed $user): ?Node
     {
         /** @var NodeChrootResolver $resolver */
@@ -42,7 +41,6 @@ final readonly class NodeChrootChainResolver implements NodeChrootResolver
     /**
      * @param User|UserInterface|string|null $user
      */
-    #[\Override]
     public function supports(mixed $user): bool
     {
         /** @var NodeChrootResolver $resolver */

@@ -15,7 +15,6 @@ class PodcastFinder extends AbstractPodcastFinder
 {
     use EmbedFinderTrait;
 
-    #[\Override]
     protected function injectMetaFromPodcastItem(
         ObjectManager $objectManager,
         DocumentInterface $document,
@@ -34,7 +33,7 @@ class PodcastFinder extends AbstractPodcastFinder
                 $documentTr->setCopyright($this->getPodcastItemCopyright($item));
                 $objectManager->persist($documentTr);
             }
-        } catch (ClientExceptionInterface) {
+        } catch (ClientExceptionInterface $exception) {
             // do not prevent from creating document if platform has errors, such as
             // too much API usage.
         }

@@ -65,7 +65,6 @@ class EntityListManager extends AbstractEntityListManager
      *
      * @throws \ReflectionException
      */
-    #[\Override]
     public function handle(bool $disabled = false): void
     {
         // transform the key chroot in parent
@@ -121,7 +120,6 @@ class EntityListManager extends AbstractEntityListManager
         }
     }
 
-    #[\Override]
     protected function handleOrderingParam(string $field, string $ordering): void
     {
         $this->validateOrderingFieldName($field);
@@ -171,7 +169,6 @@ class EntityListManager extends AbstractEntityListManager
         $this->paginator->setDisplayingAllNodesStatuses($this->isDisplayingAllNodesStatuses());
     }
 
-    #[\Override]
     public function getItemCount(): int
     {
         if (
@@ -184,7 +181,6 @@ class EntityListManager extends AbstractEntityListManager
         return 0;
     }
 
-    #[\Override]
     public function getPageCount(): int
     {
         if (
@@ -202,7 +198,6 @@ class EntityListManager extends AbstractEntityListManager
      *
      * @return array<T>
      */
-    #[\Override]
     public function getEntities(): array
     {
         if (true === $this->pagination && null !== $this->paginator) {

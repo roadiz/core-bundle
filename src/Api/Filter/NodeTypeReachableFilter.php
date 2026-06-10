@@ -20,11 +20,11 @@ final class NodeTypeReachableFilter extends AbstractFilter
 {
     use PropertyHelperTrait;
 
-    public const string FILTER_COMPAT = 'node.nodeType.reachable';
-    public const string FILTER = 'reachable';
+    public const FILTER_COMPAT = 'node.nodeType.reachable';
+    public const FILTER = 'reachable';
 
-    public const array TRUE_VALUES = [1, '1', 'true', true, 'on', 'yes'];
-    public const array FALSE_VALUES = [0, '0', 'false', false, 'off', 'no'];
+    public const TRUE_VALUES = [1, '1', 'true', true, 'on', 'yes'];
+    public const FALSE_VALUES = [0, '0', 'false', false, 'off', 'no'];
 
     public function __construct(
         private readonly NodeTypes $nodeTypesBag,
@@ -36,7 +36,6 @@ final class NodeTypeReachableFilter extends AbstractFilter
         parent::__construct($managerRegistry, $logger, $properties, $nameConverter);
     }
 
-    #[\Override]
     protected function filterProperty(
         string $property,
         mixed $value,
@@ -86,7 +85,6 @@ final class NodeTypeReachableFilter extends AbstractFilter
     /**
      * Gets filter description.
      */
-    #[\Override]
     public function getDescription(string $property): array
     {
         return [

@@ -18,7 +18,6 @@ final readonly class AttributeGroupNormalizer implements DenormalizerInterface
     ) {
     }
 
-    #[\Override]
     public function getSupportedTypes(?string $format): array
     {
         return [
@@ -26,7 +25,6 @@ final readonly class AttributeGroupNormalizer implements DenormalizerInterface
         ];
     }
 
-    #[\Override]
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): AttributeGroup
     {
         $groupCanonicalName = $data['canonicalName'];
@@ -97,8 +95,7 @@ final readonly class AttributeGroupNormalizer implements DenormalizerInterface
         $attributeGroupTranslation->setName($data['name']);
     }
 
-    #[\Override]
-    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null): bool
     {
         return is_array($data) && array_key_exists('canonicalName', $data);
     }

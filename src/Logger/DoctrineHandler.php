@@ -7,7 +7,6 @@ namespace RZ\Roadiz\CoreBundle\Logger;
 use Doctrine\Persistence\ManagerRegistry;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
-use Monolog\LogRecord;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
@@ -111,8 +110,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
         }
     }
 
-    #[\Override]
-    protected function write(LogRecord $record): void
+    public function write(array $record): void
     {
         try {
             $manager = $this->managerRegistry->getManagerForClass(Log::class);
@@ -121,13 +119,13 @@ final class DoctrineHandler extends AbstractProcessingHandler
             }
 
             $log = new Log(
-                $record->level->value,
-                $record->message
+                $record['level'],
+                $record['message']
             );
 
-            $log->setChannel((string) $record->channel);
-            $data = $record->extra;
-            $context = $record->context;
+            $log->setChannel((string) $record['channel']);
+            $data = $record['extra'];
+            $context = $record['context'];
 
             if (\is_array($context)) {
                 foreach ($context as $key => $value) {
@@ -136,7 +134,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
                     } elseif ($value instanceof NodesSources) {
                         $this->populateForNodesSources($value, $log, $data);
                     } elseif ('entity' === $key && $value instanceof PersistableInterface) {
-                        $log->setEntityClass($value::class);
+                        $log->setEntityClass(get_class($value));
                         $log->setEntityId($value->getId());
 
                         $texteable = ['getTitle', 'getName', '__toString'];
@@ -156,7 +154,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
                         $data = array_merge(
                             $data,
                             [
-                                'exception_class' => $value::class,
+                                'exception_class' => get_class($value),
                                 'message' => $value->getMessage(),
                             ]
                         );
@@ -224,7 +222,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
 
             $manager->persist($log);
             $manager->flush();
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             /*
              * Need to prevent SQL errors over throwing
              * if PDO has faulted
