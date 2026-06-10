@@ -21,7 +21,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     ORM\Index(columns: ['root_node'], name: 'webhook_root_node'),
     ORM\Index(columns: ['last_triggered_at'], name: 'webhook_last_triggered_at'),
     ORM\HasLifecycleCallbacks]
-class Webhook implements \Stringable, WebhookInterface
+class Webhook implements WebhookInterface
 {
     use UuidTrait;
     use DateTimedTrait;

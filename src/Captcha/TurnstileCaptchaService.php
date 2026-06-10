@@ -17,7 +17,7 @@ final readonly class TurnstileCaptchaService implements CaptchaServiceInterface
         private ?string $publicKey,
         #[\SensitiveParameter]
         private ?string $privateKey,
-        private string $verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+        private ?string $verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
     ) {
     }
 

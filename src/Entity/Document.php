@@ -73,7 +73,7 @@ use Symfony\Component\Validator\Constraints as Assert;
         'copyrightValidUntil' => 'include_null_after',
     ]),
     ApiFilter(CopyrightValidFilter::class)]
-class Document implements \Stringable, AdvancedDocumentInterface, HasThumbnailInterface, TimeableInterface, FileHashInterface, DateTimedInterface, PersistableInterface
+class Document implements AdvancedDocumentInterface, HasThumbnailInterface, TimeableInterface, FileHashInterface, DateTimedInterface, PersistableInterface
 {
     use SequentialIdTrait;
     use DateTimedTrait;

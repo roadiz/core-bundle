@@ -43,7 +43,7 @@ final readonly class ExplorerProviderItemTransformer implements DataTransformerI
                 }
             }
 
-            return $idArray;
+            return array_filter($idArray);
         }
 
         return '';
