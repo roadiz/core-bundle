@@ -19,7 +19,8 @@ final readonly class NodeTypeTransformer implements DataTransformerInterface
     /**
      * @param NodeType|null $value
      */
-    public function transform(mixed $value): int|string
+    #[\Override]
+    public function transform(mixed $value): string
     {
         if (!$value instanceof NodeType) {
             return '';
@@ -28,6 +29,7 @@ final readonly class NodeTypeTransformer implements DataTransformerInterface
         return $value->getName();
     }
 
+    #[\Override]
     public function reverseTransform(mixed $value): ?NodeType
     {
         if (!$value || !is_string($value)) {

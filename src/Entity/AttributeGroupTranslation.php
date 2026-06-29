@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
 use RZ\Roadiz\CoreBundle\Model\AttributeGroupTranslationInterface;
 use RZ\Roadiz\CoreBundle\Model\AttributeGroupTranslationTrait;
 use RZ\Roadiz\CoreBundle\Repository\AttributeGroupTranslationRepository;
@@ -19,7 +19,8 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
     ORM\HasLifecycleCallbacks,
     UniqueEntity(fields: ['attributeGroup', 'translation']),
     UniqueEntity(fields: ['name', 'translation'])]
-class AttributeGroupTranslation extends AbstractEntity implements AttributeGroupTranslationInterface
+class AttributeGroupTranslation implements AttributeGroupTranslationInterface
 {
+    use SequentialIdTrait;
     use AttributeGroupTranslationTrait;
 }

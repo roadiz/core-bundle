@@ -27,6 +27,7 @@ final class CustomFormsType extends AbstractType
     ) {
     }
 
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $fieldsArray = $this->getFieldsByGroups($options);
@@ -81,7 +82,7 @@ final class CustomFormsType extends AbstractType
     /**
      * @return $this
      */
-    protected function addSingleField(FormBuilderInterface $builder, CustomFormField $field, array $formOptions): self
+    protected function addSingleField(FormBuilderInterface $builder, CustomFormField $field, array $formOptions): static
     {
         $builder->add(
             $field->getName(),
@@ -124,9 +125,7 @@ final class CustomFormsType extends AbstractType
         if ($field->isRequired()) {
             $option['required'] = true;
             $option['constraints'] = [
-                new NotBlank([
-                    'message' => 'you.need.to.fill.this.required.field',
-                ]),
+                new NotBlank(),
             ];
         } else {
             $option['required'] = false;
@@ -187,14 +186,14 @@ final class CustomFormsType extends AbstractType
                 if (!empty($field->getDefaultValues())) {
                     $mimeTypes = $field->getDefaultValuesAsArray();
                 }
-                $option['constraints'][] = new All([
-                    'constraints' => [
+                $option['constraints'][] = new All(
+                    constraints: [
                         new File([
                             'maxSize' => $formOptions['fileUploadMaxSize'],
                             'mimeTypes' => $mimeTypes,
                         ]),
                     ],
-                ]);
+                );
                 break;
             case FieldType::COUNTRY_T:
                 $option['expanded'] = $field->isExpanded();
@@ -226,6 +225,7 @@ final class CustomFormsType extends AbstractType
         return array_combine(array_values($choices), array_values($choices));
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -242,6 +242,7 @@ final class CustomFormsType extends AbstractType
         $resolver->setAllowedTypes('fileUploadMaxSize', ['string']);
     }
 
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'custom_form_public';
