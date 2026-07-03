@@ -10,12 +10,24 @@ use Symfony\Component\Form\FormInterface;
 
 trait LoginResetTrait
 {
+    /**
+     * @param ObjectManager $entityManager
+     * @param string $token
+     * @return null|User
+     */
     public function getUserByToken(ObjectManager $entityManager, string $token): ?User
     {
         return $entityManager->getRepository(User::class)->findOneByConfirmationToken($token);
     }
 
-    public function updateUserPassword(FormInterface $form, User $user, ObjectManager $entityManager): bool
+    /**
+     * @param FormInterface $form
+     * @param User          $user
+     * @param ObjectManager $entityManager
+     *
+     * @return bool
+     */
+    public function updateUserPassword(FormInterface $form, User $user, ObjectManager $entityManager)
     {
         $user->setConfirmationToken(null);
         $user->setPasswordRequestedAt(null);

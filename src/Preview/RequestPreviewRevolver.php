@@ -8,22 +8,26 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * BC Preview resolver to check Request-time then Kernel boot-time preview param.
+ *
+ * @package RZ\Roadiz\CoreBundle\Preview
  */
-final readonly class RequestPreviewRevolver implements PreviewResolverInterface
+final class RequestPreviewRevolver implements PreviewResolverInterface
 {
     public function __construct(
-        private RequestStack $requestStack,
-        private string $requiredRole,
+        private readonly RequestStack $requestStack,
+        private readonly string $requiredRole
     ) {
     }
 
+    /**
+     * @return bool
+     */
     public function isPreview(): bool
     {
         $request = $this->requestStack->getMainRequest();
         if (null === $request) {
             return false;
         }
-
         return $request->attributes->getBoolean('preview');
     }
 

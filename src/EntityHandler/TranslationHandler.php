@@ -19,12 +19,13 @@ final class TranslationHandler extends AbstractHandler
     private ?TranslationInterface $translation = null;
 
     /**
+     * @param TranslationInterface $translation
+     *
      * @return $this
      */
     public function setTranslation(TranslationInterface $translation): self
     {
         $this->translation = $translation;
-
         return $this;
     }
 

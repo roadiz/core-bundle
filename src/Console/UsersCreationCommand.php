@@ -22,7 +22,7 @@ final class UsersCreationCommand extends UsersCommand
         $this->setName('users:create')
             ->setDescription('Create a user. Without <info>--password</info> a random password will be generated and sent by email. <info>Check if "email_sender" setting is valid.</info>')
             ->addOption('email', 'm', InputOption::VALUE_REQUIRED, 'Set user email.')
-            ->addOption('plain-password', 'p', InputOption::VALUE_REQUIRED, 'Set user password (typing plain password in command-line is insecure).')
+            ->addOption('password', 'p', InputOption::VALUE_REQUIRED, 'Set user password (typing plain password in command-line is insecure).')
             ->addOption('back-end', 'b', InputOption::VALUE_NONE, 'Add ROLE_BACKEND_USER to user.')
             ->addOption('super-admin', 's', InputOption::VALUE_NONE, 'Add ROLE_SUPERADMIN to user.')
             ->addUsage('--email=test@test.com --password=secret --back-end --super-admin test')
@@ -42,18 +42,13 @@ final class UsersCreationCommand extends UsersCommand
             throw new \InvalidArgumentException('Username argument is required.');
         }
 
-        if (is_string($input->getOption('plain-password')) && \mb_strlen($input->getOption('plain-password')) < 12) {
-            throw new \InvalidArgumentException('Password should be at least 12 chars long.');
-        }
-
         /** @var User|null $user */
         $user = $this->managerRegistry
             ->getRepository(User::class)
             ->findOneBy(['username' => $name]);
 
         if ($user instanceof User) {
-            $io->warning('User “'.$name.'” already exists.');
-
+            $io->warning('User “' . $name . '” already exists.');
             return 1;
         }
 
@@ -65,26 +60,24 @@ final class UsersCreationCommand extends UsersCommand
             'username' => $user->getUsername(),
         ];
         $passwordInput = new ArrayInput($arguments);
-
-        if ($plainPassword = $input->getOption('plain-password')) {
-            $passwordInput = new ArrayInput([
-                'username' => $user->getUsername(),
-                '--plain-password' => $plainPassword,
-            ]);
-            $passwordInput->setInteractive(false);
-        }
-
         return $command->run($passwordInput, $output);
     }
 
+    /**
+     * @param string          $username
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     *
+     * @return User
+     */
     private function executeUserCreation(
         string $username,
         InputInterface $input,
-        OutputInterface $output,
+        OutputInterface $output
     ): User {
         $user = new User();
         $io = new SymfonyStyle($input, $output);
-        if (!$input->hasOption('plain-password')) {
+        if (!$input->hasOption('password')) {
             $user->sendCreationConfirmationEmail(true);
         }
         $user->setUsername($username);
@@ -101,8 +94,8 @@ final class UsersCreationCommand extends UsersCommand
                     $questionEmail
                 );
             } while (
-                !filter_var($email, FILTER_VALIDATE_EMAIL)
-                || $this->managerRegistry->getRepository(User::class)->emailExists($email)
+                !filter_var($email, FILTER_VALIDATE_EMAIL) ||
+                $this->managerRegistry->getRepository(User::class)->emailExists($email)
             );
         } else {
             /*
@@ -131,7 +124,7 @@ final class UsersCreationCommand extends UsersCommand
             ) {
                 $user->addRoleEntity($this->getRole(Role::ROLE_BACKEND_USER));
             }
-        } elseif (true === $input->getOption('back-end')) {
+        } elseif ($input->getOption('back-end') === true) {
             $user->addRoleEntity($this->getRole(Role::ROLE_BACKEND_USER));
         }
 
@@ -147,15 +140,22 @@ final class UsersCreationCommand extends UsersCommand
             ) {
                 $user->addRoleEntity($this->getRole(Role::ROLE_SUPERADMIN));
             }
-        } elseif (true === $input->getOption('super-admin')) {
+        } elseif ($input->getOption('super-admin') === true) {
             $user->addRoleEntity($this->getRole(Role::ROLE_SUPERADMIN));
+        }
+
+        if ($input->getOption('password')) {
+            if (\mb_strlen($input->getOption('password')) < 5) {
+                throw new \InvalidArgumentException('Password is too short.');
+            }
+
+            $user->setPlainPassword($input->getOption('password'));
         }
 
         $this->managerRegistry->getManagerForClass(User::class)->persist($user);
         $this->managerRegistry->getManagerForClass(User::class)->flush();
 
-        $io->success('User “'.$username.'”<'.$email.'> created no password.');
-
+        $io->success('User “' . $username . '”<' . $email . '> created no password.');
         return $user;
     }
 }

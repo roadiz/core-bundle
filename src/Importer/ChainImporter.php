@@ -4,22 +4,32 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Importer;
 
-final class ChainImporter implements EntityImporterInterface
+class ChainImporter implements EntityImporterInterface
 {
+    private array $importers = [];
+
     /**
      * @param array<EntityImporterInterface> $importers
      */
-    public function __construct(private array $importers = [])
+    public function __construct(array $importers = [])
     {
+        $this->importers = $importers;
     }
 
+    /**
+     * @param EntityImporterInterface $entityImporter
+     *
+     * @return ChainImporter
+     */
     public function addImporter(EntityImporterInterface $entityImporter): self
     {
         $this->importers[] = $entityImporter;
-
         return $this;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function supports(string $entityClass): bool
     {
         foreach ($this->importers as $importer) {
@@ -31,11 +41,18 @@ final class ChainImporter implements EntityImporterInterface
         return false;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function import(string $serializedData): bool
     {
         throw new \RuntimeException('You cannot call import method on ChainImporter, but importWithType method');
     }
 
+
+    /**
+     * @inheritDoc
+     */
     public function importWithType(string $serializedData, string $entityClass): bool
     {
         foreach ($this->importers as $importer) {
@@ -43,7 +60,6 @@ final class ChainImporter implements EntityImporterInterface
                 return $importer->import($serializedData);
             }
         }
-
         return false;
     }
 }

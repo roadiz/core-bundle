@@ -10,8 +10,11 @@ use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class CreatePasswordType extends RepeatedType
+class CreatePasswordType extends RepeatedType
 {
+    /**
+     * @inheritDoc
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
@@ -21,8 +24,8 @@ final class CreatePasswordType extends RepeatedType
             'invalid_message' => 'password.must.match',
             'options' => [
                 'constraints' => [
-                    new NotInPasswordCommonList(),
-                ],
+                    new NotInPasswordCommonList()
+                ]
             ],
             'first_options' => [
                 'label' => 'choose.a.new.password',
@@ -37,6 +40,9 @@ final class CreatePasswordType extends RepeatedType
         ]);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getBlockPrefix(): string
     {
         return 'repeated';

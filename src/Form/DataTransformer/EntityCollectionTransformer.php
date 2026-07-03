@@ -10,20 +10,33 @@ use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use Symfony\Component\Form\DataTransformerInterface;
 use Symfony\Component\Form\Exception\TransformationFailedException;
 
-readonly class EntityCollectionTransformer implements DataTransformerInterface
+/**
+ * @package RZ\Roadiz\CoreBundle\Form\DataTransformer
+ */
+class EntityCollectionTransformer implements DataTransformerInterface
 {
+    protected bool $asCollection;
+    private ObjectManager $manager;
     /**
-     * @param class-string<PersistableInterface> $classname
+     * @var class-string<PersistableInterface>
      */
-    public function __construct(
-        protected ObjectManager $manager,
-        protected string $classname,
-        protected bool $asCollection = false,
-    ) {
+    private string $classname;
+
+    /**
+     * @param ObjectManager $manager
+     * @param class-string<PersistableInterface> $classname
+     * @param bool $asCollection
+     */
+    public function __construct(ObjectManager $manager, string $classname, bool $asCollection = false)
+    {
+        $this->manager = $manager;
+        $this->asCollection = $asCollection;
+        $this->classname = $classname;
     }
 
     /**
      * @param iterable<PersistableInterface>|mixed|null $value
+     * @return string|array
      */
     public function transform(mixed $value): string|array
     {
@@ -38,13 +51,11 @@ readonly class EntityCollectionTransformer implements DataTransformerInterface
         if ($this->asCollection) {
             return $ids;
         }
-
         return implode(',', $ids);
     }
 
     /**
      * @param string|array|null $value
-     *
      * @return array<PersistableInterface>|ArrayCollection<int, PersistableInterface>
      */
     public function reverseTransform(mixed $value): array|ArrayCollection
@@ -53,7 +64,6 @@ readonly class EntityCollectionTransformer implements DataTransformerInterface
             if ($this->asCollection) {
                 return new ArrayCollection();
             }
-
             return [];
         }
 
@@ -72,7 +82,11 @@ readonly class EntityCollectionTransformer implements DataTransformerInterface
                 ->find($entityId)
             ;
             if (null === $entity) {
-                throw new TransformationFailedException(sprintf('A %s with id "%s" does not exist!', $this->classname, $entityId));
+                throw new TransformationFailedException(sprintf(
+                    'A %s with id "%s" does not exist!',
+                    $this->classname,
+                    $entityId
+                ));
             }
 
             $entities[] = $entity;
@@ -80,7 +94,6 @@ readonly class EntityCollectionTransformer implements DataTransformerInterface
         if ($this->asCollection) {
             return new ArrayCollection($entities);
         }
-
         return $entities;
     }
 }

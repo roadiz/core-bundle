@@ -8,9 +8,8 @@ use Symfony\Component\Validator\Constraint;
 
 /**
  * @see https://developers.google.com/recaptcha/docs/verify
- * @deprecated since v2.5.30
  */
-final class Recaptcha extends Constraint
+class Recaptcha extends Constraint
 {
     public const FORM_NAME = 'g-recaptcha-response';
     public string $emptyMessage = 'you_must_show_youre_not_robot';

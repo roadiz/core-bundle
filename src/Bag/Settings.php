@@ -11,13 +11,13 @@ use RZ\Roadiz\CoreBundle\Entity\Setting;
 use RZ\Roadiz\CoreBundle\Repository\SettingRepository;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-final class Settings extends LazyParameterBag
+class Settings extends LazyParameterBag
 {
     private ?SettingRepository $repository = null;
 
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
-        private readonly Stopwatch $stopwatch,
+        private readonly Stopwatch $stopwatch
     ) {
         parent::__construct();
     }
@@ -27,7 +27,6 @@ final class Settings extends LazyParameterBag
         if (null === $this->repository) {
             $this->repository = $this->managerRegistry->getRepository(Setting::class);
         }
-
         return $this->repository;
     }
 
@@ -48,6 +47,11 @@ final class Settings extends LazyParameterBag
         $this->stopwatch->stop('settings');
     }
 
+    /**
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
     public function get(string $key, $default = false): mixed
     {
         return parent::get($key, $default);
@@ -55,12 +59,14 @@ final class Settings extends LazyParameterBag
 
     /**
      * Get a document from its setting name.
+     *
+     * @param string $key
+     * @return Document|null
      */
     public function getDocument(string $key): ?Document
     {
         try {
             $id = $this->getInt($key);
-
             return $this->managerRegistry
                         ->getRepository(Document::class)
                         ->findOneById($id);

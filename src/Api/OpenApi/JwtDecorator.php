@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Api\OpenApi;
 
 use ApiPlatform\OpenApi\Factory\OpenApiFactoryInterface;
-use ApiPlatform\OpenApi\Model;
 use ApiPlatform\OpenApi\OpenApi;
+use ApiPlatform\OpenApi\Model;
 
-final readonly class JwtDecorator implements OpenApiFactoryInterface
+final class JwtDecorator implements OpenApiFactoryInterface
 {
     public function __construct(
-        private OpenApiFactoryInterface $decorated,
+        private readonly OpenApiFactoryInterface $decorated
     ) {
     }
 
