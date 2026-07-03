@@ -16,7 +16,6 @@ final readonly class NodeSourcePathSubscriber implements EventSubscriberInterfac
     ) {
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [
@@ -32,6 +31,6 @@ final readonly class NodeSourcePathSubscriber implements EventSubscriberInterfac
             $event->isForceLocale(),
             $event->isForceLocaleWithUrlAlias()
         );
-        $event->setPath($urlGenerator->getNonContextualUrl($event->getParameters()));
+        $event->setPath($urlGenerator->getNonContextualUrl($event->getTheme(), $event->getParameters()));
     }
 }

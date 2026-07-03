@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Event\NodesSources;
 
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
+use RZ\Roadiz\CoreBundle\Entity\Theme;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Contracts\EventDispatcher\Event;
 
 final class NodesSourcesPathGeneratingEvent extends Event
 {
-    private ?string $path = null;
+    private ?string $path;
     /**
      * @var bool tells Node Router to prepend request context information to path or not
      */
@@ -18,12 +19,18 @@ final class NodesSourcesPathGeneratingEvent extends Event
     protected bool $containsScheme = false;
 
     public function __construct(
+        private readonly ?Theme $theme,
         private ?NodesSources $nodeSource,
         private readonly ?RequestContext $requestContext,
         private array $parameters = [],
         private readonly bool $forceLocale = false,
         private bool $forceLocaleWithUrlAlias = false,
     ) {
+    }
+
+    public function getTheme(): ?Theme
+    {
+        return $this->theme;
     }
 
     public function getNodeSource(): ?NodesSources
@@ -60,12 +67,12 @@ final class NodesSourcesPathGeneratingEvent extends Event
         return $this;
     }
 
-    public function getParameters(): array
+    public function getParameters(): ?array
     {
         return $this->parameters;
     }
 
-    public function setParameters(array $parameters): NodesSourcesPathGeneratingEvent
+    public function setParameters(?array $parameters): NodesSourcesPathGeneratingEvent
     {
         $this->parameters = $parameters;
 

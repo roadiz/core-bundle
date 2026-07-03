@@ -17,12 +17,17 @@ use RZ\Roadiz\CoreBundle\Doctrine\ORM\SimpleQueryBuilder;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Enum\NodeStatus;
+use RZ\Roadiz\CoreBundle\Exception\SolrServerNotAvailableException;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
+use RZ\Roadiz\CoreBundle\SearchEngine\NodeSourceSearchHandlerInterface;
+use RZ\Roadiz\CoreBundle\SearchEngine\SolrSearchResultItem;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Contracts\EventDispatcher\Event;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
+ * EntityRepository that implements search engine query with Solr.
+ *
  * @template T of NodesSources
  *
  * @extends StatusAwareRepository<T|NodesSources>
@@ -31,6 +36,8 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  */
 class NodesSourcesRepository extends StatusAwareRepository
 {
+    private ?NodeSourceSearchHandlerInterface $nodeSourceSearchHandler;
+
     /**
      * @param class-string<NodesSources> $entityClass
      */
@@ -39,15 +46,16 @@ class NodesSourcesRepository extends StatusAwareRepository
         PreviewResolverInterface $previewResolver,
         EventDispatcherInterface $dispatcher,
         Security $security,
+        ?NodeSourceSearchHandlerInterface $nodeSourceSearchHandler,
         string $entityClass = NodesSources::class,
     ) {
         parent::__construct($registry, $entityClass, $previewResolver, $dispatcher, $security);
+        $this->nodeSourceSearchHandler = $nodeSourceSearchHandler;
     }
 
     /**
      * @return Event
      */
-    #[\Override]
     protected function dispatchQueryBuilderBuildEvent(QueryBuilder $qb, string $property, mixed $value): object
     {
         // @phpstan-ignore-next-line
@@ -59,7 +67,6 @@ class NodesSourcesRepository extends StatusAwareRepository
     /**
      * @return Event
      */
-    #[\Override]
     protected function dispatchQueryBuilderApplyEvent(QueryBuilder $qb, string $property, mixed $value): object
     {
         // @phpstan-ignore-next-line
@@ -71,7 +78,6 @@ class NodesSourcesRepository extends StatusAwareRepository
     /**
      * @return Event
      */
-    #[\Override]
     protected function dispatchQueryEvent(Query $query): object
     {
         // @phpstan-ignore-next-line
@@ -144,7 +150,6 @@ class NodesSourcesRepository extends StatusAwareRepository
     /**
      * Bind parameters to generated query.
      */
-    #[\Override]
     protected function applyFilterByCriteria(array &$criteria, QueryBuilder $qb): void
     {
         /*
@@ -164,9 +169,6 @@ class NodesSourcesRepository extends StatusAwareRepository
         }
     }
 
-    /**
-     * @return T|null
-     */
     public function findOneByIdentifierAndTranslation(
         string $identifier,
         ?TranslationInterface $translation,
@@ -201,7 +203,6 @@ class NodesSourcesRepository extends StatusAwareRepository
         return $query->getOneOrNullResult();
     }
 
-    #[\Override]
     public function alterQueryBuilderWithAuthorizationChecker(
         QueryBuilder $qb,
         string $prefix = EntityRepository::NODESSOURCES_ALIAS,
@@ -266,15 +267,9 @@ class NodesSourcesRepository extends StatusAwareRepository
         // Add ordering
         if (null !== $orderBy) {
             foreach ($orderBy as $key => $value) {
-                if (\str_contains((string) $key, 'node.')) {
+                if (\str_contains($key, 'node.')) {
                     $simpleKey = str_replace('node.', '', $key);
                     $qb->addOrderBy(static::NODE_ALIAS.'.'.$simpleKey, $value);
-                } elseif (
-                    !$this->getClassMetadata()->hasField($key)
-                    && !$this->getClassMetadata()->hasAssociation($key)
-                    && $this->hasJoinedNode($qb, static::NODESSOURCES_ALIAS)
-                ) {
-                    $qb->addOrderBy(static::NODE_ALIAS.'.'.$key, $value);
                 } else {
                     $qb->addOrderBy(static::NODESSOURCES_ALIAS.'.'.$key, $value);
                 }
@@ -296,8 +291,10 @@ class NodesSourcesRepository extends StatusAwareRepository
      * not a Backend user and if authorizationChecker is defined.
      *
      * This method allows to pre-filter Nodes with a given translation.
+     *
+     * @return QueryBuilder
      */
-    protected function getCountContextualQuery(array &$criteria): QueryBuilder
+    protected function getCountContextualQuery(array &$criteria)
     {
         $qb = $this->createQueryBuilder(static::NODESSOURCES_ALIAS);
         $this->alterQueryBuilderWithAuthorizationChecker($qb);
@@ -318,7 +315,6 @@ class NodesSourcesRepository extends StatusAwareRepository
      * @throws \Doctrine\ORM\NoResultException
      * @throws NonUniqueResultException
      */
-    #[\Override]
     public function countBy(mixed $criteria): int
     {
         $query = $this->getCountContextualQuery($criteria);
@@ -358,9 +354,8 @@ class NodesSourcesRepository extends StatusAwareRepository
      * @param int|null $limit
      * @param int|null $offset
      *
-     * @return array<T>
+     * @return array<NodesSources>
      */
-    #[\Override]
     public function findBy(
         array $criteria,
         ?array $orderBy = null,
@@ -405,11 +400,8 @@ class NodesSourcesRepository extends StatusAwareRepository
      * A secure findOneBy with which user must be a backend user
      * to see unpublished nodes.
      *
-     * @return T|null
-     *
      * @throws NonUniqueResultException
      */
-    #[\Override]
     public function findOneBy(
         array $criteria,
         ?array $orderBy = null,
@@ -438,9 +430,43 @@ class NodesSourcesRepository extends StatusAwareRepository
     }
 
     /**
-     * @return T|null
+     * Search nodes sources by using Solr search engine.
+     *
+     * @param string $query Solr query string (for example: `text:Lorem Ipsum`)
+     * @param int    $limit Result number to fetch (default: all)
+     *
+     * @return array<SolrSearchResultItem<NodesSources>>
      */
-    public function findOneByNodeAndTranslation(Node $node, ?TranslationInterface $translation): ?NodesSources
+    public function findBySearchQuery(string $query, int $limit = 25): array
+    {
+        if (null !== $this->nodeSourceSearchHandler) {
+            try {
+                $this->nodeSourceSearchHandler->boostByUpdateDate();
+                $arguments = [];
+                if ($this->isDisplayingNotPublishedNodes()) {
+                    $arguments['status'] = ['<=', NodeStatus::PUBLISHED];
+                }
+                if ($this->isDisplayingAllNodesStatuses()) {
+                    $arguments['status'] = ['<=', NodeStatus::DELETED];
+                }
+
+                if ($limit > 0) {
+                    return $this->nodeSourceSearchHandler->search($query, $arguments, $limit)->getResultItems();
+                }
+
+                return $this->nodeSourceSearchHandler->search($query, $arguments, 999999)->getResultItems();
+            } catch (SolrServerNotAvailableException $exception) {
+                return [];
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public function findOneByNodeAndTranslation(Node $node, ?TranslationInterface $translation)
     {
         $qb = $this->createQueryBuilder(static::NODESSOURCES_ALIAS);
 
@@ -464,7 +490,6 @@ class NodesSourcesRepository extends StatusAwareRepository
      * Extends EntityRepository to make join possible with «node.» prefix.
      * Required if making search with EntityListManager and filtering by node criteria.
      */
-    #[\Override]
     protected function prepareComparisons(array &$criteria, QueryBuilder $qb, string $alias): QueryBuilder
     {
         $simpleQB = new SimpleQueryBuilder($qb);
@@ -478,7 +503,7 @@ class NodesSourcesRepository extends StatusAwareRepository
 
             if (!$event->isPropagationStopped()) {
                 $baseKey = $simpleQB->getParameterKey($key);
-                if (\str_contains((string) $key, 'node.')) {
+                if (\str_contains($key, 'node.')) {
                     $this->joinNodeOnce($qb, $alias);
                     $prefix = static::NODE_ALIAS.'.';
                     $simpleKey = str_replace('node.', '', $key);
@@ -492,7 +517,6 @@ class NodesSourcesRepository extends StatusAwareRepository
         return $qb;
     }
 
-    #[\Override]
     protected function createSearchBy(
         string $pattern,
         QueryBuilder $qb,
@@ -505,7 +529,6 @@ class NodesSourcesRepository extends StatusAwareRepository
         return $qb;
     }
 
-    #[\Override]
     public function searchBy(
         string $pattern,
         array $criteria = [],
@@ -514,42 +537,17 @@ class NodesSourcesRepository extends StatusAwareRepository
         ?int $offset = null,
         string $alias = EntityRepository::DEFAULT_ALIAS,
     ): array {
-        return parent::searchBy($pattern, $criteria, $this->prefixNodeOrderFields($orders), $limit, $offset, static::NODESSOURCES_ALIAS);
-    }
-
-    /**
-     * @param array<non-empty-string, 'ASC'|'DESC'> $orders
-     *
-     * @return array<non-empty-string, 'ASC'|'DESC'>
-     */
-    private function prefixNodeOrderFields(array $orders): array
-    {
-        $prefixed = [];
-        foreach ($orders as $key => $value) {
-            if (
-                !\str_contains($key, '.')
-                && !$this->getClassMetadata()->hasField($key)
-                && !$this->getClassMetadata()->hasAssociation($key)
-            ) {
-                $prefixed['node.'.$key] = $value;
-            } else {
-                $prefixed[$key] = $value;
-            }
-        }
-
-        return $prefixed;
+        return parent::searchBy($pattern, $criteria, $orders, $limit, $offset, static::NODESSOURCES_ALIAS);
     }
 
     /**
      * @param array<class-string<NodesSources>> $nodeSourceClasses
-     *
-     * @return array<T>
      */
     public function findByNodesSourcesAndFieldNameAndTranslation(
         NodesSources $nodesSources,
         string $fieldName,
         array $nodeSourceClasses = [],
-    ): array {
+    ): ?array {
         $qb = $this->createQueryBuilder(static::NODESSOURCES_ALIAS);
         $this->joinNodeOnce($qb);
         $qb->innerJoin(static::NODE_ALIAS.'.aNodes', 'ntn')
@@ -578,7 +576,7 @@ class NodesSourcesRepository extends StatusAwareRepository
     }
 
     /**
-     * @return array<T>
+     * @return array<NodesSources>
      */
     public function findByNode(Node $node): array
     {
@@ -602,7 +600,6 @@ class NodesSourcesRepository extends StatusAwareRepository
         return $qb->getQuery()->getResult();
     }
 
-    #[\Override]
     protected function classicLikeComparison(
         string $pattern,
         QueryBuilder $qb,

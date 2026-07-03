@@ -14,12 +14,12 @@ interface AttributeGroupTranslationInterface extends PersistableInterface
     /**
      * @return $this
      */
-    public function setName(string $value): static;
+    public function setName(string $value): self;
 
     /**
      * @return $this
      */
-    public function setTranslation(TranslationInterface $translation): static;
+    public function setTranslation(TranslationInterface $translation): self;
 
     public function getTranslation(): ?TranslationInterface;
 
@@ -28,5 +28,5 @@ interface AttributeGroupTranslationInterface extends PersistableInterface
     /**
      * @return $this
      */
-    public function setAttributeGroup(AttributeGroupInterface $attributeGroup): static;
+    public function setAttributeGroup(AttributeGroupInterface $attributeGroup): self;
 }

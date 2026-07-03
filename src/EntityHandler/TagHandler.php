@@ -15,15 +15,10 @@ final class TagHandler extends AbstractHandler
 {
     private ?Tag $tag = null;
 
-    public function getTag(): Tag
-    {
-        return $this->tag ?? throw new \RuntimeException('Tag is not initialized.');
-    }
-
     /**
      * @return $this
      */
-    public function setTag(Tag $tag): static
+    public function setTag(Tag $tag): self
     {
         $this->tag = $tag;
 
@@ -35,10 +30,10 @@ final class TagHandler extends AbstractHandler
      *
      * @return $this
      */
-    private function removeChildren(): static
+    private function removeChildren(): self
     {
         /** @var Tag $tag */
-        foreach ($this->getTag()->getChildren() as $tag) {
+        foreach ($this->tag->getChildren() as $tag) {
             $handler = new TagHandler($this->objectManager);
             $handler->setTag($tag);
             $handler->removeWithChildrenAndAssociations();
@@ -52,9 +47,9 @@ final class TagHandler extends AbstractHandler
      *
      * @return $this
      */
-    public function removeAssociations(): static
+    public function removeAssociations(): self
     {
-        foreach ($this->getTag()->getTranslatedTags() as $tt) {
+        foreach ($this->tag->getTranslatedTags() as $tt) {
             $this->objectManager->remove($tt);
         }
 
@@ -67,12 +62,12 @@ final class TagHandler extends AbstractHandler
      *
      * @return $this
      */
-    public function removeWithChildrenAndAssociations(): static
+    public function removeWithChildrenAndAssociations(): self
     {
         $this->removeChildren();
         $this->removeAssociations();
 
-        $this->objectManager->remove($this->getTag());
+        $this->objectManager->remove($this->tag);
 
         /*
          * Final flush
@@ -87,11 +82,12 @@ final class TagHandler extends AbstractHandler
      *
      * @return float Return the next position after the **last** tag
      */
-    #[\Override]
     public function cleanPositions(bool $setPositions = true): float
     {
-        if (null !== $parent = $this->getTag()->getParent()) {
+        if (null !== $this->tag->getParent()) {
             $tagHandler = new TagHandler($this->objectManager);
+            /** @var Tag|null $parent */
+            $parent = $this->tag->getParent();
             $tagHandler->setTag($parent);
 
             return $tagHandler->cleanChildrenPositions($setPositions);
@@ -117,7 +113,7 @@ final class TagHandler extends AbstractHandler
             'position' => Criteria::ASC,
         ]);
 
-        $children = $this->getTag()->getChildren()->matching($sort);
+        $children = $this->tag->getChildren()->matching($sort);
         $i = 1;
         /** @var Tag $child */
         foreach ($children as $child) {

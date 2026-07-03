@@ -6,24 +6,20 @@ namespace RZ\Roadiz\CoreBundle\Model;
 
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use Symfony\Component\Serializer\Attribute as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 trait AttributeValueTranslationTrait
 {
     #[ORM\ManyToOne(targetEntity: TranslationInterface::class),
-        ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),
-        Serializer\Groups(['attribute', 'node', 'nodes_sources']),]
+        ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),]
     protected TranslationInterface $translation;
 
     #[ORM\Column(type: 'string', length: 255, unique: false, nullable: true),
-        Serializer\Groups(['attribute', 'node', 'nodes_sources']),
         Assert\Length(max: 255)]
     protected ?string $value = null;
 
     #[ORM\ManyToOne(targetEntity: AttributeValueInterface::class, cascade: ['persist'], inversedBy: 'attributeValueTranslations'),
-        ORM\JoinColumn(name: 'attribute_value', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),
-        Serializer\Ignore]
+        ORM\JoinColumn(name: 'attribute_value', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),]
     protected AttributeValueInterface $attributeValue;
 
     /**
@@ -49,7 +45,7 @@ trait AttributeValueTranslationTrait
      *
      * @return $this
      */
-    public function setValue(mixed $value): static
+    public function setValue(mixed $value): self
     {
         if (null === $value) {
             $this->value = null;
@@ -81,7 +77,7 @@ trait AttributeValueTranslationTrait
     /**
      * @return $this
      */
-    public function setTranslation(TranslationInterface $translation): static
+    public function setTranslation(TranslationInterface $translation): self
     {
         $this->translation = $translation;
 
@@ -101,7 +97,7 @@ trait AttributeValueTranslationTrait
     /**
      * @return $this
      */
-    public function setAttributeValue(AttributeValueInterface $attributeValue): static
+    public function setAttributeValue(AttributeValueInterface $attributeValue): self
     {
         $this->attributeValue = $attributeValue;
 
@@ -110,6 +106,6 @@ trait AttributeValueTranslationTrait
 
     public function getAttribute(): AttributeInterface
     {
-        return $this->getAttributeValue()->getAttribute() ?? throw new \RuntimeException('AttributeValue has no Attribute assigned.');
+        return $this->getAttributeValue()->getAttribute();
     }
 }

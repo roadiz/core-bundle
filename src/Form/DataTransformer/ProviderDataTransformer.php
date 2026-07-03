@@ -14,7 +14,6 @@ final readonly class ProviderDataTransformer implements DataTransformerInterface
     {
     }
 
-    #[\Override]
     public function transform(mixed $value): ?array
     {
         if (null === $value) {
@@ -34,7 +33,6 @@ final readonly class ProviderDataTransformer implements DataTransformerInterface
         return $this->provider->getItemsById($value);
     }
 
-    #[\Override]
     public function reverseTransform(mixed $value): mixed
     {
         if (

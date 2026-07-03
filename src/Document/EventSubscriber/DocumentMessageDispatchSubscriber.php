@@ -26,7 +26,6 @@ final readonly class DocumentMessageDispatchSubscriber implements EventSubscribe
     {
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [
@@ -43,6 +42,7 @@ final readonly class DocumentMessageDispatchSubscriber implements EventSubscribe
             $document instanceof Document
             && \is_numeric($document->getId())
             && $document->isLocal()
+            && null !== $document->getRelativePath()
         ) {
             $id = (int) $document->getId();
             $this->bus->dispatch(new Envelope(new DocumentRawMessage($id)));

@@ -41,13 +41,17 @@ final class NodesSourcesHandler extends AbstractHandler
 
     public function getNodeSource(): NodesSources
     {
-        return $this->nodeSource ?? throw new \BadMethodCallException('NodesSources is null');
+        if (null === $this->nodeSource) {
+            throw new \BadMethodCallException('NodesSources is null');
+        }
+
+        return $this->nodeSource;
     }
 
     /**
      * @return $this
      */
-    public function setNodeSource(NodesSources $nodeSource): static
+    public function setNodeSource(NodesSources $nodeSource): self
     {
         $this->nodeSource = $nodeSource;
 
@@ -61,9 +65,9 @@ final class NodesSourcesHandler extends AbstractHandler
      *
      * @return $this
      */
-    public function cleanDocumentsFromField(NodeTypeFieldInterface $field, bool $flush = true): static
+    public function cleanDocumentsFromField(NodeTypeFieldInterface $field, bool $flush = true): self
     {
-        $this->getNodeSource()->clearDocumentsByFields($field);
+        $this->nodeSource->clearDocumentsByFields($field);
 
         if (true === $flush) {
             $this->objectManager->flush();
@@ -84,24 +88,20 @@ final class NodesSourcesHandler extends AbstractHandler
         NodeTypeFieldInterface $field,
         bool $flush = true,
         ?float $position = null,
-        ?array $hotspot = null,
-        ?string $imageCropAlignment = null,
     ): self {
-        $nsDoc = new NodesSourcesDocuments($this->getNodeSource(), $document, $field);
-        $nsDoc->setHotspot($hotspot);
-        $nsDoc->setImageCropAlignment($imageCropAlignment);
+        $nsDoc = new NodesSourcesDocuments($this->nodeSource, $document, $field);
 
-        if (!$this->getNodeSource()->hasNodesSourcesDocuments($nsDoc)) {
+        if (!$this->nodeSource->hasNodesSourcesDocuments($nsDoc)) {
             if (null === $position) {
                 $latestPosition = $this->objectManager
                     ->getRepository(NodesSourcesDocuments::class)
-                    ->getLatestPositionForFieldName($this->getNodeSource(), $field->getName());
+                    ->getLatestPositionForFieldName($this->nodeSource, $field->getName());
 
                 $nsDoc->setPosition($latestPosition + 1);
             } else {
                 $nsDoc->setPosition($position);
             }
-            $this->getNodeSource()->addDocumentsByFields($nsDoc);
+            $this->nodeSource->addDocumentsByFields($nsDoc);
             $this->objectManager->persist($nsDoc);
             if (true === $flush) {
                 $this->objectManager->flush();
@@ -125,7 +125,7 @@ final class NodesSourcesHandler extends AbstractHandler
         return $this->objectManager
             ->getRepository(Document::class)
             ->findByNodeSourceAndFieldName(
-                $this->getNodeSource(),
+                $this->nodeSource,
                 $fieldName
             );
     }
@@ -139,12 +139,12 @@ final class NodesSourcesHandler extends AbstractHandler
      */
     public function getIdentifier(): string
     {
-        $urlAlias = $this->getNodeSource()->getUrlAliases()->first();
+        $urlAlias = $this->nodeSource->getUrlAliases()->first();
         if (is_object($urlAlias)) {
             return $urlAlias->getAlias();
         }
 
-        return $this->getNodeSource()->getNode()->getNodeName();
+        return $this->nodeSource->getNode()->getNodeName();
     }
 
     /**
@@ -154,7 +154,7 @@ final class NodesSourcesHandler extends AbstractHandler
      */
     public function getParent(): ?NodesSources
     {
-        return $this->getNodeSource()->getParent();
+        return $this->nodeSource->getParent();
     }
 
     /**
@@ -174,14 +174,14 @@ final class NodesSourcesHandler extends AbstractHandler
                 $criteria = [];
             }
 
-            $parent = $this->getNodeSource();
+            $parent = $this->nodeSource;
 
             while (null !== $parent) {
                 $criteria = array_merge(
                     $criteria,
                     [
                         'node' => $parent->getNode()->getParent(),
-                        'translation' => $this->getNodeSource()->getTranslation(),
+                        'translation' => $this->nodeSource->getTranslation(),
                     ]
                 );
                 $currentParent = $this->getRepository()->findOneBy(
@@ -215,8 +215,8 @@ final class NodesSourcesHandler extends AbstractHandler
         ?array $order = null,
     ): array {
         $defaultCrit = [
-            'node.parent' => $this->getNodeSource()->getNode(),
-            'translation' => $this->getNodeSource()->getTranslation(),
+            'node.parent' => $this->nodeSource->getNode(),
+            'translation' => $this->nodeSource->getTranslation(),
         ];
 
         if (null !== $order) {
@@ -247,8 +247,8 @@ final class NodesSourcesHandler extends AbstractHandler
         ?array $order = null,
     ): ?NodesSources {
         $defaultCrit = [
-            'node.parent' => $this->getNodeSource()->getNode(),
-            'translation' => $this->getNodeSource()->getTranslation(),
+            'node.parent' => $this->nodeSource->getNode(),
+            'translation' => $this->nodeSource->getTranslation(),
         ];
 
         if (null !== $order) {
@@ -279,8 +279,8 @@ final class NodesSourcesHandler extends AbstractHandler
         ?array $order = null,
     ): ?NodesSources {
         $defaultCrit = [
-            'node.parent' => $this->getNodeSource()->getNode(),
-            'translation' => $this->getNodeSource()->getTranslation(),
+            'node.parent' => $this->nodeSource->getNode(),
+            'translation' => $this->nodeSource->getTranslation(),
         ];
 
         if (null !== $order) {
@@ -310,9 +310,9 @@ final class NodesSourcesHandler extends AbstractHandler
         ?array $criteria = null,
         ?array $order = null,
     ): ?NodesSources {
-        if (null !== $this->getNodeSource()->getParent()) {
+        if (null !== $this->nodeSource->getParent()) {
             $parentHandler = new NodesSourcesHandler($this->objectManager, $this->settingsBag);
-            $parentHandler->setNodeSource($this->getNodeSource()->getParent());
+            $parentHandler->setNodeSource($this->nodeSource->getParent());
 
             return $parentHandler->getFirstChild($criteria, $order);
         }
@@ -330,9 +330,9 @@ final class NodesSourcesHandler extends AbstractHandler
         ?array $criteria = null,
         ?array $order = null,
     ): ?NodesSources {
-        if (null !== $this->getNodeSource()->getParent()) {
+        if (null !== $this->nodeSource->getParent()) {
             $parentHandler = new NodesSourcesHandler($this->objectManager, $this->settingsBag);
-            $parentHandler->setNodeSource($this->getNodeSource()->getParent());
+            $parentHandler->setNodeSource($this->nodeSource->getParent());
 
             return $parentHandler->getLastChild($criteria, $order);
         }
@@ -350,7 +350,7 @@ final class NodesSourcesHandler extends AbstractHandler
         ?array $criteria = null,
         ?array $order = null,
     ): ?NodesSources {
-        if ($this->getNodeSource()->getNode()->getPosition() <= 1) {
+        if ($this->nodeSource->getNode()->getPosition() <= 1) {
             return null;
         }
 
@@ -361,12 +361,12 @@ final class NodesSourcesHandler extends AbstractHandler
              */
             'node.position' => [
                 '<',
-                $this->getNodeSource()
+                $this->nodeSource
                      ->getNode()
                      ->getPosition(),
             ],
-            'node.parent' => $this->getNodeSource()->getNode()->getParent(),
-            'translation' => $this->getNodeSource()->getTranslation(),
+            'node.parent' => $this->nodeSource->getNode()->getParent(),
+            'translation' => $this->nodeSource->getTranslation(),
         ];
         if (null !== $criteria) {
             $defaultCriteria = array_merge($defaultCriteria, $criteria);
@@ -400,12 +400,12 @@ final class NodesSourcesHandler extends AbstractHandler
              */
             'node.position' => [
                 '>',
-                $this->getNodeSource()
+                $this->nodeSource
                      ->getNode()
                      ->getPosition(),
             ],
-            'node.parent' => $this->getNodeSource()->getNode()->getParent(),
-            'translation' => $this->getNodeSource()->getTranslation(),
+            'node.parent' => $this->nodeSource->getNode()->getParent(),
+            'translation' => $this->nodeSource->getTranslation(),
         ];
         if (null !== $criteria) {
             $defaultCrit = array_merge($defaultCrit, $criteria);
@@ -436,8 +436,8 @@ final class NodesSourcesHandler extends AbstractHandler
          * @phpstan-ignore-next-line
          */
         return $this->objectManager->getRepository(Tag::class)->findBy([
-            'nodes' => $this->getNodeSource()->getNode(),
-            'translation' => $this->getNodeSource()->getTranslation(),
+            'nodes' => $this->nodeSource->getNode(),
+            'translation' => $this->nodeSource->getTranslation(),
         ], [
             'position' => 'ASC',
         ]);
@@ -457,12 +457,12 @@ final class NodesSourcesHandler extends AbstractHandler
     public function getSEO(): array
     {
         return [
-            'title' => ('' != $this->getNodeSource()->getMetaTitle()) ?
-            $this->getNodeSource()->getMetaTitle() :
-            $this->getNodeSource()->getTitle().' – '.$this->settingsBag->get('site_name'),
-            'description' => ('' != $this->getNodeSource()->getMetaDescription()) ?
-            $this->getNodeSource()->getMetaDescription() :
-            $this->getNodeSource()->getTitle().', '.$this->settingsBag->get('seo_description'),
+            'title' => ('' != $this->nodeSource->getMetaTitle()) ?
+            $this->nodeSource->getMetaTitle() :
+            $this->nodeSource->getTitle().' – '.$this->settingsBag->get('site_name'),
+            'description' => ('' != $this->nodeSource->getMetaDescription()) ?
+            $this->nodeSource->getMetaDescription() :
+            $this->nodeSource->getTitle().', '.$this->settingsBag->get('seo_description'),
         ];
     }
 }

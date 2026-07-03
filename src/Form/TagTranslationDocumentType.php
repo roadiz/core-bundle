@@ -21,20 +21,18 @@ final class TagTranslationDocumentType extends AbstractType
     {
     }
 
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addEventListener(
             FormEvents::POST_SUBMIT,
-            $this->onPostSubmit(...)
+            [$this, 'onPostSubmit']
         );
         $builder->addModelTransformer(new TagTranslationDocumentsTransformer(
-            $this->managerRegistry->getManagerForClass(TagTranslationDocuments::class) ?? throw new \RuntimeException('No manager found for TagTranslationDocuments class.'),
+            $this->managerRegistry->getManagerForClass(TagTranslationDocuments::class),
             $options['tagTranslation']
         ));
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -48,14 +46,12 @@ final class TagTranslationDocumentType extends AbstractType
         $resolver->setAllowedTypes('tagTranslation', [TagTranslation::class]);
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'documents';
     }
 
-    #[\Override]
-    public function getParent(): string
+    public function getParent(): ?string
     {
         return CollectionType::class;
     }
