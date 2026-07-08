@@ -11,14 +11,15 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class AttributeGroupType extends AbstractType
+final class AttributeGroupType extends AbstractType
 {
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('canonicalName', TextType::class, [
-                'label' => 'attribute_group.form.canonicalName',
-                'empty_data' => '',
-            ])
+            'label' => 'attribute_group.form.canonicalName',
+            'empty_data' => '',
+        ])
             ->add('attributeGroupTranslations', CollectionType::class, [
                 'label' => 'attribute_group.form.attributeGroupTranslations',
                 'allow_add' => true,
@@ -29,16 +30,17 @@ class AttributeGroupType extends AbstractType
                 'entry_options' => [
                     'label' => false,
                     'attr' => [
-                        'class' => 'uk-form uk-form-horizontal'
-                    ]
+                        'class' => 'uk-form uk-form-horizontal',
+                    ],
                 ],
                 'attr' => [
-                    'class' => 'rz-collection-form-type'
-                ]
+                    'class' => 'rz-collection-form-type',
+                ],
             ])
         ;
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefault('data_class', AttributeGroup::class);

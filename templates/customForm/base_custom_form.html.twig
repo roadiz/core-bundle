@@ -4,23 +4,26 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>{% block title %}{{ head.siteTitle }}{% endblock %}</title>
+    <title>{% block title %}{{ meta.siteName }}{% endblock %}</title>
     <meta name="description" content="{% block description %}{% trans %}back_office{% endtrans %}{% endblock %}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     {% include '@RoadizRozier/admin/meta-icon.html.twig' %}
     {# CSS scripts inclusions / Using webpack #}
-    {% include '@RoadizRozier/partials/css-inject.html.twig' %}
-    {% if head.mainColor %}
+    {{ manifest_preload_tags('shared') }}
+    {{ manifest_preload_tags('simple') }}
+
+    {{ manifest_style_tags('shared') }}
+    {{ manifest_style_tags('simple') }}
+    {% if main_color %}
         <style>
             :root {
-                --rz-accent-color: {{ head.mainColor|raw }};
+                --rz-accent-color: {{ main_color|raw }};
                 --rz-accent-color-lighter: color-mix(in srgb, var(--rz-accent-color) var(--color-light-mix), white);
                 --rz-accent-color-darker: color-mix(in srgb, var(--rz-accent-color) var(--color-darker-mix), black);
                 --rz-accent-color-darkest: color-mix(in srgb, var(--rz-accent-color) var(--color-darkest-mix), black);
             }
         </style>
     {% endif %}
-    <script src="{{ asset('vendor/modernizr.custom.50380.js', 'Rozier') }}"></script>
 </head>
 <body id="custom-form-front">
 {% include '@RoadizRozier/includes/messages.html.twig' %}
@@ -29,6 +32,10 @@
             <h1>{% trans %}Welcome{% endtrans %}</h1>
         {% endblock %}
     </section>
+{# JS scripts inclusions / Using Vite manifest #}
+{{ manifest_script_tags('@vite/client') }}
+{{ manifest_script_tags('shared') }}
+{{ manifest_script_tags('simple') }}
 {% block customScripts %}{% endblock %}
 </body>
 </html>

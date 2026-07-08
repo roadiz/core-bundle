@@ -11,11 +11,11 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 
-final class LoggableSubscriber implements EventSubscriberInterface
+final readonly class LoggableSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private readonly LoggableListener $loggableListener,
-        private readonly Security $security,
+        private LoggableListener $loggableListener,
+        private Security $security,
     ) {
     }
 
@@ -34,10 +34,11 @@ final class LoggableSubscriber implements EventSubscriberInterface
         }
     }
 
+    #[\Override]
     public static function getSubscribedEvents(): array
     {
-        return array(
+        return [
             KernelEvents::REQUEST => 'onKernelRequest',
-        );
+        ];
     }
 }

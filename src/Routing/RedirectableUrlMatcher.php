@@ -12,16 +12,17 @@ final class RedirectableUrlMatcher extends BaseMatcher
     /**
      * Redirects the user to another URL.
      *
-     * @param string $path   The path info to redirect to
-     * @param string $route  The route that matched
+     * @param string      $path   The path info to redirect to
+     * @param string      $route  The route that matched
      * @param string|null $scheme The URL scheme (null to keep the current one)
      *
      * @return array An array of parameters
      */
+    #[\Override]
     public function redirect(string $path, string $route, ?string $scheme = null): array
     {
         return [
-            '_controller' => RedirectionController::class . '::redirectToRouteAction',
+            '_controller' => RedirectionController::class.'::redirectToRouteAction',
             'path' => $path,
             'permanent' => true,
             'scheme' => $scheme,

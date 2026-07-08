@@ -4,26 +4,29 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Breadcrumbs;
 
+use ApiPlatform\Metadata\ApiResource;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
-use Symfony\Component\Serializer\Annotation as Serializer;
+use Symfony\Component\Serializer\Attribute as Serializer;
 
-final class Breadcrumbs implements BreadcrumbsInterface
+#[ApiResource(operations: [])]
+final readonly class Breadcrumbs implements BreadcrumbsInterface
 {
     /**
      * @param PersistableInterface[] $items
      */
     public function __construct(
-        #[Serializer\Groups(["breadcrumbs", "web_response"])]
+        #[Serializer\Groups(['breadcrumbs', 'web_response'])]
         #[Serializer\MaxDepth(1)]
-        private readonly array $items
+        private array $items,
     ) {
     }
 
     /**
      * @return PersistableInterface[]
      */
+    #[\Override]
     public function getItems(): array
     {
-        return $this->items;
+        return array_values($this->items);
     }
 }

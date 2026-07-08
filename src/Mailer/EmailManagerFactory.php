@@ -9,29 +9,34 @@ use RZ\Roadiz\Documents\UrlGenerators\DocumentUrlGeneratorInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
-use Twig\Environment;
 
-final class EmailManagerFactory
+/**
+ * @deprecated since 2.6, use symfony/notifier instead with custom EmailNotification
+ */
+final readonly class EmailManagerFactory
 {
     public function __construct(
-        private readonly RequestStack $requestStack,
-        private readonly TranslatorInterface $translator,
-        private readonly Environment $templating,
-        private readonly MailerInterface $mailer,
-        private readonly Settings $settingsBag,
-        private readonly DocumentUrlGeneratorInterface $documentUrlGenerator
+        private RequestStack $requestStack,
+        private TranslatorInterface $translator,
+        private MailerInterface $mailer,
+        private Settings $settingsBag,
+        private DocumentUrlGeneratorInterface $documentUrlGenerator,
+        private bool $useReplyTo = true,
     ) {
     }
 
+    /**
+     * @deprecated since 2.6, use symfony/notifier instead with custom EmailNotification
+     */
     public function create(): EmailManager
     {
         return new EmailManager(
             $this->requestStack,
             $this->translator,
-            $this->templating,
             $this->mailer,
             $this->settingsBag,
-            $this->documentUrlGenerator
+            $this->documentUrlGenerator,
+            $this->useReplyTo,
         );
     }
 }

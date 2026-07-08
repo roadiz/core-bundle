@@ -16,9 +16,9 @@ final class DocumentQueryExtension implements QueryItemExtensionInterface, Query
     private function apply(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
-        string $resourceClass
+        string $resourceClass,
     ): void {
-        if ($resourceClass !== Document::class) {
+        if (Document::class !== $resourceClass) {
             return;
         }
 
@@ -27,23 +27,25 @@ final class DocumentQueryExtension implements QueryItemExtensionInterface, Query
             ->setParameter(':raw', false);
     }
 
+    #[\Override]
     public function applyToItem(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
         array $identifiers,
-        Operation $operation = null,
-        array $context = []
+        ?Operation $operation = null,
+        array $context = [],
     ): void {
         $this->apply($queryBuilder, $queryNameGenerator, $resourceClass);
     }
 
+    #[\Override]
     public function applyToCollection(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
-        Operation $operation = null,
-        array $context = []
+        ?Operation $operation = null,
+        array $context = [],
     ): void {
         $this->apply($queryBuilder, $queryNameGenerator, $resourceClass);
     }

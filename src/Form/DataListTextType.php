@@ -10,8 +10,9 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class DataListTextType extends AbstractType
+final class DataListTextType extends AbstractType
 {
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         parent::configureOptions($resolver);
@@ -22,6 +23,7 @@ class DataListTextType extends AbstractType
         $resolver->setAllowedTypes('list', 'array');
     }
 
+    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
@@ -30,12 +32,13 @@ class DataListTextType extends AbstractType
         $view->vars['list'] = $options['list'];
     }
 
-
+    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'data_list_text';
     }
 
+    #[\Override]
     public function getParent(): string
     {
         return TextType::class;
