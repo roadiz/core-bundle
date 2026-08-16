@@ -9,11 +9,13 @@ use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
+use Symfony\Component\Serializer\Attribute as Serializer;
 
 trait AttributeValueTrait
 {
     #[ORM\ManyToOne(targetEntity: AttributeInterface::class, fetch: 'EAGER', inversedBy: 'attributeValues'),
         ORM\JoinColumn(name: 'attribute_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),
+        Serializer\Groups(['attribute', 'node', 'nodes_sources']),
         ApiFilter(BaseFilter\SearchFilter::class, properties: [
             'attribute.id' => 'exact',
             'attribute.code' => 'exact',
@@ -45,6 +47,7 @@ trait AttributeValueTrait
         fetch: 'EAGER',
         orphanRemoval: true
     ),
+        Serializer\Groups(['attribute', 'node', 'nodes_sources']),
         ApiFilter(BaseFilter\SearchFilter::class, properties: [
             'attributeValueTranslations.value' => 'partial',
         ]),
@@ -61,7 +64,10 @@ trait AttributeValueTrait
         return $this->attribute;
     }
 
-    public function setAttribute(AttributeInterface $attribute): self
+    /**
+     * @return $this
+     */
+    public function setAttribute(AttributeInterface $attribute): static
     {
         $this->attribute = $attribute;
 
@@ -70,7 +76,7 @@ trait AttributeValueTrait
 
     public function getType(): int
     {
-        return $this->getAttribute()->getType();
+        return $this->getAttribute()?->getType() ?? throw new \RuntimeException('Attribute is not set on AttributeValue.');
     }
 
     /**
@@ -82,9 +88,9 @@ trait AttributeValueTrait
     }
 
     /**
-     * @return static
+     * @return $this
      */
-    public function setAttributeValueTranslations(Collection $attributeValueTranslations): self
+    public function setAttributeValueTranslations(Collection $attributeValueTranslations): static
     {
         $this->attributeValueTranslations = $attributeValueTranslations;
         /** @var AttributeValueTranslationInterface $attributeValueTranslation */
@@ -111,9 +117,7 @@ trait AttributeValueTrait
     public function getAttributeValueDefaultTranslation(): ?AttributeValueTranslationInterface
     {
         return $this->getAttributeValueTranslations()
-            ->filter(function (AttributeValueTranslationInterface $attributeValueTranslation) {
-                return $attributeValueTranslation->getTranslation()?->isDefaultTranslation() ?? false;
-            })
+            ->filter(fn (AttributeValueTranslationInterface $attributeValueTranslation) => $attributeValueTranslation->getTranslation()?->isDefaultTranslation() ?? false)
             ->first() ?: null;
     }
 }

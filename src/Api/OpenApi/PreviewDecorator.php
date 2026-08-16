@@ -16,6 +16,7 @@ final readonly class PreviewDecorator implements OpenApiFactoryInterface
     ) {
     }
 
+    #[\Override]
     public function __invoke(array $context = []): OpenApi
     {
         $openApi = ($this->decorated)($context);
@@ -31,7 +32,7 @@ final readonly class PreviewDecorator implements OpenApiFactoryInterface
                 );
 
                 $newOperation = $operation->withParameters([
-                    ...$operation->getParameters(),
+                    ...($operation->getParameters() ?? []),
                     (new Model\Parameter(
                         '_preview',
                         'query',

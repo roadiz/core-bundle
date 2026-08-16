@@ -17,10 +17,11 @@ final readonly class HCaptchaService implements CaptchaServiceInterface
         private ?string $publicKey,
         #[\SensitiveParameter]
         private ?string $privateKey,
-        private ?string $verifyUrl = 'https://api.hcaptcha.com/siteverify',
+        private string $verifyUrl = 'https://api.hcaptcha.com/siteverify',
     ) {
     }
 
+    #[\Override]
     public function isEnabled(): bool
     {
         return !empty($this->publicKey) && !empty($this->privateKey) && !empty($this->verifyUrl);
@@ -32,6 +33,7 @@ final readonly class HCaptchaService implements CaptchaServiceInterface
      * @throws ServerExceptionInterface
      * @throws TransportExceptionInterface
      */
+    #[\Override]
     public function check(
         string $responseValue,
     ): true|string|array {
@@ -57,11 +59,13 @@ final readonly class HCaptchaService implements CaptchaServiceInterface
             ($jsonResponse['error-codes']);
     }
 
+    #[\Override]
     public function getFieldName(): string
     {
         return 'h-captcha-response';
     }
 
+    #[\Override]
     public function getPublicKey(): ?string
     {
         return $this->publicKey;
@@ -72,6 +76,7 @@ final readonly class HCaptchaService implements CaptchaServiceInterface
      *     <div class="g-recaptcha" data-sitekey="{{ configs.publicKey }}"></div>
      * {%- endblock recaptcha_widget %}.
      */
+    #[\Override]
     public function getFormWidgetName(): string
     {
         return 'hcaptcha';

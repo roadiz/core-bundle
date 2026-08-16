@@ -16,6 +16,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 final class TranslationsCreationCommand extends TranslationsCommand
 {
+    #[\Override]
     protected function configure(): void
     {
         $this->setName('translations:create')
@@ -32,6 +33,7 @@ final class TranslationsCreationCommand extends TranslationsCommand
             );
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -73,8 +75,8 @@ final class TranslationsCreationCommand extends TranslationsCommand
             $newTrans->setName($name)
                 ->setLocale($locale);
 
-            $this->managerRegistry->getManagerForClass(Translation::class)->persist($newTrans);
-            $this->managerRegistry->getManagerForClass(Translation::class)->flush();
+            $this->managerRegistry->getManagerForClass(Translation::class)?->persist($newTrans);
+            $this->managerRegistry->getManagerForClass(Translation::class)?->flush();
 
             $io->success('New '.$newTrans->getName().' translation for '.$newTrans->getLocale().' locale.');
         }

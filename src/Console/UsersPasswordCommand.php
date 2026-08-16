@@ -24,6 +24,7 @@ final class UsersPasswordCommand extends UsersCommand
         parent::__construct($managerRegistry, $name);
     }
 
+    #[\Override]
     protected function configure(): void
     {
         $this->setName('users:password')
@@ -46,6 +47,7 @@ final class UsersPasswordCommand extends UsersCommand
             );
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -63,13 +65,13 @@ final class UsersPasswordCommand extends UsersCommand
             )
         ) {
             if ($plainPassword = $input->getOption('plain-password')) {
-                if (\mb_strlen($plainPassword) < 12) {
+                if (\mb_strlen((string) $plainPassword) < 12) {
                     throw new \InvalidArgumentException('Password should be at least 12 chars long.');
                 }
                 $password = $plainPassword;
             }
             $user->setPlainPassword($password);
-            $this->managerRegistry->getManagerForClass(User::class)->flush();
+            $this->managerRegistry->getManagerForClass(User::class)?->flush();
             $io->success('A new password was regenerated for '.$name.': '.$user->getPlainPassword());
 
             return 0;

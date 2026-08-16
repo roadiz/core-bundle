@@ -6,13 +6,11 @@ namespace RZ\Roadiz\CoreBundle\EntityHandler;
 
 use Doctrine\Persistence\ObjectManager;
 use Psr\Log\LoggerInterface;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeClassLocatorInterface;
 use RZ\Roadiz\Core\Handlers\AbstractHandler;
-use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\NodeType\ApiResourceGenerator;
-use RZ\Roadiz\CoreBundle\Repository\NotPublishedNodeRepository;
 use RZ\Roadiz\EntityGenerator\EntityGeneratorFactory;
-use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
@@ -34,7 +32,7 @@ final class NodeTypeHandler extends AbstractHandler
     /**
      * @return $this
      */
-    public function setNodeType(NodeType $nodeType): self
+    public function setNodeType(NodeType $nodeType): static
     {
         $this->nodeType = $nodeType;
 
@@ -44,11 +42,10 @@ final class NodeTypeHandler extends AbstractHandler
     public function __construct(
         ObjectManager $objectManager,
         private readonly EntityGeneratorFactory $entityGeneratorFactory,
-        private readonly HandlerFactory $handlerFactory,
         private readonly ApiResourceGenerator $apiResourceGenerator,
         private readonly LoggerInterface $logger,
-        private readonly NotPublishedNodeRepository $notPublishedNodeRepository,
         private readonly string $generatedEntitiesDir,
+        private readonly NodeTypeClassLocatorInterface $nodeTypeClassLocator,
     ) {
         parent::__construct($objectManager);
     }
@@ -81,7 +78,7 @@ final class NodeTypeHandler extends AbstractHandler
                 $fileSystem->remove($repositoryFile);
             }
             $this->logger->info('Entity class file and repository have been removed.', [
-                'nodeType' => $this->nodeType->getName(),
+                'nodeType' => $this->getNodeType()->getName(),
                 'file' => $file,
                 'repositoryFile' => $repositoryFile,
             ]);
@@ -111,17 +108,14 @@ final class NodeTypeHandler extends AbstractHandler
         }
 
         if (!$fileSystem->exists($file)) {
-            $classGenerator = $this->entityGeneratorFactory->createWithCustomRepository($this->nodeType);
-            $repositoryGenerator = $this->entityGeneratorFactory->createCustomRepository($this->nodeType);
+            $classGenerator = $this->entityGeneratorFactory->createWithCustomRepository($this->getNodeType());
+            $repositoryGenerator = $this->entityGeneratorFactory->createCustomRepository($this->getNodeType());
             $content = $classGenerator->getClassContent();
             $repositoryContent = $repositoryGenerator->getClassContent();
 
-            if (false === @file_put_contents($file, $content)) {
-                throw new IOException('Impossible to write entity class file ('.$file.').', 1);
-            }
-            if (false === @file_put_contents($repositoryFile, $repositoryContent)) {
-                throw new IOException('Impossible to write entity class file ('.$repositoryFile.').', 1);
-            }
+            $fileSystem->dumpFile($file, $content);
+            $fileSystem->dumpFile($repositoryFile, $repositoryContent);
+
             /*
              * Force Zend OPcache to reset file
              */
@@ -136,7 +130,7 @@ final class NodeTypeHandler extends AbstractHandler
             \clearstatcache(true, $file);
             \clearstatcache(true, $repositoryFile);
             $this->logger->info('Entity class file and repository have been generated.', [
-                'nodeType' => $this->nodeType->getName(),
+                'nodeType' => $this->getNodeType()->getName(),
                 'file' => $file,
                 'repositoryFile' => $repositoryFile,
             ]);
@@ -151,14 +145,14 @@ final class NodeTypeHandler extends AbstractHandler
     {
         $folder = $this->getGeneratedEntitiesFolder();
 
-        return $folder.DIRECTORY_SEPARATOR.$this->nodeType->getSourceEntityClassName().'.php';
+        return $folder.DIRECTORY_SEPARATOR.$this->nodeTypeClassLocator->getSourceEntityClassName($this->getNodeType()).'.php';
     }
 
     public function getRepositoryClassPath(): string
     {
         $folder = $this->getGeneratedRepositoriesFolder();
 
-        return $folder.DIRECTORY_SEPARATOR.$this->nodeType->getSourceEntityClassName().'Repository.php';
+        return $folder.DIRECTORY_SEPARATOR.$this->nodeTypeClassLocator->getRepositoryClassName($this->getNodeType()).'.php';
     }
 
     /**
@@ -167,7 +161,7 @@ final class NodeTypeHandler extends AbstractHandler
      *
      * @return $this
      */
-    public function updateSchema(): NodeTypeHandler
+    public function updateSchema(): static
     {
         $this->regenerateEntityClass();
 
@@ -192,8 +186,10 @@ final class NodeTypeHandler extends AbstractHandler
      * Delete node-type class from database.
      *
      * @return $this
+     *
+     * @deprecated
      */
-    public function deleteSchema(): NodeTypeHandler
+    public function deleteSchema(): static
     {
         if (null !== $this->nodeType) {
             $this->apiResourceGenerator->remove($this->nodeType);
@@ -203,46 +199,7 @@ final class NodeTypeHandler extends AbstractHandler
         return $this;
     }
 
-    /**
-     * Delete node-type inherited nodes and its database schema
-     * before removing it from node-types table.
-     *
-     * @return $this
-     *
-     * @throws \Psr\Container\ContainerExceptionInterface
-     * @throws \Psr\Container\NotFoundExceptionInterface
-     */
-    public function deleteWithAssociations(): NodeTypeHandler
-    {
-        /*
-         * Delete every nodes
-         */
-        $nodes = $this->notPublishedNodeRepository
-            ->findBy([
-                'nodeTypeName' => $this->getNodeType()->getName(),
-            ]);
-
-        /** @var Node $node */
-        foreach ($nodes as $node) {
-            /** @var NodeHandler $nodeHandler */
-            $nodeHandler = $this->handlerFactory->getHandler($node);
-            $nodeHandler->removeWithChildrenAndAssociations();
-        }
-
-        /*
-         * Remove node type
-         */
-        $this->objectManager->remove($this->getNodeType());
-        $this->objectManager->flush();
-
-        /*
-         * Remove class and database table
-         */
-        $this->deleteSchema();
-
-        return $this;
-    }
-
+    #[\Override]
     public function cleanPositions(bool $setPositions = false): float
     {
         throw new \LogicException('Node-types are static, you can not clean their positions.');

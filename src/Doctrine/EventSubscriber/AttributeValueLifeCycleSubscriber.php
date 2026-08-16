@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber;
 
 use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use RZ\Roadiz\CoreBundle\Entity\AttributeValue;
@@ -32,7 +33,7 @@ final class AttributeValueLifeCycleSubscriber
                 /*
                  * Get the last index after last node in parent
                  */
-                $nodeAttributes = $entity->getAttributable()->getAttributeValues();
+                $nodeAttributes = $entity->getAttributable()?->getAttributeValues() ?? new ArrayCollection();
                 $lastPosition = 1;
                 foreach ($nodeAttributes as $nodeAttribute) {
                     $nodeAttribute->setPosition($lastPosition);
@@ -57,16 +58,14 @@ final class AttributeValueLifeCycleSubscriber
                 $classMetadata = $em->getClassMetadata(AttributeValue::class);
                 foreach ($uow->getEntityChangeSet($entity) as $keyField => $field) {
                     if ('position' === $keyField) {
-                        $nodeAttributes = $entity->getAttributable()->getAttributeValues();
+                        $nodeAttributes = $entity->getAttributable()?->getAttributeValues() ?? new ArrayCollection();
                         /*
                          * Need to resort collection based on updated position.
                          */
                         $iterator = $nodeAttributes->getIterator();
                         if ($iterator instanceof \ArrayIterator) {
                             // define ordering closure, using preferred comparison method/field
-                            $iterator->uasort(function (AttributeValueInterface $first, AttributeValueInterface $second) {
-                                return $first->getPosition() > $second->getPosition() ? 1 : -1;
-                            });
+                            $iterator->uasort(fn (AttributeValueInterface $first, AttributeValueInterface $second) => $first->getPosition() > $second->getPosition() ? 1 : -1);
                         }
 
                         $lastPosition = 1;

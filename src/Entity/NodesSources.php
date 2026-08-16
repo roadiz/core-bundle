@@ -15,17 +15,18 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Persistence\ObjectManager;
 use Gedmo\Loggable\Loggable;
 use Gedmo\Mapping\Annotation as Gedmo;
-use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
-use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
+use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
+use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
 use RZ\Roadiz\CoreBundle\Api\Filter\NodeTypePublishableFilter;
 use RZ\Roadiz\CoreBundle\Api\Filter\NodeTypeReachableFilter;
 use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
+use RZ\Roadiz\Documents\Models\BaseDocumentInterface;
 use RZ\Roadiz\Documents\Models\DocumentInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Serializer\Attribute as SymfonySerializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -57,10 +58,11 @@ use Symfony\Component\Validator\Constraints as Assert;
     ApiFilter(NodeTypePublishableFilter::class),
     ApiFilter(RoadizFilter\LocaleFilter::class),
     ApiFilter(RoadizFilter\TagGroupFilter::class),]
-class NodesSources extends AbstractEntity implements Loggable
+class NodesSources implements PersistableInterface, Loggable, \Stringable
 {
+    use SequentialIdTrait;
+
     #[SymfonySerializer\Ignore]
-    #[Serializer\Exclude]
     protected ?ObjectManager $objectManager = null;
 
     /**
@@ -68,13 +70,11 @@ class NodesSources extends AbstractEntity implements Loggable
      */
     #[ORM\OneToMany(mappedBy: 'redirectNodeSource', targetEntity: Redirection::class)]
     #[SymfonySerializer\Ignore]
-    #[Serializer\Exclude]
     protected Collection $redirections;
 
     #[ApiFilter(BaseFilter\SearchFilter::class, strategy: 'partial')]
     #[ORM\Column(name: 'title', type: 'string', length: 250, unique: false, nullable: true)]
     #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'log_sources'])]
-    #[Serializer\Groups(['nodes_sources', 'nodes_sources_base', 'log_sources'])]
     #[Gedmo\Versioned]
     #[Assert\Length(max: 250)]
     #[ApiProperty(
@@ -88,7 +88,6 @@ class NodesSources extends AbstractEntity implements Loggable
     #[ApiFilter(RoadizFilter\ArchiveFilter::class)]
     #[ORM\Column(name: 'published_at', type: 'datetime', unique: false, nullable: true)]
     #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base'])]
-    #[Serializer\Groups(['nodes_sources', 'nodes_sources_base'])]
     #[Gedmo\Versioned]
     #[ApiProperty(
         description: 'Content publication date and time',
@@ -98,7 +97,6 @@ class NodesSources extends AbstractEntity implements Loggable
     #[ApiFilter(BaseFilter\SearchFilter::class, strategy: 'partial')]
     #[ORM\Column(name: 'meta_title', type: 'string', length: 150, unique: false)]
     #[SymfonySerializer\Groups(['nodes_sources'])]
-    #[Serializer\Groups(['nodes_sources'])]
     #[Gedmo\Versioned]
     #[Assert\Length(max: 150)]
     #[ApiProperty(
@@ -110,7 +108,6 @@ class NodesSources extends AbstractEntity implements Loggable
     #[ApiFilter(BaseFilter\SearchFilter::class, strategy: 'partial')]
     #[ORM\Column(name: 'meta_description', type: 'text')]
     #[SymfonySerializer\Groups(['nodes_sources'])]
-    #[Serializer\Groups(['nodes_sources'])]
     #[Gedmo\Versioned]
     #[ApiProperty(
         description: 'Description for search engine optimization, used in HTML meta description tag',
@@ -121,70 +118,12 @@ class NodesSources extends AbstractEntity implements Loggable
     #[ApiFilter(BaseFilter\BooleanFilter::class)]
     #[ORM\Column(name: 'no_index', type: 'boolean', options: ['default' => false])]
     #[SymfonySerializer\Groups(['nodes_sources'])]
-    #[Serializer\Groups(['nodes_sources'])]
     #[Gedmo\Versioned]
     #[ApiProperty(
         description: 'Do not allow robots to index this content, used in HTML meta robots tag',
         example: 'false',
     )]
     protected bool $noIndex = false;
-
-    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
-        'node.id' => 'exact',
-        'node.nodeName' => 'exact',
-        'node.parent' => 'exact',
-        'node.parent.nodeName' => 'exact',
-        'node.nodesTags.tag' => 'exact',
-        'node.nodesTags.tag.tagName' => 'exact',
-        'node.nodeTypeName' => 'exact',
-    ])]
-    #[ApiFilter(BaseFilter\OrderFilter::class, properties: [
-        'node.position',
-        'node.createdAt',
-        'node.updatedAt',
-    ])]
-    #[ApiFilter(BaseFilter\NumericFilter::class, properties: [
-        'node.position',
-    ])]
-    #[ApiFilter(BaseFilter\RangeFilter::class, properties: [
-        'node.position',
-    ])]
-    #[ApiFilter(BaseFilter\DateFilter::class, properties: [
-        'node.createdAt',
-        'node.updatedAt',
-    ])]
-    #[ApiFilter(BaseFilter\BooleanFilter::class, properties: [
-        'node.visible',
-        'node.home',
-    ])]
-    #[ApiFilter(RoadizFilter\NotFilter::class, properties: [
-        'node.nodeTypeName',
-        'node.id',
-        'node.nodesTags.tag.tagName',
-    ])]
-    // Use IntersectionFilter after SearchFilter!
-    #[ApiFilter(RoadizFilter\IntersectionFilter::class, properties: [
-        'node.nodesTags.tag',
-        'node.nodesTags.tag.tagName',
-    ])]
-    #[ORM\ManyToOne(targetEntity: Node::class, cascade: ['persist'], fetch: 'EAGER', inversedBy: 'nodeSources')]
-    #[ORM\JoinColumn(name: 'node_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'log_sources'])]
-    #[Serializer\Groups(['nodes_sources', 'nodes_sources_base', 'log_sources'])]
-    #[Assert\Valid]
-    #[Assert\NotNull]
-    private Node $node;
-
-    #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
-        'translation.id' => 'exact',
-        'translation.locale' => 'exact',
-    ])]
-    #[ORM\ManyToOne(targetEntity: Translation::class, inversedBy: 'nodeSources')]
-    #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
-    #[SymfonySerializer\Groups(['translation_base'])]
-    #[Serializer\Groups(['translation_base'])]
-    #[Assert\NotNull]
-    private TranslationInterface $translation;
 
     /**
      * @var Collection<int, UrlAlias>
@@ -208,22 +147,69 @@ class NodesSources extends AbstractEntity implements Loggable
         orphanRemoval: true
     )]
     #[SymfonySerializer\Ignore]
-    #[Serializer\Exclude]
     private Collection $documentsByFields;
 
-    /**
-     * Create a new NodeSource with its Node and Translation.
-     */
-    public function __construct(Node $node, TranslationInterface $translation)
-    {
-        $this->setNode($node);
-        $this->translation = $translation;
+    public function __construct(
+        #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+            'node.id' => 'exact',
+            'node.nodeName' => 'exact',
+            'node.parent' => 'exact',
+            'node.parent.nodeName' => 'exact',
+            'node.nodesTags.tag' => 'exact',
+            'node.nodesTags.tag.tagName' => 'exact',
+            'node.nodeTypeName' => 'exact',
+        ])]
+        #[ApiFilter(BaseFilter\OrderFilter::class, properties: [
+            'node.position',
+            'node.createdAt',
+            'node.updatedAt',
+        ])]
+        #[ApiFilter(BaseFilter\NumericFilter::class, properties: [
+            'node.position',
+        ])]
+        #[ApiFilter(BaseFilter\RangeFilter::class, properties: [
+            'node.position',
+        ])]
+        #[ApiFilter(BaseFilter\DateFilter::class, properties: [
+            'node.createdAt',
+            'node.updatedAt',
+        ])]
+        #[ApiFilter(BaseFilter\BooleanFilter::class, properties: [
+            'node.visible',
+            'node.home',
+        ])]
+        #[ApiFilter(RoadizFilter\NotFilter::class, properties: [
+            'node.nodeTypeName',
+            'node.id',
+            'node.nodesTags.tag.tagName',
+        ])]
+        // Use IntersectionFilter after SearchFilter!
+        #[ApiFilter(RoadizFilter\IntersectionFilter::class, properties: [
+            'node.nodesTags.tag',
+            'node.nodesTags.tag.tagName',
+        ])]
+        #[ORM\ManyToOne(targetEntity: Node::class, cascade: ['persist'], fetch: 'EAGER', inversedBy: 'nodeSources')]
+        #[ORM\JoinColumn(name: 'node_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+        #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'log_sources'])]
+        #[Assert\Valid]
+        #[Assert\NotNull]
+        private Node $node,
+        #[ApiFilter(BaseFilter\SearchFilter::class, properties: [
+            'translation.id' => 'exact',
+            'translation.locale' => 'exact',
+        ])]
+        #[ORM\ManyToOne(targetEntity: Translation::class, inversedBy: 'nodeSources')]
+        #[ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
+        #[SymfonySerializer\Groups(['translation_base'])]
+        #[Assert\NotNull]
+        private TranslationInterface $translation,
+    ) {
+        $this->node->addNodeSources($this);
         $this->urlAliases = new ArrayCollection();
         $this->documentsByFields = new ArrayCollection();
         $this->redirections = new ArrayCollection();
     }
 
-    #[Serializer\Exclude]
     public function injectObjectManager(ObjectManager $objectManager): void
     {
         $this->objectManager = $objectManager;
@@ -251,7 +237,7 @@ class NodesSources extends AbstractEntity implements Loggable
     /**
      * @return $this
      */
-    public function addUrlAlias(UrlAlias $urlAlias): NodesSources
+    public function addUrlAlias(UrlAlias $urlAlias): static
     {
         if (!$this->urlAliases->contains($urlAlias)) {
             $this->urlAliases->add($urlAlias);
@@ -264,9 +250,7 @@ class NodesSources extends AbstractEntity implements Loggable
     public function clearDocumentsByFields(NodeTypeFieldInterface $field): NodesSources
     {
         $toRemoveCollection = $this->getDocumentsByFields()->filter(
-            function (NodesSourcesDocuments $element) use ($field) {
-                return $element->getFieldName() === $field->getName();
-            }
+            fn (NodesSourcesDocuments $element) => $element->getFieldName() === $field->getName()
         );
         /** @var NodesSourcesDocuments $toRemove */
         foreach ($toRemoveCollection as $toRemove) {
@@ -290,14 +274,13 @@ class NodesSources extends AbstractEntity implements Loggable
     #[SymfonySerializer\Ignore]
     public function getOneDisplayableDocument(): ?DocumentInterface
     {
-        return $this->getDocumentsByFields()->filter(function (NodesSourcesDocuments $nsd) {
-            return null !== $nsd->getDocument()
-                && !$nsd->getDocument()->isPrivate()
-                && ($nsd->getDocument()->isImage() || $nsd->getDocument()->isSvg())
-                && $nsd->getDocument()->isProcessable();
-        })->map(function (NodesSourcesDocuments $nsd) {
-            return $nsd->getDocument();
-        })->first() ?: null;
+        return $this->getDocumentsByFields()->filter(function (NodesSourcesDocuments $nsd): bool {
+            $document = $nsd->getDocument();
+
+            return !$document->isPrivate()
+                && ($document->isImage() || $document->isSvg())
+                && $document->isProcessable();
+        })->map(fn (NodesSourcesDocuments $nsd) => $nsd->getDocument())->first() ?: null;
     }
 
     /**
@@ -319,11 +302,8 @@ class NodesSources extends AbstractEntity implements Loggable
     public function hasNodesSourcesDocuments(NodesSourcesDocuments $nodesSourcesDocuments): bool
     {
         return $this->getDocumentsByFields()->exists(
-            function ($key, NodesSourcesDocuments $element) use ($nodesSourcesDocuments) {
-                return null !== $nodesSourcesDocuments->getDocument()->getId()
-                    && $element->getDocument()->getId() === $nodesSourcesDocuments->getDocument()->getId()
-                    && $element->getFieldName() === $nodesSourcesDocuments->getFieldName();
-            }
+            fn ($key, NodesSourcesDocuments $element) => 0 === $element->getDocument()->compareTo($nodesSourcesDocuments->getDocument())
+                && $element->getFieldName() === $nodesSourcesDocuments->getFieldName()
         );
     }
 
@@ -332,7 +312,7 @@ class NodesSources extends AbstractEntity implements Loggable
      *
      * @return $this
      */
-    public function addDocumentsByFields(NodesSourcesDocuments $nodesSourcesDocuments): NodesSources
+    public function addDocumentsByFields(NodesSourcesDocuments $nodesSourcesDocuments): static
     {
         if (!$this->getDocumentsByFields()->contains($nodesSourcesDocuments)) {
             $this->getDocumentsByFields()->add($nodesSourcesDocuments);
@@ -345,7 +325,7 @@ class NodesSources extends AbstractEntity implements Loggable
     /**
      * @param NodeTypeField $field
      *
-     * @return Document[]
+     * @return DocumentInterface[]
      */
     public function getDocumentsByFieldsWithField(NodeTypeFieldInterface $field): array
     {
@@ -354,18 +334,14 @@ class NodesSources extends AbstractEntity implements Loggable
 
         return $this->getDocumentsByFields()
             ->matching($criteria)
-            ->filter(function (NodesSourcesDocuments $element) use ($field) {
-                return $element->getFieldName() === $field->getName();
-            })
-            ->map(function (NodesSourcesDocuments $nodesSourcesDocuments) {
-                return $nodesSourcesDocuments->getDocument();
-            })
+            ->filter(fn (NodesSourcesDocuments $element) => $element->getFieldName() === $field->getName())
+            ->map(fn (NodesSourcesDocuments $nodesSourcesDocuments) => $nodesSourcesDocuments->getDocument())
             ->toArray()
         ;
     }
 
     /**
-     * @return Document[]
+     * @return DocumentInterface[]
      */
     public function getDocumentsByFieldsWithName(string $fieldName): array
     {
@@ -374,12 +350,8 @@ class NodesSources extends AbstractEntity implements Loggable
 
         return $this->getDocumentsByFields()
             ->matching($criteria)
-            ->filter(function (NodesSourcesDocuments $element) use ($fieldName) {
-                return $element->getFieldName() === $fieldName;
-            })
-            ->map(function (NodesSourcesDocuments $nodesSourcesDocuments) {
-                return $nodesSourcesDocuments->getDocument();
-            })
+            ->filter(fn (NodesSourcesDocuments $element) => $element->getFieldName() === $fieldName)
+            ->map(fn (NodesSourcesDocuments $nodesSourcesDocuments) => $nodesSourcesDocuments->getDocument())
             ->toArray()
         ;
     }
@@ -414,7 +386,12 @@ class NodesSources extends AbstractEntity implements Loggable
         return $this;
     }
 
-    public function getMetaTitle(): string
+    /**
+     * Final on purpose: like getMetaDescription(), this raw getter is bound to
+     * the admin SEO form and its setter round-trip, so it must never become a
+     * computed value (that would persist the computed value on save).
+     */
+    final public function getMetaTitle(): string
     {
         return $this->metaTitle;
     }
@@ -422,14 +399,20 @@ class NodesSources extends AbstractEntity implements Loggable
     /**
      * @return $this
      */
-    public function setMetaTitle(?string $metaTitle): NodesSources
+    public function setMetaTitle(?string $metaTitle): static
     {
         $this->metaTitle = null !== $metaTitle ? trim($metaTitle) : '';
 
         return $this;
     }
 
-    public function getMetaDescription(): string
+    /**
+     * Final on purpose: this raw getter is bound to the admin SEO form and its
+     * setter round-trip, so it must never become a computed value (that would
+     * persist the computed value on save). Use getMetaDescriptionOrFallback()
+     * to expose a fallback-aware value instead.
+     */
+    final public function getMetaDescription(): string
     {
         return $this->metaDescription;
     }
@@ -437,11 +420,40 @@ class NodesSources extends AbstractEntity implements Loggable
     /**
      * @return $this
      */
-    public function setMetaDescription(?string $metaDescription): NodesSources
+    public function setMetaDescription(?string $metaDescription): static
     {
         $this->metaDescription = null !== $metaDescription ? trim($metaDescription) : '';
 
         return $this;
+    }
+
+    /**
+     * Meta-description to expose for SEO, falling back on the content of a
+     * node-type field flagged as "metaDescriptionFallback" when the stored
+     * meta-description is empty.
+     *
+     * This base implementation returns the raw stored meta-description; it is
+     * overridden in generated node-source entities when a field is flagged.
+     * Unlike getMetaDescription(), this computed value is never persisted back,
+     * so it is safe to expose without polluting the real meta-description field.
+     */
+    public function getMetaDescriptionOrFallback(): string
+    {
+        return $this->getMetaDescription();
+    }
+
+    /**
+     * Document to expose as the node-source share-image (Open Graph / social
+     * image), taken from the first document of a node-type field flagged as
+     * "shareImage".
+     *
+     * This base implementation returns null; it is overridden in generated
+     * node-source entities when a documents field is flagged. The head then
+     * falls back on the global "share_image" setting when this is null.
+     */
+    public function getShareImage(): ?BaseDocumentInterface
+    {
+        return null;
     }
 
     public function isNoIndex(): bool
@@ -458,9 +470,6 @@ class NodesSources extends AbstractEntity implements Loggable
 
     #[SymfonySerializer\SerializedName('slug')]
     #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base'])]
-    #[Serializer\SerializedName('slug')]
-    #[Serializer\VirtualProperty]
-    #[Serializer\Groups(['nodes_sources', 'nodes_sources_base'])]
     public function getIdentifier(): string
     {
         $urlAlias = $this->getUrlAliases()->first();
@@ -483,7 +492,6 @@ class NodesSources extends AbstractEntity implements Loggable
      * Get parent node source based on the same translation.
      */
     #[SymfonySerializer\Ignore]
-    #[Serializer\Exclude]
     public function getParent(): ?NodesSources
     {
         /** @var Node|null $parent */
@@ -498,6 +506,7 @@ class NodesSources extends AbstractEntity implements Loggable
         return null;
     }
 
+    #[\Override]
     public function __toString(): string
     {
         return (string) $this->getId();
@@ -511,7 +520,7 @@ class NodesSources extends AbstractEntity implements Loggable
     /**
      * @return $this
      */
-    public function setTitle(?string $title): NodesSources
+    public function setTitle(?string $title): static
     {
         $this->title = null !== $title ? trim($title) : null;
 
@@ -526,7 +535,7 @@ class NodesSources extends AbstractEntity implements Loggable
     /**
      * @return $this
      */
-    public function setTranslation(TranslationInterface $translation): NodesSources
+    public function setTranslation(TranslationInterface $translation): static
     {
         $this->translation = $translation;
 
@@ -535,22 +544,24 @@ class NodesSources extends AbstractEntity implements Loggable
 
     #[SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_default'])]
     #[SymfonySerializer\SerializedName('@type')]
-    #[Serializer\Groups(['nodes_sources', 'nodes_sources_default'])]
-    #[Serializer\SerializedName('@type')]
-    #[Serializer\VirtualProperty]
     public function getNodeTypeName(): string
     {
         return 'NodesSources';
     }
 
-    #[Serializer\VirtualProperty]
-    #[Serializer\Groups(['node_type'])]
-    #[Serializer\SerializedName('nodeTypeColor')]
     #[SymfonySerializer\Groups(['node_type'])]
     #[SymfonySerializer\SerializedName('nodeTypeColor')]
     public function getNodeTypeColor(): string
     {
         return '#000000';
+    }
+
+    #[SymfonySerializer\Groups(['nodes_sources_published'])]
+    public function isPublished(): bool
+    {
+        return $this->getNode()->isPublished()
+            && null !== $this->getPublishedAt()
+            && $this->getPublishedAt() <= new \DateTime();
     }
 
     /**
@@ -574,7 +585,7 @@ class NodesSources extends AbstractEntity implements Loggable
      *
      * @return $this
      */
-    public function withNodesSources(NodesSources $nodesSources): self
+    public function withNodesSources(NodesSources $nodesSources): static
     {
         $this->setTitle($nodesSources->getTitle());
         $this->setPublishedAt($nodesSources->getPublishedAt());
@@ -588,7 +599,6 @@ class NodesSources extends AbstractEntity implements Loggable
     /**
      * Returns current listing sort options OR parent node's if parent node is hiding children.
      */
-    #[Serializer\Groups(['node_listing'])]
     #[SymfonySerializer\Groups(['node_listing'])]
     public function getListingSortOptions(): array
     {

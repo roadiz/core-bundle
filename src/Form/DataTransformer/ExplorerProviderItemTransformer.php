@@ -19,6 +19,7 @@ final readonly class ExplorerProviderItemTransformer implements DataTransformerI
     ) {
     }
 
+    #[\Override]
     public function transform(mixed $value): array|string
     {
         if (!empty($value) && $this->explorerProvider->supports($value)) {
@@ -42,12 +43,13 @@ final readonly class ExplorerProviderItemTransformer implements DataTransformerI
                 }
             }
 
-            return array_filter($idArray);
+            return $idArray;
         }
 
         return '';
     }
 
+    #[\Override]
     public function reverseTransform(mixed $value): mixed
     {
         if (empty($value)) {

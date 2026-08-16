@@ -17,10 +17,11 @@ final readonly class TurnstileCaptchaService implements CaptchaServiceInterface
         private ?string $publicKey,
         #[\SensitiveParameter]
         private ?string $privateKey,
-        private ?string $verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+        private string $verifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify',
     ) {
     }
 
+    #[\Override]
     public function isEnabled(): bool
     {
         return !empty($this->publicKey) && !empty($this->privateKey) && !empty($this->verifyUrl);
@@ -32,6 +33,7 @@ final readonly class TurnstileCaptchaService implements CaptchaServiceInterface
      * @throws ServerExceptionInterface
      * @throws TransportExceptionInterface
      */
+    #[\Override]
     public function check(
         string $responseValue,
     ): true|string|array {
@@ -57,11 +59,13 @@ final readonly class TurnstileCaptchaService implements CaptchaServiceInterface
             ($jsonResponse['error-codes']);
     }
 
+    #[\Override]
     public function getFieldName(): string
     {
         return 'cf-turnstile-response';
     }
 
+    #[\Override]
     public function getPublicKey(): ?string
     {
         return $this->publicKey;
@@ -76,6 +80,7 @@ final readonly class TurnstileCaptchaService implements CaptchaServiceInterface
      * ></div>
      * {%- endblock cf_turnstile_widget %}.
      */
+    #[\Override]
     public function getFormWidgetName(): string
     {
         return 'cf_turnstile';

@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\NodeType\Configuration;
 
 use RZ\Roadiz\CoreBundle\Enum\FieldType;
+use RZ\Roadiz\CoreBundle\Form\Constraint\NodeSourceReservedName;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 final class NodeTypeConfiguration implements ConfigurationInterface
 {
+    #[\Override]
     public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('node_type');
@@ -37,6 +39,7 @@ final class NodeTypeConfiguration implements ConfigurationInterface
                 ->booleanNode('reachable')->defaultTrue()->end()
                 ->booleanNode('hidingNodes')->defaultFalse()->end()
                 ->booleanNode('hidingNonReachableNodes')->defaultTrue()->end()
+                ->booleanNode('highlighted')->defaultFalse()->end()
                 ->append($this->addFieldsNode())
             ->end()
         ;
@@ -50,7 +53,35 @@ final class NodeTypeConfiguration implements ConfigurationInterface
 
         $node = $treeBuilder->getRootNode()
             ->isRequired()
+            ->validate()
+                ->ifTrue(fn (array $fields) => count(array_filter(
+                    $fields,
+                    fn (array $field) => $field['metaDescriptionFallback'] ?? false
+                )) > 1)
+                ->thenInvalid('Only one field can be flagged as "metaDescriptionFallback" per node-type.')
+            ->end()
+            ->validate()
+                ->ifTrue(fn (array $fields) => count(array_filter(
+                    $fields,
+                    fn (array $field) => $field['shareImage'] ?? false
+                )) > 1)
+                ->thenInvalid('Only one field can be flagged as "shareImage" per node-type.')
+            ->end()
             ->arrayPrototype()
+                ->validate()
+                    ->ifTrue(fn (array $field) => ($field['metaDescriptionFallback'] ?? false)
+                        && !in_array($field['type'] ?? null, ['string', 'text', 'markdown'], true))
+                    ->thenInvalid('A "metaDescriptionFallback" field must be a "string", "text" or "markdown" type.')
+                ->end()
+                ->validate()
+                    ->ifTrue(fn (array $field) => ($field['shareImage'] ?? false)
+                        && 'documents' !== ($field['type'] ?? null))
+                    ->thenInvalid('A "shareImage" field must be a "documents" type.')
+                ->end()
+                ->validate()
+                    ->ifTrue(fn (array $field) => NodeSourceReservedName::isReserved((string) ($field['name'] ?? '')))
+                    ->thenInvalid('Node-type field name %s is reserved: it collides with a built-in NodesSources method (e.g. title, metaTitle, metaDescription, shareImage, publishedAt).')
+                ->end()
                 ->children()
                     ->scalarNode('name')
                         ->info('Unique field name without spaces or special characters')
@@ -89,6 +120,9 @@ final class NodeTypeConfiguration implements ConfigurationInterface
                     ->booleanNode('indexed')->defaultFalse()->end()
                     ->booleanNode('visible')->defaultTrue()->end()
                     ->booleanNode('expanded')->defaultFalse()->end()
+                    ->booleanNode('required')->defaultFalse()->end()
+                    ->booleanNode('metaDescriptionFallback')->defaultFalse()->end()
+                    ->booleanNode('shareImage')->defaultFalse()->end()
                     ->variableNode('defaultValues')->end()
                     ->arrayNode('normalizationContext')
                         ->children()

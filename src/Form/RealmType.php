@@ -9,12 +9,14 @@ use RZ\Roadiz\CoreBundle\Model\RealmInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 final class RealmType extends AbstractType
 {
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('name', TextType::class, [
@@ -40,10 +42,10 @@ final class RealmType extends AbstractType
                 'realm.behaviour_'.RealmInterface::BEHAVIOUR_DENY => RealmInterface::BEHAVIOUR_DENY,
                 'realm.behaviour_'.RealmInterface::BEHAVIOUR_HIDE_BLOCKS => RealmInterface::BEHAVIOUR_HIDE_BLOCKS,
             ],
-        ])->add('plainPassword', TextType::class, [
+        ])->add('plainPassword', PasswordType::class, [
             'label' => 'realm.plainPassword',
             'help' => 'realm.plainPassword.help',
-            'empty_data' => null,
+            'empty_data' => '',
             'required' => false,
         ])->add('serializationGroup', TextType::class, [
             'label' => 'realm.serializationGroup',
@@ -51,9 +53,10 @@ final class RealmType extends AbstractType
             'empty_data' => null,
             'by_reference' => true,
             'required' => false,
-        ])->add('roleEntity', RoleEntityType::class, [
+        ])->add('role', RolesType::class, [
             'label' => 'realm.role',
             'help' => 'realm.role.help',
+            'multiple' => false,
             'required' => false,
             'placeholder' => 'realm.role.placeholder',
         ])->add('users', UserCollectionType::class, [
@@ -63,6 +66,7 @@ final class RealmType extends AbstractType
         ]);
     }
 
+    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefault('data_class', Realm::class);

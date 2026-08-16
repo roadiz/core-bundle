@@ -10,6 +10,7 @@ use Doctrine\ORM\Event\PostLoadEventArgs;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Psr\Log\LoggerInterface;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeClassLocatorInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeFieldInterface;
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Configuration;
@@ -18,13 +19,14 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
 #[AsDoctrineListener(event: Events::postLoad)]
 #[AsDoctrineListener(event: Events::loadClassMetadata)]
-final class NodesSourcesInheritanceSubscriber
+final readonly class NodesSourcesInheritanceSubscriber
 {
     public function __construct(
-        private readonly NodeTypes $nodeTypes,
-        private readonly string $inheritanceType,
-        private readonly LoggerInterface $logger,
-        private readonly Stopwatch $stopwatch,
+        private NodeTypes $nodeTypes,
+        private string $inheritanceType,
+        private LoggerInterface $logger,
+        private Stopwatch $stopwatch,
+        private NodeTypeClassLocatorInterface $nodeTypeClassLocator,
     ) {
     }
 
@@ -50,13 +52,14 @@ final class NodesSourcesInheritanceSubscriber
             $nodeTypes = $this->nodeTypes->all();
             $map = [];
             foreach ($nodeTypes as $type) {
-                if (\class_exists($type->getSourceEntityFullQualifiedClassName())) {
-                    $map[\mb_strtolower($type->getName())] = $type->getSourceEntityFullQualifiedClassName();
+                $nodeTypeClassName = $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($type);
+                if (\class_exists($nodeTypeClassName)) {
+                    $map[\mb_strtolower($type->getName())] = $nodeTypeClassName;
                 } else {
                     $this->logger->critical(sprintf(
                         '"%s" node-type is registered in database but source entity class "%s" does not exist.',
                         $type->getName(),
-                        $type->getSourceEntityFullQualifiedClassName()
+                        $nodeTypeClassName
                     ));
                 }
             }
@@ -94,9 +97,7 @@ final class NodesSourcesInheritanceSubscriber
                  * If inheritance type is single table, we need to set indexes on parent class: NodesSources
                  */
                 foreach ($nodeTypes as $type) {
-                    $indexedFields = $type->getFields()->filter(function (NodeTypeFieldInterface $field) {
-                        return $field->isIndexed();
-                    });
+                    $indexedFields = $type->getFields()->filter(fn (NodeTypeFieldInterface $field) => $field->isIndexed());
                     /** @var NodeTypeFieldInterface $indexedField */
                     foreach ($indexedFields as $indexedField) {
                         $nodeSourceTableAnnotation['indexes']['nsapp_'.$indexedField->getName()] = [
