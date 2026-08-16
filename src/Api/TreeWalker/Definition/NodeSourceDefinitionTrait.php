@@ -9,6 +9,7 @@ use RZ\Roadiz\CoreBundle\Api\TreeWalker\NodeSourceWalkerContext;
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
+use RZ\Roadiz\CoreBundle\Repository\EntityRepository;
 use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
 
 trait NodeSourceDefinitionTrait
@@ -20,9 +21,10 @@ trait NodeSourceDefinitionTrait
 
     protected function getQueryBuilder(
         NodesSources $parent,
+        bool $onlyVisible = true,
     ): QueryBuilder {
-        if (!($this->context instanceof NodeSourceWalkerContext)) {
-            throw new \InvalidArgumentException('Context should be instance of ' . NodeSourceWalkerContext::class);
+        if (!$this->context instanceof NodeSourceWalkerContext) {
+            throw new \InvalidArgumentException('Context should be instance of '.NodeSourceWalkerContext::class);
         }
 
         $nodeTypes = $this->getNodeTypes($this->context->getNodeTypesBag());
@@ -34,24 +36,23 @@ trait NodeSourceDefinitionTrait
         }
 
         /** @var NodesSourcesRepository $repository */
-        $repository = $this->context->getManagerRegistry()->getRepository($entityName);
+        $repository = $this->context->getRepository($entityName);
 
         $alias = 'o';
         $qb = $repository->alterQueryBuilderWithAuthorizationChecker(
             $repository->createQueryBuilder($alias),
             $alias
         );
-
-        $qb->select([$alias, 'node'])
-            ->innerJoin($alias . '.node', 'node')
-            ->andWhere('node.parent = :parent')
-            ->andWhere($alias . '.translation = :translation')
-            ->addOrderBy('node.position', 'ASC')
+        $repository->joinNodeOnce($qb, $alias);
+        $qb->select([$alias, EntityRepository::NODE_ALIAS])
+            ->andWhere(EntityRepository::NODE_ALIAS.'.parent = :parent')
+            ->andWhere($alias.'.translation = :translation')
+            ->addOrderBy(EntityRepository::NODE_ALIAS.'.position', 'ASC')
             ->setParameter('parent', $parent->getNode())
             ->setParameter('translation', $parent->getTranslation());
 
-        if ($this->onlyVisible) {
-            $qb->andWhere('node.visible = :visible')
+        if ($onlyVisible) {
+            $qb->andWhere(EntityRepository::NODE_ALIAS.'.visible = :visible')
                 ->setParameter('visible', true);
         }
         if (NodesSources::class === $entityName) {

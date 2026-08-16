@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Routing;
 
 use Psr\Log\LoggerInterface;
+use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Theme;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
@@ -20,11 +21,6 @@ use Symfony\Component\Stopwatch\Stopwatch;
 final class NodeUrlMatcher extends DynamicUrlMatcher implements NodeUrlMatcherInterface
 {
     /**
-     * @param PathResolverInterface $pathResolver
-     * @param RequestContext $context
-     * @param PreviewResolverInterface $previewResolver
-     * @param Stopwatch $stopwatch
-     * @param LoggerInterface $logger
      * @param class-string<AbstractController> $defaultControllerClass
      */
     public function __construct(
@@ -33,33 +29,26 @@ final class NodeUrlMatcher extends DynamicUrlMatcher implements NodeUrlMatcherIn
         PreviewResolverInterface $previewResolver,
         Stopwatch $stopwatch,
         LoggerInterface $logger,
-        private readonly string $defaultControllerClass
+        private readonly NodeTypes $nodeTypesBag,
+        private readonly string $defaultControllerClass,
     ) {
         parent::__construct($context, $previewResolver, $stopwatch, $logger);
     }
 
-    /**
-     * @return array
-     */
     public function getSupportedFormatExtensions(): array
     {
         return ['xml', 'json', 'pdf', 'html'];
     }
 
-    /**
-     * @return string
-     */
     public function getDefaultSupportedFormatExtension(): string
     {
         return 'html';
     }
 
-    /**
-     * @inheritDoc
-     */
     public function match(string $pathinfo): array
     {
         $decodedUrl = rawurldecode($pathinfo);
+
         /*
          * Try nodes routes
          */
@@ -73,15 +62,11 @@ final class NodeUrlMatcher extends DynamicUrlMatcher implements NodeUrlMatcherIn
             $theme,
             $this->previewResolver,
             $this->logger,
-            $this->defaultControllerClass
+            $this->defaultControllerClass,
+            $this->nodeTypesBag
         );
     }
 
-    /**
-     * @param string $decodedUrl
-     * @param Theme|null $theme
-     * @return array
-     */
     public function matchNode(string $decodedUrl, ?Theme $theme): array
     {
         $resourceInfo = $this->pathResolver->resolvePath(
@@ -103,7 +88,7 @@ final class NodeUrlMatcher extends DynamicUrlMatcher implements NodeUrlMatcherIn
             }
 
             return [
-                '_controller' => $nodeRouteHelper->getController() . '::' . $nodeRouteHelper->getMethod(),
+                '_controller' => $nodeRouteHelper->getController().'::'.$nodeRouteHelper->getMethod(),
                 '_locale' => $resourceInfo->getLocale(),
                 '_route' => RouteObjectInterface::OBJECT_BASED_ROUTE_NAME,
                 '_format' => $resourceInfo->getFormat(),

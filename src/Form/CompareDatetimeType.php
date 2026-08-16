@@ -12,7 +12,7 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class CompareDatetimeType extends AbstractType
+final class CompareDatetimeType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -23,8 +23,8 @@ class CompareDatetimeType extends AbstractType
                 '>' => '>',
                 '<=' => '<=',
                 '>=' => '>=',
-                '=' => '='
-            ]
+                '=' => '=',
+            ],
         ])
         ->add('compareDatetime', DateTimeType::class, [
             'label' => false,
@@ -41,9 +41,6 @@ class CompareDatetimeType extends AbstractType
         ]);
     }
 
-    /**
-     * @inheritDoc
-     */
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
@@ -51,9 +48,6 @@ class CompareDatetimeType extends AbstractType
         $view->vars['attr']['class'] = 'rz-compare-datetype';
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([

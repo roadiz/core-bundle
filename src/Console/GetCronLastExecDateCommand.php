@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use RZ\Roadiz\CoreBundle\Entity\Setting;
@@ -18,7 +20,7 @@ final class GetCronLastExecDateCommand extends Command
 {
     public function __construct(
         private readonly SettingRepository $settingRepository,
-        string $name = null
+        ?string $name = null,
     ) {
         parent::__construct($name);
     }
@@ -28,8 +30,9 @@ final class GetCronLastExecDateCommand extends Command
         $io = new SymfonyStyle($input, $output);
 
         $setting = $this->settingRepository->findOneByName('cron_last_exec_date');
-        if (!($setting instanceof Setting)) {
+        if (!$setting instanceof Setting) {
             $io->warning('Last execution date of cron job has not been persisted yet.');
+
             return Command::FAILURE;
         }
 

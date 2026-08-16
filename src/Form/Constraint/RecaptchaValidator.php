@@ -4,30 +4,30 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 
-use GuzzleHttp\Client;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
  * @see https://github.com/thrace-project/form-bundle/blob/master/Validator/Constraint/RecaptchaValidator.php
+ * @deprecated since v2.5.30
  */
-class RecaptchaValidator extends ConstraintValidator implements RecaptchaServiceInterface
+final class RecaptchaValidator extends ConstraintValidator
 {
-    protected RequestStack $requestStack;
-    protected ?string $recaptchaPrivateKey;
-
-    public function __construct(RequestStack $requestStack, ?string $recaptchaPrivateKey)
-    {
-        $this->requestStack = $requestStack;
-        $this->recaptchaPrivateKey = $recaptchaPrivateKey;
+    public function __construct(
+        protected HttpClientInterface $client,
+        protected RequestStack $requestStack,
+        protected ?string $recaptchaPrivateKey = null,
+    ) {
     }
 
     /**
-     * @param mixed $data
-     * @param Constraint $constraint
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     * @see \Symfony\Component\Validator\ConstraintValidator::validate()
+     * @see ConstraintValidator::validate()
      */
     public function validate(mixed $data, Constraint $constraint): void
     {
@@ -70,36 +70,34 @@ class RecaptchaValidator extends ConstraintValidator implements RecaptchaService
      * Makes a request to recaptcha service and checks if recaptcha field is valid.
      * Returns Google error-codes if recaptcha fails.
      *
-     * @param string $responseValue
-     * @param string $verifyUrl
      * @return true|mixed
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     *
+     * @throws ClientExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws TransportExceptionInterface
      */
     public function check(
         string $responseValue,
-        string $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify'
+        string $verifyUrl = 'https://www.google.com/recaptcha/api/siteverify',
     ): mixed {
         if (empty($this->recaptchaPrivateKey)) {
             return true;
         }
 
-        $data = [
-            'secret' => $this->recaptchaPrivateKey,
-            'response' => $responseValue,
-        ];
-
-        $client = new Client();
-        $response = $client->post($verifyUrl, [
-            'form_params' => $data,
-            'connect_timeout' => 10,
+        $response = $this->client->request('POST', $verifyUrl, [
+            'query' => [
+                'secret' => $this->recaptchaPrivateKey,
+                'response' => $responseValue,
+            ],
             'timeout' => 10,
             'headers' => [
-                'Accept'     => 'application/json',
-            ]
+                'Accept' => 'application/json',
+            ],
         ]);
-        $jsonResponse = json_decode($response->getBody()->getContents(), true);
+        $jsonResponse = json_decode($response->getContent(false), true);
 
-        return (isset($jsonResponse['success']) && $jsonResponse['success'] === true) ?
+        return (isset($jsonResponse['success']) && true === $jsonResponse['success']) ?
             (true) :
             ($jsonResponse['error-codes']);
     }

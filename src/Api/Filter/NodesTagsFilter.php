@@ -48,8 +48,8 @@ final class NodesTagsFilter extends AbstractFilter
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
-        Operation $operation = null,
-        array $context = []
+        ?Operation $operation = null,
+        array $context = [],
     ): void {
         if (Tag::class !== $resourceClass) {
             return;
@@ -60,8 +60,8 @@ final class NodesTagsFilter extends AbstractFilter
         }
 
         if (
-            !is_array($value) &&
-            (in_array($value, self::TRUE_VALUES, true) || in_array($value, self::FALSE_VALUES, true))
+            !is_array($value)
+            && (in_array($value, self::TRUE_VALUES, true) || in_array($value, self::FALSE_VALUES, true))
         ) {
             $withNodes = in_array($value, self::TRUE_VALUES, true);
             $withoutNodes = in_array($value, self::FALSE_VALUES, true);
@@ -84,7 +84,7 @@ final class NodesTagsFilter extends AbstractFilter
     private function extractProperties(array $value): array
     {
         $parameters = [
-            ...self::DEFAULTS
+            ...self::DEFAULTS,
         ];
 
         if (array_key_exists('visible', $value)) {
@@ -97,7 +97,7 @@ final class NodesTagsFilter extends AbstractFilter
         }
 
         if (array_key_exists('parentNodeName', $value)) {
-            $parameters['parentNodeName'] =  array_filter(is_array($value['parentNodeName']) ? $value['parentNodeName'] : [$value['parentNodeName']]);
+            $parameters['parentNodeName'] = array_filter(is_array($value['parentNodeName']) ? $value['parentNodeName'] : [$value['parentNodeName']]);
         }
 
         if (array_key_exists('nodeTypeName', $value)) {
@@ -110,7 +110,6 @@ final class NodesTagsFilter extends AbstractFilter
 
         return array_filter($parameters, fn ($value) => !is_array($value) || count($value) > 0);
     }
-
 
     private function alterQueryBuilder(QueryBuilder $queryBuilder, array $parameters): void
     {
@@ -140,6 +139,7 @@ final class NodesTagsFilter extends AbstractFilter
                 'o.id',
                 $ntgQb->getQuery()->getDQL()
             ));
+
             return;
         }
 
@@ -162,8 +162,7 @@ final class NodesTagsFilter extends AbstractFilter
 
         if (array_key_exists('nodeTypeName', $parameters) && is_array($parameters['nodeTypeName'])) {
             $ntgQb
-                ->innerJoin('n.nodeType', 'nt')
-                ->andWhere($ntgQb->expr()->in('nt.name', ':nodeTypeName'));
+                ->andWhere($ntgQb->expr()->in('n.nodeTypeName', ':nodeTypeName'));
             $queryBuilder->setParameter(':nodeTypeName', $parameters['nodeTypeName']);
         }
 
@@ -193,8 +192,8 @@ final class NodesTagsFilter extends AbstractFilter
                     'description' => 'Filter tags if they are related to any node or not.',
                 ],
             ],
-            self::PROPERTY_PARAMETER . '[visible]' => [
-                'property' => self::PROPERTY_PARAMETER . '[visible]',
+            self::PROPERTY_PARAMETER.'[visible]' => [
+                'property' => self::PROPERTY_PARAMETER.'[visible]',
                 'type' => 'bool',
                 'required' => false,
                 'description' => 'Filter tags if they are related to any visible node.',
@@ -202,8 +201,8 @@ final class NodesTagsFilter extends AbstractFilter
                     'description' => 'Filter tags if they are related to any visible node.',
                 ],
             ],
-            self::PROPERTY_PARAMETER . '[nodeTypeName]' => [
-                'property' => self::PROPERTY_PARAMETER . '[nodeTypeName]',
+            self::PROPERTY_PARAMETER.'[nodeTypeName]' => [
+                'property' => self::PROPERTY_PARAMETER.'[nodeTypeName]',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Filter tags if they are related to any node of `nodeTypeName`.',
@@ -211,8 +210,8 @@ final class NodesTagsFilter extends AbstractFilter
                     'description' => 'Filter tags if they are related to any node of `nodeTypeName`.',
                 ],
             ],
-            self::PROPERTY_PARAMETER . '[nodeTypeName][]' => [
-                'property' => self::PROPERTY_PARAMETER . '[nodeTypeName][]',
+            self::PROPERTY_PARAMETER.'[nodeTypeName][]' => [
+                'property' => self::PROPERTY_PARAMETER.'[nodeTypeName][]',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Filter tags if they are related to any node of `nodeTypeName`.',
@@ -220,8 +219,8 @@ final class NodesTagsFilter extends AbstractFilter
                     'description' => 'Filter tags if they are related to any node of `nodeTypeName`.',
                 ],
             ],
-            self::PROPERTY_PARAMETER . '[tagName]' => [
-                'property' => self::PROPERTY_PARAMETER . '[tagName]',
+            self::PROPERTY_PARAMETER.'[tagName]' => [
+                'property' => self::PROPERTY_PARAMETER.'[tagName]',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Filter tags if they are related to any node which is linked to another `tagName`.',
@@ -229,8 +228,8 @@ final class NodesTagsFilter extends AbstractFilter
                     'description' => 'Filter tags if they are related to any node which is linked to another `tagName`.',
                 ],
             ],
-            self::PROPERTY_PARAMETER . '[tagName][]' => [
-                'property' => self::PROPERTY_PARAMETER . '[tagName][]',
+            self::PROPERTY_PARAMETER.'[tagName][]' => [
+                'property' => self::PROPERTY_PARAMETER.'[tagName][]',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Filter tags if they are related to any node which is linked to another `tagName`.',
@@ -238,8 +237,8 @@ final class NodesTagsFilter extends AbstractFilter
                     'description' => 'Filter tags if they are related to any node which is linked to another `tagName`.',
                 ],
             ],
-            self::PROPERTY_PARAMETER . '[nodeName]' => [
-                'property' => self::PROPERTY_PARAMETER . '[nodeName]',
+            self::PROPERTY_PARAMETER.'[nodeName]' => [
+                'property' => self::PROPERTY_PARAMETER.'[nodeName]',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Filter tags if they are related to a node with `nodeName`.',
@@ -247,8 +246,8 @@ final class NodesTagsFilter extends AbstractFilter
                     'description' => 'Filter tags if they are related to a node with `nodeName`.',
                 ],
             ],
-            self::PROPERTY_PARAMETER . '[nodeName][]' => [
-                'property' => self::PROPERTY_PARAMETER . '[nodeName][]',
+            self::PROPERTY_PARAMETER.'[nodeName][]' => [
+                'property' => self::PROPERTY_PARAMETER.'[nodeName][]',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Filter tags if they are related to a node with `nodeName`.',
@@ -256,8 +255,8 @@ final class NodesTagsFilter extends AbstractFilter
                     'description' => 'Filter tags if they are related to a node with `nodeName`.',
                 ],
             ],
-            self::PROPERTY_PARAMETER . '[parentNodeName]' => [
-                'property' => self::PROPERTY_PARAMETER . '[parentNodeName]',
+            self::PROPERTY_PARAMETER.'[parentNodeName]' => [
+                'property' => self::PROPERTY_PARAMETER.'[parentNodeName]',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Filter tags if they are related to a node whom parent-node is `parentNodeName`.',
@@ -265,8 +264,8 @@ final class NodesTagsFilter extends AbstractFilter
                     'description' => 'Filter tags if they are related to a node whom parent-node is `parentNodeName`.',
                 ],
             ],
-            self::PROPERTY_PARAMETER . '[parentNodeName][]' => [
-                'property' => self::PROPERTY_PARAMETER . '[parentNodeName][]',
+            self::PROPERTY_PARAMETER.'[parentNodeName][]' => [
+                'property' => self::PROPERTY_PARAMETER.'[parentNodeName][]',
                 'type' => 'string',
                 'required' => false,
                 'description' => 'Filter tags if they are related to a node whom parent-node is `parentNodeName`.',

@@ -10,20 +10,14 @@ use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 
-class UniqueTagNameValidator extends ConstraintValidator
+final class UniqueTagNameValidator extends ConstraintValidator
 {
-    protected ManagerRegistry $managerRegistry;
-
-    /**
-     * @param ManagerRegistry $managerRegistry
-     */
-    public function __construct(ManagerRegistry $managerRegistry)
+    public function __construct(private readonly ManagerRegistry $managerRegistry)
     {
-        $this->managerRegistry = $managerRegistry;
     }
 
     /**
-     * @param string $value
+     * @param string        $value
      * @param UniqueTagName $constraint
      */
     public function validate(mixed $value, Constraint $constraint): void
@@ -40,7 +34,6 @@ class UniqueTagNameValidator extends ConstraintValidator
     }
 
     /**
-     * @param string|null $value
      * @param UniqueTagName $constraint
      */
     protected function testSingleValue(?string $value, Constraint $constraint): void
@@ -62,22 +55,13 @@ class UniqueTagNameValidator extends ConstraintValidator
         }
     }
 
-    /**
-     * @param string $name
-     *
-     * @return bool
-     */
     protected function tagNameExists(string $name): bool
     {
         $entity = $this->managerRegistry->getRepository(Tag::class)->findOneByTagName($name);
 
-        return (null !== $entity);
+        return null !== $entity;
     }
 
-    /**
-     * @param string|null $value
-     * @return bool
-     */
     protected function isMulti(?string $value): bool
     {
         return (bool) \mb_strpos($value ?? '', ',');
