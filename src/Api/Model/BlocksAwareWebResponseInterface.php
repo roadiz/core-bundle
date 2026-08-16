@@ -16,8 +16,7 @@ interface BlocksAwareWebResponseInterface extends WebResponseInterface
 
     /**
      * @param Collection<int, WalkerInterface>|null $blocks
-     *
      * @return $this
      */
-    public function setBlocks(?Collection $blocks): static;
+    public function setBlocks(?Collection $blocks): self;
 }

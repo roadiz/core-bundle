@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle;
 
-use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\CaptchaServiceCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\CommonMarkCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\DoctrineMigrationCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\DocumentRendererCompilerPass;
@@ -22,18 +21,15 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 class RoadizCoreBundle extends Bundle
 {
-    #[\Override]
     public function getPath(): string
     {
         return \dirname(__DIR__);
     }
 
-    #[\Override]
     public function build(ContainerBuilder $container): void
     {
         parent::build($container);
 
-        $container->addCompilerPass(new CaptchaServiceCompilerPass());
         $container->addCompilerPass(new CommonMarkCompilerPass());
         $container->addCompilerPass(new MediaFinderCompilerPass());
         $container->addCompilerPass(new DocumentRendererCompilerPass());

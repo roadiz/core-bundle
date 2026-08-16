@@ -9,7 +9,9 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 class MediaFinderCompilerPass implements CompilerPassInterface
 {
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public function process(ContainerBuilder $container): void
     {
         if ($container->hasParameter('roadiz_core.medias.supported_platforms')) {

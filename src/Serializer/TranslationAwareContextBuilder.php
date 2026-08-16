@@ -4,29 +4,29 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Serializer;
 
-use ApiPlatform\State\SerializerContextBuilderInterface;
+use ApiPlatform\Serializer\SerializerContextBuilderInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Preview\PreviewResolverInterface;
 use RZ\Roadiz\CoreBundle\Repository\TranslationRepository;
 use Symfony\Component\HttpFoundation\Request;
 
-final readonly class TranslationAwareContextBuilder implements SerializerContextBuilderInterface
+final class TranslationAwareContextBuilder implements SerializerContextBuilderInterface
 {
     public function __construct(
-        private SerializerContextBuilderInterface $decorated,
-        private ManagerRegistry $managerRegistry,
-        private PreviewResolverInterface $previewResolver,
+        private readonly SerializerContextBuilderInterface $decorated,
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly PreviewResolverInterface $previewResolver
     ) {
     }
-
-    #[\Override]
-    public function createFromRequest(Request $request, bool $normalization, ?array $extractedAttributes = null): array
+    /**
+     * @inheritDoc
+     */
+    public function createFromRequest(Request $request, bool $normalization, array $extractedAttributes = null): array
     {
         $context = $this->decorated->createFromRequest($request, $normalization, $extractedAttributes);
 
         if (isset($context['translation']) && $context['translation'] instanceof TranslationInterface) {
-            // @phpstan-ignore-next-line
             return $context;
         }
 
@@ -36,7 +36,6 @@ final readonly class TranslationAwareContextBuilder implements SerializerContext
         $requestTranslation = $request->attributes->get('_translation');
         if ($requestTranslation instanceof TranslationInterface) {
             $context['translation'] = $requestTranslation;
-
             return $context;
         }
 

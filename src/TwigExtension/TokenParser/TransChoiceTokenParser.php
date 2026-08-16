@@ -24,7 +24,11 @@ use Twig\TokenParser\AbstractTokenParser;
  */
 class TransChoiceTokenParser extends AbstractTokenParser
 {
-    #[\Override]
+    /**
+     * {@inheritdoc}
+     *
+     * @return Node
+     */
     public function parse(Token $token): Node
     {
         $lineno = $token->getLine();
@@ -57,7 +61,7 @@ class TransChoiceTokenParser extends AbstractTokenParser
 
         $stream->expect(Token::BLOCK_END_TYPE);
 
-        $body = $this->parser->subparse($this->decideTransChoiceFork(...), true);
+        $body = $this->parser->subparse([$this, 'decideTransChoiceFork'], true);
 
         if (!$body instanceof TextNode && !$body instanceof AbstractExpression) {
             throw new SyntaxError('A message inside a transchoice tag must be a simple text.', $body->getTemplateLine(), $stream->getSourceContext());
@@ -65,7 +69,7 @@ class TransChoiceTokenParser extends AbstractTokenParser
 
         $stream->expect(Token::BLOCK_END_TYPE);
 
-        return new TransNode($body, $domain, $count, $vars, $locale, $lineno);
+        return new TransNode($body, $domain, $count, $vars, $locale, $lineno, $this->getTag());
     }
 
     public function decideTransChoiceFork(Token $token): bool
@@ -73,7 +77,11 @@ class TransChoiceTokenParser extends AbstractTokenParser
         return $token->test(['endtranschoice']);
     }
 
-    #[\Override]
+    /**
+     * {@inheritdoc}
+     *
+     * @return string
+     */
     public function getTag(): string
     {
         return 'transchoice';

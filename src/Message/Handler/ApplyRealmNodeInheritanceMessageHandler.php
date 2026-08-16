@@ -6,35 +6,29 @@ namespace RZ\Roadiz\CoreBundle\Message\Handler;
 
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Node;
+use RZ\Roadiz\CoreBundle\Entity\Realm;
 use RZ\Roadiz\CoreBundle\Entity\RealmNode;
 use RZ\Roadiz\CoreBundle\Message\ApplyRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Model\RealmInterface;
 use RZ\Roadiz\CoreBundle\Node\NodeOffspringResolverInterface;
-use RZ\Roadiz\CoreBundle\Repository\AllStatusesNodeRepository;
-use RZ\Roadiz\CoreBundle\Repository\RealmNodeRepository;
-use RZ\Roadiz\CoreBundle\Repository\RealmRepository;
-use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
+use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
-#[AsMessageHandler]
-final readonly class ApplyRealmNodeInheritanceMessageHandler
+final class ApplyRealmNodeInheritanceMessageHandler implements MessageHandlerInterface
 {
     public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private AllStatusesNodeRepository $allStatusesNodeRepository,
-        private RealmNodeRepository $realmNodeRepository,
-        private RealmRepository $realmRepository,
-        private NodeOffspringResolverInterface $nodeOffspringResolver,
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly NodeOffspringResolverInterface $nodeOffspringResolver
     ) {
     }
 
     public function __invoke(ApplyRealmNodeInheritanceMessage $message): void
     {
-        if (null === $message->getRealmId()) {
+        if ($message->getRealmId() === null) {
             return;
         }
-        $node = $this->allStatusesNodeRepository->find($message->getNodeId());
-        $realm = $this->realmRepository->find($message->getRealmId());
+        $node = $this->managerRegistry->getRepository(Node::class)->find($message->getNodeId());
+        $realm = $this->managerRegistry->getRepository(Realm::class)->find($message->getRealmId());
 
         if (null === $node) {
             throw new UnrecoverableMessageHandlingException('Node does not exist');
@@ -43,7 +37,7 @@ final readonly class ApplyRealmNodeInheritanceMessageHandler
             throw new UnrecoverableMessageHandlingException('Realm does not exist');
         }
 
-        $realmNode = $this->realmNodeRepository->findOneBy([
+        $realmNode = $this->managerRegistry->getRepository(RealmNode::class)->findOneBy([
             'node' => $node,
             'realm' => $realm,
         ]);
@@ -51,21 +45,22 @@ final readonly class ApplyRealmNodeInheritanceMessageHandler
         /*
          * Do not propagate if realm node inheritance type is not ROOT
          */
-        if (null === $realmNode || RealmInterface::INHERITANCE_ROOT !== $realmNode->getInheritanceType()) {
+        if (null === $realmNode || $realmNode->getInheritanceType() !== RealmInterface::INHERITANCE_ROOT) {
             return;
         }
 
+        $nodeRepository = $this->managerRegistry->getRepository(Node::class);
         $childrenIds = $this->nodeOffspringResolver->getAllOffspringIds($node);
 
         foreach ($childrenIds as $childId) {
             /** @var Node|null $child */
-            $child = $this->allStatusesNodeRepository->find($childId);
+            $child = $nodeRepository->find($childId);
             if (null === $child) {
                 continue;
             }
 
             /** @var RealmNode|null $childRealmNode */
-            $childRealmNode = $this->realmNodeRepository->findOneBy([
+            $childRealmNode = $this->managerRegistry->getRepository(RealmNode::class)->findOneBy([
                 'node' => $child,
                 'realm' => $realm,
             ]);

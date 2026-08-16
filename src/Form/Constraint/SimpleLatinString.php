@@ -11,7 +11,7 @@ use Symfony\Component\Validator\Constraint;
  * @Target({"PROPERTY", "METHOD", "ANNOTATION"})
  */
 #[\Attribute(\Attribute::TARGET_PROPERTY | \Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
-final class SimpleLatinString extends Constraint
+class SimpleLatinString extends Constraint
 {
     public string $message = 'string.should.only.contain.latin.characters';
 }

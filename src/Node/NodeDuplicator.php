@@ -10,24 +10,25 @@ use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodesSourcesDocuments;
 use RZ\Roadiz\CoreBundle\Entity\NodesToNodes;
-use RZ\Roadiz\CoreBundle\Enum\NodeStatus;
 use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
 /**
  * Handles node duplication.
  */
 #[Exclude]
-final readonly class NodeDuplicator
+final class NodeDuplicator
 {
     public function __construct(
-        private Node $originalNode,
-        private ObjectManager $objectManager,
-        private NodeNamePolicyInterface $nodeNamePolicy,
+        private readonly Node $originalNode,
+        private readonly ObjectManager $objectManager,
+        private readonly NodeNamePolicyInterface $nodeNamePolicy
     ) {
     }
 
     /**
      * Warning this method flush entityManager at its end.
+     *
+     * @return Node
      */
     public function duplicate(): Node
     {
@@ -44,13 +45,13 @@ final readonly class NodeDuplicator
             $this->objectManager->clear();
         }
 
-        if (null !== $parent) {
+        if ($parent !== null) {
             /** @var Node $parent */
             $parent = $this->objectManager->find(Node::class, $parent->getId());
             $node->setParent($parent);
         }
         // Demote cloned node to draft
-        $node->setStatus(NodeStatus::DRAFT);
+        $node->setStatus(Node::DRAFT);
 
         $node = $this->doDuplicate($node);
         $this->objectManager->flush();
@@ -61,6 +62,9 @@ final readonly class NodeDuplicator
 
     /**
      * Warning, do not do any FLUSH here to preserve transactional integrity.
+     *
+     * @param  Node $node
+     * @return Node
      */
     private function doDuplicate(Node &$node): Node
     {
@@ -119,6 +123,8 @@ final readonly class NodeDuplicator
      * Duplicate Node to Node relationship.
      *
      * Warning, do not do any FLUSH here to preserve transactional integrity.
+     *
+     * @param Node $node
      */
     private function doDuplicateNodeRelations(Node $node): void
     {

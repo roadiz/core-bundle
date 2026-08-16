@@ -16,20 +16,26 @@ trait RealmsAwareWebResponseOutputDataTransformerTrait
     abstract protected function getRealmResolver(): RealmResolverInterface;
 
     /**
+     * @param RealmsAwareWebResponseInterface $output
+     * @param NodesSources $data
+     * @return WebResponseInterface
      * @throws UnauthorizedHttpException
      */
     protected function injectRealms(RealmsAwareWebResponseInterface $output, NodesSources $data): WebResponseInterface
     {
-        $nodeRealms = $this->getRealmResolver()->getRealms($data->getNode());
-        $output->setRealms($nodeRealms);
+        $output->setRealms($this->getRealmResolver()->getRealms($data->getNode()));
         $output->setHidingBlocks(false);
 
-        $denyingRealms = array_filter($nodeRealms, fn (RealmInterface $realm) => RealmInterface::BEHAVIOUR_DENY === $realm->getBehaviour());
+        $denyingRealms = array_filter($output->getRealms(), function (RealmInterface $realm) {
+            return $realm->getBehaviour() === RealmInterface::BEHAVIOUR_DENY;
+        });
         foreach ($denyingRealms as $denyingRealm) {
             $this->getRealmResolver()->denyUnlessGranted($denyingRealm);
         }
 
-        $blockHidingRealms = array_filter($nodeRealms, fn (RealmInterface $realm) => RealmInterface::BEHAVIOUR_HIDE_BLOCKS === $realm->getBehaviour());
+        $blockHidingRealms = array_filter($output->getRealms(), function (RealmInterface $realm) {
+            return $realm->getBehaviour() === RealmInterface::BEHAVIOUR_HIDE_BLOCKS;
+        });
         foreach ($blockHidingRealms as $blockHidingRealm) {
             if (!$this->getRealmResolver()->isGranted($blockHidingRealm)) {
                 $output->setHidingBlocks(true);

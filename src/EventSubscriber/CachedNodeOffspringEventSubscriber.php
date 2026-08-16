@@ -11,13 +11,12 @@ use RZ\Roadiz\CoreBundle\Event\Node\NodeUpdatedEvent;
 use RZ\Roadiz\CoreBundle\Node\CachedNodeOffspringResolverInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-final readonly class CachedNodeOffspringEventSubscriber implements EventSubscriberInterface
+class CachedNodeOffspringEventSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private CachedNodeOffspringResolverInterface $cachedNodeOffspringResolver)
+    public function __construct(private readonly CachedNodeOffspringResolverInterface $cachedNodeOffspringResolver)
     {
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [

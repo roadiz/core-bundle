@@ -12,13 +12,11 @@ abstract class FileClearer implements ClearerInterface
     {
     }
 
-    #[\Override]
     public function clear(): bool
     {
         return false;
     }
 
-    #[\Override]
     public function getOutput(): string
     {
         return $this->output ?? '';
@@ -26,8 +24,9 @@ abstract class FileClearer implements ClearerInterface
 
     /**
      * Get global cache directory.
+     *
+     * @return string
      */
-    #[\Override]
     public function getCacheDir(): string
     {
         return $this->cacheDir;

@@ -4,24 +4,37 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Doctrine\EventSubscriber;
 
-use Doctrine\Bundle\DoctrineBundle\Attribute\AsDoctrineListener;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Event\OnFlushEventArgs;
+use ArrayIterator;
+use Doctrine\Common\EventSubscriber;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
-use RZ\Roadiz\CoreBundle\Entity\AttributeValue;
+use Doctrine\ORM\Event\OnFlushEventArgs;
+use Doctrine\ORM\Events;
 use RZ\Roadiz\CoreBundle\Model\AttributeValueInterface;
+use RZ\Roadiz\CoreBundle\Entity\AttributeValue;
 
-#[AsDoctrineListener('prePersist')]
-#[AsDoctrineListener('onFlush')]
-final class AttributeValueLifeCycleSubscriber
+final class AttributeValueLifeCycleSubscriber implements EventSubscriber
 {
+    /**
+     * {@inheritdoc}
+     */
+    public function getSubscribedEvents(): array
+    {
+        return [
+            Events::prePersist,
+            Events::onFlush,
+        ];
+    }
+
+    /**
+     * @param LifecycleEventArgs $event
+     */
     public function prePersist(LifecycleEventArgs $event): void
     {
         $entity = $event->getObject();
         if ($entity instanceof AttributeValueInterface) {
             if (
-                null !== $entity->getAttribute()
-                && null !== $entity->getAttribute()->getDefaultRealm()
+                null !== $entity->getAttribute() &&
+                null !== $entity->getAttribute()->getDefaultRealm()
             ) {
                 $entity->setRealm($entity->getAttribute()->getDefaultRealm());
             }
@@ -29,15 +42,15 @@ final class AttributeValueLifeCycleSubscriber
             /*
              * Automatically set position only if not manually set before.
              */
-            if (0.0 === $entity->getPosition()) {
+            if ($entity->getPosition() === 0.0) {
                 /*
                  * Get the last index after last node in parent
                  */
-                $nodeAttributes = $entity->getAttributable()?->getAttributeValues() ?? new ArrayCollection();
+                $nodeAttributes = $entity->getAttributable()->getAttributeValues();
                 $lastPosition = 1;
                 foreach ($nodeAttributes as $nodeAttribute) {
                     $nodeAttribute->setPosition($lastPosition);
-                    ++$lastPosition;
+                    $lastPosition++;
                 }
 
                 $entity->setPosition($lastPosition);
@@ -46,6 +59,8 @@ final class AttributeValueLifeCycleSubscriber
     }
 
     /**
+     * @param OnFlushEventArgs $eventArgs
+     *
      * @throws \Exception
      */
     public function onFlush(OnFlushEventArgs $eventArgs): void
@@ -57,15 +72,17 @@ final class AttributeValueLifeCycleSubscriber
             if ($entity instanceof AttributeValueInterface) {
                 $classMetadata = $em->getClassMetadata(AttributeValue::class);
                 foreach ($uow->getEntityChangeSet($entity) as $keyField => $field) {
-                    if ('position' === $keyField) {
-                        $nodeAttributes = $entity->getAttributable()?->getAttributeValues() ?? new ArrayCollection();
+                    if ($keyField === 'position') {
+                        $nodeAttributes = $entity->getAttributable()->getAttributeValues();
                         /*
                          * Need to resort collection based on updated position.
                          */
                         $iterator = $nodeAttributes->getIterator();
-                        if ($iterator instanceof \ArrayIterator) {
+                        if ($iterator instanceof ArrayIterator) {
                             // define ordering closure, using preferred comparison method/field
-                            $iterator->uasort(fn (AttributeValueInterface $first, AttributeValueInterface $second) => $first->getPosition() > $second->getPosition() ? 1 : -1);
+                            $iterator->uasort(function (AttributeValueInterface $first, AttributeValueInterface $second) {
+                                return $first->getPosition() > $second->getPosition() ? 1 : -1;
+                            });
                         }
 
                         $lastPosition = 1;
@@ -73,7 +90,7 @@ final class AttributeValueLifeCycleSubscriber
                         foreach ($iterator as $nodeAttribute) {
                             $nodeAttribute->setPosition($lastPosition);
                             $uow->computeChangeSet($classMetadata, $nodeAttribute);
-                            ++$lastPosition;
+                            $lastPosition++;
                         }
                     }
                 }

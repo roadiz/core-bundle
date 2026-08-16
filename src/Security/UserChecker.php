@@ -9,13 +9,11 @@ use RZ\Roadiz\CoreBundle\Security\Exception\UserCredentialsExpiredException;
 use RZ\Roadiz\CoreBundle\Security\Exception\UserExpiredException;
 use RZ\Roadiz\CoreBundle\Security\Exception\UserLockedException;
 use RZ\Roadiz\CoreBundle\Security\Exception\UserNotEnabledException;
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\User\UserCheckerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 final class UserChecker implements UserCheckerInterface
 {
-    #[\Override]
     public function checkPreAuth(UserInterface $user): void
     {
         if (!$user instanceof User) {
@@ -28,8 +26,7 @@ final class UserChecker implements UserCheckerInterface
         }
     }
 
-    #[\Override]
-    public function checkPostAuth(UserInterface $user, ?TokenInterface $token = null): void
+    public function checkPostAuth(UserInterface $user): void
     {
         if (!$user instanceof User) {
             return;
