@@ -129,7 +129,9 @@ class Realm implements RealmInterface
     public function setName(string $name): Realm
     {
         $this->name = $name;
-        $this->serializationGroup ??= (new AsciiSlugger())->slug($this->name, '_')->lower()->toString();
+        if (null === $this->serializationGroup) {
+            $this->serializationGroup = (new AsciiSlugger())->slug($this->name, '_')->lower()->toString();
+        }
 
         return $this;
     }

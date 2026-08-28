@@ -39,7 +39,9 @@ final readonly class SimpleQueryBuilder
             $prefix .= '.';
         }
 
-        $baseKey ??= $this->getParameterKey($key);
+        if (null === $baseKey) {
+            $baseKey = $this->getParameterKey($key);
+        }
         if (is_bool($value)) {
             return $this->queryBuilder->expr()->eq($prefix.$key, ':'.$baseKey);
         }

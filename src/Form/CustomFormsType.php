@@ -206,7 +206,9 @@ final class CustomFormsType extends AbstractType
                 }
                 break;
             case FieldType::EMAIL_T:
-                $option['constraints'] ??= [];
+                if (!isset($option['constraints'])) {
+                    $option['constraints'] = [];
+                }
                 $option['constraints'][] = new Email();
                 break;
             default:

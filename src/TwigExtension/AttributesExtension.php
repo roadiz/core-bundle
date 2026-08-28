@@ -174,10 +174,12 @@ final class AttributesExtension extends AbstractExtension
             $group = $attributeValueTranslation->getAttributeValue()->getAttribute()?->getGroup();
             if (null !== $group) {
                 $groupKey = $group->getCanonicalName() ?? sprintf('group-%s', (string) $group->getId());
-                $groups[$groupKey] ??= [
-                    'group' => $group,
-                    'attributeValues' => [],
-                ];
+                if (!isset($groups[$groupKey])) {
+                    $groups[$groupKey] = [
+                        'group' => $group,
+                        'attributeValues' => [],
+                    ];
+                }
                 $groups[$groupKey]['attributeValues'][] = $attributeValueTranslation;
             } else {
                 $groups[$defaultGroupKey]['attributeValues'][] = $attributeValueTranslation;
@@ -200,7 +202,9 @@ final class AttributesExtension extends AbstractExtension
             return $mixed->getAttribute()?->getLabelOrCode($translation);
         }
         if ($mixed instanceof AttributeValueTranslationInterface) {
-            $translation ??= $mixed->getTranslation();
+            if (null === $translation) {
+                $translation = $mixed->getTranslation();
+            }
 
             return $mixed->getAttributeValue()->getAttribute()?->getLabelOrCode($translation);
         }
@@ -223,7 +227,9 @@ final class AttributesExtension extends AbstractExtension
             return $mixed->getAttribute()->getGroup()->getTranslatedName($translation);
         }
         if ($mixed instanceof AttributeValueTranslationInterface && null !== $mixed->getAttribute()?->getGroup()) {
-            $translation ??= $mixed->getTranslation() ?? throw new \RuntimeException('Translation cannot be null');
+            if (null === $translation) {
+                $translation = $mixed->getTranslation() ?? throw new \RuntimeException('Translation cannot be null');
+            }
 
             return $mixed->getAttribute()->getGroup()->getTranslatedName($translation);
         }

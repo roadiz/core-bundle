@@ -62,7 +62,9 @@ class QueryBuilderListManager extends AbstractEntityListManager
 
     protected function getPaginator(): Paginator
     {
-        $this->paginator ??= new Paginator($this->queryBuilder);
+        if (null === $this->paginator) {
+            $this->paginator = new Paginator($this->queryBuilder);
+        }
 
         return $this->paginator;
     }

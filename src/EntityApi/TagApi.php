@@ -33,9 +33,11 @@ class TagApi extends AbstractApi
         ?int $limit = null,
         ?int $offset = null,
     ): array|Paginator {
-        $order ??= [
-            'position' => 'ASC',
-        ];
+        if (null === $order) {
+            $order = [
+                'position' => 'ASC',
+            ];
+        }
 
         return $this->getRepository()
                     ->findBy(

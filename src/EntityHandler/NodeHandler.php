@@ -490,9 +490,13 @@ final class NodeHandler extends AbstractHandler
         if ($this->getNode()->getPosition() <= 1) {
             return null;
         }
-        $order ??= [];
+        if (null === $order) {
+            $order = [];
+        }
 
-        $criteria ??= [];
+        if (null === $criteria) {
+            $criteria = [];
+        }
 
         $criteria['parent'] = $this->getNode()->getParent();
         /*
@@ -523,8 +527,12 @@ final class NodeHandler extends AbstractHandler
         ?array $criteria = null,
         ?array $order = null,
     ): ?Node {
-        $criteria ??= [];
-        $order ??= [];
+        if (null === $criteria) {
+            $criteria = [];
+        }
+        if (null === $order) {
+            $order = [];
+        }
 
         $criteria['parent'] = $this->getNode()->getParent();
 

@@ -109,8 +109,12 @@ final readonly class ArchiveExtension implements QueryResultCollectionExtensionI
                 $year = $dateTimeField->format('Y');
                 $month = $dateTimeField->format('Y-m');
 
-                $dates[$year] ??= [];
-                $dates[$year][$month] ??= new \DateTime($dateTimeField->format('Y-m-01'));
+                if (!isset($dates[$year])) {
+                    $dates[$year] = [];
+                }
+                if (!isset($dates[$year][$month])) {
+                    $dates[$year][$month] = new \DateTime($dateTimeField->format('Y-m-01'));
+                }
             }
         }
 

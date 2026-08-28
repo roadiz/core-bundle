@@ -32,9 +32,12 @@ final readonly class UserProvider implements UserProviderInterface
             ->getRepository(User::class)
             ->findOneBy(['username' => $identifier]);
 
-        $user ??= $this->managerRegistry
-            ->getRepository(User::class)
-            ->findOneBy(['email' => $identifier]);
+        if (null === $user) {
+            /** @var User|null $user */
+            $user = $this->managerRegistry
+                ->getRepository(User::class)
+                ->findOneBy(['email' => $identifier]);
+        }
 
         if (null !== $user) {
             return $user;
