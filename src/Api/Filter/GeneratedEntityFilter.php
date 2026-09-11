@@ -11,38 +11,22 @@ use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 
 abstract class GeneratedEntityFilter extends AbstractFilter
 {
-    private string $generatedEntityNamespacePattern;
-
-    /**
-     * @param ManagerRegistry $managerRegistry
-     * @param LoggerInterface|null $logger
-     * @param array|null $properties
-     * @param NameConverterInterface|null $nameConverter
-     * @param string $generatedEntityNamespacePattern
-     */
     public function __construct(
         ManagerRegistry $managerRegistry,
-        LoggerInterface $logger = null,
-        array $properties = null,
-        NameConverterInterface $nameConverter = null,
-        string $generatedEntityNamespacePattern = '#^App\\\GeneratedEntity\\\NS(?:[a-zA-Z]+)$#',
+        ?LoggerInterface $logger = null,
+        ?array $properties = null,
+        ?NameConverterInterface $nameConverter = null,
+        private readonly string $generatedEntityNamespacePattern = '#^App\\\GeneratedEntity\\\NS(?:[a-zA-Z]+)$#',
     ) {
         parent::__construct($managerRegistry, $logger, $properties, $nameConverter);
-
-        $this->generatedEntityNamespacePattern = $generatedEntityNamespacePattern;
     }
 
-    /**
-     * @return string
-     */
     public function getGeneratedEntityNamespacePattern(): string
     {
         return $this->generatedEntityNamespacePattern;
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public function getDescription(string $resourceClass): array
     {
         return [];

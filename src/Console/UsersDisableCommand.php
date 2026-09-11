@@ -13,6 +13,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class UsersDisableCommand extends UsersCommand
 {
+    #[\Override]
     protected function configure(): void
     {
         $this->setName('users:disable')
@@ -24,6 +25,7 @@ final class UsersDisableCommand extends UsersCommand
             );
     }
 
+    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -31,7 +33,7 @@ final class UsersDisableCommand extends UsersCommand
         $user = $this->getUserForInput($input);
 
         $confirmation = new ConfirmationQuestion(
-            '<question>Do you really want to disable user “' . $user->getUsername() . '”?</question>',
+            '<question>Do you really want to disable user “'.$user->getUsername().'”?</question>',
             false
         );
         if (
@@ -40,12 +42,13 @@ final class UsersDisableCommand extends UsersCommand
             )
         ) {
             $user->setEnabled(false);
-            $this->managerRegistry->getManagerForClass(User::class)->flush();
-            $io->success('User “' . $name . '” disabled.');
+            $this->managerRegistry->getManagerForClass(User::class)?->flush();
+            $io->success('User “'.$name.'” disabled.');
+
             return 0;
-        } else {
-            $io->warning('User “' . $name . '” was not disabled.');
-            return 1;
         }
+        $io->warning('User “'.$name.'” was not disabled.');
+
+        return 1;
     }
 }
