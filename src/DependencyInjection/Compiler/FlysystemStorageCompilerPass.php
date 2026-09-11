@@ -6,8 +6,8 @@ namespace RZ\Roadiz\CoreBundle\DependencyInjection\Compiler;
 
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemOperator;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use League\Flysystem\MountManager;
-use League\FlysystemBundle\Adapter\AdapterDefinitionFactory;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -19,20 +19,26 @@ class FlysystemStorageCompilerPass implements CompilerPassInterface
         ContainerBuilder $container,
         string $storageName,
         array $storageConfig,
-        ?string $publicUrl = null
+        ?string $publicUrl = null,
     ): Reference {
         if (!$container->hasDefinition($storageName)) {
-            $definitionFactory = new AdapterDefinitionFactory();
-            $adapterName = 'flysystem.adapter.' . $storageName;
-            if ($adapter = $definitionFactory->createDefinition('local', $storageConfig['options'])) {
-                $container->setDefinition($adapterName, $adapter)->setPublic(false);
-                $container->setDefinition(
-                    $storageName,
-                    $this->createStorageDefinition($storageName, new Reference($adapterName), $publicUrl)
-                );
-            }
+            $adapterName = 'flysystem.adapter.'.$storageName;
+            $container
+                ->setDefinition($adapterName, $this->createLocalAdapterDefinition($storageConfig['options']))
+                ->setPublic(false);
+            $container->setDefinition(
+                $storageName,
+                $this->createStorageDefinition($storageName, new Reference($adapterName), $publicUrl)
+            );
         }
+
         return new Reference($storageName);
+    }
+
+    private function createLocalAdapterDefinition(array $options): Definition
+    {
+        return (new Definition(LocalFilesystemAdapter::class))
+            ->setArgument(0, $options['directory']);
     }
 
     protected function getDocumentPublicStorage(ContainerBuilder $container): Reference
@@ -54,9 +60,7 @@ class FlysystemStorageCompilerPass implements CompilerPassInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public function process(ContainerBuilder $container): void
     {
         $container->setDefinition(

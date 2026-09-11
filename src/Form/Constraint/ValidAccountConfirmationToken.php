@@ -6,12 +6,10 @@ namespace RZ\Roadiz\CoreBundle\Form\Constraint;
 
 use Symfony\Component\Validator\Constraint;
 
-class ValidAccountConfirmationToken extends Constraint
+final class ValidAccountConfirmationToken extends Constraint
 {
     /**
-     * Confirmation token time to live, in seconds
-     *
-     * @var integer
+     * Confirmation token time to live, in seconds.
      */
     public int $ttl = 60;
 

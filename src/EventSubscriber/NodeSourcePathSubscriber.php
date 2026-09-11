@@ -9,16 +9,14 @@ use RZ\Roadiz\CoreBundle\Routing\NodesSourcesPathAggregator;
 use RZ\Roadiz\CoreBundle\Routing\NodesSourcesUrlGenerator;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-final class NodeSourcePathSubscriber implements EventSubscriberInterface
+final readonly class NodeSourcePathSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private readonly NodesSourcesPathAggregator $pathAggregator
+        private NodesSourcesPathAggregator $pathAggregator,
     ) {
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [
@@ -26,9 +24,6 @@ final class NodeSourcePathSubscriber implements EventSubscriberInterface
         ];
     }
 
-    /**
-     * @param NodesSourcesPathGeneratingEvent $event
-     */
     public function onNodesSourcesPath(NodesSourcesPathGeneratingEvent $event): void
     {
         $urlGenerator = new NodesSourcesUrlGenerator(
@@ -37,6 +32,6 @@ final class NodeSourcePathSubscriber implements EventSubscriberInterface
             $event->isForceLocale(),
             $event->isForceLocaleWithUrlAlias()
         );
-        $event->setPath($urlGenerator->getNonContextualUrl($event->getTheme(), $event->getParameters()));
+        $event->setPath($urlGenerator->getNonContextualUrl($event->getParameters()));
     }
 }

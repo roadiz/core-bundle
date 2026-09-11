@@ -4,92 +4,79 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Model;
 
+use ApiPlatform\Doctrine\Orm\Filter as BaseFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use JMS\Serializer\Annotation as Serializer;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use ApiPlatform\Doctrine\Orm\Filter as BaseFilter;
+use Symfony\Component\Serializer\Attribute as Serializer;
 
 trait AttributeValueTrait
 {
-    #[
-        ORM\ManyToOne(targetEntity: AttributeInterface::class, fetch: "EAGER", inversedBy: "attributeValues"),
-        ORM\JoinColumn(name: "attribute_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE"),
-        Serializer\Groups(["attribute", "node", "nodes_sources"]),
-        Serializer\Type("RZ\Roadiz\CoreBundle\Entity\Attribute"),
+    #[ORM\ManyToOne(targetEntity: AttributeInterface::class, fetch: 'EAGER', inversedBy: 'attributeValues'),
+        ORM\JoinColumn(name: 'attribute_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),
+        Serializer\Groups(['attribute', 'node', 'nodes_sources']),
         ApiFilter(BaseFilter\SearchFilter::class, properties: [
-            "attribute.id" => "exact",
-            "attribute.code" => "exact",
-            "attribute.color" => "exact",
-            "attribute.type" => "exact",
-            "attribute.group" => "exact",
-            "attribute.group.canonicalName" => "exact",
+            'attribute.id' => 'exact',
+            'attribute.code' => 'exact',
+            'attribute.color' => 'exact',
+            'attribute.type' => 'exact',
+            'attribute.group' => 'exact',
+            'attribute.group.canonicalName' => 'exact',
         ]),
         ApiFilter(BaseFilter\BooleanFilter::class, properties: [
-            "attribute.visible",
-            "attribute.searchable"
+            'attribute.visible',
+            'attribute.searchable',
         ]),
         ApiFilter(BaseFilter\ExistsFilter::class, properties: [
-            "attribute.color",
-            "attribute.group"
+            'attribute.color',
+            'attribute.group',
         ]),
         ApiFilter(BaseFilter\OrderFilter::class, properties: [
-            "attribute.weight" => "DESC",
-        ])
-    ]
+            'attribute.weight' => 'DESC',
+        ])]
     protected AttributeInterface $attribute;
 
     /**
      * @var Collection<int, AttributeValueTranslationInterface>
      */
-    #[
-        ORM\OneToMany(
-            mappedBy: "attributeValue",
-            targetEntity: AttributeValueTranslationInterface::class,
-            cascade: ["persist", "remove"],
-            fetch: "EAGER",
-            orphanRemoval: true
-        ),
-        Serializer\Groups(["attribute", "node", "nodes_sources"]),
-        Serializer\Type("ArrayCollection<RZ\Roadiz\CoreBundle\Model\AttributeValueTranslationInterface>"),
-        Serializer\Accessor(getter: "getAttributeValueTranslations", setter: "setAttributeValueTranslations"),
+    #[ORM\OneToMany(
+        mappedBy: 'attributeValue',
+        targetEntity: AttributeValueTranslationInterface::class,
+        cascade: ['persist', 'remove'],
+        fetch: 'EAGER',
+        orphanRemoval: true
+    ),
+        Serializer\Groups(['attribute', 'node', 'nodes_sources']),
         ApiFilter(BaseFilter\SearchFilter::class, properties: [
-            "attributeValueTranslations.value" => "partial",
+            'attributeValueTranslations.value' => 'partial',
         ]),
         ApiFilter(BaseFilter\RangeFilter::class, properties: [
-            "attributeValueTranslations.value",
+            'attributeValueTranslations.value',
         ]),
         ApiFilter(BaseFilter\ExistsFilter::class, properties: [
-            "attributeValueTranslations.value",
-        ]),
-    ]
+            'attributeValueTranslations.value',
+        ]),]
     protected Collection $attributeValueTranslations;
 
-    /**
-     * @return AttributeInterface|null
-     */
     public function getAttribute(): ?AttributeInterface
     {
         return $this->attribute;
     }
 
     /**
-     * @param AttributeInterface $attribute
-     * @return self
+     * @return $this
      */
-    public function setAttribute(AttributeInterface $attribute)
+    public function setAttribute(AttributeInterface $attribute): static
     {
         $this->attribute = $attribute;
+
         return $this;
     }
 
-    /**
-     * @return int
-     */
     public function getType(): int
     {
-        return $this->getAttribute()->getType();
+        return $this->getAttribute()?->getType() ?? throw new \RuntimeException('Attribute is not set on AttributeValue.');
     }
 
     /**
@@ -101,25 +88,19 @@ trait AttributeValueTrait
     }
 
     /**
-     * @param Collection $attributeValueTranslations
-     *
-     * @return static
+     * @return $this
      */
-    public function setAttributeValueTranslations(Collection $attributeValueTranslations)
+    public function setAttributeValueTranslations(Collection $attributeValueTranslations): static
     {
         $this->attributeValueTranslations = $attributeValueTranslations;
         /** @var AttributeValueTranslationInterface $attributeValueTranslation */
         foreach ($this->attributeValueTranslations as $attributeValueTranslation) {
             $attributeValueTranslation->setAttributeValue($this);
         }
+
         return $this;
     }
 
-    /**
-     * @param TranslationInterface $translation
-     *
-     * @return AttributeValueTranslationInterface|null
-     */
     public function getAttributeValueTranslation(TranslationInterface $translation): ?AttributeValueTranslationInterface
     {
         return $this->getAttributeValueTranslations()
@@ -127,20 +108,16 @@ trait AttributeValueTrait
                 if ($attributeValueTranslation->getTranslation() === $translation) {
                     return true;
                 }
+
                 return false;
             })
             ->first() ?: null;
     }
 
-    /**
-     * @return AttributeValueTranslationInterface|null
-     */
     public function getAttributeValueDefaultTranslation(): ?AttributeValueTranslationInterface
     {
         return $this->getAttributeValueTranslations()
-            ->filter(function (AttributeValueTranslationInterface $attributeValueTranslation) {
-                return $attributeValueTranslation->getTranslation()?->isDefaultTranslation() ?? false;
-            })
+            ->filter(fn (AttributeValueTranslationInterface $attributeValueTranslation) => $attributeValueTranslation->getTranslation()?->isDefaultTranslation() ?? false)
             ->first() ?: null;
     }
 }

@@ -27,13 +27,6 @@ class WebResponseOutputDataTransformer implements WebResponseDataTransformerInte
     use RealmsAwareWebResponseOutputDataTransformerTrait;
 
     /**
-     * @param NodesSourcesHeadFactoryInterface $nodesSourcesHeadFactory
-     * @param BreadcrumbsFactoryInterface $breadcrumbsFactory
-     * @param WalkerContextInterface $walkerContext
-     * @param CacheItemPoolInterface $cacheItemPool
-     * @param UrlGeneratorInterface $urlGenerator
-     * @param RealmResolverInterface $realmResolver
-     * @param TreeWalkerGenerator $treeWalkerGenerator
      * @param class-string<WebResponseInterface> $webResponseClass
      */
     public function __construct(
@@ -44,25 +37,29 @@ class WebResponseOutputDataTransformer implements WebResponseDataTransformerInte
         protected readonly UrlGeneratorInterface $urlGenerator,
         protected readonly RealmResolverInterface $realmResolver,
         protected readonly TreeWalkerGenerator $treeWalkerGenerator,
-        private readonly string $webResponseClass
+        private readonly string $webResponseClass,
     ) {
     }
 
+    #[\Override]
     protected function getWalkerContext(): WalkerContextInterface
     {
         return $this->walkerContext;
     }
 
+    #[\Override]
     protected function getCacheItemPool(): CacheItemPoolInterface
     {
         return $this->cacheItemPool;
     }
 
+    #[\Override]
     protected function getChildrenNodeSourceWalkerMaxLevel(): int
     {
         return 5;
     }
 
+    #[\Override]
     public function getTreeWalkerGenerator(): TreeWalkerGenerator
     {
         return $this->treeWalkerGenerator;
@@ -71,24 +68,28 @@ class WebResponseOutputDataTransformer implements WebResponseDataTransformerInte
     /**
      * @return class-string<AbstractWalker>
      */
+    #[\Override]
     protected function getChildrenNodeSourceWalkerClassname(): string
     {
         return AutoChildrenNodeSourceWalker::class;
     }
 
+    #[\Override]
     protected function getRealmResolver(): RealmResolverInterface
     {
         return $this->realmResolver;
     }
 
+    #[\Override]
     public function createWebResponse(): WebResponseInterface
     {
         return new ($this->webResponseClass)();
     }
 
-    public function transform(PersistableInterface $object, string $to, array $context = []): ?WebResponseInterface
+    #[\Override]
+    public function transform(PersistableInterface $object, string $to, array $context = [], ?WebResponseInterface $output = null): WebResponseInterface
     {
-        $output = $this->createWebResponse();
+        $output ??= $this->createWebResponse();
         $output->setItem($object);
         if ($object instanceof NodesSources) {
             if ($output instanceof RealmsAwareWebResponseInterface) {
@@ -99,7 +100,7 @@ class WebResponseOutputDataTransformer implements WebResponseDataTransformerInte
             }
 
             $output->setPath($this->urlGenerator->generate(RouteObjectInterface::OBJECT_BASED_ROUTE_NAME, [
-                RouteObjectInterface::ROUTE_OBJECT => $object
+                RouteObjectInterface::ROUTE_OBJECT => $object,
             ], UrlGeneratorInterface::ABSOLUTE_PATH));
             $output->setHead($this->nodesSourcesHeadFactory->createForNodeSource($object));
             $output->setBreadcrumbs($this->breadcrumbsFactory->create($object));
@@ -108,6 +109,7 @@ class WebResponseOutputDataTransformer implements WebResponseDataTransformerInte
         if ($object instanceof TranslationInterface) {
             $output->setHead($this->nodesSourcesHeadFactory->createForTranslation($object));
         }
+
         return $output;
     }
 }

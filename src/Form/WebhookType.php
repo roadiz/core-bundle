@@ -16,24 +16,19 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
-class WebhookType extends AbstractType
+final class WebhookType extends AbstractType
 {
-    private array $webhookMessageTypes;
-
-    /**
-     * @param array $webhookMessageTypes
-     */
-    public function __construct(array $webhookMessageTypes)
+    public function __construct(private readonly array $webhookMessageTypes)
     {
-        $this->webhookMessageTypes = $webhookMessageTypes;
     }
 
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('messageType', ChoiceType::class, [
             'required' => true,
             'label' => 'webhooks.messageType',
-            'choices' => $this->webhookMessageTypes
+            'choices' => $this->webhookMessageTypes,
         ])->add('description', TextType::class, [
             'required' => true,
             'label' => 'webhooks.description',
@@ -43,6 +38,10 @@ class WebhookType extends AbstractType
         ])->add('payload', YamlType::class, [
             'required' => false,
             'label' => 'webhooks.payload',
+        ])->add('secret', TextType::class, [
+            'required' => false,
+            'label' => 'webhooks.secret',
+            'help' => 'webhooks.secret.help',
         ])->add('throttleSeconds', IntegerType::class, [
             'required' => true,
             'label' => 'webhooks.throttleSeconds',
@@ -54,12 +53,10 @@ class WebhookType extends AbstractType
             'required' => false,
             'label' => 'webhooks.rootNode',
             'help' => 'webhooks.rootNode.help',
-            'multiple' => false
+            'asMultiple' => false,
         ]);
 
-        $builder->get('payload')->addModelTransformer(new CallbackTransformer(function (?array $model) {
-            return $model ? Yaml::dump($model) : null;
-        }, function (?string $yaml) {
+        $builder->get('payload')->addModelTransformer(new CallbackTransformer(fn (?array $model) => $model ? Yaml::dump($model) : null, function (?string $yaml) {
             try {
                 return $yaml ? Yaml::parse($yaml) : null;
             } catch (ParseException $e) {
