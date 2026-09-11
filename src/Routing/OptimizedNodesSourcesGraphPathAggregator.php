@@ -5,36 +5,38 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Routing;
 
 use Doctrine\ORM\Query;
+use Doctrine\Persistence\ManagerRegistry;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\InvalidArgumentException;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\Repository\AllStatusesNodesSourcesRepository;
 
-final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSourcesPathAggregator
+final class OptimizedNodesSourcesGraphPathAggregator implements NodesSourcesPathAggregator
 {
     public function __construct(
-        private AllStatusesNodesSourcesRepository $allStatusesNodesSourcesRepository,
-        private CacheItemPoolInterface $cacheAdapter,
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly CacheItemPoolInterface $cacheAdapter
     ) {
     }
 
     private function getCacheKey(NodesSources $nodesSources): string
     {
-        return 'ns_url_'.$nodesSources->getId();
+        return 'ns_url_' . $nodesSources->getId();
     }
 
     /**
+     * @param NodesSources $nodesSources
+     * @param array $parameters
+     * @return string
      * @throws InvalidArgumentException
      */
     public function aggregatePath(NodesSources $nodesSources, array $parameters = []): string
     {
         if (
-            isset($parameters[NodeRouter::NO_CACHE_PARAMETER])
-            && true === $parameters[NodeRouter::NO_CACHE_PARAMETER]
+            isset($parameters[NodeRouter::NO_CACHE_PARAMETER]) &&
+            $parameters[NodeRouter::NO_CACHE_PARAMETER] === true
         ) {
             $urlTokens = array_reverse($this->getIdentifiers($nodesSources));
-
             return implode('/', $urlTokens);
         }
 
@@ -44,17 +46,18 @@ final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSo
             $cacheItem->set(implode('/', $urlTokens));
             $this->cacheAdapter->save($cacheItem);
         }
-
         return $cacheItem->get();
     }
 
     /**
+     * @param Node $parent
+     *
      * @return array<int, int|string>
      */
     private function getParentsIds(Node $parent): array
     {
         $parentIds = [];
-        while (null !== $parent && !$parent->isHome()) {
+        while ($parent !== null && !$parent->isHome()) {
             $parentIds[] = $parent->getId();
             $parent = $parent->getParent();
         }
@@ -65,6 +68,10 @@ final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSo
     /**
      * Get every nodeSource parents identifier from current to
      * farthest ancestor.
+     *
+     * @param NodesSources $source
+     *
+     * @return array
      */
     private function getIdentifiers(NodesSources $source): array
     {
@@ -77,9 +84,12 @@ final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSo
             $parentIds = $this->getParentsIds($parentNode);
             if (count($parentIds) > 0) {
                 /**
-                 * Do a partial query to optimize SQL time.
+                 *
+                 * Do a partial query to optimize SQL time
                  */
-                $qb = $this->allStatusesNodesSourcesRepository->createQueryBuilder('ns');
+                $qb = $this->managerRegistry
+                    ->getRepository(NodesSources::class)
+                    ->createQueryBuilder('ns');
                 $parents = $qb->select('n.id as id, n.nodeName as nodeName, ua.alias as alias')
                     ->innerJoin('ns.node', 'n')
                     ->leftJoin('ns.urlAliases', 'ua')
@@ -89,7 +99,7 @@ final readonly class OptimizedNodesSourcesGraphPathAggregator implements NodesSo
                     ->setParameters([
                         'parentIds' => $parentIds,
                         'visible' => true,
-                        'translation' => $source->getTranslation(),
+                        'translation' => $source->getTranslation()
                     ])
                     ->getQuery()
                     ->setHint(Query::HINT_FORCE_PARTIAL_LOAD, true)

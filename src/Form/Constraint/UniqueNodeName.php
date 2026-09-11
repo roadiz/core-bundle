@@ -11,7 +11,7 @@ use Symfony\Component\Validator\Constraint;
  * @Target({"PROPERTY", "METHOD", "ANNOTATION"})
  */
 #[\Attribute(\Attribute::TARGET_PROPERTY | \Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
-final class UniqueNodeName extends Constraint
+class UniqueNodeName extends Constraint
 {
     public ?string $currentValue = null;
     public string $message = 'nodeName.alreadyExists';

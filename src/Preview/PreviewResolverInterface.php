@@ -7,6 +7,5 @@ namespace RZ\Roadiz\CoreBundle\Preview;
 interface PreviewResolverInterface
 {
     public function isPreview(): bool;
-
     public function getRequiredRole(): string;
 }

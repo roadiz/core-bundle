@@ -12,50 +12,60 @@ use RZ\Roadiz\Core\AbstractEntities\PositionedTrait;
 use RZ\Roadiz\CoreBundle\Repository\NodesTagsRepository;
 use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 
-#[ORM\Entity(repositoryClass: NodesTagsRepository::class),
-    ORM\Table(name: 'nodes_tags'),
+#[
+    ORM\Entity(repositoryClass: NodesTagsRepository::class),
+    ORM\Table(name: "nodes_tags"),
     ORM\Index(columns: ['node_id', 'position'], name: 'nodes_tags_node_id_position'),
     ORM\Index(columns: ['tag_id', 'position'], name: 'nodes_tags_tag_id_position'),
     ORM\Index(columns: ['position'], name: 'nodes_tags_position'),
     ORM\Index(columns: ['tag_id'], name: 'nodes_tags_tag_id'),
-    ORM\Index(columns: ['node_id'], name: 'nodes_tags_node_id'),]
+    ORM\Index(columns: ['node_id'], name: 'nodes_tags_node_id'),
+]
 class NodesTags implements PositionedInterface, Comparable
 {
     use PositionedTrait;
 
-    #[ORM\Id,
-        ORM\Column(type: 'string', length: 36),
-        SymfonySerializer\Ignore]
+    #[
+        ORM\Id,
+        ORM\Column(type:"string", length:36),
+        SymfonySerializer\Ignore
+    ]
     /** @phpstan-ignore-next-line */
     protected ?string $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Node::class, inversedBy: 'nodesTags'),
+    #[
+        ORM\ManyToOne(targetEntity: Node::class, inversedBy: "nodesTags"),
         ORM\JoinColumn(
-            name: 'node_id',
-            referencedColumnName: 'id',
+            name: "node_id",
+            referencedColumnName: "id",
             unique: false,
             nullable: false,
             onDelete: 'CASCADE'
         ),
         SymfonySerializer\Ignore,
-        Serializer\Exclude,]
+        Serializer\Exclude,
+    ]
     private Node $node;
 
-    #[ORM\ManyToOne(targetEntity: Tag::class, inversedBy: 'nodesTags'),
+    #[
+        ORM\ManyToOne(targetEntity: Tag::class, inversedBy: "nodesTags"),
         ORM\JoinColumn(
-            name: 'tag_id',
-            referencedColumnName: 'id',
+            name: "tag_id",
+            referencedColumnName: "id",
             unique: false,
             nullable: false,
             onDelete: 'CASCADE'
         ),
         SymfonySerializer\Groups(['nodes_sources', 'nodes_sources_base', 'node']),
-        Serializer\Groups(['nodes_sources', 'nodes_sources_base', 'node']),]
+        Serializer\Groups(['nodes_sources', 'nodes_sources_base', 'node']),
+    ]
     private Tag $tag;
 
-    #[ORM\Column(type: 'float', nullable: false, options: ['default' => 1]),
+    #[
+        ORM\Column(type: "float", nullable: false, options: ['default' => 1]),
         SymfonySerializer\Ignore,
-        Serializer\Exclude,]
+        Serializer\Exclude,
+    ]
     protected float $position = 0.0;
 
     public function __construct(?string $uuid = null)
@@ -63,27 +73,39 @@ class NodesTags implements PositionedInterface, Comparable
         $this->id = $uuid ?? \Ramsey\Uuid\Uuid::uuid4()->toString();
     }
 
+    /**
+     * @return Node
+     */
     public function getNode(): Node
     {
         return $this->node;
     }
 
+    /**
+     * @param Node $node
+     * @return NodesTags
+     */
     public function setNode(Node $node): NodesTags
     {
         $this->node = $node;
-
         return $this;
     }
 
+    /**
+     * @return Tag
+     */
     public function getTag(): Tag
     {
         return $this->tag;
     }
 
+    /**
+     * @param Tag $tag
+     * @return NodesTags
+     */
     public function setTag(Tag $tag): NodesTags
     {
         $this->tag = $tag;
-
         return $this;
     }
 }

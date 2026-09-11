@@ -11,13 +11,22 @@ use Symfony\Component\Form\DataTransformerInterface;
 /**
  * Transform Doctrine entities to their unique identifier.
  */
-final readonly class PersistableTransformer implements DataTransformerInterface
+class PersistableTransformer implements DataTransformerInterface
 {
     /**
+     * @var class-string<PersistableInterface>
+     */
+    protected string $doctrineEntity;
+    private EntityManagerInterface $entityManager;
+
+    /**
+     * @param EntityManagerInterface $entityManager
      * @param class-string<PersistableInterface> $doctrineEntity
      */
-    public function __construct(private EntityManagerInterface $entityManager, private string $doctrineEntity)
+    public function __construct(EntityManagerInterface $entityManager, string $doctrineEntity)
     {
+        $this->entityManager = $entityManager;
+        $this->doctrineEntity = $doctrineEntity;
     }
 
     public function transform(mixed $value): mixed
@@ -30,7 +39,6 @@ final readonly class PersistableTransformer implements DataTransformerInterface
         if ($value instanceof PersistableInterface) {
             return $value->getId();
         }
-
         return null;
     }
 
@@ -39,9 +47,8 @@ final readonly class PersistableTransformer implements DataTransformerInterface
         if (null === $value) {
             return null;
         }
-
         return $this->entityManager->getRepository($this->doctrineEntity)->findBy([
-            'id' => $value,
+            'id' => $value
         ]);
     }
 }

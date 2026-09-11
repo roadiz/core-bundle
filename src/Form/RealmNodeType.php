@@ -19,16 +19,16 @@ final class RealmNodeType extends AbstractType
             'label' => 'realm_node.realm',
             'help' => 'realm_node.realm.help',
             'placeholder' => 'realm_node.realm.placeholder',
-            'required' => true,
+            'required' => false,
         ])->add('inheritanceType', ChoiceType::class, [
             'label' => 'realm_node.inheritanceType',
             'help' => 'realm_node.inheritanceType.help',
             'required' => true,
             'choices' => [
-                'realm_node.'.RealmInterface::INHERITANCE_ROOT => RealmInterface::INHERITANCE_ROOT,
-                'realm_node.'.RealmInterface::INHERITANCE_AUTO => RealmInterface::INHERITANCE_AUTO,
-                'realm_node.'.RealmInterface::INHERITANCE_NONE => RealmInterface::INHERITANCE_NONE,
-            ],
+                'realm_node.' . RealmInterface::INHERITANCE_ROOT => RealmInterface::INHERITANCE_ROOT,
+                'realm_node.' . RealmInterface::INHERITANCE_AUTO => RealmInterface::INHERITANCE_AUTO,
+                'realm_node.' . RealmInterface::INHERITANCE_NONE => RealmInterface::INHERITANCE_NONE,
+            ]
         ]);
     }
 

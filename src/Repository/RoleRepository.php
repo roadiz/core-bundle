@@ -6,9 +6,11 @@ namespace RZ\Roadiz\CoreBundle\Repository;
 
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\NoResultException;
+use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Role;
+use RZ\Roadiz\CoreBundle\Entity\SettingGroup;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -18,19 +20,20 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  * @method Role|null findOneBy(array $criteria, array $orderBy = null)
  * @method Role[]    findAll()
  * @method Role[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
- *
  * @extends EntityRepository<Role>
  */
 final class RoleRepository extends EntityRepository
 {
     public function __construct(
         ManagerRegistry $registry,
-        EventDispatcherInterface $dispatcher,
+        EventDispatcherInterface $dispatcher
     ) {
         parent::__construct($registry, Role::class, $dispatcher);
     }
 
     /**
+     * @param string $roleName
+     * @return int
      * @throws NoResultException
      * @throws NonUniqueResultException
      */
@@ -47,6 +50,8 @@ final class RoleRepository extends EntityRepository
     }
 
     /**
+     * @param string $roleName
+     * @return Role
      * @throws NonUniqueResultException
      * @throws ORMException
      */
@@ -71,6 +76,8 @@ final class RoleRepository extends EntityRepository
 
     /**
      * Get every Role names except for ROLE_SUPERADMIN.
+     *
+     * @return array
      */
     public function getAllBasicRoleName(): array
     {
@@ -86,7 +93,9 @@ final class RoleRepository extends EntityRepository
     }
 
     /**
-     * Get every Role names.
+     * Get every Role names
+     *
+     * @return array
      */
     public function getAllRoleName(): array
     {

@@ -10,7 +10,7 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class DataListTextType extends AbstractType
+class DataListTextType extends AbstractType
 {
     public function configureOptions(OptionsResolver $resolver): void
     {
@@ -29,6 +29,7 @@ final class DataListTextType extends AbstractType
         $view->vars['listName'] = $options['listName'];
         $view->vars['list'] = $options['list'];
     }
+
 
     public function getBlockPrefix(): string
     {

@@ -23,6 +23,9 @@ final class UserCollectionType extends AbstractType
         $builder->addModelTransformer(new CollectionToArrayTransformer());
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
@@ -40,11 +43,17 @@ final class UserCollectionType extends AbstractType
         });
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function getBlockPrefix(): string
     {
         return 'user_collection';
