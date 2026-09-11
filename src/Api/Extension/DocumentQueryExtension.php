@@ -27,7 +27,6 @@ final class DocumentQueryExtension implements QueryItemExtensionInterface, Query
             ->setParameter(':raw', false);
     }
 
-    #[\Override]
     public function applyToItem(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
@@ -39,7 +38,6 @@ final class DocumentQueryExtension implements QueryItemExtensionInterface, Query
         $this->apply($queryBuilder, $queryNameGenerator, $resourceClass);
     }
 
-    #[\Override]
     public function applyToCollection(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,

@@ -65,7 +65,6 @@ abstract class PrefixAwareRepository extends EntityRepository
         return $this;
     }
 
-    #[\Override]
     protected function prepareComparisons(array &$criteria, QueryBuilder $qb, string $alias): QueryBuilder
     {
         $simpleQB = new SimpleQueryBuilder($qb);
@@ -137,7 +136,6 @@ abstract class PrefixAwareRepository extends EntityRepository
      *
      * @throws \Exception
      */
-    #[\Override]
     public function findBy(
         array $criteria,
         ?array $orderBy = null,
@@ -188,7 +186,6 @@ abstract class PrefixAwareRepository extends EntityRepository
      *
      * @throws \Doctrine\ORM\NonUniqueResultException
      */
-    #[\Override]
     public function findOneBy(
         array $criteria,
         ?array $orderBy = null,
@@ -222,7 +219,6 @@ abstract class PrefixAwareRepository extends EntityRepository
      *
      * @return array<TEntityClass>
      */
-    #[\Override]
     public function searchBy(
         string $pattern,
         array $criteria = [],
@@ -236,7 +232,7 @@ abstract class PrefixAwareRepository extends EntityRepository
         $qb = $this->createSearchBy($pattern, $qb, $criteria, $alias);
 
         // Add ordering
-        if ([] !== $orders) {
+        if (null !== $orders) {
             foreach ($orders as $key => $value) {
                 $realKey = $this->getRealKey($qb, $key);
                 $qb->addOrderBy($realKey['prefix'].$realKey['key'], $value);
@@ -269,10 +265,21 @@ abstract class PrefixAwareRepository extends EntityRepository
         return $query->getResult();
     }
 
+    public function countSearchBy(string $pattern, array $criteria = []): int
+    {
+        $qb = $this->createQueryBuilder($this->getDefaultPrefix());
+        $qb->select($qb->expr()->countDistinct($this->getDefaultPrefix().'.id'));
+        $qb = $this->createSearchBy($pattern, $qb, $criteria);
+
+        $this->dispatchQueryBuilderEvent($qb, $this->getEntityName());
+        $this->applyFilterByCriteria($criteria, $qb);
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
+
     /**
      * Create a LIKE comparison with entity texts columns.
      */
-    #[\Override]
     protected function classicLikeComparison(
         string $pattern,
         QueryBuilder $qb,

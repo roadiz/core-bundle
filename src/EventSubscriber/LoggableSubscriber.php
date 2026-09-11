@@ -34,7 +34,6 @@ final readonly class LoggableSubscriber implements EventSubscriberInterface
         }
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [

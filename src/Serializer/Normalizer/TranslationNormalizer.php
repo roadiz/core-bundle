@@ -15,7 +15,6 @@ final readonly class TranslationNormalizer implements DenormalizerInterface
     {
     }
 
-    #[\Override]
     public function getSupportedTypes(?string $format): array
     {
         return [
@@ -23,7 +22,6 @@ final readonly class TranslationNormalizer implements DenormalizerInterface
         ];
     }
 
-    #[\Override]
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): Translation
     {
         $locale = $data['locale'];
@@ -43,8 +41,7 @@ final readonly class TranslationNormalizer implements DenormalizerInterface
         return $translation;
     }
 
-    #[\Override]
-    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null): bool
     {
         return is_array($data) && array_key_exists('locale', $data);
     }

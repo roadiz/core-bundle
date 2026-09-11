@@ -13,7 +13,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class UsersDeleteCommand extends UsersCommand
 {
-    #[\Override]
     protected function configure(): void
     {
         $this->setName('users:delete')
@@ -25,7 +24,6 @@ final class UsersDeleteCommand extends UsersCommand
             );
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -41,8 +39,8 @@ final class UsersDeleteCommand extends UsersCommand
                 $confirmation
             )
         ) {
-            $this->managerRegistry->getManagerForClass(User::class)?->remove($user);
-            $this->managerRegistry->getManagerForClass(User::class)?->flush();
+            $this->managerRegistry->getManagerForClass(User::class)->remove($user);
+            $this->managerRegistry->getManagerForClass(User::class)->flush();
             $io->success('User “'.$name.'” deleted.');
 
             return 0;

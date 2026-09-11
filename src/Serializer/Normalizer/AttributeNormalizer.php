@@ -15,7 +15,7 @@ use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
 final readonly class AttributeNormalizer implements DenormalizerInterface
 {
-    public const string PERSIST_NEW_ENTITIES = 'persist_new_entities';
+    public const PERSIST_NEW_ENTITIES = 'persist_new_entities';
 
     public function __construct(
         private ManagerRegistry $managerRegistry,
@@ -24,7 +24,6 @@ final readonly class AttributeNormalizer implements DenormalizerInterface
     ) {
     }
 
-    #[\Override]
     public function getSupportedTypes(?string $format): array
     {
         return [
@@ -32,7 +31,6 @@ final readonly class AttributeNormalizer implements DenormalizerInterface
         ];
     }
 
-    #[\Override]
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): Attribute
     {
         $code = $data['code'];
@@ -48,7 +46,7 @@ final readonly class AttributeNormalizer implements DenormalizerInterface
             $attribute = new Attribute();
             $attribute->setCode($code);
             if ($context[self::PERSIST_NEW_ENTITIES] ?? false) {
-                $this->managerRegistry->getManagerForClass(Attribute::class)?->persist($attribute);
+                $this->managerRegistry->getManagerForClass(Attribute::class)->persist($attribute);
             }
         }
 
@@ -95,7 +93,7 @@ final readonly class AttributeNormalizer implements DenormalizerInterface
             throw new \InvalidArgumentException('Attribute group translation locale must be a string.');
         }
         $attributeTranslation = $attribute->getAttributeTranslations()->findFirst(
-            fn ($key, AttributeTranslationInterface $translation) => $translation->getTranslation()?->getLocale() === $data['translation']['locale']
+            fn ($key, AttributeTranslationInterface $translation) => $translation->getTranslation()->getLocale() === $data['translation']['locale']
         );
         if (null === $attributeTranslation) {
             $translation = $this->translationNormalizer->denormalize(
@@ -109,16 +107,15 @@ final readonly class AttributeNormalizer implements DenormalizerInterface
             $attribute->addAttributeTranslation($attributeTranslation);
 
             if ($context[AttributeNormalizer::PERSIST_NEW_ENTITIES] ?? false) {
-                $this->managerRegistry->getManagerForClass(AttributeTranslation::class)?->persist($attributeTranslation);
-                $this->managerRegistry->getManagerForClass(AttributeTranslation::class)?->flush();
+                $this->managerRegistry->getManagerForClass(AttributeTranslation::class)->persist($attributeTranslation);
+                $this->managerRegistry->getManagerForClass(AttributeTranslation::class)->flush();
             }
         }
 
         $attributeTranslation->setLabel($data['label']);
     }
 
-    #[\Override]
-    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, ?array $context = []): bool
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null): bool
     {
         return is_array($data) && array_key_exists('type', $data) && array_key_exists('code', $data);
     }

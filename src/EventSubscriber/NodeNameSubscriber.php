@@ -26,7 +26,6 @@ final readonly class NodeNameSubscriber implements EventSubscriberInterface
     ) {
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [
@@ -70,7 +69,7 @@ final readonly class NodeNameSubscriber implements EventSubscriberInterface
                         $oldPaths = $this->nodeMover->getNodeSourcesUrls($nodeSource->getNode());
                         $oldUpdateAt = $nodeSource->getNode()->getUpdatedAt();
                     }
-                } catch (SameNodeUrlException) {
+                } catch (SameNodeUrlException $e) {
                     $oldPaths = [];
                 }
                 $alreadyUsed = $this->nodeNamePolicy->isNodeNameAlreadyUsed($testingNodeName);

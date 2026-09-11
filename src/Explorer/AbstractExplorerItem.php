@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Explorer;
 
-use RZ\Roadiz\Documents\Models\BaseDocumentInterface;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 
 abstract class AbstractExplorerItem implements ExplorerItemInterface
 {
@@ -13,7 +13,7 @@ abstract class AbstractExplorerItem implements ExplorerItemInterface
         return null;
     }
 
-    protected function getThumbnail(): BaseDocumentInterface|array|null
+    protected function getThumbnail(): DocumentInterface|array|null
     {
         return null;
     }
@@ -28,7 +28,6 @@ abstract class AbstractExplorerItem implements ExplorerItemInterface
         return null;
     }
 
-    #[\Override]
     public function toArray(): array
     {
         return [

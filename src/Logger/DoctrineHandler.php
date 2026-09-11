@@ -7,7 +7,6 @@ namespace RZ\Roadiz\CoreBundle\Logger;
 use Doctrine\Persistence\ManagerRegistry;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
-use Monolog\LogRecord;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
@@ -111,8 +110,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
         }
     }
 
-    #[\Override]
-    protected function write(LogRecord $record): void
+    public function write(array $record): void
     {
         try {
             $manager = $this->managerRegistry->getManagerForClass(Log::class);
@@ -121,68 +119,70 @@ final class DoctrineHandler extends AbstractProcessingHandler
             }
 
             $log = new Log(
-                $record->level->value,
-                $record->message
+                $record['level'],
+                $record['message']
             );
 
-            $log->setChannel((string) $record->channel);
-            $data = $record->extra;
-            $context = $record->context;
+            $log->setChannel((string) $record['channel']);
+            $data = $record['extra'];
+            $context = $record['context'];
 
-            foreach ($context as $key => $value) {
-                if ($value instanceof Node) {
-                    $this->populateForNode($value, $log, $data);
-                } elseif ($value instanceof NodesSources) {
-                    $this->populateForNodesSources($value, $log, $data);
-                } elseif ('entity' === $key && $value instanceof PersistableInterface) {
-                    $log->setEntityClass($value::class);
-                    $log->setEntityId($value->getId());
+            if (\is_array($context)) {
+                foreach ($context as $key => $value) {
+                    if ($value instanceof Node) {
+                        $this->populateForNode($value, $log, $data);
+                    } elseif ($value instanceof NodesSources) {
+                        $this->populateForNodesSources($value, $log, $data);
+                    } elseif ('entity' === $key && $value instanceof PersistableInterface) {
+                        $log->setEntityClass(get_class($value));
+                        $log->setEntityId($value->getId());
 
-                    $texteable = ['getTitle', 'getName', '__toString'];
-                    foreach ($texteable as $method) {
-                        if (method_exists($value, $method)) {
-                            $data = array_merge(
-                                $data,
-                                [
-                                    'entity_title' => $value->{$method}(),
-                                ]
-                            );
-                            break;
+                        $texteable = ['getTitle', 'getName', '__toString'];
+                        foreach ($texteable as $method) {
+                            if (method_exists($value, $method)) {
+                                $data = array_merge(
+                                    $data,
+                                    [
+                                        'entity_title' => $value->{$method}(),
+                                    ]
+                                );
+                                break;
+                            }
                         }
                     }
-                }
-                if ($value instanceof \Exception) {
-                    $data = array_merge(
-                        $data,
-                        [
-                            'exception_class' => $value::class,
-                            'message' => $value->getMessage(),
-                        ]
-                    );
-                }
-                if ($value instanceof Request) {
-                    $data = array_merge(
-                        $data,
-                        [
-                            'uri' => $value->getUri(),
-                            'schemeHost' => $value->getSchemeAndHttpHost(),
-                        ]
-                    );
-                }
-                if ('request' === $key && \is_array($value)) {
-                    $data = array_merge(
-                        $data,
-                        $value
-                    );
-                }
-                if (\is_string($value) && !empty($value) && !\is_numeric($key)) {
-                    $data = array_merge(
-                        $data,
-                        [$key => $value]
-                    );
-                }
-                if (\is_string($value) && !empty($value) && \in_array($key, ['user', 'username'])) {
-                    $log->setUsername($value);
+                    if ($value instanceof \Exception) {
+                        $data = array_merge(
+                            $data,
+                            [
+                                'exception_class' => get_class($value),
+                                'message' => $value->getMessage(),
+                            ]
+                        );
+                    }
+                    if ($value instanceof Request) {
+                        $data = array_merge(
+                            $data,
+                            [
+                                'uri' => $value->getUri(),
+                                'schemeHost' => $value->getSchemeAndHttpHost(),
+                            ]
+                        );
+                    }
+                    if ('request' === $key && \is_array($value)) {
+                        $data = array_merge(
+                            $data,
+                            $value
+                        );
+                    }
+                    if (\is_string($value) && !empty($value) && !\is_numeric($key)) {
+                        $data = array_merge(
+                            $data,
+                            [$key => $value]
+                        );
+                    }
+                    if (\is_string($value) && !empty($value) && \in_array($key, ['user', 'username'])) {
+                        $log->setUsername($value);
+                    }
                 }
             }
 
@@ -222,7 +222,7 @@ final class DoctrineHandler extends AbstractProcessingHandler
 
             $manager->persist($log);
             $manager->flush();
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             /*
              * Need to prevent SQL errors over throwing
              * if PDO has faulted

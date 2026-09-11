@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Node;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\Contracts\NodeType\NodeTypeClassLocatorInterface;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
@@ -25,7 +24,6 @@ final readonly class NodeFactory
         private AllStatusesNodeRepository $allStatusesNodeRepository,
         private UrlAliasRepository $urlAliasRepository,
         private NodeTypes $nodeTypesBag,
-        private NodeTypeClassLocatorInterface $nodeTypeClassLocator,
     ) {
     }
 
@@ -40,7 +38,9 @@ final readonly class NodeFactory
             throw new \RuntimeException('Cannot create node from null NodeType and null Node.');
         }
 
-        $translation ??= $this->managerRegistry->getRepository(Translation::class)->findDefault();
+        if (null === $translation) {
+            $translation = $this->managerRegistry->getRepository(Translation::class)->findDefault();
+        }
 
         if (null === $node) {
             $node = new Node();
@@ -57,10 +57,10 @@ final readonly class NodeFactory
             $node->setParent($parent);
         }
 
-        $sourceClass = $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($nodeType);
+        $sourceClass = $nodeType->getSourceEntityFullQualifiedClassName();
         /** @var NodesSources $source */
         $source = new $sourceClass($node, $translation);
-        $manager = $this->managerRegistry->getManagerForClass(NodesSources::class) ?? throw new \RuntimeException('No entity manager found for NodesSources class.');
+        $manager = $this->managerRegistry->getManagerForClass(NodesSources::class);
         $source->injectObjectManager($manager);
         $source->setTitle($title);
         $source->setPublishedAt(new \DateTime());
@@ -100,7 +100,7 @@ final readonly class NodeFactory
             $alias = new UrlAlias();
             $alias->setNodeSource($nodeSource);
             $alias->setAlias($urlAlias);
-            $this->managerRegistry->getManagerForClass(UrlAlias::class)?->persist($alias);
+            $this->managerRegistry->getManagerForClass(UrlAlias::class)->persist($alias);
         }
 
         return $node;

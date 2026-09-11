@@ -14,13 +14,11 @@ final readonly class GroupsImporter implements EntityImporterInterface
     {
     }
 
-    #[\Override]
     public function supports(string $entityClass): bool
     {
         return Group::class === $entityClass;
     }
 
-    #[\Override]
     public function import(string $serializedData): bool
     {
         $this->serializer->deserialize(

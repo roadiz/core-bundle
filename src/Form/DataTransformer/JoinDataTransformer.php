@@ -24,7 +24,6 @@ final readonly class JoinDataTransformer implements DataTransformerInterface
     /**
      * @return array joinDataTransformer must always return an array for view data
      */
-    #[\Override]
     public function transform(mixed $value): array
     {
         /*
@@ -54,13 +53,12 @@ final readonly class JoinDataTransformer implements DataTransformerInterface
         return [];
     }
 
-    #[\Override]
-    public function reverseTransform(mixed $value): array|object|null
+    /**
+     * @return array|object|null
+     */
+    public function reverseTransform(mixed $value): mixed
     {
         if ($this->nodeTypeField->isManyToMany()) {
-            if (empty($value) || !is_array($value)) {
-                return [];
-            }
             /** @var PersistableInterface[] $unorderedEntities */
             $unorderedEntities = $this->managerRegistry->getRepository($this->entityClassname)->findBy([
                 'id' => $value,
@@ -68,21 +66,14 @@ final readonly class JoinDataTransformer implements DataTransformerInterface
             /*
              * Need to preserve order in POST data
              */
-            $stringIds = array_map(strval(...), $value);
-            usort($unorderedEntities, function (PersistableInterface $a, PersistableInterface $b) use ($stringIds): int {
-                $aPosition = array_search((string) $a->getId(), $stringIds, true);
-                $bPosition = array_search((string) $b->getId(), $stringIds, true);
-
-                return ((int) $aPosition) <=> ((int) $bPosition);
+            usort($unorderedEntities, function (PersistableInterface $a, PersistableInterface $b) use ($value) {
+                return array_search($a->getId(), $value) -
+                    array_search($b->getId(), $value);
             });
 
             return $unorderedEntities;
         }
         if ($this->nodeTypeField->isManyToOne()) {
-            if (empty($value)) {
-                return null;
-            }
-
             return $this->managerRegistry->getRepository($this->entityClassname)->findOneBy([
                 'id' => $value,
             ]);

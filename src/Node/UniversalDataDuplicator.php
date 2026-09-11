@@ -39,46 +39,45 @@ final readonly class UniversalDataDuplicator
          * Only if source is default translation.
          * Non-default translation source should not contain universal fields.
          */
-        if ($this->hasDefaultTranslation($source) && !$source->getTranslation()->isDefaultTranslation()) {
-            return false;
-        }
+        if ($source->getTranslation()->isDefaultTranslation() || !$this->hasDefaultTranslation($source)) {
+            $fields = $this->nodeTypesBag->get($source->getNodeTypeName())->getFields();
+            /** @var NodeTypeField[] $universalFields */
+            $universalFields = $fields->filter(function (NodeTypeField $field) {
+                return $field->isUniversal();
+            });
 
-        $fields = $this->nodeTypesBag->get($source->getNodeTypeName())?->getFields()
-            ?? throw new \InvalidArgumentException('NodeType '.$source->getNodeTypeName().' does not exist.');
-        /** @var NodeTypeField[] $universalFields */
-        $universalFields = $fields->filter(fn (NodeTypeField $field) => $field->isUniversal());
+            if (count($universalFields) > 0) {
+                $otherSources = $this->allStatusesNodesSourcesRepository->findBy([
+                    'node' => $source->getNode(),
+                    'id' => ['!=', $source->getId()],
+                ]);
 
-        if (0 === count($universalFields)) {
-            return false;
-        }
-
-        $otherSources = $this->allStatusesNodesSourcesRepository->findBy([
-            'node' => $source->getNode(),
-            'id' => ['!=', $source->getId()],
-        ]);
-
-        foreach ($universalFields as $universalField) {
-            /** @var NodesSources $otherSource */
-            foreach ($otherSources as $otherSource) {
-                if (!$universalField->isVirtual()) {
-                    $this->duplicateNonVirtualField($source, $otherSource, $universalField);
-                } else {
-                    switch ($universalField->getType()) {
-                        case FieldType::DOCUMENTS_T:
-                            $this->duplicateDocumentsField($source, $otherSource, $universalField);
-                            break;
-                        case FieldType::MULTI_PROVIDER_T:
-                        case FieldType::SINGLE_PROVIDER_T:
-                        case FieldType::MANY_TO_ONE_T:
-                        case FieldType::MANY_TO_MANY_T:
+                foreach ($universalFields as $universalField) {
+                    /** @var NodesSources $otherSource */
+                    foreach ($otherSources as $otherSource) {
+                        if (!$universalField->isVirtual()) {
                             $this->duplicateNonVirtualField($source, $otherSource, $universalField);
-                            break;
+                        } else {
+                            switch ($universalField->getType()) {
+                                case FieldType::DOCUMENTS_T:
+                                    $this->duplicateDocumentsField($source, $otherSource, $universalField);
+                                    break;
+                                case FieldType::MULTI_PROVIDER_T:
+                                case FieldType::SINGLE_PROVIDER_T:
+                                case FieldType::MANY_TO_ONE_T:
+                                case FieldType::MANY_TO_MANY_T:
+                                    $this->duplicateNonVirtualField($source, $otherSource, $universalField);
+                                    break;
+                            }
+                        }
                     }
                 }
+
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 
     /**
@@ -141,9 +140,6 @@ final readonly class UniversalDataDuplicator
             /** @var NodesSourcesDocuments $newDocument */
             foreach ($newDocuments as $newDocument) {
                 $nsDoc = new NodesSourcesDocuments($destSource, $newDocument->getDocument(), $field);
-                // Copy all contextual information from source nodes-sources-document
-                // (hotspot, imageCropAlignment)
-                $nsDoc->copyFrom($newDocument);
                 $nsDoc->setPosition($position);
                 ++$position;
 

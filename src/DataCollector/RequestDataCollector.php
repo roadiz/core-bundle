@@ -26,7 +26,6 @@ final class RequestDataCollector extends AbstractDataCollector
     ) {
     }
 
-    #[\Override]
     public function collect(Request $request, Response $response, ?\Throwable $exception = null): void
     {
         $this->data = [
@@ -39,7 +38,6 @@ final class RequestDataCollector extends AbstractDataCollector
         return $this->data['version'] ?? '';
     }
 
-    #[\Override]
     public function getName(): string
     {
         return 'roadiz.data_collector.request';

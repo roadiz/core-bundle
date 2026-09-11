@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use RZ\Roadiz\Core\AbstractEntities\AbstractEntity;
 use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
-use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
 use RZ\Roadiz\CoreBundle\Enum\NodeTypeDecoratorProperty;
 use RZ\Roadiz\CoreBundle\Repository\NodeTypeDecoratorRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -15,10 +15,8 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
     ORM\Table(name: 'node_type_decorators'),
     UniqueEntity(fields: ['path', 'property']),
     ORM\Index(columns: ['path'], name: 'idx_ntd_path'),]
-class NodeTypeDecorator implements PersistableInterface, \Stringable
+class NodeTypeDecorator extends AbstractEntity implements PersistableInterface
 {
-    use SequentialIdTrait;
-
     private function __construct(
         #[ORM\Column(type: 'string', length: 255, nullable: false)]
         private string $path,
@@ -83,7 +81,6 @@ class NodeTypeDecorator implements PersistableInterface, \Stringable
             NodeTypeDecoratorProperty::NODE_TYPE_FIELD_PLACEHOLDER, => $this->getStringValue(),
             NodeTypeDecoratorProperty::NODE_TYPE_FIELD_MIN_LENGTH,
             NodeTypeDecoratorProperty::NODE_TYPE_FIELD_MAX_LENGTH => $this->getIntegerValue(),
-            NodeTypeDecoratorProperty::NODE_TYPE_HIGHLIGHTED,
             NodeTypeDecoratorProperty::NODE_TYPE_FIELD_VISIBLE,
             NodeTypeDecoratorProperty::NODE_TYPE_FIELD_UNIVERSAL => $this->getBooleanValue(),
         };
@@ -91,7 +88,7 @@ class NodeTypeDecorator implements PersistableInterface, \Stringable
 
     public function getStringValue(): ?string
     {
-        return $this->value ?? null;
+        return null !== $this->value ? $this->value : null;
     }
 
     public function getBooleanValue(): ?bool
@@ -132,11 +129,6 @@ class NodeTypeDecorator implements PersistableInterface, \Stringable
                     break;
                 case NodeTypeDecoratorProperty::NODE_TYPE_DISPLAY_NAME:
                     $nodeType->setDisplayName($this->getStringValue());
-                    break;
-                case NodeTypeDecoratorProperty::NODE_TYPE_HIGHLIGHTED:
-                    if (null !== $value = $this->getBooleanValue()) {
-                        $nodeType->setHighlighted($value);
-                    }
                     break;
             }
         } else {
@@ -181,7 +173,6 @@ class NodeTypeDecorator implements PersistableInterface, \Stringable
         return $nodeType->getFieldByName($fieldName);
     }
 
-    #[\Override]
     public function __toString(): string
     {
         return $this->path.$this->property->value;

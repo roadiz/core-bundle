@@ -25,7 +25,6 @@ final readonly class NodeRedirectionSubscriber implements EventSubscriberInterfa
     ) {
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [
@@ -41,15 +40,15 @@ final readonly class NodeRedirectionSubscriber implements EventSubscriberInterfa
         string $eventName,
         EventDispatcherInterface $dispatcher,
     ): void {
-        $node = $event->getNode();
         if (
             'prod' === $this->kernelEnvironment
             && !$this->previewResolver->isPreview()
-            && $node->isPublished()
-            && $this->nodeTypesBag->get($node->getNodeTypeName())?->isReachable()
+            && null !== $event->getNode()
+            && $event->getNode()->isPublished()
+            && $this->nodeTypesBag->get($event->getNode()->getNodeTypeName())?->isReachable()
             && count($event->getPaths()) > 0
         ) {
-            $this->nodeMover->redirectAll($node, $event->getPaths());
+            $this->nodeMover->redirectAll($event->getNode(), $event->getPaths());
             $dispatcher->dispatch(new CachePurgeRequestEvent());
         }
     }

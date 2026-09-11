@@ -22,7 +22,7 @@ final readonly class CircularReferenceHandler
                 null,
                 $context
             );
-        } catch (\InvalidArgumentException) {
+        } catch (\InvalidArgumentException $exception) {
             if (is_object($object) && method_exists($object, 'getId')) {
                 return (string) $object->getId();
             }

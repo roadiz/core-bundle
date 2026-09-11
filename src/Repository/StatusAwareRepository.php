@@ -52,7 +52,6 @@ abstract class StatusAwareRepository extends EntityRepository implements StatusA
     /**
      * @deprecated do not use repository stateful methods in services
      */
-    #[\Override]
     public function isDisplayingNotPublishedNodes(): bool
     {
         return $this->displayNotPublishedNodes;
@@ -73,7 +72,6 @@ abstract class StatusAwareRepository extends EntityRepository implements StatusA
     /**
      * @deprecated do not use repository stateful methods in services
      */
-    #[\Override]
     public function isDisplayingAllNodesStatuses(): bool
     {
         return $this->displayAllNodesStatuses;
@@ -94,7 +92,6 @@ abstract class StatusAwareRepository extends EntityRepository implements StatusA
         return $this;
     }
 
-    #[\Override]
     public function alterQueryBuilderWithAuthorizationChecker(
         QueryBuilder $qb,
         string $prefix = EntityRepository::NODE_ALIAS,

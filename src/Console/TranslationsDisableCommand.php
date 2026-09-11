@@ -16,7 +16,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 final class TranslationsDisableCommand extends TranslationsCommand
 {
-    #[\Override]
     protected function configure(): void
     {
         $this->setName('translations:disable')
@@ -28,7 +27,6 @@ final class TranslationsDisableCommand extends TranslationsCommand
             );
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -54,7 +52,7 @@ final class TranslationsDisableCommand extends TranslationsCommand
             )
         ) {
             $translation->setAvailable(false);
-            $this->managerRegistry->getManagerForClass(Translation::class)?->flush();
+            $this->managerRegistry->getManagerForClass(Translation::class)->flush();
             $io->success('Translation disabled.');
         }
 

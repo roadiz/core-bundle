@@ -16,9 +16,8 @@ use Doctrine\ORM\QueryBuilder;
  */
 final class IntersectionFilter extends AbstractFilter
 {
-    public const string PARAMETER = 'intersect';
+    public const PARAMETER = 'intersect';
 
-    #[\Override]
     protected function filterProperty(
         string $property,
         mixed $value,
@@ -58,12 +57,13 @@ final class IntersectionFilter extends AbstractFilter
         }
     }
 
-    #[\Override]
     public function getDescription(string $resourceClass): array
     {
         $properties = $this->properties;
 
-        $properties ??= array_fill_keys($this->getClassMetadata($resourceClass)->getFieldNames(), null);
+        if (null === $properties) {
+            $properties = array_fill_keys($this->getClassMetadata($resourceClass)->getFieldNames(), null);
+        }
 
         return array_reduce(
             array_keys($properties),
@@ -73,7 +73,7 @@ final class IntersectionFilter extends AbstractFilter
                     'type' => 'string',
                     'required' => false,
                     'description' => 'Discriminate an existing filter with additional filtering value using a new inner join.',
-                    'openapiContext' => [
+                    'openapi' => [
                         'description' => 'Discriminate an existing filter with additional filtering value using a new inner join.',
                     ],
                 ];
@@ -82,7 +82,7 @@ final class IntersectionFilter extends AbstractFilter
                     'type' => 'string',
                     'required' => false,
                     'description' => 'Discriminate an existing filter with additional filtering value using a new inner join.',
-                    'openapiContext' => [
+                    'openapi' => [
                         'description' => 'Discriminate an existing filter with additional filtering value using a new inner join.',
                     ],
                 ];

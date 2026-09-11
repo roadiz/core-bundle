@@ -21,7 +21,6 @@ final readonly class AttributeValueQueryExtension implements QueryItemExtensionI
     ) {
     }
 
-    #[\Override]
     public function applyToItem(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
@@ -33,7 +32,6 @@ final readonly class AttributeValueQueryExtension implements QueryItemExtensionI
         $this->apply($queryBuilder, $resourceClass);
     }
 
-    #[\Override]
     public function applyToCollection(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
@@ -67,11 +65,6 @@ final readonly class AttributeValueQueryExtension implements QueryItemExtensionI
         } else {
             $joinAlias = $existingNodeJoin->getAlias();
         }
-
-        // Always exclude shadow nodes
-        $queryBuilder
-            ->andWhere($queryBuilder->expr()->eq($joinAlias.'.shadow', ':shadow'))
-            ->setParameter(':shadow', false);
 
         if ($this->previewResolver->isPreview()) {
             $queryBuilder
