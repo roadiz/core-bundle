@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Serializer\Normalizer;
 
 use League\Flysystem\FilesystemOperator;
+use Psr\Log\LoggerInterface;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
+use RZ\Roadiz\Documents\Exceptions\InvalidEmbedId;
 use RZ\Roadiz\Documents\MediaFinders\EmbedFinderFactory;
 use RZ\Roadiz\Documents\Models\FolderInterface;
+use RZ\Roadiz\Documents\UrlGenerators\DocumentUrlGeneratorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Symfony\Component\Stopwatch\Stopwatch;
 
 /**
  * Override Document default normalization.
@@ -21,33 +25,35 @@ final class DocumentNormalizer extends AbstractPathNormalizer
     public function __construct(
         NormalizerInterface $decorated,
         UrlGeneratorInterface $urlGenerator,
+        Stopwatch $stopwatch,
         private readonly FilesystemOperator $documentsStorage,
-        private readonly EmbedFinderFactory $embedFinderFactory
+        private readonly EmbedFinderFactory $embedFinderFactory,
+        private readonly DocumentUrlGeneratorInterface $documentUrlGenerator,
+        private readonly LoggerInterface $logger,
     ) {
-        parent::__construct($decorated, $urlGenerator);
+        parent::__construct($decorated, $urlGenerator, $stopwatch);
     }
 
     /**
-     * @param mixed $object
-     * @param string|null $format
-     * @param array $context
      * @return array|\ArrayObject|bool|float|int|string|null
+     *
      * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
      */
     public function normalize(mixed $object, ?string $format = null, array $context = []): mixed
     {
         $data = $this->decorated->normalize($object, $format, $context);
         if (
-            $object instanceof Document &&
-            is_array($data)
+            $object instanceof Document
+            && is_array($data)
         ) {
+            $this->stopwatch->start('normalizeDocument', 'serializer');
             /** @var array<string> $serializationGroups */
             $serializationGroups = isset($context['groups']) && is_array($context['groups']) ? $context['groups'] : [];
             $data['type'] = $object->getShortType();
 
             if (
-                !$object->isPrivate() &&
-                !$object->isProcessable()
+                !$object->isPrivate()
+                && !$object->isProcessable()
             ) {
                 $mountPath = $object->getMountPath();
                 if (null !== $mountPath) {
@@ -56,11 +62,19 @@ final class DocumentNormalizer extends AbstractPathNormalizer
             }
 
             if (
-                !$object->isPrivate() &&
-                $object->isProcessable() &&
-                null !== $alignment = $object->getImageCropAlignment()
+                !$object->isPrivate()
+                && $object->isProcessable()
+                && null !== $alignment = $object->getImageCropAlignment()
             ) {
                 $data['imageCropAlignment'] = $alignment;
+            }
+
+            if (
+                \in_array('document_raw_relative_path', $serializationGroups, true)
+                && !$object->isPrivate()
+                && null !== $rawDocument = $object->getRawDocument()
+            ) {
+                $data['rawRelativePath'] = $rawDocument->getRelativePath();
             }
 
             if (
@@ -83,15 +97,23 @@ final class DocumentNormalizer extends AbstractPathNormalizer
             }
 
             if (
-                $object->getEmbedPlatform() &&
-                $object->getEmbedId()
+                $object->getEmbedPlatform()
+                && $object->getEmbedId()
             ) {
-                $embedFinder = $this->embedFinderFactory->createForPlatform(
-                    $object->getEmbedPlatform(),
-                    $object->getEmbedId()
-                );
-                if (null !== $embedFinder) {
-                    $data['embedUrl'] = $embedFinder->getSource();
+                try {
+                    $embedFinder = $this->embedFinderFactory->createForPlatform(
+                        $object->getEmbedPlatform(),
+                        $object->getEmbedId()
+                    );
+                    if (null !== $embedFinder) {
+                        $data['embedUrl'] = $embedFinder->getSource();
+                    }
+                } catch (InvalidEmbedId $exception) {
+                    $this->logger->error($exception->getMessage(), [
+                        'document' => $object->getId(),
+                        'embedId' => $object->getEmbedId(),
+                        'embedPlatform' => $object->getEmbedPlatform(),
+                    ]);
                 }
             }
 
@@ -109,7 +131,23 @@ final class DocumentNormalizer extends AbstractPathNormalizer
                     $data['externalUrl'] = $translatedData->getExternalUrl();
                 }
             }
+
+            if (
+                !$object->isPrivate()
+                && \in_array('explorer_thumbnail', $serializationGroups, true)
+            ) {
+                $data['url'] = $this->documentUrlGenerator
+                    ->setDocument($object)
+                    ->setOptions([
+                        'fit' => '250x200',
+                        'quality' => 60,
+                    ])
+                    ->getUrl();
+            }
+
+            $this->stopwatch->stop('normalizeDocument');
         }
+
         return $data;
     }
 }

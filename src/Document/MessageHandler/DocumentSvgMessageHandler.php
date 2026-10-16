@@ -13,10 +13,6 @@ use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
 
 final class DocumentSvgMessageHandler extends AbstractLockingDocumentMessageHandler
 {
-    /**
-     * @param  DocumentInterface $document
-     * @return bool
-     */
     protected function supports(DocumentInterface $document): bool
     {
         return $document->isLocal() && null !== $document->getRelativePath() && $document->isSvg();

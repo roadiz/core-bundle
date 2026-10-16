@@ -11,24 +11,12 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-/**
- * Translation selector form field type.
- */
-class TranslationsType extends AbstractType
+final class TranslationsType extends AbstractType
 {
-    protected ManagerRegistry $managerRegistry;
-
-    /**
-     * @param ManagerRegistry $managerRegistry
-     */
-    public function __construct(ManagerRegistry $managerRegistry)
+    public function __construct(private readonly ManagerRegistry $managerRegistry)
     {
-        $this->managerRegistry = $managerRegistry;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([]);
@@ -48,16 +36,11 @@ class TranslationsType extends AbstractType
         });
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
-    /**
-     * {@inheritdoc}
-     */
+
     public function getBlockPrefix(): string
     {
         return 'translations';

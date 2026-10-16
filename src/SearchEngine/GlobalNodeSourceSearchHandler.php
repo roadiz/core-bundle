@@ -4,53 +4,31 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\SearchEngine;
 
-use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\NoResultException;
-use Doctrine\Persistence\ObjectManager;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
+use RZ\Roadiz\CoreBundle\Repository\AllStatusesNodesSourcesRepository;
+use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
 
-/**
- * @package RZ\Roadiz\CoreBundle\SearchEngine
- */
-class GlobalNodeSourceSearchHandler
+final readonly class GlobalNodeSourceSearchHandler
 {
-    private ObjectManager $em;
+    public function __construct(
+        private AllStatusesNodesSourcesRepository $allStatusesNodesSourcesRepository,
+    ) {
+    }
 
-    public function __construct(ObjectManager $em)
+    private function getRepository(): NodesSourcesRepository
     {
-        $this->em = $em;
+        return $this->allStatusesNodesSourcesRepository;
     }
 
     /**
-     * @return EntityRepository<NodesSources>
-     */
-    protected function getRepository(): EntityRepository
-    {
-        return $this->em->getRepository(NodesSources::class);
-    }
-
-    /**
-     * @param bool $displayNonPublishedNodes
-     *
-     * @return $this
-     */
-    public function setDisplayNonPublishedNodes(bool $displayNonPublishedNodes): self
-    {
-        $this->getRepository()->setDisplayingNotPublishedNodes($displayNonPublishedNodes);
-        return $this;
-    }
-
-    /**
-     * @param string $searchTerm
-     * @param int $resultCount
-     * @param Translation|null $translation
      * @return NodesSources[]
      */
     public function getNodeSourcesBySearchTerm(
         string $searchTerm,
         int $resultCount,
-        ?Translation $translation = null
+        ?Translation $translation = null,
     ): array {
         $safeSearchTerms = strip_tags($searchTerm);
 
@@ -80,7 +58,7 @@ class GlobalNodeSourceSearchHandler
             $resultCount
         );
 
-        if (count($nodesSources) === 0) {
+        if (0 === count($nodesSources)) {
             /*
              * Then try with node name.
              */
@@ -93,7 +71,7 @@ class GlobalNodeSourceSearchHandler
                     $qb->expr()->like('ns.title', ':nodeName')
                 ))
                 ->setMaxResults($resultCount)
-                ->setParameter('nodeName', '%' . $safeSearchTerms . '%');
+                ->setParameter('nodeName', '%'.$safeSearchTerms.'%');
 
             if (null !== $translation) {
                 $qb->andWhere($qb->expr()->eq('ns.translation', ':translation'))
