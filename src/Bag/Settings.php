@@ -11,25 +11,25 @@ use RZ\Roadiz\CoreBundle\Entity\Setting;
 use RZ\Roadiz\CoreBundle\Repository\SettingRepository;
 use Symfony\Component\Stopwatch\Stopwatch;
 
-final class Settings extends LazyParameterBag
+class Settings extends LazyParameterBag
 {
     private ?SettingRepository $repository = null;
 
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
-        private readonly Stopwatch $stopwatch,
+        private readonly Stopwatch $stopwatch
     ) {
         parent::__construct();
     }
 
     public function getRepository(): SettingRepository
     {
-        $this->repository ??= $this->managerRegistry->getRepository(Setting::class);
-
+        if (null === $this->repository) {
+            $this->repository = $this->managerRegistry->getRepository(Setting::class);
+        }
         return $this->repository;
     }
 
-    #[\Override]
     protected function populateParameters(): void
     {
         $this->stopwatch->start('settings');
@@ -40,14 +40,18 @@ final class Settings extends LazyParameterBag
             foreach ($settings as $setting) {
                 $this->parameters[$setting->getName()] = $setting->getValue();
             }
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             $this->parameters = [];
         }
         $this->ready = true;
         $this->stopwatch->stop('settings');
     }
 
-    #[\Override]
+    /**
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
     public function get(string $key, $default = false): mixed
     {
         return parent::get($key, $default);
@@ -55,16 +59,18 @@ final class Settings extends LazyParameterBag
 
     /**
      * Get a document from its setting name.
+     *
+     * @param string $key
+     * @return Document|null
      */
     public function getDocument(string $key): ?Document
     {
         try {
             $id = $this->getInt($key);
-
             return $this->managerRegistry
                         ->getRepository(Document::class)
                         ->findOneById($id);
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             return null;
         }
     }

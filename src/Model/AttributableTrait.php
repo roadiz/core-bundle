@@ -18,6 +18,8 @@ trait AttributableTrait
     }
 
     /**
+     * @param TranslationInterface $translation
+     *
      * @return Collection<int, AttributeValueInterface>
      */
     public function getAttributesValuesForTranslation(TranslationInterface $translation): Collection
@@ -29,12 +31,13 @@ trait AttributableTrait
                     return true;
                 }
             }
-
             return false;
         });
     }
 
     /**
+     * @param TranslationInterface $translation
+     *
      * @return Collection<int, AttributeValueTranslationInterface>
      */
     public function getAttributesValuesTranslations(TranslationInterface $translation): Collection
@@ -48,26 +51,29 @@ trait AttributableTrait
                         return $attributeValueTranslation;
                     }
                 }
-
                 return null;
             })
-            ->filter(fn (?AttributeValueTranslationInterface $attributeValueTranslation) => null !== $attributeValueTranslation)
+            ->filter(function (?AttributeValueTranslationInterface $attributeValueTranslation) {
+                return null !== $attributeValueTranslation;
+            })
         ;
-
         return $values; // phpstan does not understand return type after filtering
     }
 
     /**
+     * @param Collection $attributes
+     *
      * @return $this
      */
     public function setAttributeValues(Collection $attributes): static
     {
         $this->attributeValues = $attributes;
-
         return $this;
     }
 
     /**
+     * @param AttributeValueInterface $attribute
+     *
      * @return $this
      */
     public function addAttributeValue(AttributeValueInterface $attribute): static
@@ -75,11 +81,13 @@ trait AttributableTrait
         if (!$this->getAttributeValues()->contains($attribute)) {
             $this->getAttributeValues()->add($attribute);
         }
-
         return $this;
     }
 
+
     /**
+     * @param AttributeValueInterface $attribute
+     *
      * @return $this
      */
     public function removeAttributeValue(AttributeValueInterface $attribute): static
@@ -87,7 +95,6 @@ trait AttributableTrait
         if ($this->getAttributeValues()->contains($attribute)) {
             $this->getAttributeValues()->removeElement($attribute);
         }
-
         return $this;
     }
 }

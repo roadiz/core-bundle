@@ -8,13 +8,12 @@ use Doctrine\ORM\Tools\Pagination\Paginator;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
 use RZ\Roadiz\CoreBundle\Repository\TagRepository;
 
-/**
- * @deprecated Use TagRepository directly
- */
 class TagApi extends AbstractApi
 {
-    #[\Override]
-    public function getRepository(): TagRepository
+    /**
+     * @return TagRepository
+     */
+    public function getRepository()
     {
         return $this->managerRegistry->getRepository(Tag::class);
     }
@@ -24,18 +23,24 @@ class TagApi extends AbstractApi
      *
      * When no order is defined, tags are ordered by position.
      *
-     * @return array<Tag>|Paginator<Tag>
+     * @param array      $criteria
+     * @param array|null $order
+     * @param int|null   $limit
+     * @param int|null   $offset
+     *
+     * @return array|Paginator
      */
-    #[\Override]
     public function getBy(
         array $criteria,
-        ?array $order = null,
+        array $order = null,
         ?int $limit = null,
-        ?int $offset = null,
-    ): array|Paginator {
-        $order ??= [
-            'position' => 'ASC',
-        ];
+        ?int $offset = null
+    ) {
+        if (null === $order) {
+            $order = [
+                'position' => 'ASC',
+            ];
+        }
 
         return $this->getRepository()
                     ->findBy(
@@ -46,9 +51,10 @@ class TagApi extends AbstractApi
                         null
                     );
     }
-
-    #[\Override]
-    public function countBy(array $criteria): int
+    /**
+     * {@inheritdoc}
+     */
+    public function countBy(array $criteria)
     {
         return $this->getRepository()
                     ->countBy(
@@ -56,9 +62,10 @@ class TagApi extends AbstractApi
                         null
                     );
     }
-
-    #[\Override]
-    public function getOneBy(array $criteria, ?array $order = null): ?Tag
+    /**
+     * {@inheritdoc}
+     */
+    public function getOneBy(array $criteria, array $order = null)
     {
         return $this->getRepository()
                     ->findOneBy(

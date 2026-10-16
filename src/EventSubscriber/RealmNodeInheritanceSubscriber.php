@@ -17,13 +17,15 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-final readonly class RealmNodeInheritanceSubscriber implements EventSubscriberInterface
+final class RealmNodeInheritanceSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private MessageBusInterface $bus)
+    public function __construct(private readonly MessageBusInterface $bus)
     {
     }
 
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public static function getSubscribedEvents(): array
     {
         return [

@@ -3,153 +3,156 @@
   <file source-language="en" datatype="plaintext" original="file.ext" target-language="de">
     <body>
       <!-- welcome.user.email -->
-      <trans-unit id="welcome.user.email.%site%" approved="yes">
+      <trans-unit id="welcome.user.email.%site%">
         <source>welcome.user.email.%site%</source>
-        <target state="final">Willkommen auf %site%</target>
+        <target state="translated">Willkommen auf %site%</target>
       </trans-unit>
-      <trans-unit id="your.user.account" approved="yes">
+      <trans-unit id="your.user.account">
         <source>your.user.account</source>
-        <target state="final">Ihr Benutzerkonto</target>
+        <target state="translated">Ihr Benutzerkonto</target>
       </trans-unit>
-      <trans-unit id="username" approved="yes">
+      <trans-unit id="username">
         <source>username</source>
-        <target state="final">Benutzername</target>
+        <target state="translated">Benutzername</target>
       </trans-unit>
-      <trans-unit id="email" approved="yes">
+      <trans-unit id="email">
         <source>email</source>
-        <target state="final">E-Mail</target>
+        <target state="translated">E-Mail</target>
       </trans-unit>
-      <trans-unit id="password" approved="yes">
+      <trans-unit id="password">
         <source>password</source>
-        <target state="final">Passwort</target>
+        <target state="translated">Passwort</target>
       </trans-unit>
-      <trans-unit id="for.questions.email" approved="yes">
+      <trans-unit id="for.questions.email">
         <source>for.questions.email</source>
-        <target state="final">Haben Sie Fragen? Kontaktieren Sie uns</target>
+        <target state="translated">Haben Sie Fragen? Kontaktieren Sie uns</target>
       </trans-unit>
       <!-- Contact forms -->
-      <trans-unit id="contact.form" approved="yes">
+      <trans-unit id="contact.form">
         <source>contact.form</source>
-        <target state="final">Kontaktformular</target>
+        <target state="translated">Kontaktformular</target>
       </trans-unit>
-      <trans-unit id="new.contact.form.%site%" approved="yes">
+      <trans-unit id="new.contact.form.%site%">
         <source>new.contact.form.%site%</source>
-        <target state="final">Neues Kontaktformular auf %site%</target>
+        <target state="translated">Neues Kontaktformular auf %site%</target>
       </trans-unit>
-      <trans-unit id="form.successfully.sent" approved="yes">
+      <trans-unit id="form.successfully.sent">
         <source>form.successfully.sent</source>
-        <target state="final">Formular erfolgreich gesendet</target>
+        <target state="translated">Formular erfolgreich gesendet</target>
       </trans-unit>
-      <trans-unit id="form.has.errors" approved="yes">
+      <trans-unit id="form.has.errors">
         <source>form.has.errors</source>
-        <target state="final">Im Formular befinden sich Fehler.</target>
+        <target state="translated">Im Formular befinden sich Fehler.</target>
       </trans-unit>
-      <trans-unit id="%field%.is.mandatory" approved="yes">
+      <trans-unit id="%field%.is.mandatory">
         <source>%field%.is.mandatory</source>
-        <target state="final">Das Feld %field% ist verpflichtend</target>
+        <target state="translated">Das Feld %field% ist verpflichtend</target>
       </trans-unit>
-      <trans-unit id="email.not.valid" approved="yes">
+      <trans-unit id="email.not.valid">
         <source>email.not.valid</source>
-        <target state="final">Ungültige E-Mail Adresse</target>
+        <target state="translated">Ungültige E-Mail Adresse</target>
       </trans-unit>
-      <trans-unit id="date" approved="yes">
+      <trans-unit id="date">
         <source>date</source>
-        <target state="final">Datum</target>
+        <target state="translated">Datum</target>
       </trans-unit>
-      <trans-unit id="ip.address" approved="yes">
+      <trans-unit id="ip.address">
         <source>ip.address</source>
-        <target state="final">IP Adresse</target>
+        <target state="translated">IP Adresse</target>
       </trans-unit>
-      <trans-unit id="submittedAt" approved="yes">
+      <trans-unit id="submittedAt">
         <source>submittedAt</source>
-        <target state="final">Abgesendet am</target>
+        <target state="translated">Abgesendet am</target>
       </trans-unit>
-      <trans-unit id="form.submit" approved="yes">
+      <trans-unit id="form.submit">
         <source>form.submit</source>
-        <target state="final">Formular absenden</target>
+        <target state="translated">Formular absenden</target>
       </trans-unit>
-      <trans-unit xml:space="preserve" id="answer.form" approved="yes">
+      <trans-unit xml:space="preserve" id="answer.form">
                 <source>answer.form</source>
-                <target state="final">Antwortformular</target>
+                <target state="translated">Antwortformular</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="customForm.%name%.send" approved="yes">
+      <trans-unit xml:space="preserve" id="customForm.%name%.send">
                 <source>customForm.%name%.send</source>
-                <target state="final">Das Formular %name% wurde gesendet</target>
+                <target state="translated">Das Formular %name% wurde gesendet</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="new.answer.form.%site%" approved="yes">
+      <trans-unit xml:space="preserve" id="new.answer.form.%site%">
                 <source>new.answer.form.%site%</source>
-                <target state="final">Neues Antwortformular auf %site%</target>
+                <target state="translated">Neues Antwortformular auf %site%</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="file.not.accepted" approved="yes">
+      <trans-unit xml:space="preserve" id="file.not.accepted">
                 <source>file.not.accepted</source>
-                <target state="final">Datei nicht akzeptiert</target>
+                <target state="translated">Datei nicht akzeptiert</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="customForm.answer.sent" approved="yes">
+      <trans-unit xml:space="preserve" id="customForm.answer.sent">
                 <source>customForm.answer.sent</source>
-                <target state="final">Ihr Antwort wurde abgesendet</target>
+                <target state="translated">Ihr Antwort wurde abgesendet</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="none" approved="yes">
+      <trans-unit xml:space="preserve" id="none">
                 <source>none</source>
-                <target state="final">Keine</target>
+                <target state="translated">Keine</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="reset.password.request" approved="yes">
+      <trans-unit xml:space="preserve" id="reset.password.request">
               <source>reset.password.request</source>
-              <target state="final">Passwortanfrage</target>
+              <target state="translated">Passwortanfrage</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="you.asked.for.a.password.reset.on.%site%" approved="yes">
+      <trans-unit xml:space="preserve" id="you.asked.for.a.password.reset.on.%site%">
                 <source>you.asked.for.a.password.reset.on.%site%</source>
-                <target state="final">Sie wollen das Passwort auf %site% zurücksetzen</target>
+                <target state="translated">Sie wollen das Passwort auf %site% zurücksetzen</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="you.need.to.choose.a.new.password.using.following.link" approved="yes">
+      <trans-unit xml:space="preserve" id="you.need.to.choose.a.new.password.using.following.link">
                 <source>you.need.to.choose.a.new.password.using.following.link</source>
-                <target state="final">Sie müssen unter dem folgenden Link ein neues Passwort festlegen</target>
+                <target state="translated">Sie müssen unter dem folgenden Link ein neues Passwort festlegen</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="as.a.reminder.here.are.your.credentials" approved="yes">
+      <trans-unit xml:space="preserve" id="as.a.reminder.here.are.your.credentials">
                 <source>as.a.reminder.here.are.your.credentials</source>
-                <target state="final">Als Erinnerung, hier sind ihre Daten</target>
+                <target state="translated">Als Erinnerung, hier sind ihre Daten</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="if.you.didnt.request.this.password.reset.ignore.this.email" approved="yes">
+      <trans-unit xml:space="preserve" id="if.you.didnt.request.this.password.reset.ignore.this.email">
                 <source>if.you.didnt.request.this.password.reset.ignore.this.email</source>
-                <target state="final">Wenn sie ihr Passwort nicht zurücksetzen wollen ignorieren sie diese E-Mail</target>
+                <target state="translated">Wenn sie ihr Passwort nicht zurücksetzen wollen ignorieren sie diese E-Mail</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="reset_your_password" approved="yes">
+      <trans-unit xml:space="preserve" id="reset_your_password">
                 <source>reset_your_password</source>
-                <target state="final">Ihr Passwort zurücksetzen</target>
+                <target state="translated">Ihr Passwort zurücksetzen</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="*.required.fields" approved="yes">
+      <trans-unit xml:space="preserve" id="you.need.to.fill.this.required.field">
+                <source>you.need.to.fill.this.required.field</source>
+                <target state="translated">Sie müssen dieses benötigte Feld ausfüllen</target>
+            </trans-unit>
+      <trans-unit xml:space="preserve" id="*.required.fields">
                 <source>*.required.fields</source>
-                <target state="final">* Pflichtfelder</target>
+                <target state="translated">* Pflichtfelder</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="website.is.under.maintenance" approved="yes">
+      <trans-unit xml:space="preserve" id="website.is.under.maintenance">
                 <source>website.is.under.maintenance</source>
-                <target state="final">Seite wird zurzeit gewartet</target>
+                <target state="translated">Seite wird zurzeit gewartet</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="website.is.under.maintenance.we.will.be.back.soon" approved="yes">
+      <trans-unit xml:space="preserve" id="website.is.under.maintenance.we.will.be.back.soon">
                 <source>website.is.under.maintenance.we.will.be.back.soon</source>
-                <target state="final">Seite wird zurzeit gewartet und ist bald wieder erreichbar.</target>
+                <target state="translated">Seite wird zurzeit gewartet und ist bald wieder erreichbar.</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="yaml.is.not.valid" approved="yes">
+      <trans-unit xml:space="preserve" id="yaml.is.not.valid">
                 <source>yaml.is.not.valid.{{ error }}</source>
-                <target state="final">YAML ist nicht gültig: {{ error }}</target>
+                <target state="translated">YAML ist nicht gültig: {{ error }}</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="value.is.already.used" approved="yes">
+      <trans-unit xml:space="preserve" id="value.is.already.used">
                 <source>value.is.already.used</source>
-                <target state="final">Wert bereits in Benutzung</target>
+                <target state="translated">Wert bereits in Benutzung</target>
                 <note>Error message meaning that user can’t use that value for this object (eg. Object name is already used).</note>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="password_should_contains_at_least_one_capital_one_digit" approved="yes">
+      <trans-unit xml:space="preserve" id="password_should_contains_at_least_one_capital_one_digit">
                 <source>password_should_contains_at_least_one_capital_one_digit</source>
-                <target state="final">das_Passwort_sollte_mindestens_eine_Zahl_beinhalten</target>
+                <target state="translated">das_Passwort_sollte_mindestens_eine_Zahl_beinhalten</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="password_blacklisted" approved="yes">
+      <trans-unit xml:space="preserve" id="password_blacklisted">
                 <source>password_blacklisted</source>
-                <target state="final">password_gesperrt</target>
+                <target state="translated">password_gesperrt</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="password_should_be_at_least_characters_long" approved="yes">
+      <trans-unit xml:space="preserve" id="password_should_be_at_least_characters_long">
                 <source>password_should_be_at_least_{{length}}_characters_long</source>
-                <target state="final">passwort_sollte_mindestens{{length}}_Zeichen_haben</target>
+                <target state="translated">passwort_sollte_mindestens{{length}}_Zeichen_haben</target>
             </trans-unit>
-      <!-- History entry params -->
     </body>
   </file>
 </xliff>

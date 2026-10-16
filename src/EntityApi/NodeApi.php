@@ -7,40 +7,36 @@ namespace RZ\Roadiz\CoreBundle\EntityApi;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Repository\NodeRepository;
-use RZ\Roadiz\CoreBundle\Repository\StatusAwareRepository;
 
-/**
- * @deprecated Use NodeRepository directly
- */
 class NodeApi extends AbstractApi
 {
-    #[\Override]
-    public function getRepository(): NodeRepository
+    /**
+     * @return NodeRepository
+     */
+    public function getRepository()
     {
+        // phpstan cannot resolve repository type.
         /** @var NodeRepository $repository */
-        $repository = $this->managerRegistry->getRepository(Node::class);
-
-        /*
-         * We need to reset repository status state, because StatusAwareRepository is not a stateless service.
-         * When using worker PHP runtimes (such as FrankenPHP or Swoole), this can lead to unpublish nodes being returned.
-         */
-        if ($repository instanceof StatusAwareRepository) {
-            $repository->resetStatuses();
-        }
-
+        $repository = $this->managerRegistry
+                    ->getRepository(Node::class)
+                    ->setDisplayingNotPublishedNodes(false)
+                    ->setDisplayingAllNodesStatuses(false);
         return $repository;
     }
 
     /**
-     * @return array<Node>|Paginator<Node>
+     * @param array $criteria
+     * @param array|null $order
+     * @param int|null $limit
+     * @param int|null $offset
+     * @return array|Paginator
      */
-    #[\Override]
     public function getBy(
         array $criteria,
-        ?array $order = null,
+        array $order = null,
         ?int $limit = null,
-        ?int $offset = null,
-    ): array|Paginator {
+        ?int $offset = null
+    ) {
         if (!in_array('translation.available', $criteria, true)) {
             $criteria['translation.available'] = true;
         }
@@ -54,9 +50,10 @@ class NodeApi extends AbstractApi
                         null
                     );
     }
-
-    #[\Override]
-    public function countBy(array $criteria): int
+    /**
+     * {@inheritdoc}
+     */
+    public function countBy(array $criteria)
     {
         if (!in_array('translation.available', $criteria, true)) {
             $criteria['translation.available'] = true;
@@ -68,9 +65,10 @@ class NodeApi extends AbstractApi
                         null
                     );
     }
-
-    #[\Override]
-    public function getOneBy(array $criteria, ?array $order = null): ?Node
+    /**
+     * {@inheritdoc}
+     */
+    public function getOneBy(array $criteria, array $order = null)
     {
         if (!in_array('translation.available', $criteria, true)) {
             $criteria['translation.available'] = true;

@@ -10,22 +10,25 @@ use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Validator\Constraints\Email;
 
-final class LoginRequestForm extends AbstractType
+class LoginRequestForm extends AbstractType
 {
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('email', EmailType::class, [
             'required' => true,
             'label' => 'your.account.email',
             'constraints' => [
-                new Email(message: 'email.invalid'),
+                new Email([
+                    'message' => 'email.invalid',
+                ]),
                 new ValidAccountEmail(),
             ],
         ]);
     }
 
-    #[\Override]
+    /**
+     * {@inheritdoc}
+     */
     public function getBlockPrefix(): string
     {
         return 'login_request';

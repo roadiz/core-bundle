@@ -7,94 +7,57 @@ namespace RZ\Roadiz\CoreBundle\Importer;
 use Doctrine\Common\Cache\CacheProvider;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use JMS\Serializer\DeserializationContext;
+use JMS\Serializer\SerializerInterface;
 use RZ\Roadiz\CoreBundle\Entity\Setting;
-use RZ\Roadiz\CoreBundle\Entity\SettingGroup;
-use Symfony\Component\Cache\ResettableInterface;
-use Symfony\Component\Serializer\SerializerInterface;
+use RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TypedObjectConstructorInterface;
 
-final readonly class SettingsImporter implements EntityImporterInterface
+class SettingsImporter implements EntityImporterInterface
 {
-    public function __construct(private ManagerRegistry $managerRegistry, private SerializerInterface $serializer)
+    private ManagerRegistry $managerRegistry;
+    private SerializerInterface $serializer;
+
+    /**
+     * @param ManagerRegistry $managerRegistry
+     * @param SerializerInterface $serializer
+     */
+    public function __construct(ManagerRegistry $managerRegistry, SerializerInterface $serializer)
     {
+        $this->managerRegistry = $managerRegistry;
+        $this->serializer = $serializer;
     }
 
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public function supports(string $entityClass): bool
     {
-        return Setting::class === $entityClass;
+        return $entityClass === Setting::class;
     }
 
-    #[\Override]
+    /**
+     * @inheritDoc
+     */
     public function import(string $serializedData): bool
     {
-        $manager = $this->managerRegistry->getManagerForClass(Setting::class) ?? throw new \RuntimeException('No manager found for Setting class.');
         $settings = $this->serializer->deserialize(
             $serializedData,
-            Setting::class.'[]',
+            'array<' . Setting::class . '>',
             'json',
-            ['groups' => ['setting']]
+            DeserializationContext::create()
+                ->setAttribute(TypedObjectConstructorInterface::PERSIST_NEW_OBJECTS, true)
+                ->setAttribute(TypedObjectConstructorInterface::FLUSH_NEW_OBJECTS, true)
         );
 
-        foreach ($settings as $setting) {
-            $this->importSingleSetting($setting);
-        }
-
-        $manager->flush();
-
+        $manager = $this->managerRegistry->getManagerForClass(Setting::class);
         if ($manager instanceof EntityManagerInterface) {
-            $configuration = $manager->getConfiguration();
-
-            // Doctrine ORM result cache pool (PSR-6, Doctrine ORM 2.7+)
-            $resultCache = $configuration->getResultCache();
-            $resultCache?->clear();
-            if ($resultCache instanceof ResettableInterface) {
-                $resultCache->reset();
-            }
-
-            // Legacy Doctrine result cache provider
-            if ($configuration->getResultCacheImpl() instanceof CacheProvider) {
-                $configuration->getResultCacheImpl()->deleteAll();
+            // Clear result cache
+            $cacheDriver = $manager->getConfiguration()->getResultCacheImpl();
+            if ($cacheDriver instanceof CacheProvider) {
+                $cacheDriver->deleteAll();
             }
         }
 
         return true;
-    }
-
-    private function importSingleSetting(Setting $setting): void
-    {
-        $manager = $this->managerRegistry->getManagerForClass(Setting::class) ?? throw new \RuntimeException('No manager found for Setting class.');
-        $existingSetting = $this->managerRegistry->getRepository(Setting::class)->findOneByName($setting->getName());
-
-        if (null !== $settingGroup = $setting->getSettingGroup()) {
-            $existingSettingGroup = $this->managerRegistry->getRepository(SettingGroup::class)->findOneByName($settingGroup->getName());
-            if (null === $existingSettingGroup) {
-                $manager->persist($settingGroup);
-                $manager->flush();
-            } else {
-                $existingSettingGroup->setName($settingGroup->getName());
-                $existingSettingGroup->setInMenu($settingGroup->isInMenu());
-                $setting->setSettingGroup($existingSettingGroup);
-            }
-        }
-
-        if (null === $existingSetting) {
-            $manager->persist($setting);
-
-            return;
-        }
-
-        /*
-         * Update existing setting
-         */
-        $existingSetting->setName($setting->getName());
-        $existingSetting->setDefaultValues($setting->getDefaultValues());
-        $existingSetting->setVisible($setting->isVisible());
-        $existingSetting->setDescription($setting->getDescription());
-        $existingSetting->setType($setting->getType());
-
-        // Only override value when defined
-        if (null !== $setting->getRawValue()) {
-            $existingSetting->setValue($setting->getRawValue());
-        }
     }
 }

@@ -23,8 +23,13 @@ trait LoginRequestTrait
     abstract protected function getUserViewer(): UserViewer;
 
     /**
-     * @return bool TRUE if confirmation has been sent. FALSE if errors
+     * @param FormInterface $form
+     * @param ObjectManager $entityManager
+     * @param LoggerInterface $logger
+     * @param UrlGeneratorInterface $urlGenerator
+     * @param string $resetRoute
      *
+     * @return bool TRUE if confirmation has been sent. FALSE if errors
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
@@ -33,7 +38,7 @@ trait LoginRequestTrait
         ObjectManager $entityManager,
         LoggerInterface $logger,
         UrlGeneratorInterface $urlGenerator,
-        string $resetRoute = 'loginResetPage',
+        string $resetRoute = 'loginResetPage'
     ): bool {
         $email = $form->get('email')->getData();
         /** @var User $user */
@@ -47,11 +52,7 @@ trait LoginRequestTrait
                     $user->setConfirmationToken($tokenGenerator->generateToken());
                     $entityManager->flush();
                     $userViewer = $this->getUserViewer();
-                    // Dispatched asynchronously (not sendPasswordResetLink()) so this
-                    // request returns in similar time whether the account exists or
-                    // not, closing the same timing oracle L3 closed for password_request.
-                    $userViewer->sendPasswordResetLinkAsync($user, $resetRoute);
-
+                    $userViewer->sendPasswordResetLink($user, $resetRoute);
                     return true;
                 } catch (\Throwable $e) {
                     $user->setPasswordRequestedAt(null);

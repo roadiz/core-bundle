@@ -15,15 +15,18 @@ interface RealmsAwareWebResponseInterface extends WebResponseInterface
 
     /**
      * @param RealmInterface[]|null $realms
-     *
      * @return $this
      */
-    public function setRealms(?array $realms): static;
+    public function setRealms(?array $realms): self;
 
+    /**
+     * @return bool
+     */
     public function isHidingBlocks(): bool;
 
     /**
+     * @param bool $hidingBlocks
      * @return $this
      */
-    public function setHidingBlocks(bool $hidingBlocks): static;
+    public function setHidingBlocks(bool $hidingBlocks): self;
 }

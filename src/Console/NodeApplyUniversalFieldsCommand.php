@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
+use Doctrine\ORM\NoResultException;
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\Entity\NodeType;
-use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Node\UniversalDataDuplicator;
 use Symfony\Component\Console\Command\Command;
@@ -22,13 +20,11 @@ final class NodeApplyUniversalFieldsCommand extends Command
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
         private readonly UniversalDataDuplicator $universalDataDuplicator,
-        private readonly NodeTypes $nodeTypesBag,
-        ?string $name = null,
+        ?string $name = null
     ) {
         parent::__construct($name);
     }
 
-    #[\Override]
     protected function configure(): void
     {
         $this->setName('nodes:force-universal')
@@ -36,7 +32,6 @@ final class NodeApplyUniversalFieldsCommand extends Command
         ;
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $translation = $this->managerRegistry->getRepository(Translation::class)->findDefault();
@@ -44,30 +39,7 @@ final class NodeApplyUniversalFieldsCommand extends Command
 
         $manager = $this->managerRegistry->getManagerForClass(NodesSources::class);
         if (null === $manager) {
-            throw new \RuntimeException('No manager found for '.NodesSources::class);
-        }
-
-        /*
-         * Node-types are declarative (loaded from files) since Roadiz 2.5 and are no longer
-         * queryable through Doctrine. Resolve the node-type names holding at least one universal
-         * field from the NodeTypes bag, then filter sources on their nodeTypeName string.
-         */
-        $universalNodeTypeNames = array_values(array_filter(
-            array_map(
-                fn (NodeType $nodeType) => $nodeType->getName(),
-                array_filter(
-                    $this->nodeTypesBag->all(),
-                    fn (NodeType $nodeType) => $nodeType->getFields()->exists(
-                        fn (int $key, NodeTypeField $field) => $field->isUniversal()
-                    )
-                )
-            )
-        ));
-
-        if (0 === count($universalNodeTypeNames)) {
-            $io->warning('No node-type with universal fields were found.');
-
-            return 0;
+            throw new \RuntimeException('No manager found for ' . NodesSources::class);
         }
 
         $qb = $manager->createQueryBuilder();
@@ -75,37 +47,37 @@ final class NodeApplyUniversalFieldsCommand extends Command
             ->distinct(true)
             ->from(NodesSources::class, 'ns')
             ->innerJoin('ns.node', 'n')
+            ->innerJoin('n.nodeType', 'nt')
+            ->innerJoin('nt.fields', 'ntf')
             ->andWhere($qb->expr()->eq('ns.translation', ':translation'))
-            ->andWhere($qb->expr()->in('n.nodeTypeName', ':nodeTypeNames'))
-            ->setParameter('translation', $translation)
-            ->setParameter('nodeTypeNames', $universalNodeTypeNames);
+            ->andWhere($qb->expr()->eq('ntf.universal', true))
+            ->setParameter(':translation', $translation);
+        try {
+            $sources = $qb->getQuery()->getResult();
+            $io->note(count($sources) . ' node(s) with universal fields were found.');
 
-        /** @var NodesSources[] $sources */
-        $sources = $qb->getQuery()->getResult();
+            $question = new ConfirmationQuestion(
+                '<question>Are you sure to force every universal fields?</question>',
+                false
+            );
+            if (
+                $io->askQuestion(
+                    $question
+                )
+            ) {
+                $io->progressStart(count($sources));
 
-        if (0 === count($sources)) {
-            $io->warning('No node with universal fields were found.');
-
-            return 0;
-        }
-
-        $io->note(count($sources).' node(s) with universal fields were found.');
-
-        $question = new ConfirmationQuestion(
-            '<question>Are you sure to force every universal fields?</question>',
-            false
-        );
-        if ($io->askQuestion($question)) {
-            $io->progressStart(count($sources));
-
-            foreach ($sources as $source) {
-                $this->universalDataDuplicator->duplicateUniversalContents($source);
-                $io->progressAdvance();
+                /** @var NodesSources $source */
+                foreach ($sources as $source) {
+                    $this->universalDataDuplicator->duplicateUniversalContents($source);
+                    $io->progressAdvance();
+                }
+                $manager->flush();
+                $io->progressFinish();
             }
-            $manager->flush();
-            $io->progressFinish();
+        } catch (NoResultException $e) {
+            $io->warning('No node with universal fields were found.');
         }
-
         return 0;
     }
 }
