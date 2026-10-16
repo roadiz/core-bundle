@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Model;
 
+use ApiPlatform\Metadata\ApiResource;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\Documents\Models\DocumentInterface;
+use RZ\Roadiz\Documents\Models\BaseDocumentInterface;
 
+#[ApiResource(operations: [])]
 interface NodesSourcesHeadInterface
 {
     public function getSiteName(): ?string;
@@ -16,15 +17,9 @@ interface NodesSourcesHeadInterface
 
     public function getMetaDescription(): ?string;
 
-    public function getPolicyUrl(): ?string;
-
-    public function getHomePageUrl(): ?string;
-
     public function isNoIndex(): bool;
 
-    public function getHomePage(): ?NodesSources;
-
-    public function getShareImage(): ?DocumentInterface;
+    public function getShareImage(): ?BaseDocumentInterface;
 
     public function getTranslation(): TranslationInterface;
 }

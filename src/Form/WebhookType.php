@@ -22,6 +22,7 @@ final class WebhookType extends AbstractType
     {
     }
 
+    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('messageType', ChoiceType::class, [
@@ -37,6 +38,10 @@ final class WebhookType extends AbstractType
         ])->add('payload', YamlType::class, [
             'required' => false,
             'label' => 'webhooks.payload',
+        ])->add('secret', TextType::class, [
+            'required' => false,
+            'label' => 'webhooks.secret',
+            'help' => 'webhooks.secret.help',
         ])->add('throttleSeconds', IntegerType::class, [
             'required' => true,
             'label' => 'webhooks.throttleSeconds',
@@ -51,9 +56,7 @@ final class WebhookType extends AbstractType
             'asMultiple' => false,
         ]);
 
-        $builder->get('payload')->addModelTransformer(new CallbackTransformer(function (?array $model) {
-            return $model ? Yaml::dump($model) : null;
-        }, function (?string $yaml) {
+        $builder->get('payload')->addModelTransformer(new CallbackTransformer(fn (?array $model) => $model ? Yaml::dump($model) : null, function (?string $yaml) {
             try {
                 return $yaml ? Yaml::parse($yaml) : null;
             } catch (ParseException $e) {

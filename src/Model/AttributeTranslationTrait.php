@@ -6,18 +6,18 @@ namespace RZ\Roadiz\CoreBundle\Model;
 
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
-use Symfony\Component\Serializer\Annotation as SymfonySerializer;
+use Symfony\Component\Serializer\Attribute as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 trait AttributeTranslationTrait
 {
     #[ORM\ManyToOne(targetEntity: TranslationInterface::class),
         ORM\JoinColumn(name: 'translation_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),
-        SymfonySerializer\Groups(['attribute', 'attribute:export', 'node', 'nodes_sources']),]
+        Serializer\Groups(['attribute', 'attribute:export', 'node', 'nodes_sources']),]
     protected TranslationInterface $translation;
 
     #[ORM\Column(type: 'string', length: 250, unique: false, nullable: false),
-        SymfonySerializer\Groups(['attribute', 'attribute:export', 'node', 'nodes_sources']),
+        Serializer\Groups(['attribute', 'attribute:export', 'node', 'nodes_sources']),
         Assert\Length(max: 250)]
     protected string $label = '';
 
@@ -25,12 +25,12 @@ trait AttributeTranslationTrait
      * @var array<string>|null
      */
     #[ORM\Column(type: 'simple_array', unique: false, nullable: true),
-        SymfonySerializer\Groups(['attribute', 'attribute:export']),]
+        Serializer\Groups(['attribute', 'attribute:export']),]
     protected ?array $options = [];
 
     #[ORM\ManyToOne(targetEntity: AttributeInterface::class, cascade: ['persist'], inversedBy: 'attributeTranslations'),
         ORM\JoinColumn(name: 'attribute_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE'),
-        SymfonySerializer\Ignore,]
+        Serializer\Ignore,]
     protected AttributeInterface $attribute;
 
     public function getLabel(): ?string
@@ -41,9 +41,9 @@ trait AttributeTranslationTrait
     /**
      * @return $this
      */
-    public function setLabel(?string $label): self
+    public function setLabel(?string $label): static
     {
-        $this->label = null !== $label ? trim($label) : null;
+        $this->label = null !== $label ? trim($label) : '';
 
         return $this;
     }
@@ -51,7 +51,7 @@ trait AttributeTranslationTrait
     /**
      * @return $this
      */
-    public function setTranslation(TranslationInterface $translation): self
+    public function setTranslation(TranslationInterface $translation): static
     {
         $this->translation = $translation;
 
@@ -71,7 +71,7 @@ trait AttributeTranslationTrait
     /**
      * @return $this
      */
-    public function setAttribute(AttributeInterface $attribute): self
+    public function setAttribute(AttributeInterface $attribute): static
     {
         $this->attribute = $attribute;
 
@@ -91,7 +91,7 @@ trait AttributeTranslationTrait
      *
      * @return $this
      */
-    public function setOptions(?array $options): self
+    public function setOptions(?array $options): static
     {
         $this->options = $options;
 

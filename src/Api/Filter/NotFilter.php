@@ -13,8 +13,9 @@ use Symfony\Component\String\Slugger\AsciiSlugger;
 
 final class NotFilter extends AbstractFilter
 {
-    public const PARAMETER = 'not';
+    public const string PARAMETER = 'not';
 
+    #[\Override]
     protected function filterProperty(
         string $property,
         mixed $value,
@@ -29,11 +30,15 @@ final class NotFilter extends AbstractFilter
         }
 
         foreach ($value as $property => $notValue) {
+            if (!$this->isPropertyEnabled($property, $resourceClass)) {
+                continue;
+            }
+
             $alias = 'o';
             $field = $property;
 
             if ($this->isPropertyNested($property, $resourceClass)) {
-                list($alias, $field) = $this->addJoinsForNestedProperty(
+                [$alias, $field] = $this->addJoinsForNestedProperty(
                     $property,
                     $alias,
                     $queryBuilder,
@@ -68,13 +73,12 @@ final class NotFilter extends AbstractFilter
      *   - swagger (optional): additional parameters for the path operation, e.g. 'swagger' => ['description' => 'My Description']
      * The description can contain additional data specific to a filter.
      */
+    #[\Override]
     public function getDescription(string $resourceClass): array
     {
         $properties = $this->properties;
 
-        if (null === $properties) {
-            $properties = array_fill_keys($this->getClassMetadata($resourceClass)->getFieldNames(), null);
-        }
+        $properties ??= array_fill_keys($this->getClassMetadata($resourceClass)->getFieldNames(), null);
 
         return array_reduce(
             array_keys($properties),

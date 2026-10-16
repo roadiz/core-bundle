@@ -7,15 +7,19 @@ namespace RZ\Roadiz\CoreBundle\TwigExtension;
 use Doctrine\ORM\NonUniqueResultException;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use RZ\Roadiz\Contracts\NodeType\NodeTypeClassLocatorInterface;
 use RZ\Roadiz\CoreBundle\Bag\DecoratedNodeTypes;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
+use RZ\Roadiz\CoreBundle\Model\DocumentDto;
+use RZ\Roadiz\CoreBundle\Repository\DocumentRepository;
 use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
 use RZ\Roadiz\CoreBundle\Repository\NotPublishedNodesSourcesRepository;
 use RZ\Roadiz\CoreBundle\Repository\TagRepository;
 use Twig\Error\RuntimeError;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
+use Twig\TwigFunction;
 use Twig\TwigTest;
 
 /**
@@ -28,35 +32,52 @@ final class NodesSourcesExtension extends AbstractExtension
         private readonly NodesSourcesRepository $nodesSourcesRepository,
         private readonly NotPublishedNodesSourcesRepository $notPublishedNodesSourcesRepository,
         private readonly TagRepository $tagRepository,
+        private readonly DocumentRepository $documentRepository,
+        private readonly NodeTypeClassLocatorInterface $nodeTypeClassLocator,
         private readonly bool $throwExceptions = false,
     ) {
     }
 
+    #[\Override]
     public function getFilters(): array
     {
         return [
-            new TwigFilter('children', [$this, 'getChildren']),
-            new TwigFilter('next', [$this, 'getNext']),
-            new TwigFilter('previous', [$this, 'getPrevious']),
-            new TwigFilter('lastSibling', [$this, 'getLastSibling']),
-            new TwigFilter('firstSibling', [$this, 'getFirstSibling']),
-            new TwigFilter('parent', [$this, 'getParent']),
-            new TwigFilter('parents', [$this, 'getParents']),
-            new TwigFilter('tags', [$this, 'getTags']),
+            new TwigFilter('children', $this->getChildren(...)),
+            new TwigFilter('next', $this->getNext(...)),
+            new TwigFilter('previous', $this->getPrevious(...)),
+            new TwigFilter('lastSibling', $this->getLastSibling(...)),
+            new TwigFilter('firstSibling', $this->getFirstSibling(...)),
+            new TwigFilter('parent', $this->getParent(...)),
+            new TwigFilter('parents', $this->getParents(...)),
+            new TwigFilter('tags', $this->getTags(...)),
         ];
     }
 
+    #[\Override]
+    public function getFunctions(): array
+    {
+        return [
+            new TwigFunction('first_displayable_image', $this->getFirstDisplayableImage(...)),
+        ];
+    }
+
+    public function getFirstDisplayableImage(?NodesSources $nodesSources): ?DocumentDto
+    {
+        return null !== $nodesSources ? $this->documentRepository
+            ->findOneDisplayableDtoByNodeSource(
+                $nodesSources,
+            ) : null;
+    }
+
+    #[\Override]
     public function getTests(): array
     {
         $tests = [];
 
         foreach ($this->nodeTypesBag->all() as $nodeType) {
-            $tests[] = new TwigTest($nodeType->getName(), function ($mixed) use ($nodeType) {
-                return null !== $mixed && get_class($mixed) === $nodeType->getSourceEntityFullQualifiedClassName();
-            });
-            $tests[] = new TwigTest($nodeType->getSourceEntityClassName(), function ($mixed) use ($nodeType) {
-                return null !== $mixed && get_class($mixed) === $nodeType->getSourceEntityFullQualifiedClassName();
-            });
+            $nodeTypeClassName = $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($nodeType);
+            $tests[] = new TwigTest($nodeType->getName(), fn ($mixed) => null !== $mixed && $mixed::class === $nodeTypeClassName);
+            $tests[] = new TwigTest($this->nodeTypeClassLocator->getSourceEntityClassName($nodeType), fn ($mixed) => null !== $mixed && $mixed::class === $nodeTypeClassName);
         }
 
         return $tests;

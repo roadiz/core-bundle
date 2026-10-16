@@ -13,16 +13,32 @@ use RZ\Roadiz\CoreBundle\Security\Authorization\Voter\RealmVoter;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\String\Slugger\AsciiSlugger;
+use Symfony\Contracts\Service\ResetInterface;
 
-final readonly class RealmResolver implements RealmResolverInterface
+/**
+ * getGrantedRealms()/getDeniedRealms()/hasRealms()/hasRealmsWithSerializationGroup()
+ * memoize their result for the lifetime of this instance: the "app" cache pool is a
+ * raw Redis adapter with no in-request layer in front of it, so without this, every
+ * caller (NodesSourcesRepository now calls getDeniedRealms() on every query) would
+ * pay a Redis round-trip each time instead of once. ResetInterface clears the memo
+ * between requests/messages so long-lived Messenger workers don't serve stale grants
+ * for the process lifetime.
+ */
+final class RealmResolver implements RealmResolverInterface, ResetInterface
 {
+    private ?array $grantedRealms = null;
+    private ?array $deniedRealms = null;
+    private ?bool $hasRealms = null;
+    private ?bool $hasRealmsWithSerializationGroup = null;
+
     public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private Security $security,
-        private CacheItemPoolInterface $cache,
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly Security $security,
+        private readonly CacheItemPoolInterface $cache,
     ) {
     }
 
+    #[\Override]
     public function getRealms(?Node $node): array
     {
         if (null === $node) {
@@ -32,6 +48,7 @@ final readonly class RealmResolver implements RealmResolverInterface
         return $this->managerRegistry->getRepository(Realm::class)->findByNode($node);
     }
 
+    #[\Override]
     public function getRealmsWithSerializationGroup(?Node $node): array
     {
         if (null === $node) {
@@ -41,11 +58,13 @@ final readonly class RealmResolver implements RealmResolverInterface
         return $this->managerRegistry->getRepository(Realm::class)->findByNodeWithSerializationGroup($node);
     }
 
+    #[\Override]
     public function isGranted(RealmInterface $realm): bool
     {
         return $this->security->isGranted(RealmVoter::READ, $realm);
     }
 
+    #[\Override]
     public function denyUnlessGranted(RealmInterface $realm): void
     {
         if (!$this->isGranted($realm)) {
@@ -60,21 +79,31 @@ final readonly class RealmResolver implements RealmResolverInterface
             ->__toString();
     }
 
+    #[\Override]
     public function getGrantedRealms(): array
     {
+        if (null !== $this->grantedRealms) {
+            return $this->grantedRealms;
+        }
+
         $cacheItem = $this->cache->getItem('granted_realms_'.$this->getUserCacheKey());
         if (!$cacheItem->isHit()) {
             $allRealms = $this->managerRegistry->getRepository(Realm::class)->findBy([]);
-            $cacheItem->set(array_values(array_filter($allRealms, fn (RealmInterface $realm) => $this->isGranted($realm))));
+            $cacheItem->set(array_values(array_filter($allRealms, $this->isGranted(...))));
             $cacheItem->expiresAfter(new \DateInterval('PT1H'));
             $this->cache->save($cacheItem);
         }
 
-        return $cacheItem->get();
+        return $this->grantedRealms = $cacheItem->get();
     }
 
+    #[\Override]
     public function getDeniedRealms(): array
     {
+        if (null !== $this->deniedRealms) {
+            return $this->deniedRealms;
+        }
+
         $cacheItem = $this->cache->getItem('denied_realms_'.$this->getUserCacheKey());
         if (!$cacheItem->isHit()) {
             $allRealms = $this->managerRegistry->getRepository(Realm::class)->findBy([]);
@@ -83,11 +112,16 @@ final readonly class RealmResolver implements RealmResolverInterface
             $this->cache->save($cacheItem);
         }
 
-        return $cacheItem->get();
+        return $this->deniedRealms = $cacheItem->get();
     }
 
+    #[\Override]
     public function hasRealms(): bool
     {
+        if (null !== $this->hasRealms) {
+            return $this->hasRealms;
+        }
+
         $cacheItem = $this->cache->getItem('app_has_realms');
         if (!$cacheItem->isHit()) {
             $hasRealms = $this->managerRegistry->getRepository(Realm::class)->countBy([]) > 0;
@@ -96,11 +130,16 @@ final readonly class RealmResolver implements RealmResolverInterface
             $this->cache->save($cacheItem);
         }
 
-        return $cacheItem->get();
+        return $this->hasRealms = $cacheItem->get();
     }
 
+    #[\Override]
     public function hasRealmsWithSerializationGroup(): bool
     {
+        if (null !== $this->hasRealmsWithSerializationGroup) {
+            return $this->hasRealmsWithSerializationGroup;
+        }
+
         $cacheItem = $this->cache->getItem('app_has_realms_with_serialization_group');
         if (!$cacheItem->isHit()) {
             $hasRealms = $this->managerRegistry->getRepository(Realm::class)->countWithSerializationGroup() > 0;
@@ -109,6 +148,15 @@ final readonly class RealmResolver implements RealmResolverInterface
             $this->cache->save($cacheItem);
         }
 
-        return $cacheItem->get();
+        return $this->hasRealmsWithSerializationGroup = $cacheItem->get();
+    }
+
+    #[\Override]
+    public function reset(): void
+    {
+        $this->grantedRealms = null;
+        $this->deniedRealms = null;
+        $this->hasRealms = null;
+        $this->hasRealmsWithSerializationGroup = null;
     }
 }
