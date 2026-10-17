@@ -16,11 +16,14 @@ final class DocumentUrlGenerator extends AbstractDocumentUrlGenerator
         FilesystemOperator $documentsStorage,
         UrlHelper $urlHelper,
         private readonly UrlGeneratorInterface $urlGenerator,
-        CacheItemPoolInterface $optionsCacheAdapter,
+        CacheItemPoolInterface $optionsCacheAdapter
     ) {
         parent::__construct($documentsStorage, $urlHelper, $optionsCacheAdapter);
     }
 
+    /**
+     * @return string
+     */
     protected function getRouteName(): string
     {
         return 'interventionRequestProcess';

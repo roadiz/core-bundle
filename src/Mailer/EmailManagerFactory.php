@@ -11,16 +11,15 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
 
-final readonly class EmailManagerFactory
+final class EmailManagerFactory
 {
     public function __construct(
-        private RequestStack $requestStack,
-        private TranslatorInterface $translator,
-        private Environment $templating,
-        private MailerInterface $mailer,
-        private Settings $settingsBag,
-        private DocumentUrlGeneratorInterface $documentUrlGenerator,
-        private bool $useReplyTo = true,
+        private readonly RequestStack $requestStack,
+        private readonly TranslatorInterface $translator,
+        private readonly Environment $templating,
+        private readonly MailerInterface $mailer,
+        private readonly Settings $settingsBag,
+        private readonly DocumentUrlGeneratorInterface $documentUrlGenerator
     ) {
     }
 
@@ -32,8 +31,7 @@ final readonly class EmailManagerFactory
             $this->templating,
             $this->mailer,
             $this->settingsBag,
-            $this->documentUrlGenerator,
-            $this->useReplyTo,
+            $this->documentUrlGenerator
         );
     }
 }

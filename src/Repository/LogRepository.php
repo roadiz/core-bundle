@@ -20,13 +20,16 @@ final class LogRepository extends EntityRepository
 {
     public function __construct(
         ManagerRegistry $registry,
-        EventDispatcherInterface $dispatcher,
+        EventDispatcherInterface $dispatcher
     ) {
         parent::__construct($registry, Log::class, $dispatcher);
     }
 
     /**
      * Find the latest Log with NodesSources.
+     *
+     * @param int $maxResult
+     * @return Paginator
      */
     public function findLatestByNodesSources(int $maxResult = 5): Paginator
     {
@@ -59,7 +62,6 @@ final class LogRepository extends EntityRepository
     public function findByNode(Node $node): array
     {
         $qb = $this->getAllRelatedToNodeQueryBuilder($node);
-
         return $qb->getQuery()->getResult();
     }
 
@@ -83,7 +85,6 @@ final class LogRepository extends EntityRepository
         $qb->setParameter('nodeSourceId', $node->getNodeSources()->map(function (NodesSources $ns) {
             return $ns->getId();
         })->toArray());
-
         return $qb;
     }
 }
