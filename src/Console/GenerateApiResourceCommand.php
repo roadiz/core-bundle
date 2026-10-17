@@ -6,16 +6,11 @@ namespace RZ\Roadiz\CoreBundle\Console;
 
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\NodeType\ApiResourceGenerator;
-use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-#[AsCommand(
-    name: 'generate:api-resources',
-    description: 'Generate nodes-sources API Platform resource files in <info>config/api_resources</info>.',
-)]
 final class GenerateApiResourceCommand extends Command
 {
     public function __construct(
@@ -26,7 +21,13 @@ final class GenerateApiResourceCommand extends Command
         parent::__construct($name);
     }
 
-    #[\Override]
+    protected function configure(): void
+    {
+        $this->setName('generate:api-resources')
+            ->setDescription('Generate node-sources entities API Platform resource files.')
+        ;
+    }
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);

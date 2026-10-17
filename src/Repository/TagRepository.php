@@ -82,6 +82,23 @@ final class TagRepository extends EntityRepository
     }
 
     /**
+     * Bind parameters to generated query.
+     */
+    protected function applyFilterByCriteria(array &$criteria, QueryBuilder $qb): void
+    {
+        /*
+         * Reimplementing findBy features…
+         */
+        $simpleQB = new SimpleQueryBuilder($qb);
+        foreach ($criteria as $key => $value) {
+            $event = $this->dispatchQueryBuilderApplyEvent($qb, $key, $value);
+            if (!$event->isPropagationStopped()) {
+                $simpleQB->bindValue($key, $value);
+            }
+        }
+    }
+
+    /**
      * Create filters according to any translation criteria OR argument.
      */
     protected function filterByTranslation(
@@ -96,27 +113,29 @@ final class TagRepository extends EntityRepository
         ) {
             $qb->leftJoin('tg.translatedTags', 'tt');
             $qb->leftJoin('tt.translation', static::TRANSLATION_ALIAS);
-        } elseif (null !== $translation) {
-            /*
-             * With a given translation
-             */
-            $qb->leftJoin(
-                'tg.translatedTags',
-                'tt',
-                'WITH',
-                'tt.translation = :translation'
-            );
         } else {
-            /*
-             * With a null translation, just take the default one.
-             */
-            $qb->leftJoin('tg.translatedTags', 'tt');
-            $qb->leftJoin(
-                'tt.translation',
-                self::TRANSLATION_ALIAS,
-                'WITH',
-                't.defaultTranslation = true'
-            );
+            if (null !== $translation) {
+                /*
+                 * With a given translation
+                 */
+                $qb->leftJoin(
+                    'tg.translatedTags',
+                    'tt',
+                    'WITH',
+                    'tt.translation = :translation'
+                );
+            } else {
+                /*
+                 * With a null translation, just take the default one.
+                 */
+                $qb->leftJoin('tg.translatedTags', 'tt');
+                $qb->leftJoin(
+                    'tt.translation',
+                    self::TRANSLATION_ALIAS,
+                    'WITH',
+                    't.defaultTranslation = true'
+                );
+            }
         }
     }
 
@@ -189,7 +208,6 @@ final class TagRepository extends EntityRepository
      *
      * @return array<Tag>
      */
-    #[\Override]
     public function findBy(
         array $criteria,
         ?array $orderBy = null,
@@ -291,7 +309,6 @@ EOT,
      *
      * @throws NonUniqueResultException
      */
-    #[\Override]
     public function findOneBy(
         array $criteria,
         ?array $orderBy = null,
@@ -324,7 +341,6 @@ EOT,
      * @throws NonUniqueResultException
      * @throws NoResultException
      */
-    #[\Override]
     public function countBy(
         mixed $criteria,
         ?TranslationInterface $translation = null,
@@ -345,9 +361,11 @@ EOT,
     /**
      * @param int $tagId
      *
+     * @return Tag|null
+     *
      * @throws NonUniqueResultException
      */
-    public function findWithTranslation($tagId, TranslationInterface $translation): ?Tag
+    public function findWithTranslation($tagId, TranslationInterface $translation)
     {
         $qb = $this->createQueryBuilder('t');
         $qb->select('t, tt')
@@ -365,7 +383,7 @@ EOT,
     /**
      * @return Tag[]
      */
-    public function findAllWithTranslation(TranslationInterface $translation): array
+    public function findAllWithTranslation(TranslationInterface $translation)
     {
         $qb = $this->createQueryBuilder('t');
         $qb->select('t, tt')
@@ -379,8 +397,10 @@ EOT,
 
     /**
      * @param int $tagId
+     *
+     * @return Tag|null
      */
-    public function findWithDefaultTranslation($tagId): ?Tag
+    public function findWithDefaultTranslation($tagId)
     {
         $qb = $this->createQueryBuilder('t');
         $qb->select('t, tt')
@@ -399,7 +419,7 @@ EOT,
     /**
      * @return Tag[]
      */
-    public function findAllWithDefaultTranslation(): array
+    public function findAllWithDefaultTranslation()
     {
         $qb = $this->createQueryBuilder('t');
         $qb->select('t, tt')
@@ -416,7 +436,7 @@ EOT,
     /**
      * @return Tag[]
      */
-    public function findAllColored(): array
+    public function findAllColored()
     {
         $qb = $this->createQueryBuilder('t');
         $qb
@@ -437,7 +457,7 @@ EOT,
     /**
      * @return Tag[]
      */
-    public function findAllLinkedToNodeChildren(Node $parentNode, ?TranslationInterface $translation = null): array
+    public function findAllLinkedToNodeChildren(Node $parentNode, ?TranslationInterface $translation = null)
     {
         $qb = $this->createQueryBuilder('t');
         $qb->select('t')
@@ -468,7 +488,7 @@ EOT,
     /**
      * @return Tag[]
      */
-    public function findByParentWithTranslation(TranslationInterface $translation, ?Tag $parent = null): array
+    public function findByParentWithTranslation(TranslationInterface $translation, ?Tag $parent = null)
     {
         $qb = $this->createQueryBuilder('t');
         $qb->select('t, tt')
@@ -491,7 +511,7 @@ EOT,
     /**
      * @return Tag[]
      */
-    public function findByParentWithDefaultTranslation(?Tag $parent = null): array
+    public function findByParentWithDefaultTranslation(?Tag $parent = null)
     {
         $qb = $this->createQueryBuilder('t');
         $qb->select('t, tt')
@@ -517,7 +537,7 @@ EOT,
      *
      * @return Tag[]
      */
-    public function findByParentWithChildrenAndDefaultTranslation(?Tag $parent = null): array
+    public function findByParentWithChildrenAndDefaultTranslation(?Tag $parent = null)
     {
         $qb = $this->createQueryBuilder('t');
         $qb->select('t, tt')
@@ -548,7 +568,6 @@ EOT,
      * @param array        $criteria Additional criteria
      * @param string       $alias    SQL query table alias
      */
-    #[\Override]
     protected function createSearchBy(
         string $pattern,
         QueryBuilder $qb,
@@ -574,7 +593,6 @@ EOT,
         return $this->prepareComparisons($criteria, $qb, $alias);
     }
 
-    #[\Override]
     protected function prepareComparisons(array &$criteria, QueryBuilder $qb, string $alias): QueryBuilder
     {
         $simpleQB = new SimpleQueryBuilder($qb);
@@ -602,19 +620,19 @@ EOT,
                 // Dots are forbidden in field definitions
                 $baseKey = $simpleQB->getParameterKey($key);
 
-                if (\str_contains((string) $key, 'translation.')) {
+                if (\str_contains($key, 'translation.')) {
                     /*
                      * Search in translation fields
                      */
                     $prefix = static::TRANSLATION_ALIAS.'.';
                     $key = str_replace('translation.', '', $key);
-                } elseif (\str_contains((string) $key, 'nodes.')) {
+                } elseif (\str_contains($key, 'nodes.')) {
                     /*
                      * Search in node fields
                      */
                     $prefix = static::NODE_ALIAS.'.';
                     $key = str_replace('nodes.', '', $key);
-                } elseif (\str_contains((string) $key, 'translatedTag.')) {
+                } elseif (\str_contains($key, 'translatedTag.')) {
                     /*
                      * Search in translatedTags fields
                      */
@@ -636,10 +654,12 @@ EOT,
     /**
      * Find a tag according to the given path or create it.
      *
+     * @return Tag|null
+     *
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      */
-    public function findOrCreateByPath(string $tagPath, ?TranslationInterface $translation = null): ?Tag
+    public function findOrCreateByPath(string $tagPath, ?TranslationInterface $translation = null)
     {
         $tagPath = trim($tagPath);
         $tags = explode('/', $tagPath);
@@ -672,7 +692,9 @@ EOT,
                 // Call recursively to create parent tag if not exists with $tags array without last element
                 $parentTag = $this->findOrCreateByPath(implode('/', array_slice($tags, 0, -1)), $translation);
             }
-            $translation ??= $this->_em->getRepository(Translation::class)->findDefault() ?? throw new \RuntimeException('No default translation found.');
+            if (null === $translation) {
+                $translation = $this->_em->getRepository(Translation::class)->findDefault();
+            }
 
             $tag = new Tag();
             $tag->setTagName($tagName);
@@ -738,7 +760,7 @@ EOT,
         return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
-    public function findByNodesSources(NodesSources $nodesSources): array
+    public function findByNodesSources(NodesSources $nodesSources): array|Paginator
     {
         // @phpstan-ignore-next-line
         return $this->findBy([

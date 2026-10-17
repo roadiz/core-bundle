@@ -13,7 +13,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class UsersUnexpireCommand extends UsersCommand
 {
-    #[\Override]
     protected function configure(): void
     {
         $this->setName('users:unexpire')
@@ -25,7 +24,6 @@ final class UsersUnexpireCommand extends UsersCommand
             );
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -42,7 +40,7 @@ final class UsersUnexpireCommand extends UsersCommand
             )
         ) {
             $user->setExpiresAt(null);
-            $this->managerRegistry->getManagerForClass(User::class)?->flush();
+            $this->managerRegistry->getManagerForClass(User::class)->flush();
             $io->success('User “'.$name.'” unexpired.');
 
             return 0;

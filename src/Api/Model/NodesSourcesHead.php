@@ -4,18 +4,17 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Model;
 
-use ApiPlatform\Metadata\ApiResource;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\Documents\Models\BaseDocumentInterface;
-use RZ\Roadiz\Markdown\MarkdownInterface;
+use RZ\Roadiz\CoreBundle\EntityApi\NodeSourceApi;
+use RZ\Roadiz\CoreBundle\EntityHandler\NodesSourcesHandler;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
+use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Serializer\Attribute as Serializer;
-use Symfony\Component\String\UnicodeString;
+use Symfony\Component\Serializer\Annotation as Serializer;
 
-#[ApiResource(operations: [])]
 class NodesSourcesHead implements NodesSourcesHeadInterface
 {
     #[Serializer\Ignore]
@@ -29,53 +28,38 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
         #[Serializer\Ignore]
         protected readonly UrlGeneratorInterface $urlGenerator,
         #[Serializer\Ignore]
+        protected readonly NodeSourceApi $nodeSourceApi,
+        #[Serializer\Ignore]
         protected readonly HandlerFactoryInterface $handlerFactory,
         #[Serializer\Ignore]
         protected readonly TranslationInterface $defaultTranslation,
-        #[Serializer\Ignore]
-        protected readonly ?MarkdownInterface $markdown = null,
     ) {
     }
 
-    /**
-     * @deprecated Since 2.6, provide universal_analytics_id in your CommonContent resource instead.
-     */
     #[Serializer\Groups(['web_response', 'nodes_sources_single', 'walker'])]
     public function getGoogleAnalytics(): ?string
     {
         return $this->settingsBag->get('universal_analytics_id', null) ?? null;
     }
 
-    /**
-     * @deprecated Since 2.6, provide google_tag_manager_id in your CommonContent resource instead.
-     */
     #[Serializer\Groups(['web_response', 'nodes_sources_single', 'walker'])]
     public function getGoogleTagManager(): ?string
     {
         return $this->settingsBag->get('google_tag_manager_id', null) ?? null;
     }
 
-    /**
-     * @deprecated Since 2.6, provide matomo_tag_manager_id in your CommonContent resource instead.
-     */
     #[Serializer\Groups(['web_response', 'nodes_sources_single', 'walker'])]
     public function getMatomoTagManager(): ?string
     {
         return $this->settingsBag->get('matomo_tag_manager_id', null) ?? null;
     }
 
-    /**
-     * @deprecated Since 2.6, provide matomo_url in your CommonContent resource instead.
-     */
     #[Serializer\Groups(['web_response', 'nodes_sources_single', 'walker'])]
     public function getMatomoUrl(): ?string
     {
         return $this->settingsBag->get('matomo_url', null) ?? null;
     }
 
-    /**
-     * @deprecated Since 2.6, provide matomo_site_id in your CommonContent resource instead.
-     */
     #[Serializer\Groups(['web_response', 'nodes_sources_single', 'walker'])]
     public function getMatomoSiteId(): ?string
     {
@@ -83,82 +67,48 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
     }
 
     #[Serializer\Groups(['web_response', 'nodes_sources_single', 'walker'])]
-    #[\Override]
     public function getSiteName(): ?string
     {
         return $this->settingsBag->get('site_name', null) ?? null;
     }
 
-    protected function findDescriptionCandidate(): ?string
-    {
-        if (null === $this->nodesSource) {
-            return null;
-        }
-
-        /*
-         * getMetaDescriptionOrFallback() already falls back on a field flagged
-         * as "metaDescriptionFallback" in the generated node-source entity, so
-         * we only need to check the resulting candidate is relevant enough.
-         */
-        $description = $this->nodesSource->getMetaDescriptionOrFallback();
-
-        return $this->isStringDescriptionEligible($description) ? $description : null;
-    }
-
-    protected function isStringDescriptionEligible(mixed $description): bool
-    {
-        return is_string($description) && !empty($description) && mb_strlen($description) > 20;
-    }
-
-    /**
-     * @return array{'title': string, 'description': string|null}
-     */
     #[Serializer\Ignore]
     protected function getDefaultSeo(): array
     {
-        if (null === $this->nodesSource) {
-            return [
-                'title' => $this->settingsBag->get('site_name'),
-                'description' => $this->settingsBag->get('seo_description'),
-            ];
-        }
-
-        $description = $this->findDescriptionCandidate();
-
-        if (null !== $description) {
-            $description = (new UnicodeString($this->markdown?->strip($description) ?? $description))
-                ->truncate(160, '…', false)
-                ->toString();
+        if (null !== $this->nodesSource) {
+            $nodesSourcesHandler = $this->handlerFactory->getHandler($this->nodesSource);
+            if ($nodesSourcesHandler instanceof NodesSourcesHandler) {
+                return $nodesSourcesHandler->getSEO();
+            }
         }
 
         return [
-            'title' => ('' != $this->nodesSource->getMetaTitle()) ?
-                $this->nodesSource->getMetaTitle() :
-                $this->nodesSource->getTitle().' – '.$this->settingsBag->get('site_name'),
-            'description' => $description,
+            'title' => $this->settingsBag->get('site_name'),
+            'description' => $this->settingsBag->get('seo_description'),
         ];
     }
 
     #[Serializer\Groups(['web_response', 'nodes_sources_single', 'walker'])]
-    #[\Override]
     public function getMetaTitle(): ?string
     {
-        $this->seo ??= $this->getDefaultSeo();
+        if (null === $this->seo) {
+            $this->seo = $this->getDefaultSeo();
+        }
 
         return $this->seo['title'];
     }
 
     #[Serializer\Groups(['web_response', 'nodes_sources_single', 'walker'])]
-    #[\Override]
     public function getMetaDescription(): ?string
     {
-        $this->seo ??= $this->getDefaultSeo();
+        if (null === $this->seo) {
+            $this->seo = $this->getDefaultSeo();
+        }
 
         return $this->seo['description'];
     }
 
     #[Serializer\Groups(['web_response', 'nodes_sources_single', 'walker'])]
-    #[\Override]
     public function isNoIndex(): bool
     {
         if (null !== $this->nodesSource) {
@@ -168,106 +118,119 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
         return false;
     }
 
-    /**
-     * @deprecated Since 2.6, provide main_color in your CommonContent resource instead.
-     */
+    #[Serializer\Groups(['web_response', 'nodes_sources_single', 'walker'])]
+    public function getPolicyUrl(): ?string
+    {
+        $translation = $this->getTranslation();
+
+        $policyNodeSource = $this->nodeSourceApi->getOneBy([
+            'node.nodeName' => 'privacy',
+            'translation' => $translation,
+        ]);
+        if (null === $policyNodeSource) {
+            $policyNodeSource = $this->nodeSourceApi->getOneBy([
+                'node.nodeName' => 'legal',
+                'translation' => $translation,
+            ]);
+        }
+        if (null !== $policyNodeSource) {
+            return $this->urlGenerator->generate(RouteObjectInterface::OBJECT_BASED_ROUTE_NAME, [
+                RouteObjectInterface::ROUTE_OBJECT => $policyNodeSource,
+            ]);
+        }
+
+        return null;
+    }
+
     #[Serializer\Groups(['web_response', 'nodes_sources_single', 'walker'])]
     public function getMainColor(): ?string
     {
         return $this->settingsBag->get('main_color', null) ?? null;
     }
 
-    /**
-     * @deprecated Since 2.6, provide facebook_url in your CommonContent resource instead.
-     */
     #[Serializer\Groups(['web_response', 'nodes_sources_single', 'walker'])]
     public function getFacebookUrl(): ?string
     {
         return $this->settingsBag->get('facebook_url', null) ?? null;
     }
 
-    /**
-     * @deprecated Since 2.6, provide instagram_url in your CommonContent resource instead.
-     */
     #[Serializer\Groups(['web_response', 'nodes_sources_single', 'walker'])]
     public function getInstagramUrl(): ?string
     {
         return $this->settingsBag->get('instagram_url', null) ?? null;
     }
 
-    /**
-     * @deprecated Since 2.6, provide twitter_url in your CommonContent resource instead.
-     */
     #[Serializer\Groups(['web_response', 'nodes_sources_single', 'walker'])]
     public function getTwitterUrl(): ?string
     {
         return $this->settingsBag->get('twitter_url', null) ?? null;
     }
 
-    /**
-     * @deprecated Since 2.6, provide youtube_url in your CommonContent resource instead.
-     */
     #[Serializer\Groups(['web_response', 'nodes_sources_single', 'walker'])]
     public function getYoutubeUrl(): ?string
     {
         return $this->settingsBag->get('youtube_url', null) ?? null;
     }
 
-    /**
-     * @deprecated Since 2.6, provide linkedin_url in your CommonContent resource instead.
-     */
     #[Serializer\Groups(['nodes_sources_single', 'walker'])]
     public function getLinkedinUrl(): ?string
     {
         return $this->settingsBag->get('linkedin_url', null) ?? null;
     }
 
-    /**
-     * @deprecated Since 2.6, provide spotify_url in your CommonContent resource instead.
-     */
     #[Serializer\Groups(['nodes_sources_single', 'walker'])]
     public function getSpotifyUrl(): ?string
     {
         return $this->settingsBag->get('spotify_url', null) ?? null;
     }
 
-    /**
-     * @deprecated Since 2.6, provide soundcloud_url in your CommonContent resource instead.
-     */
     #[Serializer\Groups(['nodes_sources_single', 'walker'])]
     public function getSoundcloudUrl(): ?string
     {
         return $this->settingsBag->get('soundcloud_url', null) ?? null;
     }
 
-    /**
-     * @deprecated Since 2.6, provide tiktok_url in your CommonContent resource instead.
-     */
     #[Serializer\Groups(['nodes_sources_single', 'walker'])]
     public function getTikTokUrl(): ?string
     {
         return $this->settingsBag->get('tiktok_url', null) ?? null;
     }
 
-    #[Serializer\Groups(['web_response', 'nodes_sources_single'])]
-    #[\Override]
-    public function getShareImage(): ?BaseDocumentInterface
+    #[Serializer\Groups(['web_response', 'nodes_sources_single', 'walker'])]
+    public function getHomePageUrl(): ?string
     {
-        /*
-         * getShareImage() returns the first document of a field flagged as
-         * "shareImage" in the generated node-source entity, or null when no
-         * field is flagged (or the flagged field is empty).
-         */
-        $shareImage = $this->nodesSource?->getShareImage();
-        if (null !== $shareImage) {
-            return $shareImage;
+        $homePage = $this->getHomePage();
+        if (null !== $homePage) {
+            return $this->urlGenerator->generate(RouteObjectInterface::OBJECT_BASED_ROUTE_NAME, [
+                RouteObjectInterface::ROUTE_OBJECT => $homePage,
+            ]);
+        }
+
+        return null;
+    }
+
+    #[Serializer\Groups(['web_response', 'nodes_sources_single'])]
+    public function getShareImage(): ?DocumentInterface
+    {
+        if (
+            null !== $this->nodesSource
+            && method_exists($this->nodesSource, 'getHeaderImage')
+            && isset($this->nodesSource->getHeaderImage()[0])
+        ) {
+            return $this->nodesSource->getHeaderImage()[0];
+        }
+        if (
+            null !== $this->nodesSource
+            && method_exists($this->nodesSource, 'getImage')
+            && isset($this->nodesSource->getImage()[0])
+        ) {
+            return $this->nodesSource->getImage()[0];
         }
 
         return $this->settingsBag->getDocument('share_image') ?? null;
     }
 
     #[Serializer\Ignore()]
-    #[\Override]
     public function getTranslation(): TranslationInterface
     {
         if (null !== $this->nodesSource) {
@@ -275,5 +238,14 @@ class NodesSourcesHead implements NodesSourcesHeadInterface
         }
 
         return $this->defaultTranslation;
+    }
+
+    #[Serializer\Ignore()]
+    public function getHomePage(): ?NodesSources
+    {
+        return $this->nodeSourceApi->getOneBy([
+            'node.home' => true,
+            'translation' => $this->getTranslation(),
+        ]);
     }
 }

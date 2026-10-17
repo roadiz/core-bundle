@@ -26,7 +26,6 @@ final class DocumentUrlGenerator extends AbstractDocumentUrlGenerator
         return 'interventionRequestProcess';
     }
 
-    #[\Override]
     protected function getProcessedDocumentUrlByArray(bool $absolute = false): string
     {
         if (null === $this->getDocument()) {

@@ -22,7 +22,6 @@ final readonly class NodeQueryExtension implements QueryItemExtensionInterface, 
     ) {
     }
 
-    #[\Override]
     public function applyToItem(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
@@ -42,11 +41,6 @@ final readonly class NodeQueryExtension implements QueryItemExtensionInterface, 
         if (Node::class !== $resourceClass) {
             return;
         }
-
-        // Always exclude shadow nodes
-        $queryBuilder
-            ->andWhere($queryBuilder->expr()->eq('o.shadow', ':shadow'))
-            ->setParameter(':shadow', false);
 
         if ($this->previewResolver->isPreview()) {
             $queryBuilder
@@ -70,7 +64,6 @@ final readonly class NodeQueryExtension implements QueryItemExtensionInterface, 
             ->setParameter(':status', NodeStatus::PUBLISHED);
     }
 
-    #[\Override]
     public function applyToCollection(
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,

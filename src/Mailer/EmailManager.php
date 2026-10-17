@@ -4,23 +4,25 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Mailer;
 
+use InlineStyle\InlineStyle;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
+use RZ\Roadiz\Documents\Models\DocumentInterface;
 use RZ\Roadiz\Documents\UrlGenerators\DocumentUrlGeneratorInterface;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Email;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
 /**
  * @internal use EmailManagerFactory to create a new instance
- *
- * @deprecated since 2.6, use symfony/notifier instead with custom EmailNotification
  */
 class EmailManager
 {
@@ -36,7 +38,9 @@ class EmailManager
     protected string $failMessage = 'email.has.errors';
     protected ?string $emailTemplate = null;
     protected ?string $emailPlainTextTemplate = null;
+    protected string $emailStylesheet;
     protected array $assignation;
+    protected ?Email $message;
     /** @var File[] */
     protected array $files = [];
     protected array $resources = [];
@@ -50,37 +54,111 @@ class EmailManager
     public function __construct(
         protected readonly RequestStack $requestStack,
         protected readonly TranslatorInterface $translator,
+        protected readonly Environment $templating,
         protected readonly MailerInterface $mailer,
         protected readonly Settings $settingsBag,
         protected readonly DocumentUrlGeneratorInterface $documentUrlGenerator,
         protected readonly bool $useReplyTo = true,
     ) {
         $this->assignation = [];
+        $this->message = null;
+        /*
+         * Sets a default CSS for emails.
+         */
+        $this->emailStylesheet = dirname(__DIR__).'/../css/transactionalStyles.css';
+    }
+
+    /**
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     */
+    public function renderHtmlEmailBody(): string
+    {
+        return $this->templating->render($this->getEmailTemplate(), $this->assignation);
+    }
+
+    /**
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     */
+    public function renderHtmlEmailBodyWithCss(): string
+    {
+        if (null !== $this->getEmailStylesheet()) {
+            $htmldoc = new InlineStyle($this->renderHtmlEmailBody());
+            $css = file_get_contents(
+                $this->getEmailStylesheet()
+            );
+            if (false === $css) {
+                throw new \RuntimeException('Unable to read email stylesheet file.');
+            }
+            $htmldoc->applyStylesheet($css);
+
+            return $htmldoc->getHTML();
+        }
+
+        return $this->renderHtmlEmailBody();
+    }
+
+    /**
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     */
+    public function renderPlainTextEmailBody(): string
+    {
+        return $this->templating->render($this->getEmailPlainTextTemplate(), $this->assignation);
+    }
+
+    /**
+     * Added headerImageSrc assignation to display email header.
+     *
+     * @return $this
+     */
+    public function appendWebsiteIcon(): static
+    {
+        if (empty($this->assignation['headerImageSrc']) && null !== $this->settingsBag) {
+            $adminImage = $this->settingsBag->getDocument('admin_image');
+            if ($adminImage instanceof DocumentInterface && null !== $this->documentUrlGenerator) {
+                $this->documentUrlGenerator->setDocument($adminImage);
+                $this->assignation['headerImageSrc'] = $this->documentUrlGenerator->getUrl(true);
+            }
+        }
+
+        return $this;
     }
 
     public function getSupportEmailAddress(): ?string
     {
         $supportEmail = $this->settingsBag->get('support_email_address', null);
-        if (false !== filter_var($supportEmail, FILTER_VALIDATE_EMAIL)) {
-            return $supportEmail;
+        if (empty($supportEmail) || !filter_var($supportEmail, FILTER_VALIDATE_EMAIL)) {
+            $supportEmail = $this->settingsBag->get('email_sender', null);
         }
 
-        return null;
+        return $supportEmail;
     }
 
-    public function createMessage(): TemplatedEmail
+    /**
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
+     */
+    public function createMessage(): Email
     {
-        $email = (new TemplatedEmail())
-            ->subject($this->getSubject() ?? 'No subject')
-            ->to(...($this->getReceiver() ?? []))
-            ->context($this->assignation)
+        $this->appendWebsiteIcon();
+
+        $this->message = (new Email())
+            ->subject($this->getSubject())
+            ->from($this->getOrigin())
+            ->to(...$this->getReceiver())
         ;
 
-        if (null !== $this->emailTemplate) {
-            $email->htmlTemplate($this->emailTemplate);
+        if (null !== $this->getEmailTemplate()) {
+            $this->message->html($this->renderHtmlEmailBodyWithCss());
         }
-        if (null !== $this->emailPlainTextTemplate) {
-            $email->textTemplate($this->emailPlainTextTemplate);
+        if (null !== $this->getEmailPlainTextTemplate()) {
+            $this->message->text($this->renderPlainTextEmailBody());
         }
 
         /*
@@ -88,13 +166,13 @@ class EmailManager
          * to keep From: header with a know domain email.
          */
         if (null !== $this->getSender() && null !== $this->getSenderEmail() && $this->useReplyTo) {
-            $email
+            $this->message
                 // Force using string and only one email
                 ->returnPath($this->getSenderEmail())
                 ->replyTo(...$this->getSender());
         }
 
-        return $email;
+        return $this->message;
     }
 
     /**
@@ -111,21 +189,23 @@ class EmailManager
             throw new \RuntimeException('Can’t send a contact form without data.');
         }
 
-        $email = $this->createMessage();
+        if (null === $this->message) {
+            $this->message = $this->createMessage();
+        }
 
         /*
          * File attachment requires local file storage.
          */
         foreach ($this->files as $file) {
-            $email->attachFromPath($file->getRealPath(), $file->getFilename());
+            $this->message->attachFromPath($file->getRealPath(), $file->getFilename());
         }
         foreach ($this->resources as $resourceArray) {
             [$resource, $filename, $mimeType] = $resourceArray;
-            $email->attach($resource, $filename, $mimeType);
+            $this->message->attach($resource, $filename, $mimeType);
         }
 
         // Send the message
-        $this->mailer->send($email);
+        $this->mailer->send($this->message);
     }
 
     public function getSubject(): ?string
@@ -298,6 +378,26 @@ class EmailManager
         return $this;
     }
 
+    public function getTranslator(): TranslatorInterface
+    {
+        return $this->translator;
+    }
+
+    public function getTemplating(): Environment
+    {
+        return $this->templating;
+    }
+
+    public function getMailer(): MailerInterface
+    {
+        return $this->mailer;
+    }
+
+    public function getEmailTemplate(): ?string
+    {
+        return $this->emailTemplate;
+    }
+
     /**
      * @return $this
      */
@@ -308,6 +408,11 @@ class EmailManager
         return $this;
     }
 
+    public function getEmailPlainTextTemplate(): ?string
+    {
+        return $this->emailPlainTextTemplate;
+    }
+
     /**
      * @return $this
      */
@@ -316,6 +421,44 @@ class EmailManager
         $this->emailPlainTextTemplate = $emailPlainTextTemplate;
 
         return $this;
+    }
+
+    public function getEmailStylesheet(): ?string
+    {
+        return $this->emailStylesheet;
+    }
+
+    /**
+     * @return $this
+     */
+    public function setEmailStylesheet(?string $emailStylesheet = null): static
+    {
+        $this->emailStylesheet = $emailStylesheet;
+
+        return $this;
+    }
+
+    public function getRequest(): Request
+    {
+        return $this->requestStack->getMainRequest();
+    }
+
+    /**
+     * Origin is the real From envelop.
+     *
+     * This must be an email address with a know
+     * domain name to be validated on your SMTP server.
+     */
+    public function getOrigin(): ?Address
+    {
+        $defaultSender = 'origin@roadiz.io';
+        $defaultSenderName = '';
+        if (null !== $this->settingsBag && $this->settingsBag->get('email_sender')) {
+            $defaultSender = $this->settingsBag->get('email_sender');
+            $defaultSenderName = $this->settingsBag->get('site_name', '') ?? '';
+        }
+
+        return $this->origin ?? new Address($defaultSender, $defaultSenderName);
     }
 
     /**

@@ -6,7 +6,6 @@ namespace RZ\Roadiz\CoreBundle;
 
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\CaptchaServiceCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\CommonMarkCompilerPass;
-use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\DeprecatedNormalizerDecorationCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\DoctrineMigrationCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\DocumentRendererCompilerPass;
 use RZ\Roadiz\CoreBundle\DependencyInjection\Compiler\FlysystemStorageCompilerPass;
@@ -23,13 +22,11 @@ use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 class RoadizCoreBundle extends Bundle
 {
-    #[\Override]
     public function getPath(): string
     {
         return \dirname(__DIR__);
     }
 
-    #[\Override]
     public function build(ContainerBuilder $container): void
     {
         parent::build($container);
@@ -47,6 +44,5 @@ class RoadizCoreBundle extends Bundle
         $container->addCompilerPass(new FlysystemStorageCompilerPass());
         $container->addCompilerPass(new TwigLoaderCompilerPass());
         $container->addCompilerPass(new TreeWalkerDefinitionFactoryCompilerPass());
-        $container->addCompilerPass(new DeprecatedNormalizerDecorationCompilerPass());
     }
 }

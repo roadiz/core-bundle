@@ -56,7 +56,6 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
         return $listManager;
     }
 
-    #[\Override]
     public function getItems($options = []): array
     {
         $listManager = $this->doFetchItems($options);
@@ -69,7 +68,6 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
         return $items;
     }
 
-    #[\Override]
     public function getFilters($options = []): array
     {
         $listManager = $this->doFetchItems($options);
@@ -77,10 +75,9 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
         return $listManager->getAssignation();
     }
 
-    #[\Override]
     public function getItemsById(array $ids = []): array
     {
-        if (count($ids) > 0) {
+        if (is_array($ids) && count($ids) > 0) {
             $entities = $this->managerRegistry->getRepository($this->getProvidedClassname())->findBy([
                 'id' => $ids,
             ]);
@@ -88,7 +85,9 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
             /*
              * Sort entities the same way IDs were given
              */
-            usort($entities, fn ($a, $b) => array_search($a->getId(), $ids) <=> array_search($b->getId(), $ids));
+            usort($entities, function ($a, $b) use ($ids) {
+                return array_search($a->getId(), $ids) <=> array_search($b->getId(), $ids);
+            });
 
             $items = [];
             foreach ($entities as $entity) {
@@ -101,7 +100,6 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
         return [];
     }
 
-    #[\Override]
     public function toExplorerItem(mixed $item): ExplorerItemInterface
     {
         return $this->explorerItemFactory->createForEntity($item);

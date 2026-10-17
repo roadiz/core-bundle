@@ -19,7 +19,6 @@ use Symfony\Component\Validator\Constraints\Type;
 
 final class SettingType extends AbstractType
 {
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         if (false === $options['shortEdit']) {
@@ -88,7 +87,6 @@ final class SettingType extends AbstractType
         });
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefault('data_class', Setting::class);
@@ -104,7 +102,9 @@ final class SettingType extends AbstractType
             case FieldType::ENUM_T:
             case FieldType::MULTIPLE_T:
                 $values = explode(',', $setting->getDefaultValues() ?? '');
-                $values = array_map(fn ($item) => trim((string) $item), $values);
+                $values = array_map(function ($item) {
+                    return trim($item);
+                }, $values);
 
                 return [
                     'label' => $label,

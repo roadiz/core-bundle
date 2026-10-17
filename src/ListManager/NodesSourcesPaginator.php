@@ -18,7 +18,6 @@ use Symfony\Component\DependencyInjection\Attribute\Exclude;
 #[Exclude]
 class NodesSourcesPaginator extends Paginator
 {
-    #[\Override]
     public function getTotalCount(): int
     {
         if (null === $this->totalCount) {
@@ -32,7 +31,6 @@ class NodesSourcesPaginator extends Paginator
         return $this->totalCount;
     }
 
-    #[\Override]
     public function findByAtPage(array $order = [], int $page = 1): array
     {
         if (null !== $this->searchPattern) {
@@ -47,7 +45,6 @@ class NodesSourcesPaginator extends Paginator
         );
     }
 
-    #[\Override]
     protected function getRepository(): NodesSourcesRepository
     {
         /** @var NodesSourcesRepository $repository */

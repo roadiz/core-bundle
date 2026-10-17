@@ -18,7 +18,6 @@ final class ValidAccountEmailValidator extends ConstraintValidator
     /**
      * @param ValidAccountEmail $constraint
      */
-    #[\Override]
     public function validate(mixed $value, Constraint $constraint): void
     {
         $user = $this->managerRegistry

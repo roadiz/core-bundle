@@ -7,7 +7,6 @@ namespace RZ\Roadiz\CoreBundle\Api\Filter;
 use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use ApiPlatform\Metadata\Operation;
-use ApiPlatform\OpenApi\Model\Parameter;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Psr\Log\LoggerInterface;
@@ -18,7 +17,7 @@ use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 
 final class LocaleFilter extends GeneratedEntityFilter
 {
-    public const string PROPERTY = '_locale';
+    public const PROPERTY = '_locale';
 
     public function __construct(
         private readonly PreviewResolverInterface $previewResolver,
@@ -31,7 +30,6 @@ final class LocaleFilter extends GeneratedEntityFilter
         parent::__construct($managerRegistry, $logger, $properties, $nameConverter, $generatedEntityNamespacePattern);
     }
 
-    #[\Override]
     protected function filterProperty(
         string $property,
         mixed $value,
@@ -42,10 +40,6 @@ final class LocaleFilter extends GeneratedEntityFilter
         array $context = [],
     ): void {
         if (self::PROPERTY !== $property) {
-            return;
-        }
-
-        if (null === $this->managerRegistry) {
             return;
         }
 
@@ -105,23 +99,18 @@ final class LocaleFilter extends GeneratedEntityFilter
      *   - swagger (optional): additional parameters for the path operation, e.g. 'swagger' => ['description' => 'My Description']
      * The description can contain additional data specific to a filter.
      */
-    #[\Override]
     public function getDescription(string $resourceClass): array
     {
-        $supportedLocales = $this->managerRegistry
-            ?->getRepository(Translation::class)
-            ->getAvailableLocales() ?? [];
+        $supportedLocales = $this->managerRegistry->getRepository(Translation::class)->getAvailableLocales();
 
         return [
             self::PROPERTY => [
                 'property' => self::PROPERTY,
                 'type' => 'string',
                 'required' => false,
-                'openapi' => new Parameter(
-                    name: self::PROPERTY,
-                    in: 'query',
-                    description: 'Filter items with translation locale ('.implode(', ', $supportedLocales).').'
-                ),
+                'openapi' => [
+                    'description' => 'Filter items with translation locale ('.implode(', ', $supportedLocales).').',
+                ],
             ],
         ];
     }
