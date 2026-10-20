@@ -8,6 +8,7 @@ use Psr\Cache\CacheItemPoolInterface;
 use RZ\Roadiz\CoreBundle\Api\Model\BlocksAwareWebResponseInterface;
 use RZ\Roadiz\CoreBundle\Api\Model\RealmsAwareWebResponseInterface;
 use RZ\Roadiz\CoreBundle\Api\Model\WebResponseInterface;
+use RZ\Roadiz\CoreBundle\Api\TreeWalker\NodesSourcesPrefetcher;
 use RZ\Roadiz\CoreBundle\Api\TreeWalker\TreeWalkerGenerator;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\TreeWalker\AbstractWalker;
@@ -16,14 +17,25 @@ use RZ\TreeWalker\WalkerContextInterface;
 trait BlocksAwareWebResponseOutputDataTransformerTrait
 {
     abstract protected function getWalkerContext(): WalkerContextInterface;
+
     abstract protected function getCacheItemPool(): CacheItemPoolInterface;
+
     abstract protected function getTreeWalkerGenerator(): TreeWalkerGenerator;
+
     abstract protected function getChildrenNodeSourceWalkerMaxLevel(): int;
 
     /**
      * @return class-string<AbstractWalker>
      */
     abstract protected function getChildrenNodeSourceWalkerClassname(): string;
+
+    /**
+     * Override to prefetch blocks documents and references, avoiding N+1 queries during serialization.
+     */
+    protected function getNodesSourcesPrefetcher(): ?NodesSourcesPrefetcher
+    {
+        return null;
+    }
 
     protected function injectBlocks(BlocksAwareWebResponseInterface $output, NodesSources $data): WebResponseInterface
     {
@@ -35,7 +47,10 @@ trait BlocksAwareWebResponseOutputDataTransformerTrait
                 $this->getChildrenNodeSourceWalkerMaxLevel(),
                 $this->getCacheItemPool()
             );
-            $output->setBlocks($walker->getChildren());
+            $blocks = $walker->getChildren();
+            // Inside the isHidingBlocks() guard: blocks hidden by a Realm must not be loaded.
+            $this->getNodesSourcesPrefetcher()?->prefetchWalkers($blocks, [$data]);
+            $output->setBlocks($blocks);
         }
 
         return $output;

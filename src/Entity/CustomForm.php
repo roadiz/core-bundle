@@ -5,145 +5,126 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Entity;
 
 use ApiPlatform\Metadata\ApiFilter;
-use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use JMS\Serializer\Annotation as Serializer;
-use RZ\Roadiz\CoreBundle\Repository\CustomFormRepository;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\Serializer\Annotation as SymfonySerializer;
-use RZ\Roadiz\Core\AbstractEntities\AbstractDateTimed;
-use RZ\Roadiz\Utils\StringHandler;
+use RZ\Roadiz\Core\AbstractEntities\DateTimedInterface;
+use RZ\Roadiz\Core\AbstractEntities\DateTimedTrait;
+use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
+use RZ\Roadiz\Core\AbstractEntities\SequentialIdTrait;
 use RZ\Roadiz\CoreBundle\Api\Filter as RoadizFilter;
+use RZ\Roadiz\CoreBundle\Repository\CustomFormRepository;
+use RZ\Roadiz\Utils\StringHandler;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Serializer\Attribute as SymfonySerializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * CustomForms describe each node structure family,
  * They are mandatory before creating any Node.
  */
-#[
-    ORM\Entity(repositoryClass: CustomFormRepository::class),
-    ORM\Table(name: "custom_forms"),
+#[ORM\Entity(repositoryClass: CustomFormRepository::class),
+    ORM\Table(name: 'custom_forms'),
     ORM\HasLifecycleCallbacks,
-    UniqueEntity(fields: ["name"]),
-    ORM\Index(columns: ["created_at"], name: "custom_form_created_at"),
-    ORM\Index(columns: ["updated_at"], name: "custom_form_updated_at"),
-]
-class CustomForm extends AbstractDateTimed
+    UniqueEntity(fields: ['name']),
+    ORM\Index(columns: ['created_at'], name: 'custom_form_created_at'),
+    ORM\Index(columns: ['updated_at'], name: 'custom_form_updated_at'),
+    ORM\Index(columns: ['webhook_enabled'], name: 'custom_form_webhook_enabled'),
+    ORM\Index(columns: ['webhook_provider'], name: 'custom_form_webhook_provider'),]
+class CustomForm implements DateTimedInterface, PersistableInterface
 {
-    #[
-        ORM\Column(name: "color", type: "string", length: 7, unique: false, nullable: true),
-        Serializer\Groups(["custom_form", "nodes_sources"]),
+    use SequentialIdTrait;
+    use DateTimedTrait;
+
+    #[ORM\Column(name: 'color', type: 'string', length: 7, unique: false, nullable: true),
         Assert\Length(max: 7),
-        SymfonySerializer\Ignore()
-    ]
+        SymfonySerializer\Groups(['custom_form', 'nodes_sources']),]
     protected ?string $color = '#000000';
 
-    #[
-        ORM\Column(type: "string", length: 250, unique: true),
-        Serializer\Groups(["custom_form", "nodes_sources"]),
-        SymfonySerializer\Groups(["custom_form", "nodes_sources"]),
+    #[ORM\Column(type: 'string', length: 250, unique: true),
+        SymfonySerializer\Groups(['custom_form', 'nodes_sources']),
         Assert\NotNull(),
         Assert\NotBlank(),
-        Assert\Length(max: 250),
-        SymfonySerializer\Ignore()
-    ]
+        Assert\Length(max: 250),]
     private string $name = 'Untitled';
 
-    #[
-        ORM\Column(name: "display_name", type: "string", length: 250),
-        Serializer\Groups(["custom_form", "nodes_sources"]),
-        SymfonySerializer\Groups(["custom_form", "nodes_sources"]),
+    #[ORM\Column(name: 'display_name', type: 'string', length: 250),
+        SymfonySerializer\Groups(['custom_form', 'nodes_sources']),
         Assert\NotNull(),
         Assert\NotBlank(),
-        Assert\Length(max: 250),
-        SymfonySerializer\Ignore()
-    ]
+        Assert\Length(max: 250),]
     private string $displayName = 'Untitled';
 
-    #[
-        ORM\Column(type: "text", nullable: true),
-        Serializer\Groups(["custom_form", "nodes_sources"]),
-        SymfonySerializer\Groups(["custom_form", "nodes_sources"]),
-        SymfonySerializer\Ignore()
-    ]
+    #[ORM\Column(type: 'text', nullable: true),
+        SymfonySerializer\Groups(['custom_form', 'nodes_sources']),]
     private ?string $description = null;
 
-    #[
-        ORM\Column(type: "text", nullable: true),
-        Serializer\Groups(["custom_form"]),
-        SymfonySerializer\Groups(["custom_form"]),
-        SymfonySerializer\Ignore()
-    ]
+    #[ORM\Column(type: 'text', nullable: true),
+        SymfonySerializer\Groups(['custom_form:export']),
+        Assert\NotBlank(),]
     private ?string $email = null;
 
-    #[
-        ORM\Column(type: "string", length: 15, nullable: true),
-        Serializer\Groups(["custom_form"]),
-        SymfonySerializer\Groups(["custom_form"]),
-        Assert\Length(max: 15),
-        SymfonySerializer\Ignore()
-    ]
+    #[ORM\Column(type: 'string', length: 15, nullable: true),
+        SymfonySerializer\Groups(['custom_form:export']),
+        Assert\Length(max: 15),]
     private ?string $retentionTime = null;
 
-    #[
-        ORM\Column(type: "boolean", nullable: false, options: ["default" => true]),
-        Serializer\Groups(["custom_form", "nodes_sources"]),
-        SymfonySerializer\Groups(["custom_form", "nodes_sources"]),
-        SymfonySerializer\Ignore()
-    ]
+    #[ORM\Column(type: 'boolean', nullable: false, options: ['default' => true]),
+        SymfonySerializer\Ignore()]
     private bool $open = true;
 
-    #[
-        ApiFilter(RoadizFilter\ArchiveFilter::class),
-        ORM\Column(name: "close_date", type: "datetime", nullable: true),
-        Serializer\Groups(["custom_form", "nodes_sources"]),
-        SymfonySerializer\Groups(["custom_form", "nodes_sources"]),
-        SymfonySerializer\Ignore()
-    ]
-    private ?DateTime $closeDate = null;
+    #[ApiFilter(RoadizFilter\ArchiveFilter::class),
+        ORM\Column(name: 'close_date', type: 'datetime', nullable: true),
+        SymfonySerializer\Ignore()]
+    private ?\DateTime $closeDate = null;
+
+    #[ORM\Column(name: 'webhook_enabled', type: 'boolean', nullable: false, options: ['default' => false]),
+        SymfonySerializer\Groups(['custom_form:export'])]
+    private bool $webhookEnabled = false;
+
+    #[ORM\Column(name: 'webhook_provider', type: 'string', length: 50, nullable: true),
+        SymfonySerializer\Groups(['custom_form:export']),
+        Assert\Length(max: 50)]
+    private ?string $webhookProvider = null;
+
+    #[ORM\Column(name: 'webhook_field_mapping', type: 'json', nullable: true),
+        SymfonySerializer\Groups(['custom_form:export'])]
+    private ?array $webhookFieldMapping = null;
+
+    #[ORM\Column(name: 'webhook_extra_config', type: 'json', nullable: true),
+        SymfonySerializer\Groups(['custom_form:export'])]
+    private ?array $webhookExtraConfig = null;
 
     /**
      * @var Collection<int, CustomFormField>
      */
-    #[
-        ORM\OneToMany(
-            mappedBy: "customForm",
-            targetEntity: CustomFormField::class,
-            cascade: ["ALL"],
-            orphanRemoval: true
-        ),
-        ORM\OrderBy(["position" => "ASC"]),
-        Serializer\Groups(["custom_form"]),
-        SymfonySerializer\Groups(["custom_form"]),
-        SymfonySerializer\Ignore()
-    ]
+    #[ORM\OneToMany(
+        mappedBy: 'customForm',
+        targetEntity: CustomFormField::class,
+        cascade: ['ALL'],
+        orphanRemoval: true
+    ),
+        ORM\OrderBy(['position' => 'ASC']),
+        SymfonySerializer\Ignore()]
     private Collection $fields;
 
     /**
      * @var Collection<int, CustomFormAnswer>
      */
-    #[
-        ORM\OneToMany(
-            mappedBy: "customForm",
-            targetEntity: CustomFormAnswer::class,
-            cascade: ["ALL"],
-            orphanRemoval: true
-        ),
-        Serializer\Exclude,
-        SymfonySerializer\Ignore
-    ]
+    #[ORM\OneToMany(
+        mappedBy: 'customForm',
+        targetEntity: CustomFormAnswer::class,
+        cascade: ['ALL'],
+        orphanRemoval: true
+    ),
+        SymfonySerializer\Ignore]
     private Collection $customFormAnswers;
 
     /**
      * @var Collection<int, NodesCustomForms>
      */
-    #[
-        ORM\OneToMany(mappedBy: "customForm", targetEntity: NodesCustomForms::class, fetch: "EXTRA_LAZY"),
-        Serializer\Exclude,
-        SymfonySerializer\Ignore
-    ]
+    #[ORM\OneToMany(mappedBy: 'customForm', targetEntity: NodesCustomForms::class, fetch: 'EXTRA_LAZY'),
+        SymfonySerializer\Ignore]
     private Collection $nodes;
 
     public function __construct()
@@ -151,22 +132,18 @@ class CustomForm extends AbstractDateTimed
         $this->fields = new ArrayCollection();
         $this->customFormAnswers = new ArrayCollection();
         $this->nodes = new ArrayCollection();
-        $this->initAbstractDateTimed();
+        $this->initDateTimedTrait();
     }
 
-    /**
-     * @return string
-     */
     public function getDisplayName(): string
     {
         return $this->displayName;
     }
 
     /**
-     * @param string|null $displayName
      * @return $this
      */
-    public function setDisplayName(?string $displayName): CustomForm
+    public function setDisplayName(?string $displayName): static
     {
         $this->displayName = $displayName ?? '';
         $this->setName($displayName ?? '');
@@ -174,9 +151,6 @@ class CustomForm extends AbstractDateTimed
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
     public function getDescription(): ?string
     {
         return $this->description;
@@ -185,102 +159,88 @@ class CustomForm extends AbstractDateTimed
     /**
      * @return $this
      */
-    public function setDescription(?string $description): CustomForm
+    public function setDescription(?string $description): static
     {
         $this->description = $description;
+
         return $this;
     }
 
-    /**
-     * @return string|null
-     */
     public function getEmail(): ?string
     {
         return $this->email;
     }
 
     /**
-     * @param string|null $email
-     *
      * @return $this
      */
-    public function setEmail(?string $email): CustomForm
+    public function setEmail(?string $email): static
     {
         $this->email = $email;
+
         return $this;
     }
 
     /**
-     * @param bool $open
-     *
      * @return $this
      */
-    public function setOpen(bool $open): CustomForm
+    public function setOpen(bool $open): static
     {
         $this->open = $open;
+
         return $this;
     }
 
-    /**
-     * @return \DateTime|null
-     */
     public function getCloseDate(): ?\DateTime
     {
         return $this->closeDate;
     }
 
     /**
-     * @param \DateTime|null $closeDate
-     *
      * @return $this
      */
-    public function setCloseDate(?\DateTime $closeDate): CustomForm
+    public function setCloseDate(?\DateTime $closeDate): static
     {
         $this->closeDate = $closeDate;
+
         return $this;
     }
 
     /**
      * Combine open flag and closeDate to determine
      * if current form is still available.
-     *
-     * @return bool
      */
-    #[
-        Serializer\Groups(["custom_form", "nodes_sources"]),
-        Serializer\VirtualProperty,
-        SymfonySerializer\Ignore
-    ]
+    #[SymfonySerializer\Groups(['custom_form', 'nodes_sources'])]
+    #[SymfonySerializer\SerializedName('open')]
     public function isFormStillOpen(): bool
     {
-        return (null === $this->getCloseDate() || $this->getCloseDate() >= (new \DateTime('now'))) &&
-            $this->open === true;
+        return (null === $this->getCloseDate() || $this->getCloseDate() >= (new \DateTime('now')))
+            && true === $this->open;
     }
 
     /**
      * Gets the value of color.
-     *
-     * @return string
      */
-    public function getColor(): string
+    public function getColor(): ?string
     {
         return $this->color;
     }
 
     /**
+     * Sets the value of color.
+     *
      * @return $this
      */
-    public function setColor(?string $color): CustomForm
+    public function setColor(?string $color): static
     {
         $this->color = $color;
+
         return $this;
     }
 
     /**
      * Get every node-type fields names in
      * a simple array.
-     *
-     * @return array
      */
     public function getFieldsNames(): array
     {
@@ -293,9 +253,6 @@ class CustomForm extends AbstractDateTimed
         return $namesArray;
     }
 
-    /**
-     * @return Collection
-     */
     public function getFields(): Collection
     {
         return $this->fields;
@@ -304,8 +261,6 @@ class CustomForm extends AbstractDateTimed
     /**
      * Get every node-type fields names in
      * a simple array.
-     *
-     * @return array
      */
     public function getFieldsLabels(): array
     {
@@ -318,10 +273,6 @@ class CustomForm extends AbstractDateTimed
         return $namesArray;
     }
 
-    /**
-     * @param CustomFormField $field
-     * @return CustomForm
-     */
     public function addField(CustomFormField $field): CustomForm
     {
         if (!$this->getFields()->contains($field)) {
@@ -332,10 +283,6 @@ class CustomForm extends AbstractDateTimed
         return $this;
     }
 
-    /**
-     * @param CustomFormField $field
-     * @return CustomForm
-     */
     public function removeField(CustomFormField $field): CustomForm
     {
         if ($this->getFields()->contains($field)) {
@@ -353,45 +300,32 @@ class CustomForm extends AbstractDateTimed
         return $this->customFormAnswers;
     }
 
-    /**
-     * @return string
-     */
     public function getOneLineSummary(): string
     {
-        return $this->getId() . " — " . $this->getName() .
-            " — Open : " . ($this->isOpen() ? 'true' : 'false') . PHP_EOL;
+        return $this->getId().' — '.$this->getName().
+            ' — Open : '.($this->isOpen() ? 'true' : 'false').PHP_EOL;
     }
 
-    /**
-     * @return string
-     */
     public function getName(): string
     {
         return $this->name;
     }
 
     /**
-     * @param string $name
-     *
      * @return $this
      */
-    public function setName(string $name): CustomForm
+    public function setName(string $name): static
     {
         $this->name = StringHandler::slugify($name);
+
         return $this;
     }
 
-    /**
-     * @return bool
-     */
     public function isOpen(): bool
     {
         return $this->open;
     }
 
-    /**
-     * @return string|null
-     */
     public function getRetentionTime(): ?string
     {
         return $this->retentionTime;
@@ -401,18 +335,63 @@ class CustomForm extends AbstractDateTimed
     {
         try {
             return null !== $this->getRetentionTime() ? new \DateInterval($this->getRetentionTime()) : null;
-        } catch (\Exception $exception) {
+        } catch (\Exception) {
             return null;
         }
     }
 
-    /**
-     * @param string|null $retentionTime
-     * @return CustomForm
-     */
     public function setRetentionTime(?string $retentionTime): CustomForm
     {
         $this->retentionTime = $retentionTime;
+
+        return $this;
+    }
+
+    public function isWebhookEnabled(): bool
+    {
+        return $this->webhookEnabled;
+    }
+
+    public function setWebhookEnabled(bool $webhookEnabled): CustomForm
+    {
+        $this->webhookEnabled = $webhookEnabled;
+
+        return $this;
+    }
+
+    public function getWebhookProvider(): ?string
+    {
+        return $this->webhookProvider;
+    }
+
+    public function setWebhookProvider(?string $webhookProvider): CustomForm
+    {
+        $this->webhookProvider = $webhookProvider;
+
+        return $this;
+    }
+
+    public function getWebhookFieldMapping(): ?array
+    {
+        return $this->webhookFieldMapping;
+    }
+
+    public function setWebhookFieldMapping(?array $webhookFieldMapping): CustomForm
+    {
+        $this->webhookFieldMapping = $webhookFieldMapping;
+
+        return $this;
+    }
+
+    public function getWebhookExtraConfig(): ?array
+    {
+        return $this->webhookExtraConfig;
+    }
+
+    public function setWebhookExtraConfig(?array $webhookExtraConfig): CustomForm
+    {
+        $this->webhookExtraConfig = $webhookExtraConfig;
+
         return $this;
     }
 
@@ -421,17 +400,14 @@ class CustomForm extends AbstractDateTimed
      */
     public function getFieldsSummary(): string
     {
-        $text = "|" . PHP_EOL;
+        $text = '|'.PHP_EOL;
         foreach ($this->getFields() as $field) {
-            $text .= "|--- " . $field->getOneLineSummary();
+            $text .= '|--- '.$field->getOneLineSummary();
         }
 
         return $text;
     }
 
-    /**
-     * @return Collection
-     */
     public function getNodes(): Collection
     {
         return $this->nodes;
@@ -441,7 +417,7 @@ class CustomForm extends AbstractDateTimed
     {
         if ($this->id) {
             $this->id = null;
-            $suffix = "-" . uniqid();
+            $suffix = '-'.uniqid();
             $this->name .= $suffix;
             $this->displayName .= $suffix;
             $this->customFormAnswers = new ArrayCollection();

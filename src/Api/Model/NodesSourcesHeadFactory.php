@@ -8,40 +8,42 @@ use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\Core\Handlers\HandlerFactoryInterface;
 use RZ\Roadiz\CoreBundle\Bag\Settings;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
-use RZ\Roadiz\CoreBundle\EntityApi\NodeSourceApi;
+use RZ\Roadiz\Markdown\MarkdownInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-final class NodesSourcesHeadFactory implements NodesSourcesHeadFactoryInterface
+final readonly class NodesSourcesHeadFactory implements NodesSourcesHeadFactoryInterface
 {
     public function __construct(
-        private readonly Settings $settingsBag,
-        private readonly UrlGeneratorInterface $urlGenerator,
-        private readonly NodeSourceApi $nodeSourceApi,
-        private readonly HandlerFactoryInterface $handlerFactory
+        private Settings $settingsBag,
+        private UrlGeneratorInterface $urlGenerator,
+        private HandlerFactoryInterface $handlerFactory,
+        private ?MarkdownInterface $markdown = null,
     ) {
     }
 
+    #[\Override]
     public function createForNodeSource(NodesSources $nodesSources): NodesSourcesHeadInterface
     {
         return new NodesSourcesHead(
             $nodesSources,
             $this->settingsBag,
             $this->urlGenerator,
-            $this->nodeSourceApi,
             $this->handlerFactory,
-            $nodesSources->getTranslation()
+            $nodesSources->getTranslation(),
+            $this->markdown,
         );
     }
 
+    #[\Override]
     public function createForTranslation(TranslationInterface $translation): NodesSourcesHeadInterface
     {
         return new NodesSourcesHead(
             null,
             $this->settingsBag,
             $this->urlGenerator,
-            $this->nodeSourceApi,
             $this->handlerFactory,
-            $translation
+            $translation,
+            $this->markdown,
         );
     }
 }
