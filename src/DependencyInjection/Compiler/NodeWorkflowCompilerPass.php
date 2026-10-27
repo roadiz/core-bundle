@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\DependencyInjection\Compiler;
 
-use RZ\Roadiz\Core\AbstractEntities\NodeInterface;
+use RZ\Roadiz\CoreBundle\Entity\Node;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -23,7 +23,7 @@ class NodeWorkflowCompilerPass implements CompilerPassInterface
         $workflowId = 'state_machine.node';
         $registryDefinition = $container->getDefinition('workflow.registry');
 
-        $strategyDefinition = new Definition(InstanceOfSupportStrategy::class, [NodeInterface::class]);
+        $strategyDefinition = new Definition(InstanceOfSupportStrategy::class, [Node::class]);
         $strategyDefinition->setPublic(false);
         $registryDefinition->addMethodCall('addWorkflow', [new Reference($workflowId), $strategyDefinition]);
     }

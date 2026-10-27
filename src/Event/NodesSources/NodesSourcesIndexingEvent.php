@@ -14,7 +14,7 @@ final class NodesSourcesIndexingEvent extends Event
         private readonly NodesSources $nodeSource,
         private array $associations,
         private readonly AbstractSolarium $solariumDocument,
-        private readonly bool $subResource = false,
+        private readonly bool $subResource = false
     ) {
     }
 
@@ -25,6 +25,8 @@ final class NodesSourcesIndexingEvent extends Event
 
     /**
      * Get Solr document data to index.
+     *
+     * @return array
      */
     public function getAssociations(): array
     {
@@ -33,11 +35,13 @@ final class NodesSourcesIndexingEvent extends Event
 
     /**
      * Set Solr document data to index.
+     *
+     * @param array $associations
+     * @return NodesSourcesIndexingEvent
      */
     public function setAssociations(array $associations): NodesSourcesIndexingEvent
     {
         $this->associations = $associations;
-
         return $this;
     }
 

@@ -10,6 +10,9 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 final class OPCacheEventSubscriber implements EventSubscriberInterface
 {
+    /**
+     * @inheritDoc
+     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -17,6 +20,9 @@ final class OPCacheEventSubscriber implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * @param CachePurgeRequestEvent $event
+     */
     public function onPurgeRequest(CachePurgeRequestEvent $event): void
     {
         try {

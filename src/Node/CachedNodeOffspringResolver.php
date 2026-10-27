@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Node;
 
+use Doctrine\Persistence\ManagerRegistry;
 use Psr\Cache\CacheException;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\InvalidArgumentException;
-use RZ\Roadiz\Core\AbstractEntities\NodeInterface;
 use RZ\Roadiz\CoreBundle\Entity\Node;
-use RZ\Roadiz\CoreBundle\Repository\AllStatusesNodeRepository;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
@@ -17,47 +16,52 @@ final class CachedNodeOffspringResolver implements CachedNodeOffspringResolverIn
 {
     public function __construct(
         private readonly CacheItemPoolInterface $cache,
-        private readonly AllStatusesNodeRepository $allStatusesNodeRepository,
+        private readonly ManagerRegistry $managerRegistry
     ) {
     }
 
     /**
+     * @inheritDoc
      * @throws InvalidArgumentException
      * @throws CacheException
      */
-    public function getAllOffspringIds(NodeInterface $ancestor): array
+    public function getAllOffspringIds(Node $ancestor): array
     {
-        $cacheItem = $this->cache->getItem(self::CACHE_PREFIX.$ancestor->getId());
+        $cacheItem = $this->cache->getItem(self::CACHE_PREFIX . $ancestor->getId());
         if (!$cacheItem->isHit()) {
-            $offspringIds = $this->allStatusesNodeRepository->findAllOffspringIdByNode($ancestor);
+            $nodeRepository = $this->managerRegistry->getRepository(Node::class);
+            $offspringIds = $nodeRepository->findAllOffspringIdByNode($ancestor);
             $cacheItem->set($offspringIds);
             $cacheItem->expiresAfter(300);
             if ($cacheItem instanceof ItemInterface && $this->cache instanceof TagAwareCacheInterface) {
-                $cacheItem->tag(array_map(fn (int $nodeId) => self::CACHE_TAG_PREFIX.$nodeId, $offspringIds));
+                $cacheItem->tag(array_map(function (int $nodeId) {
+                    return self::CACHE_TAG_PREFIX . $nodeId;
+                }, $offspringIds));
             }
             $this->cache->save($cacheItem);
         } else {
             $offspringIds = $cacheItem->get();
         }
-
         return $offspringIds;
     }
 
     /**
      * @throws InvalidArgumentException
      */
-    public function purgeOffspringCache(NodeInterface $node): void
+    public function purgeOffspringCache(Node $node): void
     {
-        $this->cache->deleteItem(self::CACHE_PREFIX.$node->getId());
+        $this->cache->deleteItem(self::CACHE_PREFIX . $node->getId());
         if ($this->cache instanceof TagAwareCacheInterface) {
             /*
              * If cache pool supports tags, we can invalidate all nodes at once.
              */
-            $this->cache->invalidateTags([self::CACHE_TAG_PREFIX.$node->getId()]);
-        } elseif ($node instanceof Node) {
-            $ancestorsId = $this->allStatusesNodeRepository->findAllParentsIdByNode($node);
+            $this->cache->invalidateTags([self::CACHE_TAG_PREFIX . $node->getId()]);
+        } else {
+            $ancestorsId = $this->managerRegistry
+                ->getRepository(Node::class)
+                ->findAllParentsIdByNode($node);
             foreach ($ancestorsId as $ancestorId) {
-                $this->cache->deleteItem(self::CACHE_PREFIX.$ancestorId);
+                $this->cache->deleteItem(self::CACHE_PREFIX . $ancestorId);
             }
         }
     }

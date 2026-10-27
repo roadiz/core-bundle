@@ -9,18 +9,22 @@ use RZ\Roadiz\CoreBundle\Entity\User;
 
 /**
  * Classic Roadiz User chroot from Doctrine relation.
+ *
+ * @package RZ\Roadiz\CoreBundle\Security\Authorization\Chroot
  */
-final class RoadizUserNodeChrootResolver implements NodeChrootResolver
+class RoadizUserNodeChrootResolver implements NodeChrootResolver
 {
-    public function supports(mixed $user): bool
+    public function supports($user): bool
     {
         return $user instanceof User;
     }
 
     /**
      * @param User $user
+     *
+     * @return Node|null
      */
-    public function getChroot(mixed $user): ?Node
+    public function getChroot($user): ?Node
     {
         return $user->getChroot();
     }
