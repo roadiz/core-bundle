@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Console;
 
-use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\Core\AbstractEntities\AbstractField;
+use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use RZ\Roadiz\EntityGenerator\Field\DefaultValuesResolverInterface;
 use Symfony\Component\Console\Command\Command;
@@ -18,8 +17,8 @@ final class NodeTypesDefaultValuesCommand extends Command
 {
     public function __construct(
         private readonly DefaultValuesResolverInterface $defaultValuesResolver,
-        private readonly ManagerRegistry $managerRegistry,
-        string $name = null
+        private readonly NodeTypes $nodeTypesBag,
+        ?string $name = null,
     ) {
         parent::__construct($name);
     }
@@ -42,22 +41,20 @@ final class NodeTypesDefaultValuesCommand extends Command
         if (empty($name)) {
             throw new \InvalidArgumentException('Field name must not be empty.');
         }
-        $enumFields = $this->managerRegistry->getRepository(NodeTypeField::class)->findBy([
-            'type' => AbstractField::ENUM_T,
-        ]);
-        $enumFieldsNames = array_unique(array_map(function (NodeTypeField $field) {
-            return $field->getName();
-        }, $enumFields));
-
-        $oneField = $this->managerRegistry->getRepository(NodeTypeField::class)->findOneBy([
-            'name' => $name,
-        ]);
+        $enumFields = [];
+        foreach ($this->nodeTypesBag->all() as $nodeType) {
+            foreach ($nodeType->getFields() as $field) {
+                if ($field instanceof NodeTypeField && $field->isEnum()) {
+                    $enumFields[] = $field;
+                }
+            }
+        }
+        $enumFieldsNames = array_unique(array_map(fn (NodeTypeField $field) => $field->getName(), $enumFields));
+        $oneField = array_filter($enumFields, fn (NodeTypeField $field) => $field->getName() === $name);
+        $oneField = array_shift($oneField);
 
         if (!$oneField instanceof NodeTypeField) {
-            throw new \InvalidArgumentException('Field name must be a valid field name.');
-        }
-        if (!$oneField->isEnum()) {
-            throw new \InvalidArgumentException('Field name must be an enum field. Valid fields names are: ' . implode(', ', $enumFieldsNames));
+            throw new \InvalidArgumentException('Field name must be an enum field. Valid fields names are: '.implode(', ', $enumFieldsNames));
         }
 
         $defaultValues = $this->defaultValuesResolver->getDefaultValuesAmongAllFields($oneField);
@@ -70,9 +67,10 @@ final class NodeTypesDefaultValuesCommand extends Command
                 $oneField->getLabel(),
                 $oneField->getDescription(),
                 implode(', ', array_unique($defaultValues)),
-                $maxDefaultValuesLength
+                $maxDefaultValuesLength,
             ],
         ]);
+
         return 0;
     }
 }

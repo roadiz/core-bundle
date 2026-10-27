@@ -9,11 +9,10 @@ use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 
 final class NodesSourcesBreadcrumbsFactory implements BreadcrumbsFactoryInterface
 {
-    /**
-     * @param PersistableInterface|null $entity
-     * @return BreadcrumbsInterface|null
+    /*
+     * Loop over parents and create a Breadcrumbs object with only visible nodes.
      */
-    public function create(?PersistableInterface $entity): ?BreadcrumbsInterface
+    public function create(?PersistableInterface $entity, bool $onlyVisible = true): ?BreadcrumbsInterface
     {
         if (!$entity instanceof NodesSources) {
             return null;
@@ -27,8 +26,8 @@ final class NodesSourcesBreadcrumbsFactory implements BreadcrumbsFactoryInterfac
 
         while (null !== $entity = $entity->getParent()) {
             if (
-                null !== $entity->getNode() &&
-                $entity->getNode()->isVisible()
+                null !== $entity->getNode()
+                && (!$onlyVisible || $entity->getNode()->isVisible())
             ) {
                 $parents[] = $entity;
             }

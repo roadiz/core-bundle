@@ -8,6 +8,7 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\Tag;
+use RZ\Roadiz\CoreBundle\Repository\NotPublishedNodeRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -18,8 +19,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class NodeClearTagCommand extends Command
 {
     public function __construct(
+        private readonly NotPublishedNodeRepository $notPublishedNodeRepository,
         private readonly ManagerRegistry $managerRegistry,
-        ?string $name = null
+        ?string $name = null,
     ) {
         parent::__construct($name);
     }
@@ -34,7 +36,8 @@ final class NodeClearTagCommand extends Command
 
     protected function getNodeQueryBuilder(Tag $tag): QueryBuilder
     {
-        $qb = $this->managerRegistry->getRepository(Node::class)->createQueryBuilder('n');
+        $qb = $this->notPublishedNodeRepository->createQueryBuilder('n');
+
         return $qb->innerJoin('n.nodesTags', 'ntg')
             ->andWhere($qb->expr()->eq('ntg.tag', ':tagId'))
             ->setParameter(':tagId', $tag);
@@ -51,7 +54,7 @@ final class NodeClearTagCommand extends Command
         }
         /** @var Tag|null $tag */
         $tag = $em->find(Tag::class, $tagId);
-        if ($tag === null) {
+        if (null === $tag) {
             throw new \InvalidArgumentException(sprintf('Tag #%d does not exist.', $tagId));
         }
 
@@ -65,6 +68,7 @@ final class NodeClearTagCommand extends Command
 
         if ($count <= 0) {
             $io->warning('No nodes were found linked with this tag.');
+
             return 0;
         }
 

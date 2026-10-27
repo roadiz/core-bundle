@@ -6,20 +6,18 @@ namespace RZ\Roadiz\CoreBundle\Workflow\Event;
 
 use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Security\Authorization\Voter\NodeVoter;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\Workflow\Event\CompletedEvent;
 use Symfony\Component\Workflow\Event\GuardEvent;
 use Symfony\Component\Workflow\TransitionBlocker;
 
-final class NodeStatusGuardListener implements EventSubscriberInterface
+final readonly class NodeStatusGuardListener implements EventSubscriberInterface
 {
-    public function __construct(private readonly Security $security)
+    public function __construct(private Security $security)
     {
     }
 
-    /**
-     * @inheritDoc
-     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -27,7 +25,25 @@ final class NodeStatusGuardListener implements EventSubscriberInterface
             'workflow.node.guard.publish' => ['guardPublish'],
             'workflow.node.guard.archive' => ['guardArchive'],
             'workflow.node.guard.delete' => ['guardDelete'],
+            'workflow.node.completed.publish' => ['onPublish'],
         ];
+    }
+
+    /*
+     * Ensure that every node nodes-sources publishedAt is set to now() when a node is published.
+     */
+    public function onPublish(CompletedEvent $event): void
+    {
+        $node = $event->getSubject();
+        if (!$node instanceof Node) {
+            return;
+        }
+
+        foreach ($node->getNodeSources() as $nodesSources) {
+            if (null === $nodesSources->getPublishedAt()) {
+                $nodesSources->setPublishedAt(new \DateTime());
+            }
+        }
     }
 
     public function guard(GuardEvent $event): void

@@ -11,25 +11,13 @@ use Symfony\Component\Form\DataTransformerInterface;
 /**
  * Transform Doctrine integer ID to their Doctrine entities.
  */
-class ReversePersistableTransformer implements DataTransformerInterface
+final readonly class ReversePersistableTransformer implements DataTransformerInterface
 {
     /**
-     * @var class-string<PersistableInterface>
-     */
-    protected string $doctrineEntity;
-    /**
-     * @var EntityManagerInterface
-     */
-    private EntityManagerInterface $entityManager;
-
-    /**
-     * @param EntityManagerInterface $entityManager
      * @param class-string<PersistableInterface> $doctrineEntity
      */
-    public function __construct(EntityManagerInterface $entityManager, string $doctrineEntity)
+    public function __construct(private EntityManagerInterface $entityManager, private string $doctrineEntity)
     {
-        $this->entityManager = $entityManager;
-        $this->doctrineEntity = $doctrineEntity;
     }
 
     public function transform(mixed $value): ?array
@@ -37,8 +25,9 @@ class ReversePersistableTransformer implements DataTransformerInterface
         if (null === $value) {
             return null;
         }
+
         return $this->entityManager->getRepository($this->doctrineEntity)->findBy([
-            'id' => $value
+            'id' => $value,
         ]);
     }
 
@@ -52,6 +41,7 @@ class ReversePersistableTransformer implements DataTransformerInterface
         if ($value instanceof PersistableInterface) {
             return $value->getId();
         }
+
         return null;
     }
 }

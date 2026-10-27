@@ -4,42 +4,38 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Form;
 
-use Doctrine\ORM\EntityManagerInterface;
-use RZ\Roadiz\CoreBundle\Form\DataTransformer\AttributeGroupTransformer;
+use Doctrine\Persistence\ManagerRegistry;
 use RZ\Roadiz\CoreBundle\Entity\AttributeGroup;
+use RZ\Roadiz\CoreBundle\Form\DataTransformer\AttributeGroupTransformer;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class AttributeGroupsType extends AbstractType
+final class AttributeGroupsType extends AbstractType
 {
-    protected EntityManagerInterface $entityManager;
-
-    public function __construct(EntityManagerInterface $entityManager)
-    {
-        $this->entityManager = $entityManager;
+    public function __construct(
+        private readonly AttributeGroupTransformer $attributeGroupTransformer,
+        private readonly ManagerRegistry $managerRegistry,
+    ) {
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         parent::buildForm($builder, $options);
 
-        $builder->addModelTransformer(new AttributeGroupTransformer($this->entityManager));
+        $builder->addModelTransformer($this->attributeGroupTransformer);
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setNormalizer('choices', function (Options $options, $choices) {
             $criteria = [];
             $ordering = [
-                'canonicalName' => 'ASC'
+                'canonicalName' => 'ASC',
             ];
-            $attributeGroups = $this->entityManager
+            $attributeGroups = $this->managerRegistry
                 ->getRepository(AttributeGroup::class)
                 ->findBy($criteria, $ordering);
 
@@ -51,16 +47,12 @@ class AttributeGroupsType extends AbstractType
             return $choices;
         });
     }
-    /**
-     * {@inheritdoc}
-     */
+
     public function getParent(): ?string
     {
         return ChoiceType::class;
     }
-    /**
-     * {@inheritdoc}
-     */
+
     public function getBlockPrefix(): string
     {
         return 'attribute_groups';

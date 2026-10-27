@@ -13,15 +13,13 @@ use RZ\Roadiz\CoreBundle\Repository\NodesToNodesRepository;
  * Describes a complex ManyToMany relation
  * between two Nodes and NodeTypeFields.
  */
-#[
-    ORM\Entity(repositoryClass: NodesToNodesRepository::class),
-    ORM\Table(name: "nodes_to_nodes"),
-    ORM\Index(columns: ["position"]),
-    ORM\Index(columns: ["node_a_id", "field_name"], name: "node_a_field"),
-    ORM\Index(columns: ["node_a_id", "field_name", "position"], name: "node_a_field_position"),
-    ORM\Index(columns: ["node_b_id", "field_name"], name: "node_b_field"),
-    ORM\Index(columns: ["node_b_id", "field_name", "position"], name: "node_b_field_position")
-]
+#[ORM\Entity(repositoryClass: NodesToNodesRepository::class),
+    ORM\Table(name: 'nodes_to_nodes'),
+    ORM\Index(columns: ['position']),
+    ORM\Index(columns: ['node_a_id', 'field_name'], name: 'node_a_field'),
+    ORM\Index(columns: ['node_a_id', 'field_name', 'position'], name: 'node_a_field_position'),
+    ORM\Index(columns: ['node_b_id', 'field_name'], name: 'node_b_field'),
+    ORM\Index(columns: ['node_b_id', 'field_name', 'position'], name: 'node_b_field_position')]
 class NodesToNodes extends AbstractPositioned
 {
     use FieldAwareEntityTrait;
@@ -50,8 +48,6 @@ class NodesToNodes extends AbstractPositioned
 
     /**
      * Gets the value of nodeA.
-     *
-     * @return Node
      */
     public function getNodeA(): Node
     {
@@ -62,8 +58,6 @@ class NodesToNodes extends AbstractPositioned
      * Sets the value of nodeA.
      *
      * @param Node $nodeA the node
-     *
-     * @return self
      */
     public function setNodeA(Node $nodeA): NodesToNodes
     {
@@ -74,8 +68,6 @@ class NodesToNodes extends AbstractPositioned
 
     /**
      * Gets the value of nodeB.
-     *
-     * @return Node
      */
     public function getNodeB(): Node
     {
@@ -86,12 +78,11 @@ class NodesToNodes extends AbstractPositioned
      * Sets the value of nodeB.
      *
      * @param Node $nodeB the node
-     *
-     * @return self
      */
     public function setNodeB(Node $nodeB): NodesToNodes
     {
         $this->nodeB = $nodeB;
+
         return $this;
     }
 }

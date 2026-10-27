@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\Filter;
 
-use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use ApiPlatform\Doctrine\Orm\Filter\AbstractFilter;
-use ApiPlatform\Exception\FilterValidationException;
+use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use ApiPlatform\Metadata\Operation;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
@@ -18,9 +18,6 @@ final class IntersectionFilter extends AbstractFilter
 {
     public const PARAMETER = 'intersect';
 
-    /**
-     * @inheritDoc
-     */
     protected function filterProperty(
         string $property,
         mixed $value,
@@ -28,15 +25,15 @@ final class IntersectionFilter extends AbstractFilter
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
         ?Operation $operation = null,
-        array $context = []
+        array $context = [],
     ): void {
-        if ($property !== IntersectionFilter::PARAMETER || !is_array($value)) {
+        if (IntersectionFilter::PARAMETER !== $property || !is_array($value)) {
             return;
         }
 
         foreach ($value as $fieldName => $fieldValue) {
             if (empty($fieldName)) {
-                throw new FilterValidationException([sprintf('“%s” filter must be only used with an associative array with fields as keys.', $property)]);
+                throw new InvalidArgumentException(sprintf('“%s” filter must be only used with an associative array with fields as keys.', $property));
             }
             if ($this->isPropertyEnabled($fieldName, $resourceClass)) {
                 // Allow single value intersection
@@ -52,7 +49,7 @@ final class IntersectionFilter extends AbstractFilter
                         $resourceClass,
                         Join::INNER_JOIN // Join type must be inner to filter out empty result sets
                     );
-                    $placeholder = ':' . $alias . $splitFieldName;
+                    $placeholder = ':'.$alias.$splitFieldName;
                     $queryBuilder->andWhere($queryBuilder->expr()->eq(sprintf('%s.%s', $alias, $splitFieldName), $placeholder));
                     $queryBuilder->setParameter($placeholder, $singleValue);
                 }
@@ -60,9 +57,6 @@ final class IntersectionFilter extends AbstractFilter
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getDescription(string $resourceClass): array
     {
         $properties = $this->properties;
@@ -80,8 +74,8 @@ final class IntersectionFilter extends AbstractFilter
                     'required' => false,
                     'description' => 'Discriminate an existing filter with additional filtering value using a new inner join.',
                     'openapi' => [
-                        'description' => 'Discriminate an existing filter with additional filtering value using a new inner join.'
-                    ]
+                        'description' => 'Discriminate an existing filter with additional filtering value using a new inner join.',
+                    ],
                 ];
                 $carry[sprintf('%s[%s][]', IntersectionFilter::PARAMETER, $property)] = [
                     'property' => $property,
@@ -89,9 +83,10 @@ final class IntersectionFilter extends AbstractFilter
                     'required' => false,
                     'description' => 'Discriminate an existing filter with additional filtering value using a new inner join.',
                     'openapi' => [
-                        'description' => 'Discriminate an existing filter with additional filtering value using a new inner join.'
-                    ]
+                        'description' => 'Discriminate an existing filter with additional filtering value using a new inner join.',
+                    ],
                 ];
+
                 return $carry;
             },
             []
@@ -104,7 +99,7 @@ final class IntersectionFilter extends AbstractFilter
         QueryBuilder $queryBuilder,
         QueryNameGeneratorInterface $queryNameGenerator,
         string $resourceClass,
-        string $joinType
+        string $joinType,
     ): array {
         $propertyParts = $this->splitPropertyParts($property, $resourceClass);
         $parentAlias = $rootAlias;
@@ -116,7 +111,7 @@ final class IntersectionFilter extends AbstractFilter
         }
 
         if (null === $alias) {
-            throw new FilterValidationException([sprintf('Cannot add joins for property "%s" - property is not nested.', $property)]);
+            throw new InvalidArgumentException(sprintf('Cannot add joins for property "%s" - property is not nested.', $property));
         }
 
         return [$alias, $propertyParts['field'], $propertyParts['associations']];
@@ -130,9 +125,9 @@ final class IntersectionFilter extends AbstractFilter
         QueryNameGeneratorInterface $queryNameGenerator,
         string $alias,
         string $association,
-        string $joinType = null
+        ?string $joinType = null,
     ): string {
-        $associationAlias = $queryNameGenerator->generateJoinAlias($association) . uniqid();
+        $associationAlias = $queryNameGenerator->generateJoinAlias($association).uniqid();
         $query = "$alias.$association";
 
         if (Join::LEFT_JOIN === $joinType) {
