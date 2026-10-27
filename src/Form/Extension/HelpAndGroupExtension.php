@@ -10,7 +10,7 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-final class HelpAndGroupExtension extends AbstractTypeExtension
+class HelpAndGroupExtension extends AbstractTypeExtension
 {
     public static function getExtendedTypes(): iterable
     {

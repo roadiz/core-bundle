@@ -14,10 +14,10 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * but only by their title: every other text field is stripped before indexing,
  * so protected content never reaches Solr nor its highlighting.
  */
-final readonly class NodeSourceSearchRealmFilterSubscriber implements EventSubscriberInterface
+final class NodeSourceSearchRealmFilterSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private RealmResolverInterface $realmResolver,
+        private readonly RealmResolverInterface $realmResolver,
     ) {
     }
 

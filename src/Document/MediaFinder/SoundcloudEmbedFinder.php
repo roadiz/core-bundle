@@ -6,6 +6,9 @@ namespace RZ\Roadiz\CoreBundle\Document\MediaFinder;
 
 use RZ\Roadiz\Documents\MediaFinders\AbstractSoundcloudEmbedFinder;
 
+/**
+ * Soundcloud tools class.
+ */
 class SoundcloudEmbedFinder extends AbstractSoundcloudEmbedFinder
 {
     use EmbedFinderTrait;

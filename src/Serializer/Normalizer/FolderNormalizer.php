@@ -13,9 +13,11 @@ use RZ\Roadiz\CoreBundle\Entity\FolderTranslation;
  */
 final class FolderNormalizer extends AbstractPathNormalizer
 {
-    /**
+     /**
+     * @param mixed $object
+     * @param string|null $format
+     * @param array $context
      * @return array|\ArrayObject|bool|float|int|mixed|string|null
-     *
      * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
      */
     public function normalize(mixed $object, ?string $format = null, array $context = []): mixed
@@ -33,7 +35,6 @@ final class FolderNormalizer extends AbstractPathNormalizer
                 }
             }
         }
-
         return $data;
     }
 }

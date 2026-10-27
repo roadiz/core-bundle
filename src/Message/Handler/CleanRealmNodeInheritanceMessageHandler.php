@@ -5,30 +5,28 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Message\Handler;
 
 use Doctrine\Persistence\ManagerRegistry;
+use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\Realm;
 use RZ\Roadiz\CoreBundle\Entity\RealmNode;
 use RZ\Roadiz\CoreBundle\Message\CleanRealmNodeInheritanceMessage;
 use RZ\Roadiz\CoreBundle\Node\NodeOffspringResolverInterface;
-use RZ\Roadiz\CoreBundle\Repository\AllStatusesNodeRepository;
-use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\Exception\UnrecoverableMessageHandlingException;
+use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
-#[AsMessageHandler]
-final readonly class CleanRealmNodeInheritanceMessageHandler
+final class CleanRealmNodeInheritanceMessageHandler implements MessageHandlerInterface
 {
     public function __construct(
-        private ManagerRegistry $managerRegistry,
-        private AllStatusesNodeRepository $allStatusesNodeRepository,
-        private NodeOffspringResolverInterface $nodeOffspringResolver,
+        private readonly ManagerRegistry $managerRegistry,
+        private readonly NodeOffspringResolverInterface $nodeOffspringResolver
     ) {
     }
 
     public function __invoke(CleanRealmNodeInheritanceMessage $message): void
     {
-        if (null === $message->getRealmId()) {
+        if ($message->getRealmId() === null) {
             return;
         }
-        $node = $this->allStatusesNodeRepository->find($message->getNodeId());
+        $node = $this->managerRegistry->getRepository(Node::class)->find($message->getNodeId());
         $realm = $this->managerRegistry->getRepository(Realm::class)->find($message->getRealmId());
 
         if (null === $node) {

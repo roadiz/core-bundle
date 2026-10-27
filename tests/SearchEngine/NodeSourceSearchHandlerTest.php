@@ -20,14 +20,13 @@ class NodeSourceSearchHandlerTest extends TestCase
             new ClientRegistry($this->createMock(ContainerInterface::class)),
             $this->createMock(ObjectManager::class),
             new NullLogger(),
-            new EventDispatcher(),
-            2,
-            3,
+            new EventDispatcher()
         );
     }
 
     /**
-     * @return array{0: string, 1: string, 2: string} [$exactQuery, $fuzzyQuery, $wildcardQuery]
+     * @param string $q
+     * @return array [$exactQuery, $fuzzyQuery, $wildcardQuery]
      */
     private function getFormattedQuery(string $q): array
     {
@@ -37,6 +36,11 @@ class NodeSourceSearchHandlerTest extends TestCase
         return $method->invoke($handler, $q);
     }
 
+    /**
+     * @param string $q
+     * @param array $args
+     * @return string
+     */
     private function buildQuery(string $q, array $args = []): string
     {
         $handler = $this->createHandler();
@@ -46,9 +50,9 @@ class NodeSourceSearchHandlerTest extends TestCase
     }
 
     /**
-     * Regression test for gitlab.rezo-zero.com/events-api/eventsapi-dev-website#32:
-     * a multi-word query must produce a real Lucene PhraseQuery (quoted, with slop),
-     * not a single escapeQuery()'d term with the space backslash-escaped away.
+     * Regression test: a multi-word query must produce a real Lucene PhraseQuery
+     * (quoted, with slop), not a single escapeQuery()'d term with the space
+     * backslash-escaped away.
      */
     public function testMultiWordQueryBuildsExactPhraseQuery(): void
     {
@@ -65,8 +69,8 @@ class NodeSourceSearchHandlerTest extends TestCase
     }
 
     /**
-     * Fuzzy clause must require every word (AND), like v7 did, otherwise a single
-     * matching word is enough to rank a document (combined with eDismax minimum-match).
+     * Fuzzy clause must require every word (AND), otherwise a single matching word
+     * is enough to rank a document (combined with eDismax minimum-match).
      */
     public function testFuzzyQueryRequiresEveryWord(): void
     {
@@ -79,7 +83,7 @@ class NodeSourceSearchHandlerTest extends TestCase
     {
         $query = $this->buildQuery('King Lear');
 
-        $this->assertStringContainsString('(title:"King Lear"~2)^20', $query);
+        $this->assertStringContainsString('(title:"King Lear"~2)^10', $query);
         $this->assertStringContainsString('(title:(King~2 AND Lear~2))', $query);
     }
 }
