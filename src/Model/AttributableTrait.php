@@ -51,7 +51,9 @@ trait AttributableTrait
 
                 return null;
             })
-            ->filter(fn (?AttributeValueTranslationInterface $attributeValueTranslation) => null !== $attributeValueTranslation)
+            ->filter(function (?AttributeValueTranslationInterface $attributeValueTranslation) {
+                return null !== $attributeValueTranslation;
+            })
         ;
 
         return $values; // phpstan does not understand return type after filtering

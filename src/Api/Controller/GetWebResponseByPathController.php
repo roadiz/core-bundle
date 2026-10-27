@@ -23,7 +23,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
 use Symfony\Component\String\UnicodeString;
-use Symfony\Component\Translation\LocaleSwitcher;
 
 final class GetWebResponseByPathController extends AbstractController
 {
@@ -35,11 +34,10 @@ final class GetWebResponseByPathController extends AbstractController
         private readonly PreviewResolverInterface $previewResolver,
         private readonly ApiResourceOperationNameGenerator $apiResourceOperationNameGenerator,
         private readonly LoggerInterface $logger,
-        private readonly LocaleSwitcher $localeSwitcher,
     ) {
     }
 
-    public function __invoke(?Request $request): WebResponseInterface
+    public function __invoke(?Request $request): ?WebResponseInterface
     {
         try {
             if (
@@ -59,7 +57,7 @@ final class GetWebResponseByPathController extends AbstractController
                 'path' => (string) $request->query->get('path'),
             ]);
 
-            $resourceClass = $resource::class;
+            $resourceClass = get_class($resource);
             $isNodeSource = $resource instanceof NodesSources;
 
             try {
@@ -78,7 +76,7 @@ final class GetWebResponseByPathController extends AbstractController
                  */
                 if ($operation instanceof HttpOperation && $isNodeSource) {
                     $operation = $operation->withCacheHeaders([
-                        ...($operation->getCacheHeaders() ?? []),
+                        ...$operation->getCacheHeaders(),
                         'shared_max_age' => $resource->getNode()->getTtl() * 60,
                     ]);
                 }
@@ -96,16 +94,6 @@ final class GetWebResponseByPathController extends AbstractController
             if ($isNodeSource) {
                 $request->attributes->set('_translation', $resource->getTranslation());
                 $request->attributes->set('_locale', $resource->getTranslation()->getPreferredLocale());
-            }
-
-            /*
-             * The resource is resolved after kernel.request: LocaleAwareListener has already set
-             * every locale-aware service (translator, Gedmo translatable bridges…) on the default locale.
-             */
-            $locale = $request->attributes->get('_locale');
-            if (\is_string($locale) && '' !== $locale) {
-                $request->setLocale($locale);
-                $this->localeSwitcher->setLocale($locale);
             }
 
             $data = $this->webResponseDataTransformer->transform($resource, WebResponseInterface::class);
@@ -160,11 +148,11 @@ final class GetWebResponseByPathController extends AbstractController
 
         // Set translation and locale to be used in Request context
         if (null !== $resourceInfo->getTranslation()) {
-            $request?->attributes->set('_translation', $resourceInfo->getTranslation());
+            $request->attributes->set('_translation', $resourceInfo->getTranslation());
         }
 
         if (null !== $resourceInfo->getLocale()) {
-            $request?->attributes->set('_locale', $resourceInfo->getLocale());
+            $request->attributes->set('_locale', $resourceInfo->getLocale());
         }
 
         /*
@@ -177,9 +165,6 @@ final class GetWebResponseByPathController extends AbstractController
     {
         if (null !== $request) {
             $iri = $this->iriConverter->getIriFromResource($resource);
-            if (null === $iri) {
-                return;
-            }
             $request->attributes->set('_resources', $request->attributes->get('_resources', []) + [$iri => $iri]);
         }
     }

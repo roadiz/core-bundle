@@ -47,10 +47,7 @@ trait LoginRequestTrait
                     $user->setConfirmationToken($tokenGenerator->generateToken());
                     $entityManager->flush();
                     $userViewer = $this->getUserViewer();
-                    // Dispatched asynchronously (not sendPasswordResetLink()) so this
-                    // request returns in similar time whether the account exists or
-                    // not, closing the same timing oracle L3 closed for password_request.
-                    $userViewer->sendPasswordResetLinkAsync($user, $resetRoute);
+                    $userViewer->sendPasswordResetLink($user, $resetRoute);
 
                     return true;
                 } catch (\Throwable $e) {

@@ -13,7 +13,6 @@ use RZ\Roadiz\CoreBundle\Api\Model\NodesSourcesHeadFactoryInterface;
 use RZ\Roadiz\CoreBundle\Api\Model\RealmsAwareWebResponseInterface;
 use RZ\Roadiz\CoreBundle\Api\Model\WebResponseInterface;
 use RZ\Roadiz\CoreBundle\Api\TreeWalker\AutoChildrenNodeSourceWalker;
-use RZ\Roadiz\CoreBundle\Api\TreeWalker\NodesSourcesPrefetcher;
 use RZ\Roadiz\CoreBundle\Api\TreeWalker\TreeWalkerGenerator;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Realm\RealmResolverInterface;
@@ -39,34 +38,24 @@ class WebResponseOutputDataTransformer implements WebResponseDataTransformerInte
         protected readonly RealmResolverInterface $realmResolver,
         protected readonly TreeWalkerGenerator $treeWalkerGenerator,
         private readonly string $webResponseClass,
-        protected readonly ?NodesSourcesPrefetcher $nodesSourcesPrefetcher = null,
     ) {
     }
 
-    protected function getNodesSourcesPrefetcher(): ?NodesSourcesPrefetcher
-    {
-        return $this->nodesSourcesPrefetcher;
-    }
-
-    #[\Override]
     protected function getWalkerContext(): WalkerContextInterface
     {
         return $this->walkerContext;
     }
 
-    #[\Override]
     protected function getCacheItemPool(): CacheItemPoolInterface
     {
         return $this->cacheItemPool;
     }
 
-    #[\Override]
     protected function getChildrenNodeSourceWalkerMaxLevel(): int
     {
         return 5;
     }
 
-    #[\Override]
     public function getTreeWalkerGenerator(): TreeWalkerGenerator
     {
         return $this->treeWalkerGenerator;
@@ -75,28 +64,24 @@ class WebResponseOutputDataTransformer implements WebResponseDataTransformerInte
     /**
      * @return class-string<AbstractWalker>
      */
-    #[\Override]
     protected function getChildrenNodeSourceWalkerClassname(): string
     {
         return AutoChildrenNodeSourceWalker::class;
     }
 
-    #[\Override]
     protected function getRealmResolver(): RealmResolverInterface
     {
         return $this->realmResolver;
     }
 
-    #[\Override]
     public function createWebResponse(): WebResponseInterface
     {
         return new ($this->webResponseClass)();
     }
 
-    #[\Override]
-    public function transform(PersistableInterface $object, string $to, array $context = [], ?WebResponseInterface $output = null): WebResponseInterface
+    public function transform(PersistableInterface $object, string $to, array $context = [], ?WebResponseInterface $output = null): ?WebResponseInterface
     {
-        $output ??= $this->createWebResponse();
+        $output = $output ?? $this->createWebResponse();
         $output->setItem($object);
         if ($object instanceof NodesSources) {
             if ($output instanceof RealmsAwareWebResponseInterface) {

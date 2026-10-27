@@ -11,7 +11,6 @@ use Symfony\Component\DependencyInjection\Reference;
 
 class TreeWalkerDefinitionFactoryCompilerPass implements CompilerPassInterface
 {
-    #[\Override]
     public function process(ContainerBuilder $container): void
     {
         if ($container->has(TreeWalkerGenerator::class)) {

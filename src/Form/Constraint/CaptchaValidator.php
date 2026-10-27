@@ -20,7 +20,6 @@ final class CaptchaValidator extends ConstraintValidator
     /**
      * @see ConstraintValidator::validate()
      */
-    #[\Override]
     public function validate(mixed $data, Constraint $constraint): void
     {
         if (!$constraint instanceof Captcha) {
@@ -37,15 +36,9 @@ final class CaptchaValidator extends ConstraintValidator
                 $this->context->buildViolation('Request is not defined')
                     ->atPath($propertyPath)
                     ->addViolation();
-
-                return;
             }
 
-            /*
-             * Look for captcha field in POST or GET parameters.
-             */
-            $data = $request->request->get($this->captchaService->getFieldName())
-                ?? $request->query->get($this->captchaService->getFieldName());
+            $data = $request->get($this->captchaService->getFieldName());
         }
 
         if (empty($data)) {

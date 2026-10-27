@@ -35,7 +35,9 @@ final readonly class TagFactory
             return $tag;
         }
 
-        $translation ??= $this->managerRegistry->getRepository(TranslationInterface::class)->findDefault();
+        if (null === $translation) {
+            $translation = $this->managerRegistry->getRepository(TranslationInterface::class)->findDefault();
+        }
 
         if ($latestPosition <= 0) {
             /*
@@ -46,9 +48,6 @@ final readonly class TagFactory
         }
 
         $manager = $this->managerRegistry->getManagerForClass(Tag::class);
-        if (null === $manager) {
-            throw new \RuntimeException('No entity manager found for Tag class.');
-        }
 
         $tag = new Tag();
         $tag->setTagName($name);

@@ -36,9 +36,11 @@ final readonly class PurgeReverseProxyCacheMessageHandler
             throw new UnrecoverableMessageHandlingException('NodesSources does not exist anymore.');
         }
 
-        $nodeSource = $nodeSource->getFirstReachableParent();
-        if (null === $nodeSource) {
-            return;
+        while (!$nodeSource->isReachable()) {
+            $nodeSource = $nodeSource->getParent();
+            if (null === $nodeSource) {
+                return;
+            }
         }
 
         $purgeRequests = $this->createPurgeRequests($this->urlGenerator->generate(

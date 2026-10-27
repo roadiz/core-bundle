@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Repository;
 
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityRepository;
 use RZ\Roadiz\CoreBundle\Entity\RealmNode;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * @method RealmNode|null findOneByName(string $name)
@@ -19,13 +18,6 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  */
 final class RealmNodeRepository extends EntityRepository
 {
-    public function __construct(
-        ManagerRegistry $registry,
-        EventDispatcherInterface $dispatcher,
-    ) {
-        parent::__construct($registry, RealmNode::class, $dispatcher);
-    }
-
     public function findByNodeIdsAndRealmId(array $nodeIds, int|string $realmId): array
     {
         $nodeIds = array_filter($nodeIds);

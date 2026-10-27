@@ -17,11 +17,10 @@ final readonly class FriendlyCaptchaService implements CaptchaServiceInterface
         private ?string $publicKey,
         #[\SensitiveParameter]
         private ?string $privateKey,
-        private string $verifyUrl = 'https://global.frcapi.com/api/v2/captcha/siteverify',
+        private ?string $verifyUrl = 'https://global.frcapi.com/api/v2/captcha/siteverify',
     ) {
     }
 
-    #[\Override]
     public function isEnabled(): bool
     {
         return !empty($this->publicKey) && !empty($this->privateKey) && !empty($this->verifyUrl);
@@ -33,7 +32,6 @@ final readonly class FriendlyCaptchaService implements CaptchaServiceInterface
      * @throws ServerExceptionInterface
      * @throws TransportExceptionInterface
      */
-    #[\Override]
     public function check(
         string $responseValue,
     ): true|string|array {
@@ -59,13 +57,11 @@ final readonly class FriendlyCaptchaService implements CaptchaServiceInterface
             ($jsonResponse['error']['error_code'] ?? 'Unknown error');
     }
 
-    #[\Override]
     public function getFieldName(): string
     {
         return 'frc-captcha-response';
     }
 
-    #[\Override]
     public function getPublicKey(): ?string
     {
         return $this->publicKey;
@@ -78,7 +74,6 @@ final readonly class FriendlyCaptchaService implements CaptchaServiceInterface
      * <div class="frc-captcha" data-sitekey="{{ configs.publicKey }}"></div>
      * {%- endblock friendlycaptcha_widget %}.
      */
-    #[\Override]
     public function getFormWidgetName(): string
     {
         return 'friendlycaptcha';

@@ -11,13 +11,8 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-/**
- * @deprecated use Symfony ColorType instead
- * @see https://symfony.com/doc/6.4/reference/forms/types/color.html
- */
 final class ColorType extends AbstractType
 {
-    #[\Override]
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
         parent::buildView($view, $form, $options);
@@ -25,7 +20,6 @@ final class ColorType extends AbstractType
         $view->vars['attr']['class'] = 'colorpicker-input';
     }
 
-    #[\Override]
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefault('required', false);
@@ -34,14 +28,12 @@ final class ColorType extends AbstractType
         ]);
     }
 
-    #[\Override]
     public function getBlockPrefix(): string
     {
         return 'rz_color';
     }
 
-    #[\Override]
-    public function getParent(): string
+    public function getParent(): ?string
     {
         return TextType::class;
     }
