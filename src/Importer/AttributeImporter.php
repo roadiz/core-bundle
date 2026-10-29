@@ -4,37 +4,33 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Importer;
 
-use JMS\Serializer\DeserializationContext;
-use JMS\Serializer\SerializerInterface;
 use RZ\Roadiz\CoreBundle\Entity\Attribute;
-use RZ\Roadiz\CoreBundle\Serializer\ObjectConstructor\TypedObjectConstructorInterface;
+use RZ\Roadiz\CoreBundle\Serializer\Normalizer\AttributeNormalizer;
+use Symfony\Component\Serializer\SerializerInterface;
 
-final class AttributeImporter implements EntityImporterInterface
+final readonly class AttributeImporter implements EntityImporterInterface
 {
-    public function __construct(private readonly SerializerInterface $serializer)
+    public function __construct(private SerializerInterface $serializer)
     {
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public function supports(string $entityClass): bool
     {
-        return $entityClass === Attribute::class || $entityClass === 'array<' . Attribute::class . '>';
+        return Attribute::class === $entityClass;
     }
 
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public function import(string $serializedData): bool
     {
         $this->serializer->deserialize(
             $serializedData,
-            'array<' . Attribute::class . '>',
+            Attribute::class.'[]',
             'json',
-            DeserializationContext::create()
-                ->setAttribute(TypedObjectConstructorInterface::PERSIST_NEW_OBJECTS, true)
-                ->setAttribute(TypedObjectConstructorInterface::FLUSH_NEW_OBJECTS, true)
+            [
+                'groups' => ['attribute:import'],
+                AttributeNormalizer::PERSIST_NEW_ENTITIES => true,
+            ]
         );
 
         return true;

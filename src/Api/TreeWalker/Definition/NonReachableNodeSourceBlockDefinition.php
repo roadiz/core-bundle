@@ -11,25 +11,24 @@ use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\TreeWalker\Definition\ContextualDefinitionTrait;
 use RZ\TreeWalker\WalkerContextInterface;
 
-final class NonReachableNodeSourceBlockDefinition
+final readonly class NonReachableNodeSourceBlockDefinition
 {
     use ContextualDefinitionTrait;
     use NodeSourceDefinitionTrait;
 
     public function __construct(
-        private readonly WalkerContextInterface $context,
-        private readonly bool $onlyVisible = true,
+        private WalkerContextInterface $context,
+        private bool $onlyVisible = true,
     ) {
     }
 
     /**
      * @return array<NodeType> $nodeTypes
      */
+    #[\Override]
     protected function getNodeTypes(NodeTypes $nodeTypesBag): array
     {
-        return array_values(array_unique(array_filter($nodeTypesBag->all(), function (NodeType $nodeType) {
-            return !$nodeType->isReachable();
-        })));
+        return $nodeTypesBag->allReachable(false);
     }
 
     /**
@@ -37,12 +36,12 @@ final class NonReachableNodeSourceBlockDefinition
      */
     public function __invoke(NodesSources $source): array
     {
-        if (!($this->context instanceof NodeSourceWalkerContext)) {
-            throw new \InvalidArgumentException('Context should be instance of ' . NodeSourceWalkerContext::class);
+        if (!$this->context instanceof NodeSourceWalkerContext) {
+            throw new \InvalidArgumentException('Context should be instance of '.NodeSourceWalkerContext::class);
         }
 
         $this->context->getStopwatch()->start(self::class);
-        $queryBuilder = $this->getQueryBuilder($source);
+        $queryBuilder = $this->getQueryBuilder($source, $this->onlyVisible);
         $this->context->getStopwatch()->stop(self::class);
 
         return $queryBuilder->getQuery()->getResult();
