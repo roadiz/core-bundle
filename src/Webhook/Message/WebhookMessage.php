@@ -8,5 +8,9 @@ use RZ\Roadiz\CoreBundle\Webhook\WebhookInterface;
 
 interface WebhookMessage
 {
-    public static function fromWebhook(WebhookInterface $webhook): self;
+    /**
+     * @param WebhookInterface $webhook
+     * @return static
+     */
+    public static function fromWebhook(WebhookInterface $webhook);
 }

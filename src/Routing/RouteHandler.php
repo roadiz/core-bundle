@@ -7,14 +7,16 @@ namespace RZ\Roadiz\CoreBundle\Routing;
 use RZ\Roadiz\Utils\StringHandler;
 use Symfony\Component\String\UnicodeString;
 
-final class RouteHandler
+/**
+ * Route handling methods.
+ */
+class RouteHandler
 {
     public static function getBaseRoute(string $path): string
     {
         if ((new UnicodeString($path))->endsWith('Locale')) {
-            $path = StringHandler::replaceLast('Locale', '', $path);
+            $path = StringHandler::replaceLast("Locale", "", $path);
         }
-
         return $path;
     }
 }

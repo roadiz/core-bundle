@@ -9,20 +9,36 @@ use RZ\Roadiz\Core\AbstractEntities\PersistableInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodeTypeField;
 use Symfony\Component\Form\DataTransformerInterface;
 
-final readonly class JoinDataTransformer implements DataTransformerInterface
+class JoinDataTransformer implements DataTransformerInterface
 {
     /**
+     * @var NodeTypeField
+     */
+    private NodeTypeField $nodeTypeField;
+    private ManagerRegistry $managerRegistry;
+    /**
+     * @var class-string
+     */
+    private string $entityClassname;
+
+    /**
+     * @param NodeTypeField $nodeTypeField
+     * @param ManagerRegistry $managerRegistry
      * @param class-string $entityClassname
      */
     public function __construct(
-        private NodeTypeField $nodeTypeField,
-        private ManagerRegistry $managerRegistry,
-        private string $entityClassname,
+        NodeTypeField $nodeTypeField,
+        ManagerRegistry $managerRegistry,
+        string $entityClassname
     ) {
+        $this->nodeTypeField = $nodeTypeField;
+        $this->entityClassname = $entityClassname;
+        $this->managerRegistry = $managerRegistry;
     }
 
     /**
-     * @return array joinDataTransformer must always return an array for view data
+     * @param mixed $value
+     * @return array JoinDataTransformer must always return an array for view data.
      */
     public function transform(mixed $value): array
     {
@@ -30,8 +46,8 @@ final readonly class JoinDataTransformer implements DataTransformerInterface
          * If model is already an PersistableInterface
          */
         if (
-            !empty($value)
-            && $value instanceof PersistableInterface
+            !empty($value) &&
+            $value instanceof PersistableInterface
         ) {
             return [$value->getId()];
         } elseif (!empty($value) && is_iterable($value)) {
@@ -44,16 +60,15 @@ final readonly class JoinDataTransformer implements DataTransformerInterface
                     $idArray[] = $entity->getId();
                 }
             }
-
             return $idArray;
         } elseif (!empty($value)) {
             return [$value];
         }
-
         return [];
     }
 
     /**
+     * @param mixed $value
      * @return array|object|null
      */
     public function reverseTransform(mixed $value): mixed
@@ -70,7 +85,6 @@ final readonly class JoinDataTransformer implements DataTransformerInterface
                 return array_search($a->getId(), $value) -
                     array_search($b->getId(), $value);
             });
-
             return $unorderedEntities;
         }
         if ($this->nodeTypeField->isManyToOne()) {
@@ -78,7 +92,6 @@ final readonly class JoinDataTransformer implements DataTransformerInterface
                 'id' => $value,
             ]);
         }
-
         return null;
     }
 }

@@ -1,24 +1,22 @@
 <?php
-
 declare(strict_types=1);
 
 namespace RZ\Roadiz\Migrations;
 
-use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
 final class Version20201214232628 extends AbstractMigration
 {
-    public function getDescription(): string
+    public function getDescription() : string
     {
         return 'Rename groups table to usergroups to comply with MySQL 8 reserved words.';
     }
 
-    public function up(Schema $schema): void
+    public function up(Schema $schema) : void
     {
         $this->skipIf(
-            !$this->connection->getDatabasePlatform() instanceof MySQLPlatform,
+            $this->connection->getDatabasePlatform()->getName() !== 'mysql',
             'Migration can only be executed safely on \'mysql\'.'
         );
         $this->skipIf($schema->hasTable('usergroups'), 'Table `usergroups` already exists.');
@@ -35,10 +33,10 @@ final class Version20201214232628 extends AbstractMigration
         // $this->addSql('ALTER TABLE `usergroups` RENAME INDEX uniq_f06d39705e237e06 TO UNIQ_98972EB45E237E06');
     }
 
-    public function down(Schema $schema): void
+    public function down(Schema $schema) : void
     {
         $this->skipIf(
-            !$this->connection->getDatabasePlatform() instanceof MySQLPlatform,
+            $this->connection->getDatabasePlatform()->getName() !== 'mysql',
             'Migration can only be executed safely on \'mysql\'.'
         );
         $this->skipIf($schema->hasTable('groups'), 'Table `groups` already exists.');
@@ -56,8 +54,9 @@ final class Version20201214232628 extends AbstractMigration
     }
 
     /**
-     * Temporary workaround.
+     * Temporary workaround
      *
+     * @return bool
      * @see https://github.com/doctrine/migrations/issues/1104
      */
     public function isTransactional(): bool

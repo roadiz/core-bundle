@@ -10,17 +10,21 @@ use RZ\Roadiz\CoreBundle\Entity\Theme;
 /**
  * Do not extend this class, use NodesSourcesPathGeneratingEvent::class event.
  */
-final readonly class NodesSourcesUrlGenerator
+final class NodesSourcesUrlGenerator
 {
     public function __construct(
-        private NodesSourcesPathAggregator $pathAggregator,
-        private ?NodesSources $nodeSource = null,
-        private bool $forceLocale = false,
-        private bool $forceLocaleWithUrlAlias = false,
+        private readonly NodesSourcesPathAggregator $pathAggregator,
+        private readonly ?NodesSources $nodeSource = null,
+        private readonly bool $forceLocale = false,
+        private readonly bool $forceLocaleWithUrlAlias = false
     ) {
     }
 
-    private function isNodeSourceHome(NodesSources $nodeSource): bool
+    /**
+     * @param NodesSources $nodeSource
+     * @return bool
+     */
+    protected function isNodeSourceHome(NodesSources $nodeSource): bool
     {
         if ($nodeSource->getNode()->isHome()) {
             return true;
@@ -34,19 +38,24 @@ final readonly class NodesSourcesUrlGenerator
      * root folder.
      *
      * It returns a relative url to Roadiz, not relative to your server root.
+     *
+     * @param Theme|null $theme
+     * @param array $parameters
+     *
+     * @return string
      */
     public function getNonContextualUrl(?Theme $theme = null, array $parameters = []): string
     {
         if (null !== $this->nodeSource) {
             if ($this->isNodeSourceHome($this->nodeSource)) {
                 if (
-                    $this->nodeSource->getTranslation()->isDefaultTranslation()
-                    && false === $this->forceLocale
+                    $this->nodeSource->getTranslation()->isDefaultTranslation() &&
+                    false === $this->forceLocale
                 ) {
                     return '';
+                } else {
+                    return $this->nodeSource->getTranslation()->getPreferredLocale();
                 }
-
-                return $this->nodeSource->getTranslation()->getPreferredLocale();
             }
 
             $path = $this->pathAggregator->aggregatePath($this->nodeSource, $parameters);
@@ -56,25 +65,31 @@ final readonly class NodesSourcesUrlGenerator
              * translation is not the default one.
              */
             if ($this->urlNeedsLocalePrefix($this->nodeSource)) {
-                $path = $this->nodeSource->getTranslation()->getPreferredLocale().'/'.$path;
+                $path = $this->nodeSource->getTranslation()->getPreferredLocale() . '/' . $path;
             }
 
-            if (null !== $theme && '' != $theme->getRoutePrefix()) {
-                $path = $theme->getRoutePrefix().'/'.$path;
+            if (null !== $theme && $theme->getRoutePrefix() != '') {
+                $path = $theme->getRoutePrefix() . '/' . $path;
             }
             /*
              * Add non default format at the path end.
              */
             if (isset($parameters['_format']) && in_array($parameters['_format'], ['xml', 'json', 'pdf'])) {
-                $path .= '.'.$parameters['_format'];
+                $path .= '.' . $parameters['_format'];
             }
 
             return $path;
+        } else {
+            throw new \RuntimeException("Cannot generate Url for a NULL NodesSources", 1);
         }
-        throw new \RuntimeException('Cannot generate Url for a NULL NodesSources', 1);
     }
 
-    private function useUrlAlias(NodesSources $nodesSources): bool
+    /**
+     * @param NodesSources $nodesSources
+     *
+     * @return bool
+     */
+    protected function useUrlAlias(NodesSources $nodesSources): bool
     {
         if ($nodesSources->getIdentifier() !== $nodesSources->getNode()->getNodeName()) {
             return true;
@@ -83,7 +98,12 @@ final readonly class NodesSourcesUrlGenerator
         return false;
     }
 
-    private function urlNeedsLocalePrefix(NodesSources $nodesSources): bool
+    /**
+     * @param NodesSources $nodesSources
+     *
+     * @return bool
+     */
+    protected function urlNeedsLocalePrefix(NodesSources $nodesSources): bool
     {
         /*
          * Needs a prefix only if translation is not default AND nodeSource does not have an Url alias
@@ -93,15 +113,15 @@ final readonly class NodesSourcesUrlGenerator
          */
         if (
             (
-                !$this->useUrlAlias($nodesSources)
-                && !$nodesSources->getTranslation()->isDefaultTranslation()
-            )
-            || (
-                $this->useUrlAlias($nodesSources)
-                && !$nodesSources->getTranslation()->isDefaultTranslation()
-                && true === $this->forceLocaleWithUrlAlias
-            )
-            || true === $this->forceLocale
+                !$this->useUrlAlias($nodesSources) &&
+                !$nodesSources->getTranslation()->isDefaultTranslation()
+            ) ||
+            (
+                $this->useUrlAlias($nodesSources) &&
+                !$nodesSources->getTranslation()->isDefaultTranslation() &&
+                true === $this->forceLocaleWithUrlAlias
+            ) ||
+            true === $this->forceLocale
         ) {
             return true;
         }

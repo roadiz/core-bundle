@@ -16,19 +16,21 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  * @method Setting|null findOneBy(array $criteria, array $orderBy = null)
  * @method Setting[]    findAll()
  * @method Setting[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
- *
  * @extends EntityRepository<Setting>
  */
 final class SettingRepository extends EntityRepository
 {
     public function __construct(
         ManagerRegistry $registry,
-        EventDispatcherInterface $dispatcher,
+        EventDispatcherInterface $dispatcher
     ) {
         parent::__construct($registry, Setting::class, $dispatcher);
     }
 
     /**
+     * @param string $name
+     *
+     * @return mixed
      * @throws NoResultException
      * @throws NonUniqueResultException
      */
@@ -40,12 +42,15 @@ final class SettingRepository extends EntityRepository
                 ->setParameter(':name', $name);
 
         $query = $builder->getQuery();
-        $query->enableResultCache(3600, 'RZSettingValue_'.$name);
+        $query->enableResultCache(3600, 'RZSettingValue_' . $name);
 
         return $query->getSingleScalarResult();
     }
 
     /**
+     * @param string $name
+     *
+     * @return bool
      * @throws NoResultException
      * @throws NonUniqueResultException
      */
@@ -57,13 +62,15 @@ final class SettingRepository extends EntityRepository
             ->setParameter(':name', $name);
 
         $query = $builder->getQuery();
-        $query->enableResultCache(3600, 'RZSettingExists_'.$name);
+        $query->enableResultCache(3600, 'RZSettingExists_' . $name);
 
         return (bool) $query->getSingleScalarResult();
     }
 
     /**
-     * Get every Setting names.
+     * Get every Setting names
+     *
+     * @return array
      */
     public function findAllNames(): array
     {

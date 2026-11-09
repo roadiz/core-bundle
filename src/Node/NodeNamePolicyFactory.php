@@ -5,14 +5,12 @@ declare(strict_types=1);
 namespace RZ\Roadiz\CoreBundle\Node;
 
 use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\CoreBundle\Repository\NotPublishedNodeRepository;
 
-final readonly class NodeNamePolicyFactory
+final class NodeNamePolicyFactory
 {
     public function __construct(
-        private ManagerRegistry $registry,
-        private NotPublishedNodeRepository $notPublishedNodeRepository,
-        private bool $useTypedNodeNames,
+        private readonly ManagerRegistry $registry,
+        private readonly bool $useTypedNodeNames
     ) {
     }
 
@@ -20,8 +18,7 @@ final readonly class NodeNamePolicyFactory
     {
         return new NodeNameChecker(
             $this->registry,
-            $this->notPublishedNodeRepository,
-            $this->useTypedNodeNames,
+            $this->useTypedNodeNames
         );
     }
 }

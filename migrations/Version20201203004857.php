@@ -1,31 +1,30 @@
 <?php
-
 declare(strict_types=1);
 
 namespace RZ\Roadiz\Migrations;
 
-use Doctrine\DBAL\Platforms\MySQLPlatform;
-use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
  * Database initialization migration.
+ *
+ * @package RZ\Roadiz\Migrations
  */
 final class Version20201203004857 extends AbstractMigration
 {
-    public function getDescription(): string
+    public function getDescription() : string
     {
         return 'Database initialization migration.';
     }
 
-    public function up(Schema $schema): void
+    public function up(Schema $schema) : void
     {
         $this->skipIf($schema->hasTable('nodes'), 'Database has been initialized before Doctrine Migration tool.');
 
-        if ($this->connection->getDatabasePlatform() instanceof MySQLPlatform) {
+        if ($this->connection->getDatabasePlatform()->getName() === 'mysql') {
             $this->mysqlUp();
-        } elseif ($this->connection->getDatabasePlatform() instanceof PostgreSQLPlatform) {
+        } elseif ($this->connection->getDatabasePlatform()->getName() === 'postgresql') {
             $this->postgresUp();
         }
     }
@@ -481,14 +480,15 @@ final class Version20201203004857 extends AbstractMigration
         $this->addSql('ALTER TABLE users_groups ADD CONSTRAINT FK_FF8AB7E0FE54D947 FOREIGN KEY (group_id) REFERENCES usergroups (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
     }
 
-    public function down(Schema $schema): void
+    public function down(Schema $schema) : void
     {
         $this->throwIrreversibleMigrationException();
     }
 
     /**
-     * Temporary workaround.
+     * Temporary workaround
      *
+     * @return bool
      * @see https://github.com/doctrine/migrations/issues/1104
      */
     public function isTransactional(): bool

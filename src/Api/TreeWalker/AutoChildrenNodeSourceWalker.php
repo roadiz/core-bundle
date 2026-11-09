@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace RZ\Roadiz\CoreBundle\Api\TreeWalker;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Psr\Cache\InvalidArgumentException;
 use RZ\Roadiz\Contracts\NodeType\NodeTypeInterface;
 use RZ\Roadiz\CoreBundle\Api\TreeWalker\Definition\MultiTypeChildrenDefinition;
-use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\TreeWalker\AbstractCycleAwareWalker;
 use RZ\TreeWalker\Definition\ZeroChildrenDefinition;
 
@@ -45,13 +42,18 @@ class AutoChildrenNodeSourceWalker extends AbstractCycleAwareWalker
     }
 
     /**
+     * @param NodeTypeInterface $nodeType
+     * @return callable
      * @throws InvalidArgumentException
      */
     protected function createDefinitionForNodeType(NodeTypeInterface $nodeType): callable
     {
         $context = $this->getContext();
         if (!$context instanceof NodeSourceWalkerContext) {
-            throw new \InvalidArgumentException('TreeWalker context must be instance of '.NodeSourceWalkerContext::class);
+            throw new \InvalidArgumentException(
+                'TreeWalker context must be instance of ' .
+                NodeSourceWalkerContext::class
+            );
         }
         $childrenNodeTypes = $context->getNodeTypeResolver()->getChildrenNodeTypeList($nodeType);
         if (count($childrenNodeTypes) > 0) {
@@ -59,16 +61,5 @@ class AutoChildrenNodeSourceWalker extends AbstractCycleAwareWalker
         }
 
         return new ZeroChildrenDefinition($this->getContext());
-    }
-
-    #[\Override]
-    public function getChildren(): Collection
-    {
-        $item = $this->getItem();
-        if ($this->getLevel() > 0 && $item instanceof NodesSources && $item->isReachable()) {
-            return new ArrayCollection();
-        }
-
-        return parent::getChildren();
     }
 }

@@ -10,46 +10,78 @@ use Symfony\Contracts\EventDispatcher\Event;
 abstract class FilterQueryCriteriaEvent extends Event
 {
     /**
-     * @param class-string $entityClass
+     * @var string
      */
-    public function __construct(protected Query $query, protected string $entityClass, protected string $property, protected mixed $value)
+    protected string $property;
+    /**
+     * @var mixed
+     */
+    protected $value;
+    /**
+     * @var class-string
+     */
+    protected string $entityClass;
+    /**
+     * @var Query
+     */
+    protected Query $query;
+
+    /**
+     * @param Query $query
+     * @param class-string $entityClass
+     * @param string $property
+     * @param mixed $value
+     */
+    public function __construct(Query $query, string $entityClass, string $property, $value)
     {
+        $this->entityClass = $entityClass;
+        $this->property = $property;
+        $this->value = $value;
+        $this->query = $query;
     }
 
+    /**
+     * @return Query
+     */
     public function getQuery(): Query
     {
         return $this->query;
     }
 
     /**
-     * @return $this
+     * @param Query $query
+     *
+     * @return FilterQueryCriteriaEvent
      */
-    public function setQuery(Query $query): self
+    public function setQuery(Query $query)
     {
         $this->query = $query;
 
         return $this;
     }
 
-    public function getEntityClass(): string
-    {
-        return $this->entityClass;
-    }
-
-    public function getProperty(): string
+    /**
+     * @return string
+     */
+    public function getProperty()
     {
         return $this->property;
     }
 
-    public function getValue(): mixed
+    /**
+     * @return mixed
+     */
+    public function getValue()
     {
         return $this->value;
     }
 
+
     /**
-     * @param class-string $entityClass
+     * @param string $entityClass
+     * @return bool
      */
-    public function supports(string $entityClass): bool
+    public function supports($entityClass): bool
     {
         return $this->entityClass === $entityClass;
     }

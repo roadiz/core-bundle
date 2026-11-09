@@ -14,12 +14,18 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
 {
+    protected ManagerRegistry $managerRegistry;
+    protected RequestStack $requestStack;
+    protected UrlGeneratorInterface $urlGenerator;
+
     public function __construct(
-        protected ExplorerItemFactoryInterface $explorerItemFactory,
-        protected ManagerRegistry $managerRegistry,
-        protected RequestStack $requestStack,
-        protected UrlGeneratorInterface $urlGenerator,
+        ManagerRegistry $managerRegistry,
+        RequestStack $requestStack,
+        UrlGeneratorInterface $urlGenerator
     ) {
+        $this->managerRegistry = $managerRegistry;
+        $this->requestStack = $requestStack;
+        $this->urlGenerator = $urlGenerator;
     }
 
     /**
@@ -27,12 +33,20 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
      */
     abstract protected function getProvidedClassname(): string;
 
+    /**
+     * @return array
+     */
     abstract protected function getDefaultCriteria(): array;
 
+    /**
+     * @return array
+     */
     abstract protected function getDefaultOrdering(): array;
 
     /**
-     * @throws \ReflectionException
+     * @param array $options
+     *
+     * @return EntityListManagerInterface
      */
     protected function doFetchItems(array $options = []): EntityListManagerInterface
     {
@@ -40,7 +54,6 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
         $this->configureOptions($resolver);
         $this->options = $resolver->resolve($options);
 
-        /** @var EntityListManager<PersistableInterface> $listManager */
         $listManager = new EntityListManager(
             $this->requestStack->getCurrentRequest(),
             $this->managerRegistry->getManager(),
@@ -55,7 +68,9 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
 
         return $listManager;
     }
-
+    /**
+     * @inheritDoc
+     */
     public function getItems($options = []): array
     {
         $listManager = $this->doFetchItems($options);
@@ -68,6 +83,9 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
         return $items;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getFilters($options = []): array
     {
         $listManager = $this->doFetchItems($options);
@@ -75,11 +93,14 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
         return $listManager->getAssignation();
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getItemsById(array $ids = []): array
     {
         if (is_array($ids) && count($ids) > 0) {
             $entities = $this->managerRegistry->getRepository($this->getProvidedClassname())->findBy([
-                'id' => $ids,
+                'id' => $ids
             ]);
 
             /*
@@ -98,10 +119,5 @@ abstract class AbstractDoctrineExplorerProvider extends AbstractExplorerProvider
         }
 
         return [];
-    }
-
-    public function toExplorerItem(mixed $item): ExplorerItemInterface
-    {
-        return $this->explorerItemFactory->createForEntity($item);
     }
 }

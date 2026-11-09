@@ -9,15 +9,13 @@ use RZ\Roadiz\CoreBundle\Entity\Node;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Event\NodesSources\NodesSourcesCreatedEvent;
-use RZ\Roadiz\CoreBundle\Repository\AllStatusesNodesSourcesRepository;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class NodeTranslator
 {
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
-        private readonly AllStatusesNodesSourcesRepository $allStatusesNodesSourcesRepository,
-        private readonly EventDispatcherInterface $dispatcher,
+        private readonly EventDispatcherInterface $dispatcher
     ) {
     }
 
@@ -25,7 +23,7 @@ final class NodeTranslator
         ?Translation $sourceTranslation,
         Translation $destinationTranslation,
         Node $node,
-        bool $translateChildren = false,
+        bool $translateChildren = false
     ): Node {
         $this->translateSingleNode($sourceTranslation, $destinationTranslation, $node);
 
@@ -42,10 +40,14 @@ final class NodeTranslator
     private function translateSingleNode(
         ?Translation $sourceTranslation,
         Translation $destinationTranslation,
-        Node $node,
+        Node $node
     ): NodesSources {
         /** @var NodesSources|null $existing */
-        $existing = $this->allStatusesNodesSourcesRepository->findOneByNodeAndTranslation($node, $destinationTranslation);
+        $existing = $this->managerRegistry
+            ->getRepository(NodesSources::class)
+            ->setDisplayingAllNodesStatuses(true)
+            ->setDisplayingNotPublishedNodes(true)
+            ->findOneByNodeAndTranslation($node, $destinationTranslation);
 
         if (null === $existing) {
             /** @var NodesSources|false $baseSource */
@@ -56,7 +58,7 @@ final class NodeTranslator
                     })->first() ?:
                         $node->getNodeSources()->first();
 
-            if (!$baseSource instanceof NodesSources) {
+            if (!($baseSource instanceof NodesSources)) {
                 throw new \RuntimeException('Cannot translate a Node without any NodesSources');
             }
             $source = clone $baseSource;
@@ -74,8 +76,8 @@ final class NodeTranslator
             $this->dispatcher->dispatch(new NodesSourcesCreatedEvent($source));
 
             return $source;
+        } else {
+            return $existing;
         }
-
-        return $existing;
     }
 }

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace RZ\Roadiz\CoreBundle\Console;
 
 use Doctrine\Persistence\ManagerRegistry;
@@ -22,7 +20,7 @@ final class RegisterCronLastExecDateCommand extends Command
     public function __construct(
         private readonly SettingRepository $settingRepository,
         private readonly ManagerRegistry $managerRegistry,
-        ?string $name = null,
+        string $name = null
     ) {
         parent::__construct($name);
     }

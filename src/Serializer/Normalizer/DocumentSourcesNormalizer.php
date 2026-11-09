@@ -8,22 +8,22 @@ use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Documents\DocumentFinderInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Stopwatch\Stopwatch;
 
 final class DocumentSourcesNormalizer extends AbstractPathNormalizer
 {
     public function __construct(
         NormalizerInterface $decorated,
         UrlGeneratorInterface $urlGenerator,
-        Stopwatch $stopwatch,
-        private readonly DocumentFinderInterface $documentFinder,
+        private readonly DocumentFinderInterface $documentFinder
     ) {
-        parent::__construct($decorated, $urlGenerator, $stopwatch);
+        parent::__construct($decorated, $urlGenerator);
     }
 
     /**
+     * @param mixed $object
+     * @param string|null $format
+     * @param array $context
      * @return array|\ArrayObject|bool|float|int|mixed|string|null
-     *
      * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
      */
     public function normalize(mixed $object, ?string $format = null, array $context = []): mixed
@@ -57,7 +57,6 @@ final class DocumentSourcesNormalizer extends AbstractPathNormalizer
                 }
             }
         }
-
         return $data;
     }
 }

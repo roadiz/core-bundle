@@ -16,17 +16,19 @@ final class ChainResourcePathResolver implements PathResolverInterface
     public function addPathResolver(PathResolverInterface $pathResolver): ChainResourcePathResolver
     {
         $this->pathResolvers[get_class($pathResolver)] = $pathResolver;
-
         return $this;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function resolvePath(
         string $path,
         array $supportedFormatExtensions = ['html'],
         bool $allowRootPaths = false,
-        bool $allowNonReachableNodes = true,
+        bool $allowNonReachableNodes = true
     ): ResourceInfo {
-        if (0 === count($this->pathResolvers)) {
+        if (count($this->pathResolvers) === 0) {
             throw new ResourceNotFoundException('No PathResolverInterface was registered to resolve path');
         }
         foreach ($this->pathResolvers as $pathResolver) {

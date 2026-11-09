@@ -34,9 +34,9 @@ final class FormErrorSerializer implements FormErrorSerializerInterface
                     }
                     if (is_object($cause)) {
                         if ($cause instanceof \Exception) {
-                            $errors[$errorFieldName.'_cause_message'] = $cause->getMessage();
+                            $errors[$errorFieldName . '_cause_message'] = $cause->getMessage();
                         }
-                        $errors[$errorFieldName.'_cause'] = get_class($cause);
+                        $errors[$errorFieldName . '_cause'] = get_class($cause);
                     }
                 }
             }
@@ -48,7 +48,6 @@ final class FormErrorSerializer implements FormErrorSerializerInterface
                 $errors[$key] = $err;
             }
         }
-
         return $errors;
     }
 }

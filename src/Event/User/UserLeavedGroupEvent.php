@@ -15,6 +15,9 @@ final class UserLeavedGroupEvent extends FilterUserEvent
         parent::__construct($user);
     }
 
+    /**
+     * @return Group
+     */
     public function getGroup(): Group
     {
         return $this->group;

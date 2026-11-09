@@ -20,18 +20,21 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\MessageBusInterface;
 
-final readonly class DocumentMessageDispatchSubscriber implements EventSubscriberInterface
+final class DocumentMessageDispatchSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private MessageBusInterface $bus)
+    public function __construct(private readonly MessageBusInterface $bus)
     {
     }
 
+    /**
+     * @inheritDoc
+     */
     public static function getSubscribedEvents(): array
     {
         return [
             // Only dispatch async message when document files are updated or created
-            DocumentCreatedEvent::class => ['onFilterDocumentEvent', 0],
-            DocumentFileUpdatedEvent::class => ['onFilterDocumentEvent', 0],
+             DocumentCreatedEvent::class => ['onFilterDocumentEvent', 0],
+             DocumentFileUpdatedEvent::class => ['onFilterDocumentEvent', 0],
         ];
     }
 
@@ -39,10 +42,10 @@ final readonly class DocumentMessageDispatchSubscriber implements EventSubscribe
     {
         $document = $event->getDocument();
         if (
-            $document instanceof Document
-            && \is_numeric($document->getId())
-            && $document->isLocal()
-            && null !== $document->getRelativePath()
+            $document instanceof Document &&
+            \is_numeric($document->getId()) &&
+            $document->isLocal() &&
+            null !== $document->getRelativePath()
         ) {
             $id = (int) $document->getId();
             $this->bus->dispatch(new Envelope(new DocumentRawMessage($id)));

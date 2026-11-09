@@ -18,11 +18,17 @@ abstract class AbstractSearchQueryEvent extends Event
         $this->args = $args;
     }
 
+    /**
+     * @return Query
+     */
     public function getQuery(): Query
     {
         return $this->query;
     }
 
+    /**
+     * @return array
+     */
     public function getArgs(): array
     {
         return $this->args;

@@ -136,143 +136,45 @@
                 <source>yaml.is.not.valid.{{ error }}</source>
                 <target state="final">YAML code is not valid ({{ error }}).</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="json.is.not.valid" approved="yes">
+      <trans-unit xml:space="preserve" id="json.is.not.valid">
                 <source>json.is.not.valid.{{ error }}</source>
-                <target state="final">JSON code is not valid ({{ error }}).</target>
+                <target state="translated">JSON code is not valid ({{ error }}).</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="value.is.already.used" approved="yes">
+      <trans-unit xml:space="preserve" id="value.is.already.used">
                 <source>value.is.already.used</source>
-                <target state="final">This value is already used.</target>
+                <target state="translated">This value is already used.</target>
                 <note>Error message meaning that user can’t use that value for this object (eg. Object name is already used).</note>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="password_should_contains_at_least_one_capital_one_digit" approved="yes">
+      <trans-unit xml:space="preserve" id="password_should_contains_at_least_one_capital_one_digit">
                 <source>password_should_contains_at_least_one_capital_one_digit</source>
-                <target state="final">Password should contain at least one capital letter and one digit.</target>
+                <target state="translated">Password should contain at least one capital letter and one digit.</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="password_blacklisted" approved="yes">
+      <trans-unit xml:space="preserve" id="password_blacklisted">
                 <source>password_blacklisted</source>
-                <target state="final">Password is blacklisted</target>
+                <target state="translated">Password is blacklisted</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="password_should_be_at_least_characters_long" approved="yes">
+      <trans-unit xml:space="preserve" id="password_should_be_at_least_characters_long">
                 <source>password_should_be_at_least_{{length}}_characters_long</source>
-                <target state="final">Password should be at least {{length}} characters long</target>
+                <target state="translated">Password should be at least {{length}} characters long</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="attributes.defaultRealm" approved="yes">
+      <trans-unit xml:space="preserve" id="attributes.defaultRealm">
                 <source>attributes.defaultRealm</source>
-                <target state="final">Default realm</target>
+                <target state="translated">Default realm</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="attributes.defaultRealm.help" approved="yes">
+      <trans-unit xml:space="preserve" id="attributes.defaultRealm.help">
                 <source>attributes.defaultRealm.help</source>
-                <target state="final">Choose a default realm to secure any attribute value within API. This will affect only new attribute values.</target>
+                <target state="translated">Choose a default realm to secure any attribute value within API. This will affect only new attribute values.</target>
             </trans-unit>
-      <trans-unit xml:space="preserve" id="attributes.defaultRealm.placeholder" approved="yes">
+      <trans-unit xml:space="preserve" id="attributes.defaultRealm.placeholder">
                 <source>attributes.defaultRealm.placeholder</source>
-
-                <target state="final">-- No default realm --</target>
+                
+                <target state="translated">-- No default realm --</target>
             <note>Default text when no realm is attached to an attribute</note></trans-unit>
-      <trans-unit xml:space="preserve" id="attributeValue.realm.placeholder" approved="yes">
+      <trans-unit xml:space="preserve" id="attributeValue.realm.placeholder">
                 <source>attributeValue.realm.placeholder</source>
-
-                <target state="final">-- No realm --</target>
+                
+                <target state="translated">-- No realm --</target>
             <note>Default text when no realm is attached to an attribute-value</note></trans-unit>
-      <trans-unit xml:space="preserve" id="login_link" approved="yes">
-                <source>login_link</source>
-                <target state="final">Login link</target>
-            </trans-unit>
-      <trans-unit xml:space="preserve" id="login_link_sent" approved="yes">
-                <source>login_link_sent</source>
-                <target state="final">A login link was sent</target>
-            </trans-unit>
-      <trans-unit xml:space="preserve" id="login_link_sent_if_email_exists.check_inbox" approved="yes">
-                <source>login_link_sent_if_email_exists.check_inbox</source>
-                <target state="final">A login link was sent to your email address if your account is valid. Check your inbox.</target>
-            </trans-unit>
-      <trans-unit xml:space="preserve" id="request_login_link" approved="yes">
-                <source>request_login_link</source>
-
-                <target state="final">Request a login link</target>
-            <note>Button label to request a login link</note></trans-unit>
-      <trans-unit xml:space="preserve" id="login_link.request" approved="yes">
-                <source>login_link.request</source>
-                <target state="final">Your login link</target>
-            </trans-unit>
-      <trans-unit xml:space="preserve" id="you.asked.for.a.login_link.on.site" approved="yes">
-                <source>you.asked.for.a.login_link.on.site</source>
-                <target state="final">You requested a login link for website: %site%</target>
-            </trans-unit>
-      <trans-unit xml:space="preserve" id="click_on_following_link_to_login" approved="yes">
-                <source>click_on_following_link_to_login</source>
-                <target state="final">Click on the following link to login automatically.</target>
-            </trans-unit>
-      <trans-unit xml:space="preserve" id="login_link_will_expire_at.expiresAt" approved="yes">
-                <source>login_link_will_expire_at.expiresAt</source>
-                <target state="final">This link will expire on %expiresAt%</target>
-            </trans-unit>
-      <trans-unit xml:space="preserve" id="classic.login_password" approved="yes">
-                <source>classic.login_password</source>
-                <target state="final">Password login</target>
-            </trans-unit>
-
-            <trans-unit id="user_id" xml:space="preserve">
-                <source>user_id</source>
-                <target state="translated">User ID</target>
-            </trans-unit>
-            <trans-unit id="user_email" xml:space="preserve">
-                <source>user_email</source>
-                <target state="translated">User email</target>
-            </trans-unit>
-            <trans-unit id="user_picture_url" xml:space="preserve">
-                <source>user_picture_url</source>
-                <target state="translated">User picture URL</target>
-            </trans-unit>
-            <trans-unit id="user_public_name" xml:space="preserve">
-                <source>user_public_name</source>
-                <target state="translated">User public name</target>
-            </trans-unit>
-            <trans-unit id="security" xml:space="preserve">
-                <source>security</source>
-                <target state="translated">Security</target>
-            </trans-unit>
-            <trans-unit id="authenticator" xml:space="preserve">
-                <source>authenticator</source>
-                <target state="translated">Authenticator</target>
-            </trans-unit>
-            <trans-unit id="entity_title" xml:space="preserve">
-                <source>entity_title</source>
-                <target state="translated">Entity title</target>
-            </trans-unit>
-            <trans-unit id="exception_class" xml:space="preserve">
-                <source>exception_class</source>
-                <target state="translated">Exception class</target>
-            </trans-unit>
-            <trans-unit id="path" xml:space="preserve">
-                <source>path</source>
-                <target state="translated">Path</target>
-            </trans-unit>
-            <trans-unit id="firewall" xml:space="preserve">
-                <source>firewall</source>
-                <target state="translated">Firewall</target>
-            </trans-unit>
-
-
-
-
-            <trans-unit id="document.hotspot" xml:space="preserve">
-                <source>document.hotspot</source>
-                <target state="translated">Hotspot</target>
-            </trans-unit>
-            <trans-unit id="document.hotspot.help" xml:space="preserve">
-                <source>document.hotspot.help</source>
-                <target state="translated">An image's hotspot can be used to define a more precise area for resizing than the alignment option.</target>
-            </trans-unit>
-            <trans-unit id="apple_podcast" xml:space="preserve">
-                <source>apple_podcast</source>
-                <target state="translated">Apple Podcast</target>
-            </trans-unit>
-            <trans-unit id="Apple_podcast" xml:space="preserve">
-                <source>Apple_podcast</source>
-                <target state="translated">Apple Podcast</target>
-            </trans-unit>
     </body>
   </file>
 </xliff>
