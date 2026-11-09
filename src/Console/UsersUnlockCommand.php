@@ -13,7 +13,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class UsersUnlockCommand extends UsersCommand
 {
-    #[\Override]
     protected function configure(): void
     {
         $this->setName('users:unlock')
@@ -25,7 +24,6 @@ final class UsersUnlockCommand extends UsersCommand
             );
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -42,7 +40,7 @@ final class UsersUnlockCommand extends UsersCommand
             )
         ) {
             $user->setLocked(false);
-            $this->managerRegistry->getManagerForClass(User::class)?->flush();
+            $this->managerRegistry->getManagerForClass(User::class)->flush();
             $io->success('User “'.$name.'” unlocked.');
 
             return 0;

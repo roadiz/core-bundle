@@ -21,9 +21,7 @@ use RZ\Roadiz\CoreBundle\Entity\DocumentTranslation;
 use RZ\Roadiz\CoreBundle\Entity\Folder;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\Setting;
-use RZ\Roadiz\CoreBundle\Entity\Translation;
 use RZ\Roadiz\CoreBundle\Enum\FieldType;
-use RZ\Roadiz\CoreBundle\Model\DocumentDto;
 use RZ\Roadiz\Documents\Repository\DocumentRepositoryInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
@@ -31,10 +29,8 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  * @extends EntityRepository<Document>
  *
  * @implements DocumentRepositoryInterface<Document>
- *
- * @final not declared final so it can be mocked
  */
-class DocumentRepository extends EntityRepository implements DocumentRepositoryInterface
+final class DocumentRepository extends EntityRepository implements DocumentRepositoryInterface
 {
     public function __construct(
         ManagerRegistry $registry,
@@ -87,55 +83,54 @@ class DocumentRepository extends EntityRepository implements DocumentRepositoryI
      */
     protected function filterByFolder(array &$criteria, QueryBuilder $qb, string $prefix = 'd'): void
     {
-        if (!key_exists('folders', $criteria)) {
-            return;
-        }
-        /*
-         * Do not filter if folder is null
-         */
-        if (is_null($criteria['folders'])) {
-            return;
-        }
-
-        if (is_array($criteria['folders']) || $criteria['folders'] instanceof Collection) {
+        if (key_exists('folders', $criteria)) {
             /*
-             * Do not filter if folder array is empty.
+             * Do not filter if folder is null
              */
-            if (0 === count($criteria['folders'])) {
+            if (is_null($criteria['folders'])) {
                 return;
             }
-            if (
-                key_exists('folderExclusive', $criteria)
-                && true === $criteria['folderExclusive']
-            ) {
-                // To get an exclusive folder filter
-                // we need to filter against each folder id
-                // and to inner join with a different alias for each folder
-                // with AND operator
-                foreach ($criteria['folders'] as $index => $folder) {
-                    if ($folder instanceof Folder) {
-                        $alias = 'fd'.$index;
-                        $qb->innerJoin($prefix.'.folders', $alias);
-                        $qb->andWhere($qb->expr()->eq($alias.'.id', $folder->getId()));
-                    }
+
+            if (is_array($criteria['folders']) || $criteria['folders'] instanceof Collection) {
+                /*
+                 * Do not filter if folder array is empty.
+                 */
+                if (0 === count($criteria['folders'])) {
+                    return;
                 }
-                unset($criteria['folderExclusive']);
-                unset($criteria['folders']);
+                if (
+                    in_array('folderExclusive', array_keys($criteria))
+                    && true === $criteria['folderExclusive']
+                ) {
+                    // To get an exclusive folder filter
+                    // we need to filter against each folder id
+                    // and to inner join with a different alias for each folder
+                    // with AND operator
+                    foreach ($criteria['folders'] as $index => $folder) {
+                        if (null !== $folder && $folder instanceof Folder) {
+                            $alias = 'fd'.$index;
+                            $qb->innerJoin($prefix.'.folders', $alias);
+                            $qb->andWhere($qb->expr()->eq($alias.'.id', $folder->getId()));
+                        }
+                    }
+                    unset($criteria['folderExclusive']);
+                    unset($criteria['folders']);
+                } else {
+                    $qb->innerJoin(
+                        $prefix.'.folders',
+                        'fd',
+                        'WITH',
+                        'fd.id IN (:folders)'
+                    );
+                }
             } else {
                 $qb->innerJoin(
                     $prefix.'.folders',
                     'fd',
                     'WITH',
-                    'fd.id IN (:folders)'
+                    'fd.id = :folders'
                 );
             }
-        } else {
-            $qb->innerJoin(
-                $prefix.'.folders',
-                'fd',
-                'WITH',
-                'fd.id = :folders'
-            );
         }
     }
 
@@ -178,10 +173,10 @@ class DocumentRepository extends EntityRepository implements DocumentRepositoryI
             /*
              * Search in translation fields
              */
-            if (str_contains((string) $key, 'translation.')) {
+            if (str_contains($key, 'translation.')) {
                 $prefix = 't.';
                 $key = str_replace('translation.', '', $key);
-            } elseif (str_contains((string) $key, 'documentTranslations.')) {
+            } elseif (str_contains($key, 'documentTranslations.')) {
                 /*
                  * Search in translation fields
                  */
@@ -195,12 +190,19 @@ class DocumentRepository extends EntityRepository implements DocumentRepositoryI
         }
     }
 
-    #[\Override]
+    /**
+     * Create a Criteria object from a search pattern and additional fields.
+     *
+     * @param string       $pattern  Search pattern
+     * @param QueryBuilder $qb       QueryBuilder to pass
+     * @param array        $criteria Additional criteria
+     * @param string       $alias    SQL query table alias
+     */
     protected function createSearchBy(
         string $pattern,
         QueryBuilder $qb,
         array &$criteria = [],
-        string $alias = EntityRepository::DEFAULT_ALIAS,
+        string $alias = 'obj',
     ): QueryBuilder {
         $this->filterByFolder($criteria, $qb, $alias);
         $this->applyFilterByFolder($criteria, $qb);
@@ -227,7 +229,6 @@ class DocumentRepository extends EntityRepository implements DocumentRepositoryI
     /**
      * Bind parameters to generated query.
      */
-    #[\Override]
     protected function applyFilterByCriteria(array &$criteria, QueryBuilder $qb): void
     {
         /*
@@ -262,7 +263,7 @@ class DocumentRepository extends EntityRepository implements DocumentRepositoryI
     }
 
     /**
-     * @deprecated
+     * Bind translation parameter to final query.
      */
     protected function applyTranslationByFolder(
         QueryBuilder $qb,
@@ -299,28 +300,30 @@ class DocumentRepository extends EntityRepository implements DocumentRepositoryI
         ) {
             $qb->leftJoin('d.documentTranslations', 'dt');
             $qb->leftJoin('dt.translation', 't');
-        } elseif (null !== $translation) {
-            /*
-             * With a given translation
-             */
-            $qb->leftJoin(
-                'd.documentTranslations',
-                'dt',
-                'WITH',
-                'dt.translation = :translation'
-            );
         } else {
-            /*
-             * With a null translation, just take the default one optionally
-             * Using left join instead of inner join.
-             */
-            $qb->leftJoin('d.documentTranslations', 'dt');
-            $qb->leftJoin(
-                'dt.translation',
-                't',
-                'WITH',
-                't.defaultTranslation = true'
-            );
+            if (null !== $translation) {
+                /*
+                 * With a given translation
+                 */
+                $qb->leftJoin(
+                    'd.documentTranslations',
+                    'dt',
+                    'WITH',
+                    'dt.translation = :translation'
+                );
+            } else {
+                /*
+                 * With a null translation, just take the default one optionally
+                 * Using left join instead of inner join.
+                 */
+                $qb->leftJoin('d.documentTranslations', 'dt');
+                $qb->leftJoin(
+                    'dt.translation',
+                    't',
+                    'WITH',
+                    't.defaultTranslation = true'
+                );
+            }
         }
     }
 
@@ -362,7 +365,6 @@ class DocumentRepository extends EntityRepository implements DocumentRepositoryI
         return $qb;
     }
 
-    #[\Override]
     public function findOneByHashAndAlgorithm(string $hash, string $hashAlgorithm): ?Document
     {
         $qb = $this->createQueryBuilder('d');
@@ -393,7 +395,6 @@ class DocumentRepository extends EntityRepository implements DocumentRepositoryI
      * @param int|null $limit
      * @param int|null $offset
      */
-    #[\Override]
     public function findBy(
         array $criteria,
         ?array $orderBy = null,
@@ -423,10 +424,10 @@ class DocumentRepository extends EntityRepository implements DocumentRepositoryI
              * We need to use Doctrine paginator
              * if a limit is set because of the default inner join
              */
-            return array_values((new Paginator($query))->getIterator()->getArrayCopy());
+            return (new Paginator($query))->getIterator()->getArrayCopy();
         }
 
-        return array_values($query->getResult());
+        return $query->getResult();
     }
 
     /**
@@ -434,7 +435,6 @@ class DocumentRepository extends EntityRepository implements DocumentRepositoryI
      *
      * @throws NonUniqueResultException
      */
-    #[\Override]
     public function findOneBy(
         array $criteria,
         ?array $orderBy = null,
@@ -465,7 +465,6 @@ class DocumentRepository extends EntityRepository implements DocumentRepositoryI
      * @throws NonUniqueResultException
      * @throws NoResultException
      */
-    #[\Override]
     public function countBy(
         mixed $criteria,
         ?TranslationInterface $translation = null,
@@ -506,56 +505,6 @@ class DocumentRepository extends EntityRepository implements DocumentRepositoryI
             ->setParameter('nodeSource', $nodeSource)
             ->setParameter('translation', $translation)
             ->setParameter('raw', false)
-            ->setParameter('mimeType', ['image/webp', 'image/jpeg', 'image/png', 'image/gif', 'image/svg+xml'])
-            ->setMaxResults(1)
-            ->setCacheable(true);
-
-        return $qb->getQuery()->getOneOrNullResult();
-    }
-
-    /**
-     * @throws NonUniqueResultException
-     */
-    public function findOneDisplayableDtoByNodeSource(
-        NodesSources|int $nodeSource,
-    ): ?DocumentDto {
-        $qb = $this->createQueryBuilder('d');
-        $qb->select(sprintf(
-            'NEW %s(
-                    d.id,
-                    d.filename,
-                    d.mimeType,
-                    d.private,
-                    d.raw,
-                    d.imageWidth,
-                    d.imageHeight,
-                    d.mediaDuration,
-                    d.embedId,
-                    d.embedPlatform,
-                    d.imageAverageColor,
-                    d.folder,
-                    d.imageCropAlignment,
-                    d.hotspot,
-                    nsf.imageCropAlignment,
-                    nsf.hotspot,
-                    :nullValue,
-                    :nullValue,
-                    :nullValue,
-                    :nullValue,
-                    d.filesize,
-                    d.copyrightValidSince,
-                    d.copyrightValidUntil
-                )',
-            DocumentDto::class
-        ))
-            ->innerJoin('d.nodesSourcesByFields', 'nsf', 'WITH', 'nsf.nodeSource = :nodeSource')
-            ->andWhere($qb->expr()->eq('d.raw', ':raw'))
-            ->andWhere($qb->expr()->eq('d.private', ':private'))
-            ->andWhere($qb->expr()->in('d.mimeType', ':mimeType'))
-            ->setParameter('nodeSource', $nodeSource)
-            ->setParameter('raw', false)
-            ->setParameter('private', false)
-            ->setParameter('nullValue', null)
             ->setParameter('mimeType', ['image/webp', 'image/jpeg', 'image/png', 'image/gif', 'image/svg+xml'])
             ->setMaxResults(1)
             ->setCacheable(true);
@@ -612,223 +561,6 @@ class DocumentRepository extends EntityRepository implements DocumentRepositoryI
     }
 
     /**
-     * @return array<DocumentDto>
-     */
-    public function findDocumentDtoByNodeSourceAndFieldName(
-        NodesSources $nodeSource,
-        string $fieldName,
-    ): array {
-        $qb = $this->createQueryBuilder('d');
-        $qb->select($this->getNodeSourceDocumentDtoSelect())
-            ->leftJoin('d.documentTranslations', 'dt', 'WITH', 'dt.translation = :translation')
-            ->innerJoin('d.nodesSourcesByFields', 'nsf', 'WITH', 'nsf.nodeSource = :nodeSource')
-            ->andWhere($qb->expr()->eq('nsf.fieldName', ':fieldName'))
-            ->andWhere($qb->expr()->eq('d.raw', ':raw'))
-            ->addOrderBy('nsf.position', 'ASC')
-            ->setParameter('fieldName', $fieldName)
-            ->setParameter('nodeSource', $nodeSource)
-            ->setParameter('translation', $nodeSource->getTranslation())
-            ->setParameter('raw', false)
-            ->setCacheable(true);
-
-        return $qb->getQuery()->getResult();
-    }
-
-    /**
-     * Batch version of findDocumentDtoByNodeSourceAndFieldName(), for several node-sources
-     * sharing the same translation.
-     *
-     * @param array<int|string> $nodeSourceIds
-     * @param array<string>     $fieldNames
-     *
-     * @return array<int|string, array<string, array<DocumentDto>>> DocumentDto lists indexed by node-source ID and field name, in position order
-     */
-    public function findDocumentDtoByNodeSourceIdsAndFieldNames(
-        array $nodeSourceIds,
-        array $fieldNames,
-        TranslationInterface $translation,
-    ): array {
-        if ([] === $nodeSourceIds || [] === $fieldNames) {
-            return [];
-        }
-
-        $qb = $this->createQueryBuilder('d');
-        $qb->select($this->getNodeSourceDocumentDtoSelect())
-            ->addSelect('IDENTITY(nsf.nodeSource) AS nodeSourceId', 'nsf.fieldName AS fieldName')
-            ->leftJoin('d.documentTranslations', 'dt', 'WITH', 'dt.translation = :translation')
-            ->innerJoin('d.nodesSourcesByFields', 'nsf')
-            ->andWhere($qb->expr()->in('nsf.nodeSource', ':nodeSourceIds'))
-            ->andWhere($qb->expr()->in('nsf.fieldName', ':fieldNames'))
-            ->andWhere($qb->expr()->eq('d.raw', ':raw'))
-            ->addOrderBy('nsf.position', 'ASC')
-            ->setParameter('nodeSourceIds', array_values($nodeSourceIds))
-            ->setParameter('fieldNames', array_values($fieldNames))
-            ->setParameter('translation', $translation)
-            ->setParameter('raw', false);
-
-        $documents = [];
-        /** @var array{0: DocumentDto, nodeSourceId: int|string, fieldName: string} $row */
-        foreach ($qb->getQuery()->getResult() as $row) {
-            $documents[$row['nodeSourceId']][$row['fieldName']][] = $row[0];
-        }
-
-        return $documents;
-    }
-
-    private function getNodeSourceDocumentDtoSelect(): string
-    {
-        return sprintf(
-            'NEW %s(
-                    d.id,
-                    d.filename,
-                    d.mimeType,
-                    d.private,
-                    d.raw,
-                    d.imageWidth,
-                    d.imageHeight,
-                    d.mediaDuration,
-                    d.embedId,
-                    d.embedPlatform,
-                    d.imageAverageColor,
-                    d.folder,
-                    d.imageCropAlignment,
-                    d.hotspot,
-                    nsf.imageCropAlignment,
-                    nsf.hotspot,
-                    dt.name,
-                    dt.description,
-                    dt.copyright,
-                    dt.externalUrl,
-                    d.filesize,
-                    d.copyrightValidSince,
-                    d.copyrightValidUntil
-                )',
-            DocumentDto::class
-        );
-    }
-
-    /**
-     * DTO version of DocumentFinder::findAllByFilenames(), without hydrating entities.
-     *
-     * @param array<string> $filenames
-     *
-     * @return array<DocumentDto>
-     */
-    public function findDtoByFilenames(array $filenames): array
-    {
-        if ([] === $filenames) {
-            return [];
-        }
-
-        $qb = $this->createQueryBuilder('d');
-        $qb->select($this->getDocumentDtoSelect())
-            ->andWhere($qb->expr()->in('d.filename', ':filenames'))
-            ->andWhere($qb->expr()->eq('d.raw', ':raw'))
-            ->setParameter('filenames', array_values($filenames))
-            ->setParameter('raw', false)
-            ->setParameter('nullValue', null);
-
-        return $qb->getQuery()->getResult();
-    }
-
-    /**
-     * DocumentDto select without node-source data, translated fields from the `dt` join
-     * with a whole-row fallback on the `dtd` (default translation) join, like DocumentEnricher.
-     */
-    private function getTranslatedDocumentDtoSelect(): string
-    {
-        return sprintf(
-            'NEW %s(
-                    d.id,
-                    d.filename,
-                    d.mimeType,
-                    d.private,
-                    d.raw,
-                    d.imageWidth,
-                    d.imageHeight,
-                    d.mediaDuration,
-                    d.embedId,
-                    d.embedPlatform,
-                    d.imageAverageColor,
-                    d.folder,
-                    d.imageCropAlignment,
-                    d.hotspot,
-                    :nullValue,
-                    :nullValue,
-                    CASE WHEN dt.id IS NOT NULL THEN dt.name ELSE dtd.name END,
-                    CASE WHEN dt.id IS NOT NULL THEN dt.description ELSE dtd.description END,
-                    CASE WHEN dt.id IS NOT NULL THEN dt.copyright ELSE dtd.copyright END,
-                    CASE WHEN dt.id IS NOT NULL THEN dt.externalUrl ELSE dtd.externalUrl END,
-                    d.filesize,
-                    d.copyrightValidSince,
-                    d.copyrightValidUntil
-                )',
-            DocumentDto::class
-        );
-    }
-
-    /**
-     * DocumentDto select without node-source and translation data.
-     */
-    private function getDocumentDtoSelect(): string
-    {
-        return sprintf(
-            'NEW %s(
-                    d.id,
-                    d.filename,
-                    d.mimeType,
-                    d.private,
-                    d.raw,
-                    d.imageWidth,
-                    d.imageHeight,
-                    d.mediaDuration,
-                    d.embedId,
-                    d.embedPlatform,
-                    d.imageAverageColor,
-                    d.folder,
-                    d.imageCropAlignment,
-                    d.hotspot,
-                    :nullValue,
-                    :nullValue,
-                    :nullValue,
-                    :nullValue,
-                    :nullValue,
-                    :nullValue,
-                    d.filesize,
-                    d.copyrightValidSince,
-                    d.copyrightValidUntil
-                )',
-            DocumentDto::class
-        );
-    }
-
-    /**
-     * Translated fields come from $translation, falling back to the default translation.
-     *
-     * @throws NonUniqueResultException
-     */
-    public function findFirstThumbnailDtoBy(
-        int|string $originalDocumentId,
-        ?TranslationInterface $translation = null,
-    ): ?DocumentDto {
-        $qb = $this->createQueryBuilder('d');
-        $qb->select($this->getTranslatedDocumentDtoSelect())
-            ->leftJoin('d.documentTranslations', 'dt', 'WITH', 'dt.translation = :translation')
-            ->leftJoin(Translation::class, 'td', 'WITH', 'td.defaultTranslation = true')
-            ->leftJoin('d.documentTranslations', 'dtd', 'WITH', 'dtd.translation = td')
-            ->andWhere($qb->expr()->eq('d.original', ':original'))
-            ->andWhere($qb->expr()->eq('d.raw', ':raw'))
-            ->setParameter('original', $originalDocumentId)
-            ->setParameter('translation', $translation)
-            ->setParameter('raw', false)
-            ->setParameter('nullValue', null)
-            ->setMaxResults(1)
-            ->setCacheable(true);
-
-        return $qb->getQuery()->getOneOrNullResult();
-    }
-
-    /**
      * Find documents used as Settings.
      *
      * @return array<Document>
@@ -852,7 +584,6 @@ class DocumentRepository extends EntityRepository implements DocumentRepositoryI
      *
      * @return array<Document>
      */
-    #[\Override]
     public function findAllUnused(): array
     {
         return $this->getAllUnusedQueryBuilder()->getQuery()->getResult();
@@ -947,7 +678,6 @@ class DocumentRepository extends EntityRepository implements DocumentRepositoryI
     /**
      * @return Document[]
      */
-    #[\Override]
     public function findAllWithoutFileHash(): array
     {
         $qb = $this->createQueryBuilder('d');
@@ -980,7 +710,6 @@ class DocumentRepository extends EntityRepository implements DocumentRepositoryI
     /**
      * @return array<Document>
      */
-    #[\Override]
     public function findDuplicates(): array
     {
         return $this->getDuplicatesQueryBuilder()->getQuery()->getResult();

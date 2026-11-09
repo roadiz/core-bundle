@@ -16,7 +16,6 @@ final readonly class EntityListManagerFactory implements EntityListManagerFactor
     ) {
     }
 
-    #[\Override]
     public function createEntityListManager(string $entityClass, array $criteria = [], array $ordering = []): EntityListManagerInterface
     {
         // Remove leading backslashes on entity class name, getManagerForClass does not like it.
@@ -37,7 +36,6 @@ final readonly class EntityListManagerFactory implements EntityListManagerFactor
         );
     }
 
-    #[\Override]
     public function createAdminEntityListManager(string $entityClass, array $criteria = [], array $ordering = []): EntityListManagerInterface
     {
         return $this->createEntityListManager($entityClass, $criteria, $ordering)

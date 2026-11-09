@@ -30,7 +30,7 @@ trait NodeSourceDefinitionTrait
         $nodeTypes = $this->getNodeTypes($this->context->getNodeTypesBag());
         if (1 === count($nodeTypes)) {
             $nodeType = array_shift($nodeTypes);
-            $entityName = $this->context->getNodeTypeClassLocator()->getSourceEntityFullQualifiedClassName($nodeType);
+            $entityName = $nodeType->getSourceEntityFullQualifiedClassName();
         } else {
             $entityName = NodesSources::class;
         }
@@ -44,9 +44,7 @@ trait NodeSourceDefinitionTrait
             $alias
         );
         $repository->joinNodeOnce($qb, $alias);
-        $qb->select([$alias, EntityRepository::NODE_ALIAS, 'ua'])
-            // Fetch-join URL aliases: URL generation would load them once per walker item
-            ->leftJoin($alias.'.urlAliases', 'ua')
+        $qb->select([$alias, EntityRepository::NODE_ALIAS])
             ->andWhere(EntityRepository::NODE_ALIAS.'.parent = :parent')
             ->andWhere($alias.'.translation = :translation')
             ->addOrderBy(EntityRepository::NODE_ALIAS.'.position', 'ASC')
@@ -60,7 +58,7 @@ trait NodeSourceDefinitionTrait
         if (NodesSources::class === $entityName) {
             $qb->andWhere($qb->expr()->orX(
                 ...array_map(
-                    fn (NodeType $nodeType) => $qb->expr()->isInstanceOf($alias, $this->context->getNodeTypeClassLocator()->getSourceEntityFullQualifiedClassName($nodeType)),
+                    fn (NodeType $nodeType) => $qb->expr()->isInstanceOf($alias, $nodeType->getSourceEntityFullQualifiedClassName()),
                     $nodeTypes
                 )
             ));

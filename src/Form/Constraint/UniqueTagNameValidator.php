@@ -20,7 +20,6 @@ final class UniqueTagNameValidator extends ConstraintValidator
      * @param string        $value
      * @param UniqueTagName $constraint
      */
-    #[\Override]
     public function validate(mixed $value, Constraint $constraint): void
     {
         if ($this->isMulti($value)) {

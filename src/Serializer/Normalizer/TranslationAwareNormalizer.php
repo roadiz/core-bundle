@@ -20,7 +20,7 @@ final class TranslationAwareNormalizer implements NormalizerInterface, Normalize
 {
     use NormalizerAwareTrait;
 
-    private const string ALREADY_CALLED = 'TRANSLATION_AWARE_NORMALIZER_ALREADY_CALLED';
+    private const ALREADY_CALLED = 'TRANSLATION_AWARE_NORMALIZER_ALREADY_CALLED';
 
     public function __construct(
         private readonly RequestStack $requestStack,
@@ -29,18 +29,18 @@ final class TranslationAwareNormalizer implements NormalizerInterface, Normalize
     ) {
     }
 
-    #[\Override]
-    public function normalize(mixed $object, ?string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
+    /**
+     * @return array|\ArrayObject|bool|float|int|string|null
+     *
+     * @throws \Symfony\Component\Serializer\Exception\ExceptionInterface
+     */
+    public function normalize(mixed $object, ?string $format = null, array $context = []): mixed
     {
         if ($object instanceof WebResponseInterface) {
             $item = $object->getItem();
             if ($item instanceof NodesSources) {
                 $context['translation'] = $item->getTranslation();
-            } elseif (
-                null !== $item
-                && method_exists($item, 'getLocale')
-                && is_string($item->getLocale())
-            ) {
+            } elseif (method_exists($item, 'getLocale') && is_string($item->getLocale())) {
                 $context['translation'] = $this->getTranslationFromLocale($item->getLocale());
             }
         } elseif ($object instanceof NodesSources) {
@@ -99,7 +99,6 @@ final class TranslationAwareNormalizer implements NormalizerInterface, Normalize
         return null;
     }
 
-    #[\Override]
     public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         // Make sure we're not called twice
@@ -110,7 +109,6 @@ final class TranslationAwareNormalizer implements NormalizerInterface, Normalize
         return true;
     }
 
-    #[\Override]
     public function getSupportedTypes(?string $format): array
     {
         return [

@@ -65,7 +65,6 @@ class EntityListManager extends AbstractEntityListManager
      *
      * @throws \ReflectionException
      */
-    #[\Override]
     public function handle(bool $disabled = false): void
     {
         // transform the key chroot in parent
@@ -116,12 +115,11 @@ class EntityListManager extends AbstractEntityListManager
         ) {
             $search = $this->request->query->get('search');
             if (\is_string($search) && '' !== $search) {
-                $this->paginator?->setSearchPattern($search);
+                $this->paginator->setSearchPattern($search);
             }
         }
     }
 
-    #[\Override]
     protected function handleOrderingParam(string $field, string $ordering): void
     {
         $this->validateOrderingFieldName($field);
@@ -142,7 +140,7 @@ class EntityListManager extends AbstractEntityListManager
             $this->paginator = new NodePaginator(
                 $this->entityManager,
                 $this->entityName,
-                $this->getItemPerPage(),
+                $this->itemPerPage,
                 $this->filteringArray
             );
             $this->paginator->setTranslation($this->translation);
@@ -155,14 +153,14 @@ class EntityListManager extends AbstractEntityListManager
                 $this->entityManager,
                 // @phpstan-ignore-next-line
                 $this->entityName,
-                $this->getItemPerPage(),
+                $this->itemPerPage,
                 $this->filteringArray
             );
         } else {
             $this->paginator = new Paginator(
                 $this->entityManager,
                 $this->entityName,
-                $this->getItemPerPage(),
+                $this->itemPerPage,
                 $this->filteringArray
             );
         }
@@ -171,7 +169,6 @@ class EntityListManager extends AbstractEntityListManager
         $this->paginator->setDisplayingAllNodesStatuses($this->isDisplayingAllNodesStatuses());
     }
 
-    #[\Override]
     public function getItemCount(): int
     {
         if (
@@ -184,7 +181,6 @@ class EntityListManager extends AbstractEntityListManager
         return 0;
     }
 
-    #[\Override]
     public function getPageCount(): int
     {
         if (
@@ -202,13 +198,12 @@ class EntityListManager extends AbstractEntityListManager
      *
      * @return array<T>
      */
-    #[\Override]
     public function getEntities(): array
     {
         if (true === $this->pagination && null !== $this->paginator) {
             $this->paginator->setItemsPerPage($this->getItemPerPage());
 
-            return $this->paginator->findByAtPage($this->orderingArray, $this->getPage());
+            return $this->paginator->findByAtPage($this->orderingArray, $this->currentPage);
         }
         $repository = $this->entityManager->getRepository($this->entityName);
         if ($repository instanceof StatusAwareRepository) {

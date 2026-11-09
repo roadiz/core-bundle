@@ -49,35 +49,39 @@ final class FolderRepository extends EntityRepository
         $folderName = $folders[count($folders) - 1];
         $folder = $this->findOneByFolderName($folderName);
 
-        if (null !== $folder) {
-            return $folder;
+        if (null === $folder) {
+            /*
+             * Creation of a new folder
+             * before linking it to the node
+             */
+            $parentFolder = null;
+
+            if (count($folders) > 1) {
+                // Call recursively to create parent folder if not exists with $folders array without last element
+                $parentFolder = $this->findOrCreateByPath(implode('/', array_slice($folders, 0, -1)), $translation);
+            }
+
+            $folder = new Folder();
+            $folder->setFolderName($folderName);
+
+            if (null !== $parentFolder) {
+                $folder->setParent($parentFolder);
+            }
+
+            /*
+             * Add folder translation
+             * with given name
+             */
+            if (null === $translation) {
+                $translation = $this->_em->getRepository(Translation::class)->findDefault();
+            }
+            $folderTranslation = new FolderTranslation($folder, $translation);
+            $folderTranslation->setName($folderName);
+
+            $this->_em->persist($folder);
+            $this->_em->persist($folderTranslation);
+            $this->_em->flush();
         }
-
-        /*
-         * Creation of a new folder
-         * before linking it to the node
-         */
-        $parentFolder = null;
-
-        if (count($folders) > 1) {
-            // Call recursively to create parent folder if not exists with $folders array without last element
-            $parentFolder = $this->findOrCreateByPath(implode('/', array_slice($folders, 0, -1)), $translation);
-        }
-
-        $folder = new Folder();
-        $folder->setFolderName($folderName);
-
-        if (null !== $parentFolder) {
-            $folder->setParent($parentFolder);
-        }
-
-        $translation ??= $this->_em->getRepository(Translation::class)->findDefault() ?? throw new \InvalidArgumentException('No default translation found.');
-        $folderTranslation = new FolderTranslation($folder, $translation);
-        $folderTranslation->setName($folderName);
-
-        $this->_em->persist($folder);
-        $this->_em->persist($folderTranslation);
-        $this->_em->flush();
 
         return $folder;
     }
@@ -160,22 +164,29 @@ final class FolderRepository extends EntityRepository
             ->where($qb->expr()->eq('f.parent', ':parent'))
             ->setParameter(':parent', $folder);
 
-        return array_map(current(...), $qb->getQuery()->getScalarResult());
+        return array_map('current', $qb->getQuery()->getScalarResult());
     }
 
-    #[\Override]
+    /**
+     * Create a Criteria object from a search pattern and additionnal fields.
+     *
+     * @param string       $pattern  Search pattern
+     * @param QueryBuilder $qb       QueryBuilder to pass
+     * @param array        $criteria Additional criteria
+     * @param string       $alias    SQL query table alias
+     */
     protected function createSearchBy(
         string $pattern,
         QueryBuilder $qb,
         array &$criteria = [],
-        string $alias = EntityRepository::DEFAULT_ALIAS,
+        string $alias = 'obj',
     ): QueryBuilder {
         $this->classicLikeComparison($pattern, $qb, $alias);
 
         /*
          * Search in translations
          */
-        $qb->leftJoin($alias.'.translatedFolders', 'tf');
+        $qb->leftJoin('obj.translatedFolders', 'tf');
 
         $criteriaFields = [];
         foreach (self::getSearchableColumnsNames($this->_em->getClassMetadata(FolderTranslation::class)) as $field) {
@@ -188,6 +199,19 @@ final class FolderRepository extends EntityRepository
         }
 
         return $this->prepareComparisons($criteria, $qb, $alias);
+    }
+
+    /**
+     * @throws \Doctrine\ORM\NoResultException
+     * @throws NonUniqueResultException
+     */
+    public function countSearchBy(string $pattern, array $criteria = [], string $alias = 'obj'): int
+    {
+        $qb = $this->createQueryBuilder($alias);
+        $qb->select($qb->expr()->countDistinct($alias));
+        $qb = $this->createSearchBy($pattern, $qb, $criteria, $alias);
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
     public function findByDocumentAndTranslation(Document $document, ?TranslationInterface $translation = null): array

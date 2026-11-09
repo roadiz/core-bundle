@@ -13,7 +13,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 final class UsersExpireCommand extends UsersCommand
 {
-    #[\Override]
     protected function configure(): void
     {
         $this->setName('users:expire')
@@ -30,7 +29,6 @@ final class UsersExpireCommand extends UsersCommand
             );
     }
 
-    #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -50,7 +48,7 @@ final class UsersExpireCommand extends UsersCommand
             )
         ) {
             $user->setExpiresAt($expirationDate);
-            $this->managerRegistry->getManagerForClass(User::class)?->flush();
+            $this->managerRegistry->getManagerForClass(User::class)->flush();
             $io->success('User “'.$name.'” expiration date was set on '.$expirationDate->format('c').'.');
 
             return 0;

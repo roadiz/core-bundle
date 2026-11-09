@@ -20,7 +20,6 @@ final readonly class ReversePersistableTransformer implements DataTransformerInt
     {
     }
 
-    #[\Override]
     public function transform(mixed $value): ?array
     {
         if (null === $value) {
@@ -32,11 +31,12 @@ final readonly class ReversePersistableTransformer implements DataTransformerInt
         ]);
     }
 
-    #[\Override]
     public function reverseTransform(mixed $value): mixed
     {
         if (is_array($value)) {
-            return array_map(fn (PersistableInterface $item) => $item->getId(), $value);
+            return array_map(function (PersistableInterface $item) {
+                return $item->getId();
+            }, $value);
         }
         if ($value instanceof PersistableInterface) {
             return $value->getId();

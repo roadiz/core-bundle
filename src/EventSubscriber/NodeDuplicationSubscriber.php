@@ -18,7 +18,6 @@ final readonly class NodeDuplicationSubscriber implements EventSubscriberInterfa
     ) {
     }
 
-    #[\Override]
     public static function getSubscribedEvents(): array
     {
         return [

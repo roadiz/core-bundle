@@ -19,11 +19,10 @@ final class TransChoiceExtension extends AbstractExtension
     {
     }
 
-    #[\Override]
     public function getFilters(): array
     {
         return [
-            new TwigFilter('transchoice', $this->transchoice(...)),
+            new TwigFilter('transchoice', [$this, 'transchoice']),
         ];
     }
 
@@ -32,7 +31,6 @@ final class TransChoiceExtension extends AbstractExtension
      *
      * @return AbstractTokenParser[]
      */
-    #[\Override]
     public function getTokenParsers(): array
     {
         return [

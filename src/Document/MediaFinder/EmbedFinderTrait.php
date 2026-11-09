@@ -14,7 +14,6 @@ use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 
 trait EmbedFinderTrait
 {
-    /** @deprecated use getExistingDocument() instead */
     protected function documentExists(ObjectManager $objectManager, string $embedId, ?string $embedPlatform): bool
     {
         $existingDocument = $objectManager->getRepository(Document::class)
@@ -24,15 +23,6 @@ trait EmbedFinderTrait
             ]);
 
         return null !== $existingDocument;
-    }
-
-    protected function getExistingDocument(ObjectManager $objectManager, string $embedId, ?string $embedPlatform): ?DocumentInterface
-    {
-        return $objectManager->getRepository(Document::class)
-            ->findOneBy([
-                'embedId' => $embedId,
-                'embedPlatform' => $embedPlatform,
-            ]);
     }
 
     protected function injectMetaInDocument(ObjectManager $objectManager, DocumentInterface $document): DocumentInterface
@@ -59,9 +49,9 @@ trait EmbedFinderTrait
                     $documentTr->setCopyright($this->getMediaCopyright());
                 }
             }
-        } catch (APINeedsAuthentificationException) {
+        } catch (APINeedsAuthentificationException $exception) {
             // do not prevent from creating document if credentials are not provided.
-        } catch (ClientExceptionInterface) {
+        } catch (ClientExceptionInterface $exception) {
             // do not prevent from creating document if platform has errors, such as
             // too much API usage.
         }

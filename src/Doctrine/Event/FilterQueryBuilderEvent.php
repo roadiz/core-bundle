@@ -21,7 +21,10 @@ abstract class FilterQueryBuilderEvent extends Event
         return $this->queryBuilder;
     }
 
-    public function setQueryBuilder(QueryBuilder $queryBuilder): FilterQueryBuilderEvent
+    /**
+     * @return FilterQueryBuilderEvent
+     */
+    public function setQueryBuilder(QueryBuilder $queryBuilder)
     {
         $this->queryBuilder = $queryBuilder;
 

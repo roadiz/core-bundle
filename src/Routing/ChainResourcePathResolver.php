@@ -15,12 +15,11 @@ final class ChainResourcePathResolver implements PathResolverInterface
 
     public function addPathResolver(PathResolverInterface $pathResolver): ChainResourcePathResolver
     {
-        $this->pathResolvers[$pathResolver::class] = $pathResolver;
+        $this->pathResolvers[get_class($pathResolver)] = $pathResolver;
 
         return $this;
     }
 
-    #[\Override]
     public function resolvePath(
         string $path,
         array $supportedFormatExtensions = ['html'],
@@ -33,7 +32,7 @@ final class ChainResourcePathResolver implements PathResolverInterface
         foreach ($this->pathResolvers as $pathResolver) {
             try {
                 return $pathResolver->resolvePath($path, $supportedFormatExtensions, $allowRootPaths, $allowNonReachableNodes);
-            } catch (ResourceNotFoundException) {
+            } catch (ResourceNotFoundException $exception) {
                 // Do nothing to allow other resolver to work.
             }
         }

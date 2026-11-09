@@ -8,10 +8,8 @@ use Doctrine\Persistence\ManagerRegistry;
 use League\Flysystem\FilesystemOperator;
 use RZ\Roadiz\CoreBundle\Entity\Document;
 use RZ\Roadiz\Documents\AbstractDocumentFactory;
-use RZ\Roadiz\Documents\Exceptions\DocumentTypeNotAllowedException;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\CallbackTransformer;
-use Symfony\Component\Form\Exception\TransformationFailedException;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\HttpFoundation\File\File;
@@ -26,17 +24,15 @@ final class SettingDocumentType extends AbstractType
     ) {
     }
 
-    #[\Override]
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->addModelTransformer(new CallbackTransformer(
             function ($value) {
                 if (null !== $value) {
-                    $manager = $this->managerRegistry
-                        ->getManagerForClass(Document::class) ?? throw new \RuntimeException('No manager found for Document class.');
+                    $manager = $this->managerRegistry->getManagerForClass(Document::class);
                     /** @var Document|null $document */
                     $document = $manager->find(Document::class, $value);
-                    if (null !== $document && null !== $document->getMountPath()) {
+                    if (null !== $document) {
                         // transform the array to a string
                         return new File($this->documentsStorage->publicUrl($document->getMountPath()), false);
                     }
@@ -47,15 +43,10 @@ final class SettingDocumentType extends AbstractType
             function ($file) {
                 if ($file instanceof UploadedFile && $file->isValid()) {
                     $this->documentFactory->setFile($file);
-                    try {
-                        $document = $this->documentFactory->getDocument();
-                    } catch (DocumentTypeNotAllowedException $exception) {
-                        throw new TransformationFailedException($exception->getMessage(), 0, $exception);
-                    }
+                    $document = $this->documentFactory->getDocument();
 
                     if ($document instanceof Document) {
-                        $manager = $this->managerRegistry
-                            ->getManagerForClass(Document::class) ?? throw new \RuntimeException('No manager found for Document class.');
+                        $manager = $this->managerRegistry->getManagerForClass(Document::class);
                         $manager->persist($document);
                         $manager->flush();
 
@@ -68,8 +59,7 @@ final class SettingDocumentType extends AbstractType
         ));
     }
 
-    #[\Override]
-    public function getParent(): string
+    public function getParent(): ?string
     {
         return FileType::class;
     }

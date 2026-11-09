@@ -8,28 +8,28 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use RZ\Roadiz\Core\AbstractEntities\TranslationInterface;
 use RZ\Roadiz\Utils\StringHandler;
-use Symfony\Component\Serializer\Attribute as Serializer;
+use Symfony\Component\Serializer\Annotation as SymfonySerializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 trait AttributeTrait
 {
     #[ORM\Column(type: 'string', length: 255, unique: true, nullable: false),
-        Serializer\Groups(['attribute', 'attribute:export', 'attribute:import', 'node', 'nodes_sources']),
+        SymfonySerializer\Groups(['attribute', 'attribute:export', 'attribute:import', 'node', 'nodes_sources']),
         Assert\NotNull(),
         Assert\NotBlank(),
         Assert\Length(max: 255)]
     protected string $code = '';
 
     #[ORM\Column(type: 'boolean', unique: false, nullable: false, options: ['default' => false]),
-        Serializer\Groups(['attribute', 'attribute:export', 'attribute:import']),]
+        SymfonySerializer\Groups(['attribute', 'attribute:export', 'attribute:import']),]
     protected bool $searchable = false;
 
     #[ORM\Column(type: 'integer', unique: false, nullable: false),
-        Serializer\Groups(['attribute', 'attribute:export', 'attribute:import']),]
+        SymfonySerializer\Groups(['attribute', 'attribute:export', 'attribute:import']),]
     protected int $type = AttributeInterface::STRING_T;
 
     #[ORM\Column(type: 'string', length: 7, unique: false, nullable: true),
-        Serializer\Groups(['attribute', 'node', 'nodes_sources', 'attribute:export', 'attribute:import']),
+        SymfonySerializer\Groups(['attribute', 'node', 'nodes_sources', 'attribute:export', 'attribute:import']),
         Assert\Length(max: 7)]
     protected ?string $color = null;
 
@@ -40,7 +40,7 @@ trait AttributeTrait
         inversedBy: 'attributes'
     ),
         ORM\JoinColumn(name: 'group_id', onDelete: 'SET NULL'),
-        Serializer\Groups(['attribute', 'node', 'nodes_sources', 'attribute:export', 'attribute:import']),]
+        SymfonySerializer\Groups(['attribute', 'node', 'nodes_sources', 'attribute:export', 'attribute:import']),]
     protected ?AttributeGroupInterface $group = null;
 
     /**
@@ -53,7 +53,7 @@ trait AttributeTrait
         fetch: 'EAGER',
         orphanRemoval: true
     ),
-        Serializer\Groups(['attribute', 'node', 'nodes_sources', 'attribute:export']),]
+        SymfonySerializer\Groups(['attribute', 'node', 'nodes_sources', 'attribute:export']),]
     protected Collection $attributeTranslations;
 
     /**
@@ -66,7 +66,7 @@ trait AttributeTrait
         fetch: 'EXTRA_LAZY',
         orphanRemoval: true
     ),
-        Serializer\Ignore]
+        SymfonySerializer\Ignore]
     protected Collection $attributeValues;
 
     public function getCode(): string
@@ -77,7 +77,7 @@ trait AttributeTrait
     /**
      * @return $this
      */
-    public function setCode(?string $code): static
+    public function setCode(?string $code): self
     {
         $this->code = StringHandler::slugify($code ?? '');
 
@@ -92,7 +92,7 @@ trait AttributeTrait
     /**
      * @return $this
      */
-    public function setType(int $type): static
+    public function setType(int $type): self
     {
         $this->type = $type;
 
@@ -107,7 +107,7 @@ trait AttributeTrait
     /**
      * @return $this
      */
-    public function setColor(?string $color): static
+    public function setColor(?string $color): self
     {
         $this->color = $color;
 
@@ -122,7 +122,7 @@ trait AttributeTrait
     /**
      * @return $this
      */
-    public function setGroup(?AttributeGroupInterface $group): static
+    public function setGroup(?AttributeGroupInterface $group): self
     {
         $this->group = $group;
 
@@ -137,7 +137,7 @@ trait AttributeTrait
     /**
      * @return $this
      */
-    public function setSearchable(bool $searchable): static
+    public function setSearchable(bool $searchable): self
     {
         $this->searchable = $searchable;
 
@@ -148,12 +148,14 @@ trait AttributeTrait
     {
         if (null !== $translation) {
             $attributeTranslation = $this->getAttributeTranslations()->filter(
-                fn (AttributeTranslationInterface $attributeTranslation) => $attributeTranslation->getTranslation() === $translation
+                function (AttributeTranslationInterface $attributeTranslation) use ($translation) {
+                    return $attributeTranslation->getTranslation() === $translation;
+                }
             );
 
             if (
                 $attributeTranslation->first()
-                && !empty($attributeTranslation->first()->getLabel())
+                && '' !== $attributeTranslation->first()->getLabel()
             ) {
                 return $attributeTranslation->first()->getLabel();
             }
@@ -162,10 +164,12 @@ trait AttributeTrait
         return $this->getCode();
     }
 
-    public function getOptions(?TranslationInterface $translation): ?array
+    public function getOptions(TranslationInterface $translation): ?array
     {
         $attributeTranslation = $this->getAttributeTranslations()->filter(
-            fn (AttributeTranslationInterface $attributeTranslation) => null !== $translation && $attributeTranslation->getTranslation() === $translation
+            function (AttributeTranslationInterface $attributeTranslation) use ($translation) {
+                return $attributeTranslation->getTranslation() === $translation;
+            }
         )->first();
         if (false !== $attributeTranslation) {
             return $attributeTranslation->getOptions();
@@ -185,7 +189,7 @@ trait AttributeTrait
     /**
      * @return $this
      */
-    public function setAttributeTranslations(Collection $attributeTranslations): static
+    public function setAttributeTranslations(Collection $attributeTranslations): self
     {
         $this->attributeTranslations = $attributeTranslations;
         /** @var AttributeTranslationInterface $attributeTranslation */
@@ -199,7 +203,7 @@ trait AttributeTrait
     /**
      * @return $this
      */
-    public function addAttributeTranslation(AttributeTranslationInterface $attributeTranslation): static
+    public function addAttributeTranslation(AttributeTranslationInterface $attributeTranslation): self
     {
         if (!$this->getAttributeTranslations()->contains($attributeTranslation)) {
             $this->getAttributeTranslations()->add($attributeTranslation);
@@ -212,7 +216,7 @@ trait AttributeTrait
     /**
      * @return $this
      */
-    public function removeAttributeTranslation(AttributeTranslationInterface $attributeTranslation): static
+    public function removeAttributeTranslation(AttributeTranslationInterface $attributeTranslation): self
     {
         if ($this->getAttributeTranslations()->contains($attributeTranslation)) {
             $this->getAttributeTranslations()->removeElement($attributeTranslation);

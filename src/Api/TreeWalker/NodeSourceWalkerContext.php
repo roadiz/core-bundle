@@ -8,7 +8,6 @@ use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Persistence\ObjectManager;
 use Doctrine\Persistence\ObjectRepository;
 use Psr\Cache\CacheItemPoolInterface;
-use RZ\Roadiz\Contracts\NodeType\NodeTypeClassLocatorInterface;
 use RZ\Roadiz\CoreBundle\Bag\NodeTypes;
 use RZ\Roadiz\CoreBundle\EntityApi\NodeSourceApi;
 use RZ\Roadiz\CoreBundle\NodeType\NodeTypeResolver;
@@ -32,7 +31,6 @@ readonly class NodeSourceWalkerContext implements WalkerContextInterface
         private CacheItemPoolInterface $cacheAdapter,
         private NodeTypeResolver $nodeTypeResolver,
         private PreviewResolverInterface $previewResolver,
-        private NodeTypeClassLocatorInterface $nodeTypeClassLocator,
     ) {
     }
 
@@ -116,10 +114,5 @@ readonly class NodeSourceWalkerContext implements WalkerContextInterface
     public function getPreviewResolver(): PreviewResolverInterface
     {
         return $this->previewResolver;
-    }
-
-    public function getNodeTypeClassLocator(): NodeTypeClassLocatorInterface
-    {
-        return $this->nodeTypeClassLocator;
     }
 }

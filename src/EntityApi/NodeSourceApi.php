@@ -6,8 +6,6 @@ namespace RZ\Roadiz\CoreBundle\EntityApi;
 
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\ORM\Tools\Pagination\Paginator;
-use Doctrine\Persistence\ManagerRegistry;
-use RZ\Roadiz\Contracts\NodeType\NodeTypeClassLocatorInterface;
 use RZ\Roadiz\CoreBundle\Entity\NodesSources;
 use RZ\Roadiz\CoreBundle\Entity\NodeType;
 use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
@@ -17,13 +15,6 @@ use RZ\Roadiz\CoreBundle\Repository\NodesSourcesRepository;
  */
 class NodeSourceApi extends AbstractApi
 {
-    public function __construct(
-        ManagerRegistry $managerRegistry,
-        private readonly NodeTypeClassLocatorInterface $nodeTypeClassLocator,
-    ) {
-        parent::__construct($managerRegistry);
-    }
-
     /**
      * @var class-string<NodesSources>
      */
@@ -35,9 +26,7 @@ class NodeSourceApi extends AbstractApi
     protected function getNodeSourceClassName(?array $criteria = null): string
     {
         if (isset($criteria['node.nodeType']) && $criteria['node.nodeType'] instanceof NodeType) {
-            /** @var class-string<NodesSources> $entityClassName */
-            $entityClassName = $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($criteria['node.nodeType']);
-            $this->nodeSourceClassName = $entityClassName;
+            $this->nodeSourceClassName = $criteria['node.nodeType']->getSourceEntityFullQualifiedClassName();
             unset($criteria['node.nodeType']);
         } elseif (
             isset($criteria['node.nodeType'])
@@ -45,9 +34,7 @@ class NodeSourceApi extends AbstractApi
             && 1 === count($criteria['node.nodeType'])
             && $criteria['node.nodeType'][0] instanceof NodeType
         ) {
-            /** @var class-string<NodesSources> $entityClassName */
-            $entityClassName = $this->nodeTypeClassLocator->getSourceEntityFullQualifiedClassName($criteria['node.nodeType'][0]);
-            $this->nodeSourceClassName = $entityClassName;
+            $this->nodeSourceClassName = $criteria['node.nodeType'][0]->getSourceEntityFullQualifiedClassName();
             unset($criteria['node.nodeType']);
         } else {
             $this->nodeSourceClassName = NodesSources::class;
@@ -56,7 +43,6 @@ class NodeSourceApi extends AbstractApi
         return $this->nodeSourceClassName;
     }
 
-    #[\Override]
     public function getRepository(): NodesSourcesRepository
     {
         // @phpstan-ignore-next-line
@@ -66,7 +52,6 @@ class NodeSourceApi extends AbstractApi
     /**
      * @return array<NodesSources>|Paginator<NodesSources>
      */
-    #[\Override]
     public function getBy(
         array $criteria,
         ?array $order = null,
@@ -88,7 +73,6 @@ class NodeSourceApi extends AbstractApi
      * @throws \Doctrine\ORM\NoResultException
      * @throws NonUniqueResultException
      */
-    #[\Override]
     public function countBy(array $criteria): int
     {
         $this->getNodeSourceClassName($criteria);
@@ -102,7 +86,6 @@ class NodeSourceApi extends AbstractApi
     /**
      * @throws NonUniqueResultException
      */
-    #[\Override]
     public function getOneBy(array $criteria, ?array $order = null): ?NodesSources
     {
         $this->getNodeSourceClassName($criteria);
