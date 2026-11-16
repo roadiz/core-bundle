@@ -6,13 +6,12 @@ namespace RZ\Roadiz\CoreBundle\CustomForm\Message;
 
 use RZ\Roadiz\CoreBundle\Message\AsyncMessage;
 
-final class CustomFormAnswerNotifyMessage implements AsyncMessage
+final readonly class CustomFormAnswerNotifyMessage implements AsyncMessage
 {
     public function __construct(
-        private readonly int $customFormAnswerId,
-        private readonly string $title,
-        private readonly string $senderAddress,
-        private readonly string $locale
+        private int $customFormAnswerId,
+        private string $title,
+        private string $locale,
     ) {
     }
 
@@ -24,11 +23,6 @@ final class CustomFormAnswerNotifyMessage implements AsyncMessage
     public function getTitle(): string
     {
         return $this->title;
-    }
-
-    public function getSenderAddress(): string
-    {
-        return $this->senderAddress;
     }
 
     public function getLocale(): string

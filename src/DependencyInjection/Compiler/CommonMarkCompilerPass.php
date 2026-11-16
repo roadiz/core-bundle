@@ -10,9 +10,7 @@ use Symfony\Component\DependencyInjection\Reference;
 
 class CommonMarkCompilerPass implements CompilerPassInterface
 {
-    /**
-     * @inheritDoc
-     */
+    #[\Override]
     public function process(ContainerBuilder $container): void
     {
         if ($container->has('roadiz_core.markdown.environments.text_converter')) {
@@ -40,7 +38,7 @@ class CommonMarkCompilerPass implements CompilerPassInterface
             foreach ($taggedServices as $id => $tags) {
                 $definition->addMethodCall(
                     'addExtension',
-                    array(new Reference($id))
+                    [new Reference($id)]
                 );
             }
         }
@@ -55,7 +53,7 @@ class CommonMarkCompilerPass implements CompilerPassInterface
             foreach ($taggedServices as $id => $tags) {
                 $definition->addMethodCall(
                     'addExtension',
-                    array(new Reference($id))
+                    [new Reference($id)]
                 );
             }
         }
